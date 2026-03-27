@@ -182,7 +182,7 @@ const Onboarding = () => {
 
             <div className="h-px bg-border my-5" />
             <div className="text-sm font-bold text-foreground mb-3">Preferred timeframe</div>
-            <PillSelect options={["1m – 5m", "15m – 1H", "4H – Daily", "Mixed"]} selected={timeframes} onToggle={toggle(timeframes, setTimeframes)} />
+            <PillSelect options={["1m – 5m", "15m – 1H", "4H – Daily", "Weekly – Monthly", "Mixed"]} selected={timeframes} onToggle={toggle(timeframes, setTimeframes)} />
 
             <div className="h-px bg-border my-5" />
             <div className="text-sm font-bold text-foreground mb-3">How often do you trade?</div>
