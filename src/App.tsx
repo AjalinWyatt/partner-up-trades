@@ -7,7 +7,10 @@ import Landing from "./pages/Landing";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
+import Partners from "./pages/Partners";
+import Profile from "./pages/Profile";
+import ViewProfile from "./pages/ViewProfile";
+import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,7 +26,14 @@ const App = () => (
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/partners" element={<Partners />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/view-profile" element={<ViewProfile />} />
+          <Route path="/dashboard" element={<Partners />} />
+          <Route path="/feed" element={<Placeholder title="Feed" />} />
+          <Route path="/discover" element={<Placeholder title="Discover" />} />
+          <Route path="/log" element={<Placeholder title="Trade Log" />} />
+          <Route path="/messages" element={<Placeholder title="Messages" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
