@@ -10,8 +10,10 @@ interface ProfileData {
   avatar_url: string | null;
   gender: string | null;
   location: string | null;
-  bio: string | null;
   hobbies: string[];
+  chart_prompts: string[];
+  off_chart_prompts: string[];
+  onboarding_completed: boolean;
 }
 
 interface TradingProfileData {
@@ -21,10 +23,16 @@ interface TradingProfileData {
   strategies: string[];
   timeframes: string[];
   experience_level: string | null;
-  primary_goals: string[];
+  primary_goal: string[];
   struggles: string[];
-  chart_prompts: string[];
-  off_chart_prompts: string[];
+  frequency: string[];
+  journaling: string[];
+  trading_plan: string[];
+  looking_for_gender: string | null;
+  connection_reach: string | null;
+  connection_types: string[];
+  connect_frequency: string[];
+  match_priorities: string[];
 }
 
 const Profile = () => {
