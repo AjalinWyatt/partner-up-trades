@@ -333,7 +333,7 @@ const ViewProfile = () => {
 
         {/* Tabs */}
         <div className="flex border-b border-border mx-5 mt-5">
-          {["Profile", "Sessions", "Details"].map((tab, i) => (
+          {["Profile", "Activity", "Details"].map((tab, i) => (
             <button
               key={tab}
               onClick={() => setActiveTab(i)}
