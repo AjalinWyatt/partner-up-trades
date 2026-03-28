@@ -333,8 +333,6 @@ const Onboarding = () => {
             <BigCardSelect
               options={[
                 { icon: "🤝", title: "Partner(s)", description: "1-on-1 connections. No limit to how many partners you have." },
-                { icon: "🔺", title: "Small Group", description: "3–5 traders. Tight-knit, weekly reviews." },
-                { icon: "🌐", title: "Circle Group", description: "Up to 10 traders. Bigger energy, shared analysis." },
               ]}
               selected={connectionTypes}
               onToggle={toggle(connectionTypes, setConnectionTypes)}
