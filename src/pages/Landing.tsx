@@ -283,15 +283,6 @@ const Landing = () => {
                 <ArrowRight className="w-5 h-5 text-[#6B7A72]" />
               </div>
             ))}
-            {COMING_SOON_MARKETS.map(m => (
-              <div key={m} className="bg-white p-6 flex items-center justify-between opacity-50 cursor-default relative">
-                <span className="font-['Gabarito'] text-base font-extrabold text-[#0D1410]/50">{m}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-[#F5A623] to-[#E8843A] text-white">Coming Soon</span>
-                  <button onClick={() => setWaitlistMarket(m)} className="text-[10px] font-semibold text-[#1e70e0] hover:underline bg-transparent border-none cursor-pointer">Join waitlist</button>
-                </div>
-              </div>
-            ))}
           </div>
           <p className="text-center text-sm text-[#6B7A72] landing-reveal">You tell us what you trade. <strong className="text-[#0D1410]">We match you with people who trade the same thing.</strong></p>
         </div>
