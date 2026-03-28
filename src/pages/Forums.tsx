@@ -464,12 +464,12 @@ const Forums = () => {
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="px-4 py-3 space-y-3">
             {posts.map(post => (
               <button
                 key={post.id}
                 onClick={() => setSearchParams({ forum: activeForum, post: post.id })}
-                className="w-full text-left px-5 py-4 hover:bg-muted/30 transition-colors"
+                className="w-full text-left px-4 py-4 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center gap-2.5 mb-2">
                   {post.avatar_url ? (
