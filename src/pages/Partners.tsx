@@ -44,11 +44,13 @@ const Partners = () => {
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [partners, setPartners] = useState<PartnerRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [myId, setMyId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
+      setMyId(user.id);
 
       // Pending requests where I am the receiver
       const { data: pendingData } = await supabase
