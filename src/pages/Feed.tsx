@@ -59,43 +59,64 @@ const Feed = () => {
     const partnerIds = (connections || []).map(c =>
       c.requester_id === user.id ? c.receiver_id : c.requester_id
     );
-    const allUserIds = [...partnerIds];
+    const allUserIds = [...partnerIds, user.id];
 
-    const { data: journalEntries } = await supabase
-      .from("journal_entries")
-      .select("*")
-      .in("user_id", allUserIds)
-      .neq("share_setting", "Private")
-      .order("created_at", { ascending: false })
-      .limit(50);
+    // Load both journal entries and posts
+    const [{ data: journalEntries }, { data: postsData }] = await Promise.all([
+      supabase
+        .from("journal_entries")
+        .select("*")
+        .in("user_id", allUserIds.filter(id => id !== user.id))
+        .neq("share_setting", "Private")
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("posts" as any)
+        .select("*")
+        .in("user_id", allUserIds)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
 
-    if (!journalEntries || journalEntries.length === 0) {
+    const allItems: any[] = [
+      ...(journalEntries || []).map((e: any) => ({ ...e, _type: "journal" })),
+      ...(postsData || []).map((e: any) => ({ ...e, _type: "post" })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    if (allItems.length === 0) {
       setEntries([]);
       setLoading(false);
       return;
     }
 
-    const entryIds = journalEntries.map(e => e.id);
-    const authorIds = [...new Set(journalEntries.map(e => e.user_id))];
+    const itemIds = allItems.map(e => e.id);
+    const authorIds = [...new Set(allItems.map(e => e.user_id))];
 
     const [profilesRes, likesRes, myLikesRes, commentsRes] = await Promise.all([
       supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
-      supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds),
-      supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds).eq("user_id", user.id),
-      supabase.from("feed_comments").select("entry_id").in("entry_id", entryIds),
+      supabase.from("feed_likes").select("entry_id, post_id").in("entry_id", itemIds),
+      supabase.from("feed_likes").select("entry_id, post_id").in("entry_id", itemIds).eq("user_id", user.id),
+      supabase.from("feed_comments").select("entry_id, post_id").in("entry_id", itemIds),
     ]);
 
     const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
     const likeCounts: Record<string, number> = {};
-    (likesRes.data || []).forEach(l => { likeCounts[l.entry_id] = (likeCounts[l.entry_id] || 0) + 1; });
-    const myLikedSet = new Set((myLikesRes.data || []).map(l => l.entry_id));
+    (likesRes.data || []).forEach((l: any) => {
+      const key = l.entry_id || l.post_id;
+      likeCounts[key] = (likeCounts[key] || 0) + 1;
+    });
+    const myLikedSet = new Set((myLikesRes.data || []).map((l: any) => l.entry_id || l.post_id));
     const commentCounts: Record<string, number> = {};
-    (commentsRes.data || []).forEach(c => { commentCounts[c.entry_id] = (commentCounts[c.entry_id] || 0) + 1; });
+    (commentsRes.data || []).forEach((c: any) => {
+      const key = c.entry_id || c.post_id;
+      commentCounts[key] = (commentCounts[key] || 0) + 1;
+    });
 
-    const feedEntries: FeedEntry[] = journalEntries.map(e => {
+    const feedItems: FeedPost[] = allItems.map(e => {
       const prof = profileMap.get(e.user_id);
       return {
         ...e,
+        type: e._type as "post" | "journal",
         username: prof?.username || "trader",
         full_name: prof?.full_name || "Trader",
         avatar_url: prof?.avatar_url || null,
@@ -103,6 +124,7 @@ const Feed = () => {
         likeCount: likeCounts[e.id] || 0,
         commentCount: commentCounts[e.id] || 0,
       };
+    });
     });
 
     setEntries(feedEntries);
