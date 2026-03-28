@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Lock, Link, Users, Globe } from "lucide-react";
+import { Plus, X, Lock, Link } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -97,8 +97,9 @@ export default function TradingLog() {
   const [accountType, setAccountType] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
-  const [shareSettings, setShareSettings] = useState<string[]>(["private"]);
+  const [shareSetting, setShareSetting] = useState("partners");
   const [saving, setSaving] = useState(false);
+  const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -110,7 +111,21 @@ export default function TradingLog() {
   useEffect(() => {
     if (!userId) return;
     loadEntries();
+    loadPartners();
   }, [userId]);
+
+  async function loadPartners() {
+    if (!userId) return;
+    const { data: conns } = await supabase
+      .from("partner_connections")
+      .select("requester_id, receiver_id")
+      .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
+      .eq("status", "accepted");
+    if (!conns || conns.length === 0) { setPartners([]); return; }
+    const partnerIds = conns.map(c => c.requester_id === userId ? c.receiver_id : c.requester_id);
+    const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", partnerIds);
+    setPartners((profiles || []).map(p => ({ id: p.id, name: p.full_name || "Partner" })));
+  }
 
   async function loadEntries() {
     setLoading(true);
@@ -179,7 +194,7 @@ export default function TradingLog() {
       session: null,
       tags: selectedTags,
       notes: notes || null,
-      share_setting: shareSettings[0] || "private",
+      share_setting: shareSetting,
     });
     setSaving(false);
     if (error) { toast.error("Failed to save entry"); return; }
@@ -221,7 +236,7 @@ export default function TradingLog() {
 
   function resetForm() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
-    setAccountType(""); setSelectedTags([]); setNotes(""); setShareSettings(["private"]);
+    setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
   }
 
   const streak = getStreak();
@@ -382,26 +397,27 @@ export default function TradingLog() {
           {/* Share with */}
           <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Share this log with</p>
-            <div className="flex gap-1.5">
+            <div className="flex flex-col gap-2">
               {[
-                { value: "private", icon: Lock, label: "Private" },
-                { value: "partners", icon: Link, label: "Partners" },
+                { value: "partners", icon: Link, label: "🤝 Partners", desc: "Your accepted partners can see this in their feed and on your profile" },
+                { value: "private", icon: Lock, label: "🔒 Private", desc: "Only you can see this entry" },
               ].map((opt) => {
-                const sel = shareSettings.includes(opt.value);
-                const Icon = opt.icon;
+                const sel = shareSetting === opt.value;
                 return (
                   <button
                     key={opt.value}
-                    onClick={() => setShareSettings(sel ? shareSettings.filter((s) => s !== opt.value) : [...shareSettings, opt.value])}
+                    onClick={() => setShareSetting(opt.value)}
                     className={cn(
-                      "flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[10px] border-[1.5px] transition-colors",
+                      "flex items-start gap-3 p-3 rounded-[10px] border-[1.5px] transition-colors text-left",
                       sel
                         ? "border-accent bg-accent/[0.08]"
                         : "border-border bg-[rgba(255,255,255,0.06)]"
                     )}
                   >
-                    <Icon className={cn("w-[18px] h-[18px]", sel ? "text-accent" : "text-muted-foreground")} strokeWidth={1.6} />
-                    <span className={cn("text-[9px] font-semibold", sel ? "text-accent" : "text-muted-foreground")}>{opt.label}</span>
+                    <div className="flex flex-col">
+                      <span className={cn("text-[12px] font-bold", sel ? "text-accent" : "text-foreground")}>{opt.label}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</span>
+                    </div>
                   </button>
                 );
               })}
@@ -498,61 +514,74 @@ export default function TradingLog() {
             </p>
           </div>
         ) : (
-          <div className="space-y-1.5 mx-5">
-            {entries.map((entry) => (
-              <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
-                {/* Top row */}
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
-                  <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                    {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
-                  </span>
-                </div>
-
-                {/* Mood */}
-                {entry.mood && (
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
-                    <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
+          <>
+            <div className="space-y-1.5 mx-5">
+              {entries.map((entry) => (
+                <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
+                    <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                      {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
+                    </span>
                   </div>
-                )}
-
-                {/* Notes */}
-                {entry.notes && (
-                  <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
-                )}
-
-                {/* Tags */}
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-[3px] mb-1">
-                    {entry.tags.map((tag) => {
-                      const type = getTagType(tag);
-                      return (
-                        <span
-                          key={tag}
-                          className={cn(
+                  {entry.mood && (
+                    <div className="flex items-center gap-1 mb-1">
+                      <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
+                      <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
+                    </div>
+                  )}
+                  {entry.notes && (
+                    <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                  )}
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-[3px] mb-1">
+                      {entry.tags.map((tag) => {
+                        const type = getTagType(tag);
+                        return (
+                          <span key={tag} className={cn(
                             "text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px]",
                             type === "right" && "bg-accent/10 text-accent",
                             type === "wrong" && "bg-destructive/10 text-destructive",
                             type === "neutral" && "bg-[rgba(255,255,255,0.06)] text-muted-foreground"
-                          )}
-                        >
-                          {tag}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
+                          )}>{tag}</span>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {(entry.market_pair || entry.session) && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5">
+                      {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
 
-                {/* Market info */}
-                {(entry.market_pair || entry.session) && (
-                  <div className="text-[9px] text-muted-foreground mt-0.5">
-                    {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+            {/* Shared with partner card */}
+            {entries[0]?.share_setting === "partners" && (
+              partners.length > 0 ? (
+                <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
+                    SHARED WITH {partners[0].name.split(" ")[0].toUpperCase()}
+                    {partners.length > 1 && ` + ${partners.length - 1} other${partners.length > 2 ? "s" : ""}`}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Your partner can see your P&L, what you did right, what went wrong, and how you felt.
+                  </p>
+                </div>
+              ) : (
+                <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-primary/30 bg-primary/[0.05]">
+                  <p className="text-[11px] text-muted-foreground mb-2">Connect with a partner to share your sessions</p>
+                  <button
+                    onClick={() => navigate("/discover")}
+                    className="px-4 py-2 rounded-lg bg-gradient-brand text-white text-[11px] font-bold"
+                  >
+                    Find a partner
+                  </button>
+                </div>
+              )
+            )}
+          </>
         )}
       </div>
 
