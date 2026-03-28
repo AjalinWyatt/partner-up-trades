@@ -46,19 +46,6 @@ const Feed = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
 
-  const loadMarketCounts = useCallback(async () => {
-    const { data } = await supabase.from("trading_profiles").select("markets");
-    const counts: Record<string, number> = { All: 0, Forex: 0, Futures: 0, Options: 0 };
-    (data || []).forEach((tp: any) => {
-      if (tp.markets?.length > 0) {
-        counts.All++;
-        tp.markets.forEach((m: string) => {
-          if (counts[m] !== undefined) counts[m]++;
-        });
-      }
-    });
-    setMarketCounts(counts);
-  }, []);
 
   const loadFeed = useCallback(async (filter?: string) => {
     const activeFilter = filter ?? marketFilter;
