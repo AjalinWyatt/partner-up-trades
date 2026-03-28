@@ -126,7 +126,7 @@ export default function FeedCommentSheet({ postId, myId, onClose, onCountChange 
         await sendNotification({
           userId: post.user_id,
           type: "post_commented",
-          title: `${prof?.full_name || "Someone"} commented on your post`,
+          title: `@${prof?.username || "someone"} commented on your post`,
           body: text.trim().slice(0, 50),
           relatedUserId: myId,
           entryId: postId,

@@ -129,7 +129,7 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
         await sendNotification({
           userId: entryOwnerId,
           type: "post_commented",
-          title: `${prof?.full_name || "Someone"} commented on your session`,
+          title: `@${prof?.username || "someone"} commented on your session`,
           body: commentPreview,
           relatedUserId: myId,
           entryId,

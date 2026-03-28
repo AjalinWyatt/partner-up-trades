@@ -84,7 +84,7 @@ const Partners = () => {
       // Fetch profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, username, avatar_url")
         .in("id", allIds);
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
@@ -102,8 +102,8 @@ const Partners = () => {
         return {
           connectionId: p.id,
           userId: p.requester_id,
-          name: prof?.full_name || "Trader",
-          initials: getInitials(prof?.full_name),
+          name: prof?.username ? `@${prof.username}` : "trader",
+          initials: getInitials(prof?.full_name || prof?.username),
           avatarUrl: prof?.avatar_url || null,
           markets: tp?.markets || [],
           sessions: tp?.sessions || [],
@@ -180,8 +180,8 @@ const Partners = () => {
         partnerRows.push({
           connectionId: conn?.id || "",
           userId: id,
-          name: prof?.full_name || "Trader",
-          initials: getInitials(prof?.full_name),
+          name: prof?.username ? `@${prof.username}` : "trader",
+          initials: getInitials(prof?.full_name || prof?.username),
           avatarUrl: prof?.avatar_url || null,
           markets: tp?.markets || [],
           sessions: tp?.sessions || [],
@@ -212,8 +212,8 @@ const Partners = () => {
     setPending(prev => prev.filter(p => p.connectionId !== connectionId));
     // Notify the requester
     if (myId) {
-      const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
-      const myName = myProf?.full_name || "Someone";
+      const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
+      const myName = `@${myProf?.username || "someone"}`;
       await sendNotification({
         userId: requesterId,
         type: "partner_accepted",

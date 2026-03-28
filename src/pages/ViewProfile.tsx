@@ -115,11 +115,11 @@ const ViewProfile = () => {
 
       // Profile view notification
       if (user && user.id !== id) {
-        const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+        const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
         sendNotification({
           userId: id,
           type: "profile_viewed",
-          title: `${myProf?.full_name || "Someone"} viewed your profile`,
+          title: `@${myProf?.username || "someone"} viewed your profile`,
           body: "They might be interested in connecting",
           relatedUserId: user.id,
         });
@@ -145,12 +145,12 @@ const ViewProfile = () => {
     } else {
       toast.success("Partner request sent!");
       setConnectionStatus("pending");
-      const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+      const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
       await sendNotification({
         userId: id,
         type: "partner_request",
         title: "New connection request",
-        body: `${myProf?.full_name || "Someone"} wants to connect with you`,
+        body: `@${myProf?.username || "someone"} wants to connect with you`,
         relatedUserId: myId,
       });
     }

@@ -27,10 +27,10 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const [{ data: prof }, { data: tp }] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+        supabase.from("profiles").select("full_name, username").eq("id", user.id).single(),
         supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle(),
       ]);
-      setUserName(prof?.full_name?.split(" ")[0] || "trader");
+      setUserName(prof?.username || "trader");
       setUserMarket(tp?.markets?.[0] || "");
     };
     load();
