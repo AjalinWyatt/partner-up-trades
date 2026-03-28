@@ -38,6 +38,7 @@ const Onboarding = () => {
 
   // Step 2
   const [markets, setMarkets] = useState<string[]>([]);
+  const [instruments, setInstruments] = useState<string[]>([]);
   const [sessions, setSessions] = useState<string[]>([]);
   const [tradeTimes, setTradeTimes] = useState<string[]>([]);
 
@@ -172,7 +173,7 @@ const Onboarding = () => {
               icon="🌴"
               title="Off The Charts"
               question="When I'm not trading, I'm usually..."
-              options={["Gym", "Football", "Basketball", "Music", "Travel", "Cars", "Gaming", "Family time", "Cooking", "Reading", "Content creation", "Fitness", "Golf", "Business", "Crypto investing", "Meditation"]}
+              options={["Gym", "Football", "Basketball", "Music", "Travel", "Cars", "Gaming", "Family time", "Cooking", "Reading", "Content creation", "Fitness", "Golf", "Business", "Meditation"]}
               selected={offChartPrompts}
               onToggle={toggle(offChartPrompts, setOffChartPrompts)}
             />
@@ -189,7 +190,26 @@ const Onboarding = () => {
             <p className="text-sm text-muted-foreground mb-6">Select all that apply — this is the foundation of your match.</p>
 
             <div className="text-sm font-bold text-foreground mb-3">What do you trade?</div>
-            <PillSelect options={["Forex", "Crypto", "Stocks", "Indices", "Options", "Futures", "ETFs", "Commodities", "Bonds"]} selected={markets} onToggle={toggle(markets, setMarkets)} />
+            <PillSelect options={["Forex", "Futures", "Options"]} selected={markets} onToggle={toggle(markets, setMarkets)} />
+
+            {markets.includes("Forex") && (
+              <>
+                <div className="text-sm font-bold text-foreground mb-3 mt-5">Forex instruments</div>
+                <PillSelect options={["Major pairs", "Minor pairs", "Indices (NAS100, US30)", "Gold/XAU", "Exotics"]} selected={instruments} onToggle={toggle(instruments, setInstruments)} />
+              </>
+            )}
+            {markets.includes("Futures") && (
+              <>
+                <div className="text-sm font-bold text-foreground mb-3 mt-5">Futures instruments</div>
+                <PillSelect options={["Equity indices (NQ, ES, YM, RTY)", "Commodities (Oil, Gas, Wheat)", "Crypto futures (BTC, ETH)", "Metals"]} selected={instruments} onToggle={toggle(instruments, setInstruments)} />
+              </>
+            )}
+            {markets.includes("Options") && (
+              <>
+                <div className="text-sm font-bold text-foreground mb-3 mt-5">Options instruments</div>
+                <PillSelect options={["Stock options", "Index options (SPX, NDX)", "ETF options", "Futures options"]} selected={instruments} onToggle={toggle(instruments, setInstruments)} />
+              </>
+            )}
 
             <div className="h-px bg-border my-5" />
             <div className="text-sm font-bold text-foreground mb-3">Which session do you mainly trade?</div>
