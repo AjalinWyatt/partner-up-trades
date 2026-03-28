@@ -302,11 +302,17 @@ const Partners = () => {
                       <div className="text-[10px] text-muted-foreground mt-0.5">{a.sub}</div>
                     </div>
                     <button
-                      onClick={() => navigate(`/messages`)}
+                      onClick={() => {
+                        if (a.action === "log") {
+                          navigate(`/profile/${a.userId}`);
+                        } else {
+                          navigate(`/messages?partner=${a.userId}`);
+                        }
+                      }}
                       className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-orange-500 shrink-0"
                       style={{ background: "rgba(228,92,45,0.15)" }}
                     >
-                      Check in
+                      {a.action === "log" ? "View" : "Check in"}
                     </button>
                   </div>
                 ))}
