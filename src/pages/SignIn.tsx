@@ -17,12 +17,22 @@ const SignIn = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
       toast.error(error.message);
     } else {
-      navigate("/dashboard");
+      // Check onboarding status before routing
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (!profile?.onboarding_completed) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 
