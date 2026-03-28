@@ -28,8 +28,8 @@ const SignUp = () => {
       email,
       password,
       options: {
-        data: { first_name: firstName, last_name: lastName },
-        emailRedirectTo: window.location.origin,
+        data: { full_name: `${firstName} ${lastName}`.trim(), first_name: firstName, last_name: lastName },
+        emailRedirectTo: `${window.location.origin}/signin`,
       },
     });
     setLoading(false);

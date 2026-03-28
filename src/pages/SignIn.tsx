@@ -20,7 +20,11 @@ const SignIn = () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Please verify your email first. Check your inbox for a confirmation link.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       // Check onboarding status before routing
       const { data: profile } = await supabase
