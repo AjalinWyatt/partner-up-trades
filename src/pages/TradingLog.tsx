@@ -309,7 +309,7 @@ export default function TradingLog() {
               <input
                 value={marketName}
                 onChange={(e) => setMarketName(e.target.value)}
-                placeholder="e.g. Gold"
+                placeholder="e.g. Forex"
                 className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
               />
               <input
