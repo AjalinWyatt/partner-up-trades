@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,11 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [traderCount, setTraderCount] = useState(0);
+
+  useEffect(() => {
+    supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
+  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +62,7 @@ const SignUp = () => {
       <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
         <h1 className="text-2xl font-bold text-foreground">Create your account.</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Join 12,000+ traders building real accountability partnerships.
+          Join {traderCount.toLocaleString()} trader{traderCount !== 1 ? "s" : ""} building real accountability partnerships.
         </p>
 
         {/* OAuth */}
