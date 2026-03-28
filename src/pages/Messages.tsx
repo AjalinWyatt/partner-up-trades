@@ -350,7 +350,7 @@ export default function Messages() {
     return (
       <div className={cn("flex flex-col h-full", className)}>
         {/* Chat header */}
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-card/80 backdrop-blur-sm">
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-primary/20 bg-card/80 backdrop-blur-sm">
           <button onClick={() => setActiveChat(null)} className="lg:hidden">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
@@ -406,7 +406,7 @@ export default function Messages() {
         </div>
 
         {/* Input area */}
-        <div className="px-4 py-3 border-t border-border bg-card/80 backdrop-blur-sm">
+        <div className="px-4 py-3 border-t border-primary/20 bg-card/80 backdrop-blur-sm">
           <div className="flex items-center gap-2 bg-secondary rounded-2xl px-3 py-1.5">
             <button className="p-1.5 rounded-full hover:bg-background/50 transition-colors text-muted-foreground hover:text-foreground" title="Send image">
               <Image className="w-5 h-5" />
@@ -455,9 +455,9 @@ export default function Messages() {
   /* ---- DESKTOP VIEW: split panel ---- */
   const DesktopView = () => (
     <AppLayout>
-      <div className="flex h-[calc(100vh-0px)] -mt-0">
+      <div className="flex h-[calc(100vh-0px)] -mt-0 border border-primary/20 rounded-xl overflow-hidden m-2">
         {/* Left: conversation list */}
-        <div className="w-[340px] xl:w-[380px] border-r border-border bg-card/50 shrink-0">
+        <div className="w-[340px] xl:w-[380px] border-r border-primary/30 bg-card/50 shrink-0">
           <ConversationList />
         </div>
         {/* Right: chat panel */}
