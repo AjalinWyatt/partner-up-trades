@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Globe, ArrowLeft, Send, Search, Image, Mic, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -173,6 +173,13 @@ export default function Messages() {
 
     setConnections(connectionList);
     setLoading(false);
+
+    // Auto-select partner from URL param
+    const partnerParam = new URLSearchParams(window.location.search).get("partner");
+    if (partnerParam) {
+      const match = connectionList.find(c => c.partnerId === partnerParam);
+      if (match) setActiveChat(match);
+    }
   };
 
   useEffect(() => { if (userId) loadConnections(userId); }, [userId]);

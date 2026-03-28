@@ -13,6 +13,7 @@ interface Alert {
   name: string;
   text: string;
   sub: string;
+  action: "message" | "log";
 }
 
 interface PendingRequest {
@@ -128,7 +129,7 @@ const Partners = () => {
         // Fetch journal entries for this partner
         const { data: entries } = await supabase
           .from("journal_entries")
-          .select("created_at, result, mood")
+          .select("created_at, result, mood, share_setting, market_pair")
           .eq("user_id", id)
           .order("created_at", { ascending: false })
           .limit(30);
@@ -155,9 +156,10 @@ const Partners = () => {
         if (!lastEntry || lastEntry.created_at < twoDaysAgo) {
           alertList.push({
             userId: id,
-            name: prof?.full_name || "Partner",
+            name: prof?.username ? `@${prof.username}` : "Partner",
             text: "hasn't logged in 2+ days",
             sub: "Send a check-in message",
+            action: "message",
           });
         }
 
@@ -170,11 +172,23 @@ const Partners = () => {
           if (allRough) {
             alertList.push({
               userId: id,
-              name: prof?.full_name || "Partner",
+              name: prof?.username ? `@${prof.username}` : "Partner",
               text: "is on a rough streak",
               sub: "3+ consecutive losses or tough sessions",
+              action: "message",
             });
           }
+        }
+
+        // Check alerts: shared a new session recently (last 24h)
+        if (lastEntry && lastEntry.created_at > new Date(Date.now() - 86400000).toISOString() && (lastEntry as any).share_setting === "partners") {
+          alertList.push({
+            userId: id,
+            name: prof?.username ? `@${prof.username}` : "Partner",
+            text: "shared a new session",
+            sub: `${(lastEntry as any).market_pair || "Trade"} · ${(lastEntry as any).result || "View details"}`,
+            action: "log",
+          });
         }
 
         partnerRows.push({
@@ -288,11 +302,17 @@ const Partners = () => {
                       <div className="text-[10px] text-muted-foreground mt-0.5">{a.sub}</div>
                     </div>
                     <button
-                      onClick={() => navigate(`/messages`)}
+                      onClick={() => {
+                        if (a.action === "log") {
+                          navigate(`/profile/${a.userId}`);
+                        } else {
+                          navigate(`/messages?partner=${a.userId}`);
+                        }
+                      }}
                       className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-orange-500 shrink-0"
                       style={{ background: "rgba(228,92,45,0.15)" }}
                     >
-                      Check in
+                      {a.action === "log" ? "View" : "Check in"}
                     </button>
                   </div>
                 ))}
