@@ -109,12 +109,12 @@ const Landing = () => {
             traders<span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">world</span>
           </a>
           <div className="hidden md:flex items-center gap-9">
-            <button onClick={() => scrollTo("how")} className="text-sm font-medium text-[#6B7A72] hover:text-[#0D1410] transition-colors bg-transparent border-none cursor-pointer">How it works</button>
-            <button onClick={() => scrollTo("features")} className="text-sm font-medium text-[#6B7A72] hover:text-[#0D1410] transition-colors bg-transparent border-none cursor-pointer">Features</button>
-            <button onClick={() => scrollTo("reviews")} className="text-sm font-medium text-[#6B7A72] hover:text-[#0D1410] transition-colors bg-transparent border-none cursor-pointer">Community</button>
+            <button onClick={() => scrollTo("how")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">How it works</button>
+            <button onClick={() => scrollTo("features")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">Features</button>
+            <button onClick={() => scrollTo("reviews")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">Community</button>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/signin")} className="px-5 py-2 rounded-full border border-[#DDE8E2] text-sm font-semibold text-[#2C3830] hover:border-[#12b87a] hover:text-[#12b87a] transition-all bg-transparent cursor-pointer">Log in</button>
+            <button onClick={() => navigate("/signin")} className="px-5 py-2 rounded-full border border-white/20 text-sm font-semibold text-white/80 hover:border-[#12b87a] hover:text-[#12b87a] transition-all bg-transparent cursor-pointer">Log in</button>
             <button onClick={() => navigate("/signup")} className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-sm font-bold text-white border-none cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all">Get started free</button>
           </div>
         </div>
