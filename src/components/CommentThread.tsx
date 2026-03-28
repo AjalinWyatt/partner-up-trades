@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
+import { sendNotification } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
 
 interface Comment {
@@ -124,12 +125,14 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
 
       // Send notification to post owner (not self)
       if (entryOwnerId !== myId) {
-        await supabase.from("notifications").insert({
-          user_id: entryOwnerId,
-          actor_id: myId,
-          type: "comment",
-          entry_id: entryId,
-          comment_id: data.id,
+        const commentPreview = text.trim().slice(0, 50);
+        await sendNotification({
+          userId: entryOwnerId,
+          type: "post_commented",
+          title: `${prof?.full_name || "Someone"} commented on your session`,
+          body: commentPreview,
+          relatedUserId: myId,
+          entryId,
         });
       }
     }

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
 import { toast } from "sonner";
+import { sendNotification } from "@/lib/notifications";
 
 const CRITERIA_LABELS = ["Market", "Session", "Strategy", "Style", "Timeframe", "Experience", "Goal"];
 
@@ -94,11 +95,15 @@ const ViewProfile = () => {
     } else {
       toast.success("Partner request sent!");
       setConnectionStatus("pending");
-      // Notify the receiver
-      await supabase.from("notifications").insert({
-        user_id: id,
-        actor_id: myId,
+      // Fetch my name for notification
+      const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+      const myName = myProf?.full_name || "Someone";
+      await sendNotification({
+        userId: id,
         type: "partner_request",
+        title: "New connection request",
+        body: `${myName} wants to connect with you`,
+        relatedUserId: myId,
       });
     }
     setSending(false);
