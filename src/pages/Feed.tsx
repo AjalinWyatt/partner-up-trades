@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -11,6 +11,8 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/hooks/use-is-admin";
+import { toast } from "sonner";
 
 interface FeedPost {
   id: string;
@@ -34,6 +36,7 @@ interface FeedPost {
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
+  const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const marketFilter = searchParams.get("market") || "All";
@@ -311,6 +314,20 @@ const Feed = () => {
                               <UserPlus className="w-4 h-4" /> Follow
                             </button>
                           </>
+                        )}
+                        {(isAdmin || post.user_id === myId) && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm("Delete this post?")) return;
+                              await supabase.from("posts").delete().eq("id", post.id);
+                              setPosts(prev => prev.filter(p => p.id !== post.id));
+                              setMenuOpen(null);
+                              toast.success("Post deleted");
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete Post
+                          </button>
                         )}
                       </div>
                     )}
