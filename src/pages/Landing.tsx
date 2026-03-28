@@ -60,7 +60,7 @@ const XIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const LIVE_MARKETS = ["Forex", "Futures", "Stocks"];
+const LIVE_MARKETS = ["Forex", "Futures", "Options"];
 const COMING_SOON_MARKETS = ["Crypto", "Indices", "Options", "ETFs", "Commodities", "Bonds"];
 
 const Landing = () => {
