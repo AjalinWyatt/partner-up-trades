@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PenSquare, Bell, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import { PenSquare, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import NotificationBell from "@/components/NotificationBell";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
