@@ -155,9 +155,10 @@ const Partners = () => {
         if (!lastEntry || lastEntry.created_at < twoDaysAgo) {
           alertList.push({
             userId: id,
-            name: prof?.full_name || "Partner",
+            name: prof?.username ? `@${prof.username}` : "Partner",
             text: "hasn't logged in 2+ days",
             sub: "Send a check-in message",
+            action: "message",
           });
         }
 
@@ -170,11 +171,23 @@ const Partners = () => {
           if (allRough) {
             alertList.push({
               userId: id,
-              name: prof?.full_name || "Partner",
+              name: prof?.username ? `@${prof.username}` : "Partner",
               text: "is on a rough streak",
               sub: "3+ consecutive losses or tough sessions",
+              action: "message",
             });
           }
+        }
+
+        // Check alerts: shared a new session recently (last 24h)
+        if (lastEntry && lastEntry.created_at > new Date(Date.now() - 86400000).toISOString() && (lastEntry as any).share_setting === "partners") {
+          alertList.push({
+            userId: id,
+            name: prof?.username ? `@${prof.username}` : "Partner",
+            text: "shared a new session",
+            sub: `${(lastEntry as any).market_pair || "Trade"} · ${(lastEntry as any).result || "View details"}`,
+            action: "log",
+          });
         }
 
         partnerRows.push({
