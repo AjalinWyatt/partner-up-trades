@@ -81,6 +81,7 @@ function formatEntryDate(dateStr: string) {
 }
 
 export default function TradingLog() {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [entries, setEntries] = useState<JournalEntry[]>([]);

@@ -59,6 +59,7 @@ function formatTime(dateStr: string) {
 }
 
 export default function Messages() {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);

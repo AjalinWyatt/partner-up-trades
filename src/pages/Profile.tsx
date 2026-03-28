@@ -38,6 +38,8 @@ interface TradingProfileData {
 }
 
 const Profile = () => {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [tradingProfile, setTradingProfile] = useState<TradingProfileData | null>(null);
