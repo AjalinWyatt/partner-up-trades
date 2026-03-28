@@ -124,6 +124,7 @@ const Feed = () => {
         likeCount: likeCounts[e.id] || 0,
         commentCount: commentCounts[e.id] || 0,
       };
+    });
 
     setEntries(feedItems);
     setLoading(false);
