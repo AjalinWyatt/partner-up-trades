@@ -72,7 +72,7 @@ const Feed = () => {
         .from("journal_entries")
         .select("*")
         .in("user_id", allUserIds.filter(id => id !== user.id))
-        .neq("share_setting", "Private")
+        .eq("share_setting", "partners")
         .order("created_at", { ascending: false })
         .limit(50),
       supabase

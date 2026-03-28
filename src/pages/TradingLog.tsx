@@ -557,8 +557,32 @@ export default function TradingLog() {
                         </span>
                       );
                     })}
-                  </div>
-                )}
+          </div>
+
+          {/* Shared with partner card */}
+          {entries.length > 0 && entries[0].share_setting === "partners" && (
+            partners.length > 0 ? (
+              <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
+                  SHARED WITH {partners[0].name.split(" ")[0].toUpperCase()}
+                  {partners.length > 1 && ` + ${partners.length - 1} other${partners.length > 2 ? "s" : ""}`}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Your partner can see your P&L, what you did right, what went wrong, and how you felt.
+                </p>
+              </div>
+            ) : (
+              <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-primary/30 bg-primary/[0.05]">
+                <p className="text-[11px] text-muted-foreground mb-2">Connect with a partner to share your sessions</p>
+                <button
+                  onClick={() => navigate("/discover")}
+                  className="px-4 py-2 rounded-lg bg-gradient-brand text-white text-[11px] font-bold"
+                >
+                  Find a partner
+                </button>
+              </div>
+            )
+          )}
 
                 {/* Market info */}
                 {(entry.market_pair || entry.session) && (
