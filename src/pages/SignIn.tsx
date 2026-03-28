@@ -40,31 +40,16 @@ const SignIn = () => {
     e.preventDefault();
     setLoading(true);
     console.log("[SignIn] Attempting sign in for:", email);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      console.log("[SignIn] Result:", { error: error?.message, userId: data?.user?.id });
-      if (error) {
-        if (error.message.toLowerCase().includes("email not confirmed")) {
-          toast.error("Please verify your email first. Check your inbox for a confirmation link.");
-        } else {
-          toast.error(error.message);
-        }
-        setLoading(false);
-        return;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Please verify your email first. Check your inbox for a confirmation link.");
+      } else {
+        toast.error(error.message);
       }
-      // Check onboarding status before routing
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      console.log("[SignIn] Profile:", profile);
-      navigate(profile?.onboarding_completed ? "/feed" : "/onboarding");
-    } catch (err) {
-      console.error("[SignIn] Unexpected error:", err);
-      toast.error("Something went wrong. Please try again.");
       setLoading(false);
     }
+    // On success, the onAuthStateChange listener handles navigation
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
