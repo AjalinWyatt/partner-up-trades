@@ -61,7 +61,7 @@ const XIcon = ({ className }: { className?: string }) => (
 );
 
 const LIVE_MARKETS = ["Forex", "Futures", "Options"];
-const COMING_SOON_MARKETS = ["Crypto", "Indices", "Options", "ETFs", "Commodities", "Bonds"];
+
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -444,7 +444,7 @@ const Landing = () => {
             {[
               { text: "I went from blowing accounts every 3 months to passing my first prop challenge. My accountability partner kept me from revenge trading every single day.", name: "Kezia M.", meta: "Gold trader · London", init: "KM", grad: "from-[#0EA47A] to-[#1D4ED8]" },
               { text: "Finally found a trader who actually trades the same session as me. We do weekly reviews and it's changed everything about how I prepare.", name: "Marcus K.", meta: "Forex trader · Lagos", init: "MK", grad: "from-[#1D4ED8] to-[#7C3AED]" },
-              { text: "The daily logging changed my game. My partner calls me out when I skip a session or go off-plan. I needed that more than any course.", name: "Sofia R.", meta: "Indices trader · Dubai", init: "SR", grad: "from-[#7C3AED] to-[#DB2777]" },
+              { text: "The daily logging changed my game. My partner calls me out when I skip a session or go off-plan. I needed that more than any course.", name: "Sofia R.", meta: "Options trader · Dubai", init: "SR", grad: "from-[#7C3AED] to-[#DB2777]" },
             ].map((r, i) => (
               <div key={i} className="bg-white rounded-[20px] p-7 border border-[#DDE8E2] hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-all landing-reveal">
                 <div className="flex gap-0.5 text-[#F5A623] mb-3">

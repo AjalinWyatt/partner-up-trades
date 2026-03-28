@@ -1,5 +1,5 @@
 const MarqueeFooter = () => {
-  const markets = ["Forex", "Crypto", "Stocks", "Indices", "Options", "Futures", "ETFs", "Bonds"];
+  const markets = ["Forex", "Futures", "Options"];
   const repeated = [...markets, ...markets, ...markets];
 
   return (

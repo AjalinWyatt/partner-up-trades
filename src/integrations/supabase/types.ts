@@ -291,6 +291,7 @@ export type Database = {
           experience_level: string | null
           frequency: string[] | null
           id: string
+          instruments: string[] | null
           journaling: string[] | null
           looking_for_gender: string | null
           loss_response: string | null
@@ -315,6 +316,7 @@ export type Database = {
           experience_level?: string | null
           frequency?: string[] | null
           id?: string
+          instruments?: string[] | null
           journaling?: string[] | null
           looking_for_gender?: string | null
           loss_response?: string | null
@@ -339,6 +341,7 @@ export type Database = {
           experience_level?: string | null
           frequency?: string[] | null
           id?: string
+          instruments?: string[] | null
           journaling?: string[] | null
           looking_for_gender?: string | null
           loss_response?: string | null
