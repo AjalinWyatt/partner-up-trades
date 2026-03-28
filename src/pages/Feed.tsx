@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PenSquare, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import AppLayout from "@/components/AppLayout";
+import CreatePostModal from "@/components/CreatePostModal";
 import AppLayout from "@/components/AppLayout";
 import NotificationBell from "@/components/NotificationBell";
 import CommentThread from "@/components/CommentThread";
