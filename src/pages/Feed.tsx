@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PenSquare, Bell, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import { PenSquare, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import NotificationBell from "@/components/NotificationBell";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
@@ -124,6 +125,15 @@ const Feed = () => {
     } else {
       await supabase.from("feed_likes").insert({ user_id: myId, entry_id: entryId });
       setEntries(prev => prev.map(e => e.id === entryId ? { ...e, liked: true, likeCount: e.likeCount + 1 } : e));
+      // Send notification to post owner (not self)
+      if (entry.user_id !== myId) {
+        await supabase.from("notifications").insert({
+          user_id: entry.user_id,
+          actor_id: myId,
+          type: "like",
+          entry_id: entryId,
+        });
+      }
     }
   };
 
@@ -147,9 +157,7 @@ const Feed = () => {
             <PenSquare className="w-5 h-5 text-muted-foreground" />
           </button>
           <span className="text-base font-black text-foreground">traders🌐world</span>
-          <button className="w-8 h-8 flex items-center justify-center">
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <NotificationBell />
         </div>
 
         {entries.length === 0 ? (
@@ -257,6 +265,7 @@ const Feed = () => {
                   </div>
                   <CommentThread
                     entryId={entry.id}
+                    entryOwnerId={entry.user_id}
                     myId={myId}
                     commentCount={entry.commentCount}
                     onCountChange={handleCommentCountChange}

@@ -16,12 +16,13 @@ interface Comment {
 
 interface CommentThreadProps {
   entryId: string;
+  entryOwnerId: string;
   myId: string | null;
   commentCount: number;
   onCountChange: (entryId: string, delta: number) => void;
 }
 
-const CommentThread = ({ entryId, myId, commentCount, onCountChange }: CommentThreadProps) => {
+const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChange }: CommentThreadProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -98,6 +99,17 @@ const CommentThread = ({ entryId, myId, commentCount, onCountChange }: CommentTh
       }]);
       onCountChange(entryId, 1);
       setText("");
+
+      // Send notification to post owner (not self)
+      if (entryOwnerId !== myId) {
+        await supabase.from("notifications").insert({
+          user_id: entryOwnerId,
+          actor_id: myId,
+          type: "comment",
+          entry_id: entryId,
+          comment_id: data.id,
+        });
+      }
     }
     setSending(false);
   };
