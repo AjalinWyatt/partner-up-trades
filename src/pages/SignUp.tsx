@@ -140,7 +140,7 @@ const SignUp = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold mt-2"
+            className="w-full h-12 bg-gradient-brand text-white hover:opacity-90 text-sm font-semibold mt-2 border-none"
           >
             {loading ? "Creating…" : "Create account"}
             {!loading && <ArrowRight className="ml-2 w-4 h-4" />}
