@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
 import { toast } from "sonner";
+import { sendNotification } from "@/lib/notifications";
 
 const CRITERIA_LABELS = ["Market", "Session", "Strategy", "Style", "Timeframe", "Experience", "Goal"];
 
@@ -74,6 +75,19 @@ const ViewProfile = () => {
         .limit(50);
       setPosts(entries || []);
 
+      // Send profile_viewed notification (not for own profile)
+      if (user && user.id !== id) {
+        const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+        const myName = myProf?.full_name || "Someone";
+        sendNotification({
+          userId: id,
+          type: "profile_viewed",
+          title: `${myName} viewed your profile`,
+          body: "They might be interested in connecting",
+          relatedUserId: user.id,
+        });
+      }
+
       setLoading(false);
     };
     load();
@@ -94,11 +108,15 @@ const ViewProfile = () => {
     } else {
       toast.success("Partner request sent!");
       setConnectionStatus("pending");
-      // Notify the receiver
-      await supabase.from("notifications").insert({
-        user_id: id,
-        actor_id: myId,
+      // Fetch my name for notification
+      const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+      const myName = myProf?.full_name || "Someone";
+      await sendNotification({
+        userId: id,
         type: "partner_request",
+        title: "New connection request",
+        body: `${myName} wants to connect with you`,
+        relatedUserId: myId,
       });
     }
     setSending(false);

@@ -6,6 +6,7 @@ import BottomNav from "@/components/BottomNav";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { sendNotification } from "@/lib/notifications";
 
 interface JournalEntry {
   id: string;
@@ -184,6 +185,36 @@ export default function TradingLog() {
     setShowForm(false);
     resetForm();
     loadEntries();
+
+    // Notify accepted partners that I just logged
+    const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
+    const myName = myProf?.full_name || "Your partner";
+    const { data: conns } = await supabase
+      .from("partner_connections")
+      .select("requester_id, receiver_id")
+      .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
+      .eq("status", "accepted");
+    for (const c of conns || []) {
+      const partnerId = c.requester_id === userId ? c.receiver_id : c.requester_id;
+      sendNotification({
+        userId: partnerId,
+        type: "partner_logged",
+        title: `${myName} just logged their session 📈`,
+        body: "Hold yourself accountable — log yours too",
+        relatedUserId: userId,
+      });
+    }
+
+    // Check streak milestones
+    const currentStreak = getStreak() + 1; // +1 for the entry we just saved
+    if ([7, 14, 30].includes(currentStreak)) {
+      sendNotification({
+        userId,
+        type: "streak_milestone",
+        title: `🔥 ${currentStreak} day streak!`,
+        body: `You've logged ${currentStreak} days in a row. Keep going.`,
+      });
+    }
   }
 
   function resetForm() {

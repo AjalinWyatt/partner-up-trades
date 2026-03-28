@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Heart, MessageCircle, UserPlus, UserCheck, Bell, CheckCheck } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, UserPlus, UserCheck, Bell, CheckCheck, Eye, Target, Flame, AlertTriangle, BookOpen } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 
-type FilterType = "all" | "like" | "comment" | "partner_request" | "partner_accepted";
+type FilterType = "all" | "activity" | "partners" | "streaks";
 
 interface Notification {
   id: string;
   actor_id: string;
   type: string;
+  title: string | null;
+  body: string | null;
   entry_id: string | null;
   read: boolean;
   created_at: string;
@@ -21,11 +23,43 @@ interface Notification {
 
 const FILTERS: { key: FilterType; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "like", label: "Likes" },
-  { key: "comment", label: "Comments" },
-  { key: "partner_request", label: "Requests" },
-  { key: "partner_accepted", label: "Accepted" },
+  { key: "activity", label: "Activity" },
+  { key: "partners", label: "Partners" },
+  { key: "streaks", label: "Streaks" },
 ];
+
+const FILTER_TYPES: Record<FilterType, string[]> = {
+  all: [],
+  activity: ["post_liked", "post_commented", "profile_viewed", "new_match", "like", "comment"],
+  partners: ["partner_request", "partner_accepted", "partner_inactive", "partner_support", "partner_logged"],
+  streaks: ["streak_warning", "streak_milestone"],
+};
+
+const TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; route: string }> = {
+  partner_request:  { icon: <UserPlus className="w-4 h-4" />,       color: "text-primary bg-primary/15",         route: "/partners" },
+  partner_accepted: { icon: <UserCheck className="w-4 h-4" />,      color: "text-success bg-success/15",         route: "/messages" },
+  partner_inactive: { icon: <AlertTriangle className="w-4 h-4" />,  color: "text-orange-400 bg-orange-400/15",   route: "/messages" },
+  partner_support:  { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/messages" },
+  post_liked:       { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/feed" },
+  post_commented:   { icon: <MessageCircle className="w-4 h-4" />,  color: "text-primary bg-primary/15",         route: "/feed" },
+  profile_viewed:   { icon: <Eye className="w-4 h-4" />,            color: "text-accent-foreground bg-accent/15", route: "/partners" },
+  new_match:        { icon: <Target className="w-4 h-4" />,         color: "text-success bg-success/15",         route: "/discover" },
+  streak_warning:   { icon: <Flame className="w-4 h-4" />,          color: "text-orange-400 bg-orange-400/15",   route: "/log" },
+  streak_milestone: { icon: <Flame className="w-4 h-4" />,          color: "text-success bg-success/15",         route: "/log" },
+  partner_logged:   { icon: <BookOpen className="w-4 h-4" />,       color: "text-primary bg-primary/15",         route: "/log" },
+  like:             { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/feed" },
+  comment:          { icon: <MessageCircle className="w-4 h-4" />,  color: "text-primary bg-primary/15",         route: "/feed" },
+};
+
+const fallbackTypeText = (type: string) => {
+  switch (type) {
+    case "like": case "post_liked": return "liked your post";
+    case "comment": case "post_commented": return "commented on your post";
+    case "partner_request": return "sent you a partner request";
+    case "partner_accepted": return "accepted your partner request";
+    default: return "interacted with you";
+  }
+};
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -43,8 +77,9 @@ const Notifications = () => {
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (filter !== "all") {
-      query = query.eq("type", filter);
+    const typeFilter = FILTER_TYPES[filter];
+    if (typeFilter.length > 0) {
+      query = query.in("type", typeFilter);
     }
 
     const { data: notifs } = await query;
@@ -110,38 +145,23 @@ const Notifications = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  const markRead = async (id: string) => {
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const handleClick = async (n: Notification) => {
+    if (!n.read) {
+      await supabase.from("notifications").update({ read: true }).eq("id", n.id);
+      setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+    }
+    const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.like;
+    navigate(config.route);
   };
 
-  const handleClick = (n: Notification) => {
-    if (!n.read) markRead(n.id);
-    if (n.type === "like" || n.type === "comment") {
-      navigate("/feed");
-    } else if (n.type === "partner_request" || n.type === "partner_accepted") {
-      navigate("/partners");
-    }
+  const getDisplayTitle = (n: Notification) => {
+    if (n.title) return n.title;
+    return `${n.actorName} ${fallbackTypeText(n.type)}`;
   };
 
-  const typeIcon = (type: string) => {
-    switch (type) {
-      case "like": return <Heart className="w-3.5 h-3.5 text-destructive" />;
-      case "comment": return <MessageCircle className="w-3.5 h-3.5 text-primary" />;
-      case "partner_request": return <UserPlus className="w-3.5 h-3.5 text-accent-foreground" />;
-      case "partner_accepted": return <UserCheck className="w-3.5 h-3.5 text-success" />;
-      default: return <Bell className="w-3.5 h-3.5 text-muted-foreground" />;
-    }
-  };
-
-  const typeText = (type: string) => {
-    switch (type) {
-      case "like": return "liked your post";
-      case "comment": return "commented on your post";
-      case "partner_request": return "sent you a partner request";
-      case "partner_accepted": return "accepted your partner request";
-      default: return "interacted with you";
-    }
+  const getDisplayBody = (n: Notification) => {
+    if (n.body) return n.body;
+    return fallbackTypeText(n.type);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -191,52 +211,48 @@ const Notifications = () => {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Bell className="w-7 h-7 text-muted-foreground" />
             </div>
-            <p className="text-sm font-semibold text-foreground mb-1">No notifications</p>
+            <p className="text-sm font-semibold text-foreground mb-1">You're all caught up ✓</p>
             <p className="text-xs text-muted-foreground max-w-[260px]">
               {filter === "all"
-                ? "When someone likes, comments, or connects with you, it'll show up here."
+                ? "When someone interacts with you, it'll show up here."
                 : `No ${FILTERS.find(f => f.key === filter)?.label.toLowerCase()} notifications yet.`}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {notifications.map(n => (
-              <button
-                key={n.id}
-                onClick={() => handleClick(n)}
-                className={`w-full flex items-start gap-3 px-5 py-3.5 text-left transition-colors hover:bg-muted/30 ${
-                  !n.read ? "bg-primary/5" : ""
-                }`}
-              >
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                  {n.actorAvatar ? (
-                    <img src={n.actorAvatar} className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-black text-primary-foreground">
-                      {getInitials(n.actorName)}
-                    </div>
-                  )}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-card flex items-center justify-center">
-                    {typeIcon(n.type)}
+            {notifications.map(n => {
+              const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.like;
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  className={`w-full flex items-start gap-3 px-5 py-3.5 text-left transition-colors hover:bg-muted/30 ${
+                    !n.read ? "bg-primary/5" : ""
+                  }`}
+                >
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
+                    {config.icon}
                   </div>
-                </div>
 
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-foreground leading-snug">
-                    <span className="font-bold">{n.actorName}</span>{" "}
-                    <span className="text-muted-foreground">{typeText(n.type)}</span>
-                  </p>
-                  <span className="text-[10px] text-muted-foreground mt-0.5 block">
-                    @{n.actorUsername} · {timeAgo(n.created_at)}
-                  </span>
-                </div>
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground leading-snug">
+                      {getDisplayTitle(n)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+                      {getDisplayBody(n)}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
+                      {timeAgo(n.created_at)}
+                    </span>
+                  </div>
 
-                {/* Unread dot */}
-                {!n.read && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-2" />}
-              </button>
-            ))}
+                  {/* Unread dot */}
+                  {!n.read && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-2" />}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

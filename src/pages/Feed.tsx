@@ -6,6 +6,7 @@ import NotificationBell from "@/components/NotificationBell";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
+import { sendNotification } from "@/lib/notifications";
 
 interface FeedEntry {
   id: string;
@@ -156,11 +157,15 @@ const Feed = () => {
       setEntries(prev => prev.map(e => e.id === entryId ? { ...e, liked: true, likeCount: e.likeCount + 1 } : e));
       // Send notification to post owner (not self)
       if (entry.user_id !== myId) {
-        await supabase.from("notifications").insert({
-          user_id: entry.user_id,
-          actor_id: myId,
-          type: "like",
-          entry_id: entryId,
+        const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+        const myName = myProf?.full_name || "Someone";
+        await sendNotification({
+          userId: entry.user_id,
+          type: "post_liked",
+          title: `${myName} liked your session`,
+          body: `Your ${entry.market_pair || "trading"} session post got a like`,
+          relatedUserId: myId,
+          entryId,
         });
       }
     }

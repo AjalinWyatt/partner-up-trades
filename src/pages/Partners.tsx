@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
+import { sendNotification } from "@/lib/notifications";
 
 interface Alert {
   userId: string;
@@ -209,10 +210,14 @@ const Partners = () => {
     setPending(prev => prev.filter(p => p.connectionId !== connectionId));
     // Notify the requester
     if (myId) {
-      await supabase.from("notifications").insert({
-        user_id: requesterId,
-        actor_id: myId,
+      const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+      const myName = myProf?.full_name || "Someone";
+      await sendNotification({
+        userId: requesterId,
         type: "partner_accepted",
+        title: "Connection accepted 🎉",
+        body: `${myName} accepted your request. Say hi!`,
+        relatedUserId: myId,
       });
     }
   };

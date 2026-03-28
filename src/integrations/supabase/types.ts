@@ -150,31 +150,40 @@ export type Database = {
       notifications: {
         Row: {
           actor_id: string
+          body: string | null
           comment_id: string | null
           created_at: string
           entry_id: string | null
           id: string
           read: boolean
+          related_user_id: string | null
+          title: string | null
           type: string
           user_id: string
         }
         Insert: {
           actor_id: string
+          body?: string | null
           comment_id?: string | null
           created_at?: string
           entry_id?: string | null
           id?: string
           read?: boolean
+          related_user_id?: string | null
+          title?: string | null
           type: string
           user_id: string
         }
         Update: {
           actor_id?: string
+          body?: string | null
           comment_id?: string | null
           created_at?: string
           entry_id?: string | null
           id?: string
           read?: boolean
+          related_user_id?: string | null
+          title?: string | null
           type?: string
           user_id?: string
         }
