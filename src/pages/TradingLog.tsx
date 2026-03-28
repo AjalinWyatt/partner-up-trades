@@ -37,17 +37,25 @@ const RESULTS = [
 
 const ACCOUNT_TYPES = ["Demo", "Challenge", "Funded", "Live"];
 
-const TAGS = [
-  "Followed plan", "FOMO entry", "Clean entry", "Moved stop",
-  "Revenge trade", "Held to TP", "Cut early", "Overtraded", "Patience",
+const GREEN_TAGS = [
+  "Followed plan", "Clean entry", "Held to TP", "Took partials", "Patient",
+  "Let it run", "Good risk management", "Waited for confirmation",
+  "Stuck to sizing", "Trusted the setup", "Journaled before trading", "No revenge trade",
 ];
+const RED_TAGS = [
+  "FOMO entry", "Moved stop", "Revenge trade", "Cut early", "Overtraded",
+  "Sized up too fast", "No plan", "Chased price", "Broke rules",
+  "Emotional trade", "Didn't journal", "Tilted after loss", "Entered too early", "Exited too early",
+];
+const NEUTRAL_TAGS = [
+  "Learning day", "Studied after session", "Reviewed charts", "Took a break",
+  "Skipped session", "Low volume day", "News event",
+];
+const ALL_TAGS = [...GREEN_TAGS, ...RED_TAGS, ...NEUTRAL_TAGS];
 
-const GOOD_TAGS = ["Followed plan", "Clean entry", "Held to TP", "Patience", "Stuck to plan", "Good entry", "Textbook", "Let it run"];
-const BAD_TAGS = ["FOMO entry", "Moved stop", "Revenge trade", "Overtraded", "Cut early"];
-
-function getTagType(tag: string) {
-  if (GOOD_TAGS.includes(tag)) return "right";
-  if (BAD_TAGS.includes(tag)) return "wrong";
+function getTagType(tag: string): "green" | "red" | "neutral" {
+  if (GREEN_TAGS.includes(tag)) return "green";
+  if (RED_TAGS.includes(tag)) return "red";
   return "neutral";
 }
 
