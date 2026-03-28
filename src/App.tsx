@@ -12,6 +12,8 @@ import Profile from "./pages/Profile";
 import ViewProfile from "./pages/ViewProfile";
 import Placeholder from "./pages/Placeholder";
 import Discover from "./pages/Discover";
+import Messages from "./pages/Messages";
+import TradingLog from "./pages/TradingLog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
