@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Grid3x3, MapPin, LogOut } from "lucide-react";
+import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Grid3x3, MapPin, LogOut, Sun, Moon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -70,6 +70,7 @@ const Profile = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -268,6 +269,28 @@ const Profile = () => {
             <EditField label="State / Region / Province" value={editState} onChange={setEditState} placeholder="State / Region" />
             <EditField label="Country" value={editCountry} onChange={setEditCountry} placeholder="Country" />
             <EditField label="Gender" value={editGender} onChange={setEditGender} placeholder="Gender" />
+
+            {/* Appearance */}
+            <div className="pt-2">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
+              <div className="flex items-center justify-between bg-secondary border border-border rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                  {isDark ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-muted-foreground" />}
+                  <span className="text-sm text-foreground">Dark mode</span>
+                </div>
+                <button
+                  onClick={() => {
+                    const next = !isDark;
+                    setIsDark(next);
+                    document.documentElement.classList.toggle("dark", next);
+                    localStorage.setItem("theme", next ? "dark" : "light");
+                  }}
+                  className={`relative w-10 h-[22px] rounded-full transition-colors ${isDark ? "bg-primary" : "bg-muted"}`}
+                >
+                  <div className={`absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform ${isDark ? "left-[20px]" : "left-[2px]"}`} />
+                </button>
+              </div>
+            </div>
 
             <div className="pt-3">
               <button
