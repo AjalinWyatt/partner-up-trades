@@ -154,8 +154,11 @@ const Landing = () => {
             <h1 className="font-['Gabarito'] text-[clamp(44px,6vw,72px)] font-black text-white leading-[1.02] tracking-[-0.04em] mb-5">
               The Accountability<br />Platform for<br /><span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">Serious Traders.</span>
             </h1>
-            <p className="text-lg text-white/55 leading-relaxed mb-9 max-w-[480px] mx-auto lg:mx-0">
-              One dedicated partner. One daily check-in. No Discord chaos, no dead group chats. Structured accountability that keeps you in the game.
+            <p className="text-lg text-white/55 leading-relaxed mb-4 max-w-[480px] mx-auto lg:mx-0">
+              Most traders don't fail because of strategy. They fall off because they're doing it alone.
+            </p>
+            <p className="text-base text-white/40 leading-relaxed mb-9 max-w-[480px] mx-auto lg:mx-0 italic">
+              This journey isn't meant to be walked alone.
             </p>
             <div className="flex gap-3 flex-wrap mb-[52px] justify-center lg:justify-start">
               <button onClick={() => navigate("/signup")} className="px-[30px] py-[15px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all inline-flex items-center gap-2">
