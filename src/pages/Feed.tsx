@@ -148,9 +148,7 @@ const Feed = () => {
             <PenSquare className="w-5 h-5 text-muted-foreground" />
           </button>
           <span className="text-base font-black text-foreground">traders🌐world</span>
-          <button className="w-8 h-8 flex items-center justify-center">
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <NotificationBell />
         </div>
 
         {entries.length === 0 ? (
