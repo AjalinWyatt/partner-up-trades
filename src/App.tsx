@@ -15,6 +15,7 @@ import Discover from "./pages/Discover";
 import Messages from "./pages/Messages";
 import TradingLog from "./pages/TradingLog";
 import Feed from "./pages/Feed";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/discover" element={<Discover />} />
           <Route path="/log" element={<TradingLog />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
