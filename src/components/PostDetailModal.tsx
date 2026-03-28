@@ -29,6 +29,7 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
+  const [matchScore, setMatchScore] = useState<number | null>(null);
 
   useEffect(() => {
     if (!post || !open) return;
@@ -43,6 +44,15 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
       setLikeCount(likes?.length || 0);
       setLiked((myLike?.length || 0) > 0);
       setCommentCount(comments?.length || 0);
+
+      if (myId && post.user_id !== myId) {
+        const { data: conn } = await supabase.from("partner_connections").select("match_score")
+          .or(`and(requester_id.eq.${myId},receiver_id.eq.${post.user_id}),and(requester_id.eq.${post.user_id},receiver_id.eq.${myId})`)
+          .eq("status", "accepted").maybeSingle();
+        setMatchScore(conn?.match_score ?? null);
+      } else {
+        setMatchScore(null);
+      }
     };
     load();
   }, [post?.id, open, myId]);
@@ -97,9 +107,16 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
                 )}
               </button>
               <div className="flex-1 min-w-0">
-                <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
-                  {profile?.username || "trader"}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
+                    {profile?.username || "trader"}
+                  </button>
+                  {matchScore && post.user_id !== myId && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
+                      {matchScore}% match
+                    </span>
+                  )}
+                </div>
                 <div className="text-[9px] text-muted-foreground">{timeAgo(post.created_at)}</div>
               </div>
             </div>
