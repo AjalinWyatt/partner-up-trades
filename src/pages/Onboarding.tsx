@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,13 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [traderCount, setTraderCount] = useState(0);
+  const [partnershipCount, setPartnershipCount] = useState(0);
+
+  useEffect(() => {
+    supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
+    supabase.from("partner_connections").select("*", { count: "exact", head: true }).eq("status", "accepted").then(({ count }) => setPartnershipCount(count ?? 0));
+  }, []);
 
   // Step 1
   const [nickname, setNickname] = useState("");
@@ -89,8 +96,11 @@ const Onboarding = () => {
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] mb-8">
               Find your accountability partner, circle, or crew — matched to how you actually trade.
             </p>
-            <div className="flex gap-7">
-              {[{ num: "12K+", label: "Active traders" }, { num: "3.2K", label: "Partnerships" }, { num: "850+", label: "Groups" }].map(s => (
+            <div className="flex gap-14">
+              {[
+                { num: traderCount.toLocaleString(), label: "Active traders" },
+                { num: partnershipCount.toLocaleString(), label: "Partnerships" },
+              ].map(s => (
                 <div key={s.label}>
                   <div className="text-[22px] font-black text-gradient-accent">{s.num}</div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{s.label}</div>
