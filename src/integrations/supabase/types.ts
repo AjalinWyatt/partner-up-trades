@@ -241,6 +241,8 @@ export type Database = {
         Row: {
           avatar_url: string | null
           chart_prompts: string[] | null
+          city: string | null
+          country: string | null
           created_at: string | null
           full_name: string | null
           gender: string | null
@@ -249,12 +251,15 @@ export type Database = {
           location: string | null
           off_chart_prompts: string[] | null
           onboarding_completed: boolean | null
+          state: string | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           chart_prompts?: string[] | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           full_name?: string | null
           gender?: string | null
@@ -263,12 +268,15 @@ export type Database = {
           location?: string | null
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
+          state?: string | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           chart_prompts?: string[] | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           full_name?: string | null
           gender?: string | null
@@ -277,6 +285,7 @@ export type Database = {
           location?: string | null
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
+          state?: string | null
           updated_at?: string | null
           username?: string | null
         }

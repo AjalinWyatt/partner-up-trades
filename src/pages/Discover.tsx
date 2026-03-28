@@ -12,6 +12,9 @@ interface MatchCandidate {
   full_name: string | null;
   avatar_url: string | null;
   location: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   markets: string[];
   trading_style: string[];
   experience_level: string | null;
@@ -133,26 +136,65 @@ const Discover = () => {
       const tradingMap = new Map<string, any>();
       (allTrading || []).forEach((t) => tradingMap.set(t.user_id, t));
 
+      // Get my profile for location matching
+      const { data: myProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const myReach = myTrading?.connection_reach;
+
       const candidates: MatchCandidate[] = allProfiles
-        .map((p) => {
+        .map((p: any) => {
           const t = tradingMap.get(p.id);
           const { pct, reasons } = computeMatch(myTrading, t);
+
+          // Location bonus for Local reach
+          let locationBonus = 0;
+          if (myReach === "Local" && myProfile) {
+            if (myProfile.country && p.country && myProfile.country.toLowerCase() === p.country.toLowerCase()) {
+              locationBonus += 5;
+              if (myProfile.state && p.state && myProfile.state.toLowerCase() === p.state.toLowerCase()) {
+                locationBonus += 5;
+                if (myProfile.city && p.city && myProfile.city.toLowerCase() === p.city.toLowerCase()) {
+                  locationBonus += 5;
+                  reasons.push("Same city");
+                }
+              }
+            }
+          }
+
+          // Format display location
+          const locParts = [p.city, p.state, p.country].filter(Boolean);
+          const displayLoc = locParts.length > 0 ? locParts.join(", ") : p.location;
+
           return {
             id: p.id,
             username: p.username,
             full_name: p.full_name,
             avatar_url: p.avatar_url,
-            location: p.location,
+            location: displayLoc,
+            city: p.city,
+            state: p.state,
+            country: p.country,
             markets: t?.markets || [],
             trading_style: t?.trading_style || [],
             experience_level: t?.experience_level || null,
             sessions: t?.sessions || [],
             strategies: t?.strategies || [],
-            matchPct: pct,
+            matchPct: Math.min(pct + locationBonus, 100),
             whyMatch: reasons.slice(0, 2).join(" · "),
           };
         })
-        .sort((a, b) => b.matchPct - a.matchPct);
+        .filter((c: MatchCandidate) => {
+          // For Local reach, only show users in the same country
+          if (myReach === "Local" && myProfile?.country) {
+            return c.country && c.country.toLowerCase() === myProfile.country.toLowerCase();
+          }
+          return true;
+        })
+        .sort((a: MatchCandidate, b: MatchCandidate) => b.matchPct - a.matchPct);
 
       setMatches(candidates);
       setLoading(false);

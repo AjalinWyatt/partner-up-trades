@@ -13,6 +13,9 @@ interface ProfileData {
   avatar_url: string | null;
   gender: string | null;
   location: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   hobbies: string[];
   chart_prompts: string[];
   off_chart_prompts: string[];
@@ -53,7 +56,9 @@ const Profile = () => {
   // Edit state
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
-  const [editLocation, setEditLocation] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editState, setEditState] = useState("");
+  const [editCountry, setEditCountry] = useState("");
   const [editGender, setEditGender] = useState("");
 
   const [partnerCount, setPartnerCount] = useState(0);
@@ -73,10 +78,12 @@ const Profile = () => {
       ]);
 
       if (pData) {
-        setProfile(pData);
+        setProfile(pData as any);
         setEditName(pData.full_name || "");
         setEditUsername(pData.username || "");
-        setEditLocation(pData.location || "");
+        setEditCity((pData as any).city || "");
+        setEditState((pData as any).state || "");
+        setEditCountry((pData as any).country || "");
         setEditGender(pData.gender || "");
       }
       if (tData) setTradingProfile(tData);
@@ -110,20 +117,28 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!userId) return;
     setSaving(true);
+    const locationParts = [editCity, editState, editCountry].filter(Boolean);
+    const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
     const { error } = await supabase.from("profiles").update({
       full_name: editName || null,
       username: editUsername || null,
-      location: editLocation || null,
+      location: locationStr,
+      city: editCity || null,
+      state: editState || null,
+      country: editCountry || null,
       gender: editGender || null,
       updated_at: new Date().toISOString(),
-    }).eq("id", userId);
+    } as any).eq("id", userId);
     setSaving(false);
     if (error) { toast.error("Failed to save"); return; }
     setProfile(prev => prev ? {
       ...prev,
       full_name: editName || null,
       username: editUsername || null,
-      location: editLocation || null,
+      location: locationStr,
+      city: editCity || null,
+      state: editState || null,
+      country: editCountry || null,
       gender: editGender || null,
     } : prev);
     setEditing(false);
@@ -137,6 +152,16 @@ const Profile = () => {
 
   const displayName = profile?.full_name || "Your Name";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
+  const displayLocation = (() => {
+    if (!profile) return null;
+    const { city, state, country } = profile;
+    if (city && state && !country) return `${city}, ${state}`;
+    if (city && state && country) return `${city}, ${state}, ${country}`;
+    if (city && country) return `${city}, ${country}`;
+    if (city) return city;
+    if (country) return country;
+    return profile.location || null;
+  })();
 
   const detailSections = [
     { title: "Markets", data: tradingProfile?.markets },
@@ -220,11 +245,27 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Location</label>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">City</label>
               <input
-                value={editLocation} onChange={e => setEditLocation(e.target.value)}
+                value={editCity} onChange={e => setEditCity(e.target.value)}
                 className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
-                placeholder="City, Country"
+                placeholder="City"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">State / Region / Province</label>
+              <input
+                value={editState} onChange={e => setEditState(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="State / Region / Province"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Country</label>
+              <input
+                value={editCountry} onChange={e => setEditCountry(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="Country"
               />
             </div>
             <div>
@@ -317,13 +358,13 @@ const Profile = () => {
             </div>
           </div>
           {profile?.gender && <div className="text-[11px] text-muted-foreground mt-0.5">{profile.gender}</div>}
-          {profile?.location && (
+          {displayLocation && (
             <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              {profile.location}
+              {displayLocation}
             </div>
           )}
         </div>
