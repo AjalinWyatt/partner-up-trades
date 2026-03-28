@@ -294,25 +294,37 @@ const Feed = () => {
                 </div>
 
                 {/* Post Body */}
-                {entry.notes && <p className="text-xs text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
+                {entry.type === "post" && entry.image_url && (
+                  <div className="rounded-xl overflow-hidden mb-2.5 -mx-3.5">
+                    <img src={entry.image_url} alt="" className="w-full object-cover" />
+                  </div>
+                )}
+                {entry.type === "post" && entry.caption && (
+                  <p className="text-xs text-foreground mb-2.5 leading-relaxed">
+                    <span className="font-bold mr-1">{entry.username}</span>{entry.caption}
+                  </p>
+                )}
+                {entry.type === "journal" && entry.notes && <p className="text-xs text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
 
-                {/* Result + Tags */}
-                <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-                  {entry.result && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      entry.result === "Win"
-                        ? "text-success bg-success/15"
-                        : entry.result === "Loss"
-                        ? "text-destructive bg-destructive/15"
-                        : "text-muted-foreground bg-muted"
-                    }`}>
-                      {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
-                    </span>
-                  )}
-                  {entry.tags?.slice(0, 3).map((t) => (
-                    <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
-                  ))}
-                </div>
+                {/* Result + Tags (journal only) */}
+                {entry.type === "journal" && (
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+                    {entry.result && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        entry.result === "Win"
+                          ? "text-success bg-success/15"
+                          : entry.result === "Loss"
+                          ? "text-destructive bg-destructive/15"
+                          : "text-muted-foreground bg-muted"
+                      }`}>
+                        {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
+                      </span>
+                    )}
+                    {entry.tags?.slice(0, 3).map((t) => (
+                      <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="pt-1 border-t border-border">
