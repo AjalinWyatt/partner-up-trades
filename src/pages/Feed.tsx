@@ -4,6 +4,7 @@ import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye } from "lucide-r
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
+import PostDetailModal from "@/components/PostDetailModal";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
@@ -44,6 +45,7 @@ const Feed = () => {
   const [myId, setMyId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
 
   const loadFeed = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -295,9 +297,9 @@ const Feed = () => {
 
                 {/* Post Body */}
                 {entry.type === "post" && entry.image_url && (
-                  <div className="rounded-xl overflow-hidden mb-2.5 -mx-3.5">
+                  <button onClick={() => setSelectedPost(entry)} className="rounded-xl overflow-hidden mb-2.5 -mx-3.5 w-[calc(100%+1.75rem)]">
                     <img src={entry.image_url} alt="" className="w-full object-cover" />
-                  </div>
+                  </button>
                 )}
                 {entry.type === "post" && entry.caption && (
                   <p className="text-xs text-foreground mb-2.5 leading-relaxed">
@@ -352,6 +354,12 @@ const Feed = () => {
         )}
       </div>
       <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={loadFeed} />
+      <PostDetailModal
+        open={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        post={selectedPost}
+        myId={myId}
+      />
     </AppLayout>
   );
 };

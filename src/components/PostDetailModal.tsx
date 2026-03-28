@@ -1,0 +1,142 @@
+import { useState, useEffect } from "react";
+import { Heart, X } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import CommentThread from "@/components/CommentThread";
+import { supabase } from "@/integrations/supabase/client";
+import { getInitials, timeAgo } from "@/lib/matchUtils";
+import { sendNotification } from "@/lib/notifications";
+import { useNavigate } from "react-router-dom";
+
+interface PostDetailModalProps {
+  open: boolean;
+  onClose: () => void;
+  post: {
+    id: string;
+    user_id: string;
+    image_url: string;
+    caption?: string | null;
+    created_at: string;
+  } | null;
+  myId: string | null;
+}
+
+const PostDetailModal = ({ open, onClose, post, myId }: PostDetailModalProps) => {
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<{ username: string; full_name: string; avatar_url: string | null } | null>(null);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
+
+  useEffect(() => {
+    if (!post || !open) return;
+    const load = async () => {
+      const [{ data: prof }, { data: likes }, { data: myLike }, { data: comments }] = await Promise.all([
+        supabase.from("profiles").select("username, full_name, avatar_url").eq("id", post.user_id).single(),
+        supabase.from("feed_likes").select("id").eq("entry_id", post.id),
+        myId ? supabase.from("feed_likes").select("id").eq("entry_id", post.id).eq("user_id", myId) : Promise.resolve({ data: [] }),
+        supabase.from("feed_comments").select("id").eq("entry_id", post.id),
+      ]);
+      setProfile(prof || { username: "trader", full_name: "Trader", avatar_url: null });
+      setLikeCount(likes?.length || 0);
+      setLiked((myLike?.length || 0) > 0);
+      setCommentCount(comments?.length || 0);
+    };
+    load();
+  }, [post?.id, open, myId]);
+
+  const toggleLike = async () => {
+    if (!myId || !post) return;
+    if (liked) {
+      await supabase.from("feed_likes").delete().eq("user_id", myId).eq("entry_id", post.id);
+      setLiked(false);
+      setLikeCount(c => c - 1);
+    } else {
+      await supabase.from("feed_likes").insert({ user_id: myId, entry_id: post.id });
+      setLiked(true);
+      setLikeCount(c => c + 1);
+      if (post.user_id !== myId) {
+        const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+        await sendNotification({
+          userId: post.user_id,
+          type: "post_liked",
+          title: `${myProf?.full_name || "Someone"} liked your post`,
+          body: post.caption?.slice(0, 50) || "Your post got a like",
+          relatedUserId: myId,
+          entryId: post.id,
+        });
+      }
+    }
+  };
+
+  if (!post) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="max-w-3xl p-0 overflow-hidden bg-card border-border rounded-xl max-h-[90vh]">
+        <VisuallyHidden><DialogTitle>Post Detail</DialogTitle></VisuallyHidden>
+        <div className="flex flex-col md:flex-row max-h-[90vh]">
+          {/* Image */}
+          <div className="md:w-[60%] bg-black flex items-center justify-center min-h-[300px] max-h-[60vh] md:max-h-none">
+            <img src={post.image_url} alt="" className="w-full h-full object-contain" />
+          </div>
+
+          {/* Details */}
+          <div className="md:w-[40%] flex flex-col overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 p-3 border-b border-border">
+              <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }}>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[10px] font-black text-primary-foreground">
+                    {getInitials(profile?.full_name || "T")}
+                  </div>
+                )}
+              </button>
+              <div className="flex-1 min-w-0">
+                <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
+                  {profile?.username || "trader"}
+                </button>
+                <div className="text-[9px] text-muted-foreground">{timeAgo(post.created_at)}</div>
+              </div>
+            </div>
+
+            {/* Caption */}
+            {post.caption && (
+              <div className="px-3 py-2.5 border-b border-border">
+                <p className="text-xs text-foreground leading-relaxed">
+                  <span className="font-bold mr-1">{profile?.username}</span>{post.caption}
+                </p>
+              </div>
+            )}
+
+            {/* Comments */}
+            <div className="flex-1 px-3 py-2 overflow-y-auto">
+              <CommentThread
+                entryId={post.id}
+                entryOwnerId={post.user_id}
+                myId={myId}
+                commentCount={commentCount}
+                onCountChange={(_, delta) => setCommentCount(c => c + delta)}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="border-t border-border px-3 py-2.5">
+              <div className="flex items-center gap-4">
+                <button onClick={toggleLike} className="flex items-center gap-1.5">
+                  <Heart className={`w-5 h-5 ${liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                  {likeCount > 0 && <span className="text-xs text-muted-foreground">{likeCount}</span>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default PostDetailModal;

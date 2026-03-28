@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Save, LogOut, Grid3x3 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
+import PostDetailModal from "@/components/PostDetailModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -65,6 +66,7 @@ const Profile = () => {
   const [partnerCount, setPartnerCount] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -421,7 +423,7 @@ const Profile = () => {
           posts.length > 0 ? (
             <div className="grid grid-cols-3 gap-0.5 pb-8">
               {posts.map((post: any) => (
-                <button key={post.id} className="aspect-square overflow-hidden bg-muted">
+                <button key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square overflow-hidden bg-muted">
                   <img src={post.image_url} alt="" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
                 </button>
               ))}
@@ -495,6 +497,12 @@ const Profile = () => {
           const { data } = await supabase.from("posts" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
           setPosts(data || []);
         }}
+      />
+      <PostDetailModal
+        open={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        post={selectedPost}
+        myId={userId}
       />
     </AppLayout>
   );
