@@ -275,25 +275,19 @@ const Profile = () => {
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
               <div className="flex items-center justify-between bg-secondary border border-border rounded-xl px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                  {document.documentElement.classList.contains("dark") ? (
-                    <Moon className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <Sun className="w-4 h-4 text-muted-foreground" />
-                  )}
+                  {isDark ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-muted-foreground" />}
                   <span className="text-sm text-foreground">Dark mode</span>
                 </div>
                 <button
                   onClick={() => {
-                    const isDark = document.documentElement.classList.toggle("dark");
-                    localStorage.setItem("theme", isDark ? "dark" : "light");
+                    const next = !isDark;
+                    setIsDark(next);
+                    document.documentElement.classList.toggle("dark", next);
+                    localStorage.setItem("theme", next ? "dark" : "light");
                   }}
-                  className={`relative w-10 h-[22px] rounded-full transition-colors ${
-                    document.documentElement.classList.contains("dark") ? "bg-primary" : "bg-muted"
-                  }`}
+                  className={`relative w-10 h-[22px] rounded-full transition-colors ${isDark ? "bg-primary" : "bg-muted"}`}
                 >
-                  <div className={`absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform ${
-                    document.documentElement.classList.contains("dark") ? "left-[20px]" : "left-[2px]"
-                  }`} />
+                  <div className={`absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform ${isDark ? "left-[20px]" : "left-[2px]"}`} />
                 </button>
               </div>
             </div>
