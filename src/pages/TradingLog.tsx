@@ -397,26 +397,27 @@ export default function TradingLog() {
           {/* Share with */}
           <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Share this log with</p>
-            <div className="flex gap-1.5">
+            <div className="flex flex-col gap-2">
               {[
-                { value: "private", icon: Lock, label: "Private" },
-                { value: "partners", icon: Link, label: "Partners" },
+                { value: "partners", icon: Link, label: "🤝 Partners", desc: "Your accepted partners can see this in their feed and on your profile" },
+                { value: "private", icon: Lock, label: "🔒 Private", desc: "Only you can see this entry" },
               ].map((opt) => {
-                const sel = shareSettings.includes(opt.value);
-                const Icon = opt.icon;
+                const sel = shareSetting === opt.value;
                 return (
                   <button
                     key={opt.value}
-                    onClick={() => setShareSettings(sel ? shareSettings.filter((s) => s !== opt.value) : [...shareSettings, opt.value])}
+                    onClick={() => setShareSetting(opt.value)}
                     className={cn(
-                      "flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[10px] border-[1.5px] transition-colors",
+                      "flex items-start gap-3 p-3 rounded-[10px] border-[1.5px] transition-colors text-left",
                       sel
                         ? "border-accent bg-accent/[0.08]"
                         : "border-border bg-[rgba(255,255,255,0.06)]"
                     )}
                   >
-                    <Icon className={cn("w-[18px] h-[18px]", sel ? "text-accent" : "text-muted-foreground")} strokeWidth={1.6} />
-                    <span className={cn("text-[9px] font-semibold", sel ? "text-accent" : "text-muted-foreground")}>{opt.label}</span>
+                    <div className="flex flex-col">
+                      <span className={cn("text-[12px] font-bold", sel ? "text-accent" : "text-foreground")}>{opt.label}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</span>
+                    </div>
                   </button>
                 );
               })}
