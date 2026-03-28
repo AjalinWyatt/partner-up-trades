@@ -145,7 +145,6 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
                   </button>
                 )}
               </div>
-              </div>
             </div>
           </div>
         </div>
