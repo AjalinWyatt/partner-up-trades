@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Globe, ArrowLeft, Send, PenSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import BottomNav from "@/components/BottomNav";
+import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -314,9 +314,8 @@ export default function Messages() {
     );
   }
 
-  // Inbox view
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-16">
+    <AppLayout>
       <LogoHeader />
       <div className="px-4 pt-2">
         <div className="flex items-center justify-between mb-4">
@@ -386,7 +385,7 @@ export default function Messages() {
           ))}
         </div>
       )}
-      <BottomNav />
-    </div>
+      
+    </AppLayout>
   );
 }

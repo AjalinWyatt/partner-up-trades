@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Bell, MessageSquare, Check, X } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
+import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
@@ -241,17 +241,16 @@ const Partners = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background pb-14">
+      <AppLayout>
         <div className="flex-1 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
-        <BottomNav />
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-14">
+    <AppLayout>
       <div className="flex-1 overflow-y-auto">
         <div className="px-5 pt-4 pb-2">
           <h1 className="text-lg font-black text-foreground">Partners</h1>
@@ -382,8 +381,7 @@ const Partners = () => {
           </div>
         )}
       </div>
-      <BottomNav />
-    </div>
+    </AppLayout>
   );
 };
 

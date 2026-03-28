@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings, Edit, Share2, ImageIcon, Plus } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
+import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Save, LogOut } from "lucide-react";
+import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
+import { toast } from "sonner";
 
 interface ProfileData {
   username: string | null;
@@ -44,21 +45,42 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [tradingProfile, setTradingProfile] = useState<TradingProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const stats = { partners: 0, followers: 0 };
+  // Edit state
+  const [editName, setEditName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editGender, setEditGender] = useState("");
+
+  const [partnerCount, setPartnerCount] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
+      setUserId(user.id);
 
-      const [{ data: pData }, { data: tData }] = await Promise.all([
+      const [{ data: pData }, { data: tData }, { count }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("partner_connections").select("*", { count: "exact", head: true })
+          .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+          .eq("status", "accepted"),
       ]);
 
-      if (pData) setProfile(pData);
+      if (pData) {
+        setProfile(pData);
+        setEditName(pData.full_name || "");
+        setEditUsername(pData.username || "");
+        setEditLocation(pData.location || "");
+        setEditGender(pData.gender || "");
+      }
       if (tData) setTradingProfile(tData);
+      setPartnerCount(count ?? 0);
       setLoading(false);
     };
     fetchProfile();
@@ -69,10 +91,53 @@ const Profile = () => {
     return profile.full_name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+    const ext = file.name.split(".").pop() || "jpg";
+    const filePath = `${userId}/avatar.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) { toast.error("Upload failed"); return; }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    const avatarUrl = urlData.publicUrl + "?t=" + Date.now();
+    await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", userId);
+    setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : prev);
+    toast.success("Avatar updated!");
+  };
+
+  const handleSaveProfile = async () => {
+    if (!userId) return;
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({
+      full_name: editName || null,
+      username: editUsername || null,
+      location: editLocation || null,
+      gender: editGender || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", userId);
+    setSaving(false);
+    if (error) { toast.error("Failed to save"); return; }
+    setProfile(prev => prev ? {
+      ...prev,
+      full_name: editName || null,
+      username: editUsername || null,
+      location: editLocation || null,
+      gender: editGender || null,
+    } : prev);
+    setEditing(false);
+    toast.success("Profile updated!");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
   const displayName = profile?.full_name || "Your Name";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
 
-  // Detail sections - only shown if data exists
   const detailSections = [
     { title: "Markets", data: tradingProfile?.markets },
     { title: "Trading style", data: tradingProfile?.trading_style },
@@ -91,28 +156,128 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background pb-14 items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <BottomNav />
-      </div>
+      <AppLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Edit view
+  if (editing) {
+    return (
+      <AppLayout>
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex items-center justify-between px-5 pt-4 pb-3">
+            <button onClick={() => setEditing(false)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-semibold">Cancel</span>
+            </button>
+            <span className="text-base font-extrabold text-foreground">Edit Profile</span>
+            <button
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-bold text-sm"
+            >
+              {saving ? "..." : "Save"}
+            </button>
+          </div>
+
+          {/* Avatar */}
+          <div className="flex justify-center py-4">
+            <button onClick={() => avatarInputRef.current?.click()} className="relative group">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-2xl font-black text-muted-foreground">
+                  {getInitials()}
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-5 h-5 text-white" />
+              </div>
+            </button>
+            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          </div>
+
+          {/* Fields */}
+          <div className="px-5 space-y-4">
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Full Name</label>
+              <input
+                value={editName} onChange={e => setEditName(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="Your full name"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Username</label>
+              <input
+                value={editUsername} onChange={e => setEditUsername(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="username"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Location</label>
+              <input
+                value={editLocation} onChange={e => setEditLocation(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="City, Country"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Gender</label>
+              <input
+                value={editGender} onChange={e => setEditGender(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="Gender"
+              />
+            </div>
+
+            <div className="pt-4">
+              <button
+                onClick={() => navigate("/onboarding")}
+                className="w-full py-3 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+              >
+                Redo Onboarding (update trading details)
+              </button>
+            </div>
+
+            <div className="pt-2 pb-8">
+              <button
+                onClick={handleLogout}
+                className="w-full py-3 rounded-xl border border-destructive/30 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-14">
+    <AppLayout>
       {/* Nav */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <span className="text-base font-extrabold text-foreground">{displayUsername}</span>
         <div className="flex gap-2.5">
-          <Bell className="w-5 h-5 text-muted-foreground" strokeWidth={1.6} />
-          <Settings className="w-5 h-5 text-muted-foreground" strokeWidth={1.6} />
+          <button onClick={() => navigate("/notifications")}>
+            <Bell className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" strokeWidth={1.6} />
+          </button>
+          <button onClick={() => setEditing(true)}>
+            <Settings className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" strokeWidth={1.6} />
+          </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center gap-5 px-5 py-1.5">
-          <div className="relative">
+          <button onClick={() => avatarInputRef.current?.click()} className="relative group">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="Avatar" className="w-[76px] h-[76px] rounded-full object-cover" />
             ) : (
@@ -120,11 +285,15 @@ const Profile = () => {
                 {getInitials()}
               </div>
             )}
-          </div>
-          <div className="flex-1 grid grid-cols-3 text-center">
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="w-4 h-4 text-white" />
+            </div>
+          </button>
+          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          <div className="flex-1 grid grid-cols-2 text-center">
             {[
-              { n: String(stats.partners), l: "Partners" },
-              { n: String(stats.followers), l: "Followers" },
+              { n: String(partnerCount), l: "Partners" },
+              { n: "0", l: "Followers" },
             ].map(s => (
               <div key={s.l}>
                 <div className="text-lg font-black text-foreground">{s.n}</div>
@@ -139,10 +308,10 @@ const Profile = () => {
           <div className="flex items-center justify-between">
             <span className="text-sm font-extrabold text-foreground">{displayName}</span>
             <div className="flex gap-1.5">
-              <button className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+              <button onClick={() => setEditing(true)} className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-secondary transition-colors">
                 <Edit className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
               </button>
-              <button className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+              <button className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-secondary transition-colors">
                 <Share2 className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
               </button>
             </div>
@@ -163,7 +332,7 @@ const Profile = () => {
         {tradingProfile?.markets && tradingProfile.markets.length > 0 && (
           <div className="flex flex-wrap gap-1 px-5 py-1.5">
             {tradingProfile.markets.map(m => (
-              <span key={m} className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-primary to-success text-[10px] font-bold text-primary-foreground">{m}</span>
+              <span key={m} className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-primary to-[hsl(var(--success))] text-[10px] font-bold text-primary-foreground">{m}</span>
             ))}
           </div>
         )}
@@ -189,30 +358,30 @@ const Profile = () => {
               )}
             >
               {tab}
-              {activeTab === i && <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-primary to-success" />}
+              {activeTab === i && <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-primary to-[hsl(var(--success))]" />}
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
         {activeTab === 0 ? (
-          /* Posts - empty state */
           <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
             <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
               <ImageIcon className="w-6 h-6 text-muted-foreground" />
             </div>
             <p className="text-sm font-semibold text-foreground mb-1">No posts yet</p>
             <p className="text-xs text-muted-foreground mb-4">Start sharing your trading journey, setups, reflections, and progress.</p>
-            <button className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-success text-xs font-bold text-primary-foreground flex items-center gap-1.5">
+            <button
+              onClick={() => navigate("/log")}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--success))] text-xs font-bold text-primary-foreground flex items-center gap-1.5"
+            >
               <Plus className="w-3.5 h-3.5" />
               Create first post
             </button>
           </div>
         ) : (
-          /* Details tab */
           hasAnyDetails ? (
             <div className="px-5 py-3 space-y-2">
-              {/* Experience & Goals */}
               {(tradingProfile?.experience_level || (tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0)) && (
                 <div className="bg-card border border-border rounded-xl p-3">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Trading details</div>
@@ -231,7 +400,6 @@ const Profile = () => {
                 </div>
               )}
 
-              {/* Pill-based sections */}
               {detailSections.map(section => {
                 if (!section.data || section.data.length === 0) return null;
                 return (
@@ -257,8 +425,7 @@ const Profile = () => {
           )
         )}
       </div>
-      <BottomNav />
-    </div>
+    </AppLayout>
   );
 };
 
