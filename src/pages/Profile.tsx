@@ -152,6 +152,16 @@ const Profile = () => {
 
   const displayName = profile?.full_name || "Your Name";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
+  const displayLocation = (() => {
+    if (!profile) return null;
+    const { city, state, country } = profile;
+    if (city && state && !country) return `${city}, ${state}`;
+    if (city && state && country) return `${city}, ${state}, ${country}`;
+    if (city && country) return `${city}, ${country}`;
+    if (city) return city;
+    if (country) return country;
+    return profile.location || null;
+  })();
 
   const detailSections = [
     { title: "Markets", data: tradingProfile?.markets },
@@ -348,13 +358,13 @@ const Profile = () => {
             </div>
           </div>
           {profile?.gender && <div className="text-[11px] text-muted-foreground mt-0.5">{profile.gender}</div>}
-          {profile?.location && (
+          {displayLocation && (
             <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              {profile.location}
+              {displayLocation}
             </div>
           )}
         </div>
