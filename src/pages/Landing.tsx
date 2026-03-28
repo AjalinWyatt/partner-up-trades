@@ -30,7 +30,13 @@ const Landing = () => {
           className="flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-secondary"
         >
           <span className="w-2 h-2 rounded-full bg-success animate-pulse-dot" />
-          <span className="text-xs font-medium text-muted-foreground">12,000+ traders onboard</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {traderCount === null
+              ? "…"
+              : traderCount === 0
+              ? "Be the first trader to join"
+              : `${traderCount.toLocaleString()} traders onboard`}
+          </span>
         </motion.div>
 
         {/* Globe */}
