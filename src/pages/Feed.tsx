@@ -35,6 +35,8 @@ const MARKET_OPTIONS = ["All", "Forex", "Futures", "Options"] as const;
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const marketFilter = searchParams.get("market") || "All";
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
@@ -43,9 +45,6 @@ const Feed = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
-  const [marketFilter, setMarketFilter] = useState<string>("All");
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [marketCounts, setMarketCounts] = useState<Record<string, number>>({});
 
   const loadMarketCounts = useCallback(async () => {
     const { data } = await supabase.from("trading_profiles").select("markets");
