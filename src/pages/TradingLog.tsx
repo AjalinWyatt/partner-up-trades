@@ -384,8 +384,6 @@ export default function TradingLog() {
               {[
                 { value: "private", icon: Lock, label: "Private" },
                 { value: "partners", icon: Link, label: "Partners" },
-                { value: "groups", icon: Users, label: "Groups" },
-                { value: "circles", icon: Globe, label: "Circles" },
               ].map((opt) => {
                 const sel = shareSettings.includes(opt.value);
                 const Icon = opt.icon;

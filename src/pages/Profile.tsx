@@ -41,7 +41,7 @@ const Profile = () => {
   const [tradingProfile, setTradingProfile] = useState<TradingProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const stats = { partners: 0, groups: 0, followers: 0 };
+  const stats = { partners: 0, followers: 0 };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -120,7 +120,6 @@ const Profile = () => {
           <div className="flex-1 grid grid-cols-3 text-center">
             {[
               { n: String(stats.partners), l: "Partners" },
-              { n: String(stats.groups), l: "Groups" },
               { n: String(stats.followers), l: "Followers" },
             ].map(s => (
               <div key={s.l}>
