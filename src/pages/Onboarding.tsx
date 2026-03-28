@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,9 @@ const Onboarding = () => {
 
   // Step 1
   const [nickname, setNickname] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [chartPrompts, setChartPrompts] = useState<string[]>([]);
   const [offChartPrompts, setOffChartPrompts] = useState<string[]>([]);
 
