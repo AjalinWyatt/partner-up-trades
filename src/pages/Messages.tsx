@@ -178,7 +178,7 @@ export default function Messages() {
     const partnerParam = new URLSearchParams(window.location.search).get("partner");
     if (partnerParam) {
       const match = connectionList.find(c => c.partnerId === partnerParam);
-      if (match) setActiveConnectionId(match.id);
+      if (match) setActiveChat(match);
     }
   };
 
