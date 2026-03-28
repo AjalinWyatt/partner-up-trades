@@ -72,7 +72,7 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
         await sendNotification({
           userId: post.user_id,
           type: "post_liked",
-          title: `${myProf?.full_name || "Someone"} liked your post`,
+          title: `@${myProf?.full_name || "someone"} liked your post`,
           body: post.caption?.slice(0, 50) || "Your post got a like",
           relatedUserId: myId,
           entryId: post.id,

@@ -212,8 +212,8 @@ const Partners = () => {
     setPending(prev => prev.filter(p => p.connectionId !== connectionId));
     // Notify the requester
     if (myId) {
-      const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
-      const myName = myProf?.full_name || "Someone";
+      const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
+      const myName = `@${myProf?.username || "someone"}`;
       await sendNotification({
         userId: requesterId,
         type: "partner_accepted",

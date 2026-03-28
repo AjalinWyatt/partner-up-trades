@@ -187,11 +187,11 @@ const Feed = () => {
       await supabase.from("post_likes").insert({ post_id: postId, user_id: myId });
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, liked: true, likeCount: p.likeCount + 1 } : p));
       if (post.user_id !== myId) {
-        const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", myId).single();
+        const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
         await sendNotification({
           userId: post.user_id,
           type: "post_liked",
-          title: `${myProf?.full_name || "Someone"} liked your post`,
+          title: `@${myProf?.username || "someone"} liked your post`,
           body: post.content?.slice(0, 50) || "Your post got a like",
           relatedUserId: myId,
           entryId: postId,
