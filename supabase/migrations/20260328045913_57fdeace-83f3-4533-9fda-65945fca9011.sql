@@ -1,0 +1,1 @@
+ALTER TABLE public.trading_profiles ADD COLUMN IF NOT EXISTS instruments text[] DEFAULT '{}'::text[];

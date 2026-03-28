@@ -81,7 +81,7 @@ function computeMatch(
 }
 
 const FILTER_OPTIONS = {
-  market: ["Forex", "Crypto", "Stocks", "Indices", "Options", "Futures"],
+  market: ["Forex", "Futures", "Options"],
   session: ["London", "New York", "Asian"],
   experience: ["Just getting started", "Building my edge", "Consistent & growing", "Profitable trader"],
 };
