@@ -75,6 +75,19 @@ const ViewProfile = () => {
         .limit(50);
       setPosts(entries || []);
 
+      // Send profile_viewed notification (not for own profile)
+      if (user && user.id !== id) {
+        const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+        const myName = myProf?.full_name || "Someone";
+        sendNotification({
+          userId: id,
+          type: "profile_viewed",
+          title: `${myName} viewed your profile`,
+          body: "They might be interested in connecting",
+          relatedUserId: user.id,
+        });
+      }
+
       setLoading(false);
     };
     load();
