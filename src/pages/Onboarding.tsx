@@ -462,6 +462,7 @@ const Onboarding = () => {
                     .upsert({
                       user_id: user.id,
                       markets,
+                      instruments: instruments as any,
                       sessions,
                       trade_times: tradeTimes,
                       trading_style: styles,
