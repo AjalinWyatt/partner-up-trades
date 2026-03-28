@@ -178,6 +178,45 @@ const SignIn = () => {
           </button>
         </p>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+          <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-sm">
+            <h2 className="text-lg font-bold text-foreground">Reset password</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your email and we'll send you a reset link.
+            </p>
+            <form onSubmit={handleForgotPassword} className="mt-4 flex flex-col gap-4">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                required
+              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForgot(false)}
+                  className="flex-1 h-10 border-border text-foreground"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="flex-1 h-10 bg-gradient-brand text-white hover:opacity-90 border-none"
+                >
+                  {forgotLoading ? "Sending…" : "Send link"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
