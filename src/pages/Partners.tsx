@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Bell, MessageSquare } from "lucide-react";
+import { Users, Bell, MessageSquare, Check, X } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
+import { toast } from "sonner";
 
 interface Alert {
   userId: string;
@@ -43,11 +44,13 @@ const Partners = () => {
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [partners, setPartners] = useState<PartnerRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [myId, setMyId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
+      setMyId(user.id);
 
       // Pending requests where I am the receiver
       const { data: pendingData } = await supabase
@@ -193,6 +196,40 @@ const Partners = () => {
     load();
   }, []);
 
+  const handleAccept = async (connectionId: string, requesterId: string) => {
+    const { error } = await supabase
+      .from("partner_connections")
+      .update({ status: "accepted", updated_at: new Date().toISOString() })
+      .eq("id", connectionId);
+    if (error) {
+      toast.error("Failed to accept request");
+      return;
+    }
+    toast.success("Partner request accepted!");
+    setPending(prev => prev.filter(p => p.connectionId !== connectionId));
+    // Notify the requester
+    if (myId) {
+      await supabase.from("notifications").insert({
+        user_id: requesterId,
+        actor_id: myId,
+        type: "partner_accepted",
+      });
+    }
+  };
+
+  const handleDecline = async (connectionId: string) => {
+    const { error } = await supabase
+      .from("partner_connections")
+      .update({ status: "declined", updated_at: new Date().toISOString() })
+      .eq("id", connectionId);
+    if (error) {
+      toast.error("Failed to decline request");
+      return;
+    }
+    toast.success("Request declined");
+    setPending(prev => prev.filter(p => p.connectionId !== connectionId));
+  };
+
   const isEmpty = alerts.length === 0 && pending.length === 0 && partners.length === 0;
 
   if (loading) {
@@ -265,11 +302,13 @@ const Partners = () => {
                 </div>
                 {pending.map((r) => (
                   <div key={r.connectionId} className="flex items-center gap-2.5 p-2.5 bg-card border border-border rounded-xl mb-1.5">
-                    {r.avatarUrl ? (
-                      <img src={r.avatarUrl} className="w-9 h-9 rounded-full object-cover shrink-0" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-black text-primary-foreground shrink-0">{r.initials}</div>
-                    )}
+                    <button onClick={() => navigate(`/profile/${r.userId}`)} className="shrink-0">
+                      {r.avatarUrl ? (
+                        <img src={r.avatarUrl} className="w-9 h-9 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-black text-primary-foreground">{r.initials}</div>
+                      )}
+                    </button>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-bold text-foreground">{r.name}</div>
                       <div className="text-[10px] text-muted-foreground mt-0.5">
@@ -277,12 +316,20 @@ const Partners = () => {
                       </div>
                       <div className="text-[10px] font-extrabold text-success mt-0.5">{r.matchScore}% match</div>
                     </div>
-                    <button
-                      onClick={() => navigate(`/profile/${r.userId}`)}
-                      className="px-3 py-1 rounded-lg bg-gradient-to-r from-primary to-success text-[10px] font-bold text-primary-foreground shrink-0"
-                    >
-                      View Profile
-                    </button>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleDecline(r.connectionId)}
+                        className="w-8 h-8 rounded-lg bg-muted border border-border flex items-center justify-center"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => handleAccept(r.connectionId, r.userId)}
+                        className="px-3 h-8 rounded-lg bg-gradient-to-r from-primary to-success flex items-center justify-center gap-1 text-[10px] font-bold text-primary-foreground"
+                      >
+                        <Check className="w-3.5 h-3.5" /> Accept
+                      </button>
+                    </div>
                   </div>
                 ))}
               </section>

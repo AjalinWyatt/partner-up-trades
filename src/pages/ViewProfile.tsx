@@ -94,6 +94,12 @@ const ViewProfile = () => {
     } else {
       toast.success("Partner request sent!");
       setConnectionStatus("pending");
+      // Notify the receiver
+      await supabase.from("notifications").insert({
+        user_id: id,
+        actor_id: myId,
+        type: "partner_request",
+      });
     }
     setSending(false);
   };
