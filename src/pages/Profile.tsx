@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell, Settings, Edit, Share2, ImageIcon, Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface ProfileData {
   username: string | null;

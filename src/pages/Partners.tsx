@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface Alert {
   userId: string;
@@ -40,6 +41,7 @@ interface PartnerRow {
 }
 
 const Partners = () => {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [pending, setPending] = useState<PendingRequest[]>([]);

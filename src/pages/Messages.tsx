@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import BottomNav from "@/components/BottomNav";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface Connection {
   id: string;

@@ -4,6 +4,7 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface MatchCandidate {
   id: string;
@@ -87,6 +88,7 @@ const FILTER_OPTIONS = {
 };
 
 const Discover = () => {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [matches, setMatches] = useState<MatchCandidate[]>([]);
   const [loading, setLoading] = useState(true);
