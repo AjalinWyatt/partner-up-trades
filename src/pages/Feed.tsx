@@ -107,6 +107,12 @@ const Feed = () => {
     load();
   }, []);
 
+  const handleCommentCountChange = (entryId: string, delta: number) => {
+    setEntries(prev => prev.map(e =>
+      e.id === entryId ? { ...e, commentCount: e.commentCount + delta } : e
+    ));
+  };
+
   const toggleLike = async (entryId: string) => {
     if (!myId) return;
     const entry = entries.find(e => e.id === entryId);
