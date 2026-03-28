@@ -105,6 +105,15 @@ const ViewProfile = () => {
         .order("created_at", { ascending: false });
       setPosts(postsData || []);
 
+      // Load forum activity
+      const { data: forumPosts } = await supabase
+        .from("forum_posts")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setForumActivity(forumPosts || []);
+
       if (user && user.id !== id) {
         const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
         sendNotification({
