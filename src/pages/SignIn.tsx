@@ -26,7 +26,7 @@ const SignIn = () => {
           .select("onboarding_completed")
           .eq("id", session.user.id)
           .maybeSingle();
-        navigate(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
+        navigate(profile?.onboarding_completed ? "/feed" : "/onboarding");
       }
     };
     checkSession();
@@ -55,7 +55,7 @@ const SignIn = () => {
         .eq("id", data.user.id)
         .maybeSingle();
       console.log("[SignIn] Profile:", profile);
-      navigate(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
+      navigate(profile?.onboarding_completed ? "/feed" : "/onboarding");
     } catch (err) {
       console.error("[SignIn] Unexpected error:", err);
       toast.error("Something went wrong. Please try again.");
