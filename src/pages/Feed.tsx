@@ -175,12 +175,11 @@ const Feed = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background pb-14">
+      <AppLayout>
         <div className="flex-1 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
-        <BottomNav />
-      </div>
+      </AppLayout>
     );
   }
 
