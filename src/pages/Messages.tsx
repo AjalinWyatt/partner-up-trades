@@ -173,6 +173,13 @@ export default function Messages() {
 
     setConnections(connectionList);
     setLoading(false);
+
+    // Auto-select partner from URL param
+    const partnerParam = new URLSearchParams(window.location.search).get("partner");
+    if (partnerParam) {
+      const match = connectionList.find(c => c.partnerId === partnerParam);
+      if (match) setActiveConnectionId(match.id);
+    }
   };
 
   useEffect(() => { if (userId) loadConnections(userId); }, [userId]);
