@@ -347,20 +347,20 @@ const Forums = () => {
           </div>
 
           {/* Reply input */}
-          <div className="fixed bottom-14 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-2.5 flex gap-2">
+          <div className="px-5 py-3 flex gap-2">
             <input
               value={replyText}
               onChange={e => setReplyText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleReply()}
               placeholder="Write a reply..."
-              className="flex-1 bg-muted border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50"
+              className="flex-1 bg-muted border border-border rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50"
             />
             <button
               onClick={handleReply}
               disabled={!replyText.trim()}
-              className="w-10 h-10 rounded-xl bg-gradient-to-r from-primary to-success flex items-center justify-center disabled:opacity-40"
+              className="w-8 h-8 rounded-xl bg-gradient-to-r from-primary to-success flex items-center justify-center disabled:opacity-40"
             >
-              <Send className="w-4 h-4 text-primary-foreground" />
+              <Send className="w-3.5 h-3.5 text-primary-foreground" />
             </button>
           </div>
         </div>
