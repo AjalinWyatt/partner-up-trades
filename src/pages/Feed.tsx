@@ -30,7 +30,7 @@ interface FeedPost {
   commentCount: number;
 }
 
-const MARKET_OPTIONS = ["All", "Forex", "Futures", "Options"] as const;
+
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
