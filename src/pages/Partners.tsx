@@ -84,7 +84,7 @@ const Partners = () => {
       // Fetch profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, username, avatar_url")
         .in("id", allIds);
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
@@ -102,7 +102,7 @@ const Partners = () => {
         return {
           connectionId: p.id,
           userId: p.requester_id,
-          name: prof?.full_name || "Trader",
+          name: prof?.full_name || prof?.username || "Trader",
           initials: getInitials(prof?.full_name),
           avatarUrl: prof?.avatar_url || null,
           markets: tp?.markets || [],
@@ -155,7 +155,7 @@ const Partners = () => {
         if (!lastEntry || lastEntry.created_at < twoDaysAgo) {
           alertList.push({
             userId: id,
-            name: prof?.full_name || "Partner",
+            name: prof?.full_name || prof?.username || "Partner",
             text: "hasn't logged in 2+ days",
             sub: "Send a check-in message",
           });
@@ -170,7 +170,7 @@ const Partners = () => {
           if (allRough) {
             alertList.push({
               userId: id,
-              name: prof?.full_name || "Partner",
+              name: prof?.full_name || prof?.username || "Partner",
               text: "is on a rough streak",
               sub: "3+ consecutive losses or tough sessions",
             });
@@ -180,8 +180,8 @@ const Partners = () => {
         partnerRows.push({
           connectionId: conn?.id || "",
           userId: id,
-          name: prof?.full_name || "Trader",
-          initials: getInitials(prof?.full_name),
+          name: prof?.full_name || prof?.username || "Trader",
+          initials: getInitials(prof?.full_name || prof?.username),
           avatarUrl: prof?.avatar_url || null,
           markets: tp?.markets || [],
           sessions: tp?.sessions || [],

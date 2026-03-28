@@ -481,6 +481,7 @@ const Onboarding = () => {
                     .from("profiles")
                     .upsert({
                       id: user.id,
+                      full_name: nickname || null,
                       username: nickname || null,
                       avatar_url: avatarUrl,
                       gender,
