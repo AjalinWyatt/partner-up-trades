@@ -216,8 +216,8 @@ const Feed = () => {
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <button onClick={() => navigate("/log")} className="w-8 h-8 flex items-center justify-center">
-            <PenSquare className="w-5 h-5 text-muted-foreground" />
+          <button onClick={() => setShowCreatePost(true)} className="w-8 h-8 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-muted-foreground" />
           </button>
           <span className="text-base font-black text-foreground">traders🌐world</span>
           <NotificationBell />
