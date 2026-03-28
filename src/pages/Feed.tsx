@@ -152,8 +152,8 @@ const Feed = () => {
   }, [marketFilter]);
 
   useEffect(() => {
+    setLoading(true);
     loadFeed();
-    
 
     const channel = supabase
       .channel("feed-realtime-v2")
