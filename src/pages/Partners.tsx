@@ -13,6 +13,7 @@ interface Alert {
   name: string;
   text: string;
   sub: string;
+  action: "message" | "log";
 }
 
 interface PendingRequest {
