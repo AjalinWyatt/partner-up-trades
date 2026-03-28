@@ -525,7 +525,7 @@ const Onboarding = () => {
 
                   if (tradingError) throw tradingError;
 
-                  setTimeout(() => navigate("/profile"), 2500);
+                  setTimeout(() => navigate("/discover", { replace: true }), 2500);
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
                   toast.error("Failed to save your profile. Please try again.");
