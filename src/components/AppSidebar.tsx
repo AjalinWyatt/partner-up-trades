@@ -81,11 +81,19 @@ export default function AppSidebar() {
       {/* Bottom */}
       <div className="space-y-0.5 pt-4 border-t border-border mt-4">
         <button
-          onClick={() => navigate("/profile")}
+          onClick={() => {
+            const next = !document.documentElement.classList.contains("dark");
+            document.documentElement.classList.toggle("dark", next);
+            localStorage.setItem("theme", next ? "dark" : "light");
+          }}
           className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
         >
-          <Settings className="w-[22px] h-[22px]" strokeWidth={1.6} />
-          <span>Settings</span>
+          {document.documentElement.classList.contains("dark") ? (
+            <Sun className="w-[22px] h-[22px]" strokeWidth={1.6} />
+          ) : (
+            <Moon className="w-[22px] h-[22px]" strokeWidth={1.6} />
+          )}
+          <span>{document.documentElement.classList.contains("dark") ? "Light mode" : "Dark mode"}</span>
         </button>
         <button
           onClick={handleLogout}
