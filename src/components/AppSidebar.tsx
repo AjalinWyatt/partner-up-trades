@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Globe, Search, Users, BookOpen, MessageSquare, User, Bell, Settings, LogOut } from "lucide-react";
+import { Globe, Search, Users, BookOpen, MessageSquare, User, Bell, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ export default function AppSidebar() {
   const navigate = useNavigate();
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
     const load = async () => {
@@ -81,11 +82,20 @@ export default function AppSidebar() {
       {/* Bottom */}
       <div className="space-y-0.5 pt-4 border-t border-border mt-4">
         <button
-          onClick={() => navigate("/profile")}
+          onClick={() => {
+            const next = !isDark;
+            setIsDark(next);
+            document.documentElement.classList.toggle("dark", next);
+            localStorage.setItem("theme", next ? "dark" : "light");
+          }}
           className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
         >
-          <Settings className="w-[22px] h-[22px]" strokeWidth={1.6} />
-          <span>Settings</span>
+          {isDark ? (
+            <Sun className="w-[22px] h-[22px]" strokeWidth={1.6} />
+          ) : (
+            <Moon className="w-[22px] h-[22px]" strokeWidth={1.6} />
+          )}
+          <span>{isDark ? "Light mode" : "Dark mode"}</span>
         </button>
         <button
           onClick={handleLogout}
