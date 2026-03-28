@@ -10,17 +10,22 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
-interface FeedEntry {
+interface FeedPost {
   id: string;
+  type: "post" | "journal";
   user_id: string;
-  mood: string | null;
-  result: string | null;
-  pnl_pips: number | null;
-  market_pair: string | null;
-  session: string | null;
-  tags: string[] | null;
-  notes: string | null;
-  share_setting: string | null;
+  // Post fields
+  image_url?: string;
+  caption?: string | null;
+  // Journal fields
+  mood?: string | null;
+  result?: string | null;
+  pnl_pips?: number | null;
+  market_pair?: string | null;
+  session?: string | null;
+  tags?: string[] | null;
+  notes?: string | null;
+  share_setting?: string | null;
   created_at: string;
   // joined
   username: string;
@@ -34,10 +39,11 @@ interface FeedEntry {
 const Feed = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [entries, setEntries] = useState<FeedEntry[]>([]);
+  const [entries, setEntries] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   const loadFeed = async () => {
     const { data: { user } } = await supabase.auth.getUser();
