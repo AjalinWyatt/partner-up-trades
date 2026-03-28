@@ -285,7 +285,7 @@ const Forums = () => {
                 </button>
                 <span className="text-[10px] text-muted-foreground ml-2">{timeAgo(activePost.created_at)}</span>
               </div>
-              {myId === activePost.user_id && (
+              {(isAdmin || myId === activePost.user_id) && (
                 <button
                   onClick={async () => {
                     if (!confirm("Delete this post?")) return;
