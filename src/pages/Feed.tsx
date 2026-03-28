@@ -244,15 +244,23 @@ const Feed = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-5 pt-1 border-t border-border">
-                  <button onClick={() => toggleLike(entry.id)} className="flex items-center gap-1 pt-2">
-                    <Heart className={`w-4 h-4 ${entry.liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
-                    {entry.likeCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.likeCount}</span>}
-                  </button>
-                  <button className="flex items-center gap-1 pt-2">
-                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                    {entry.commentCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.commentCount}</span>}
-                  </button>
+                <div className="pt-1 border-t border-border">
+                  <div className="flex items-center gap-5">
+                    <button onClick={() => toggleLike(entry.id)} className="flex items-center gap-1 pt-2">
+                      <Heart className={`w-4 h-4 ${entry.liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                      {entry.likeCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.likeCount}</span>}
+                    </button>
+                    <div className="flex items-center gap-1 pt-2">
+                      <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                      {entry.commentCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.commentCount}</span>}
+                    </div>
+                  </div>
+                  <CommentThread
+                    entryId={entry.id}
+                    myId={myId}
+                    commentCount={entry.commentCount}
+                    onCountChange={handleCommentCountChange}
+                  />
                 </div>
               </div>
             ))}
