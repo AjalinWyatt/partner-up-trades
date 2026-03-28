@@ -86,11 +86,12 @@ const Feed = () => {
       return;
     }
 
-    // Fetch posts
+    // Fetch posts (media only — text-only posts belong in Forums)
     const { data: postsData } = await supabase
       .from("posts")
       .select("*")
       .in("user_id", userIdsToShow)
+      .not("media_url", "is", null)
       .order("created_at", { ascending: false })
       .limit(50);
 
