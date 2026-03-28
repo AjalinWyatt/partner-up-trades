@@ -15,10 +15,8 @@ interface FeedPost {
   id: string;
   type: "post" | "journal";
   user_id: string;
-  // Post fields
   image_url?: string;
   caption?: string | null;
-  // Journal fields
   mood?: string | null;
   result?: string | null;
   pnl_pips?: number | null;
@@ -28,13 +26,13 @@ interface FeedPost {
   notes?: string | null;
   share_setting?: string | null;
   created_at: string;
-  // joined
   username: string;
   full_name: string;
   avatar_url: string | null;
   liked: boolean;
   likeCount: number;
   commentCount: number;
+  matchScore?: number | null;
 }
 
 const Feed = () => {
@@ -54,13 +52,18 @@ const Feed = () => {
 
     const { data: connections } = await supabase
       .from("partner_connections")
-      .select("requester_id, receiver_id")
+      .select("requester_id, receiver_id, match_score")
       .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .eq("status", "accepted");
 
     const partnerIds = (connections || []).map(c =>
       c.requester_id === user.id ? c.receiver_id : c.requester_id
     );
+    const matchScoreMap = new Map<string, number>();
+    (connections || []).forEach(c => {
+      const partnerId = c.requester_id === user.id ? c.receiver_id : c.requester_id;
+      if (c.match_score) matchScoreMap.set(partnerId, c.match_score);
+    });
     const allUserIds = [...partnerIds, user.id];
 
     // Load both journal entries and posts
@@ -125,6 +128,7 @@ const Feed = () => {
         liked: myLikedSet.has(e.id),
         likeCount: likeCounts[e.id] || 0,
         commentCount: commentCounts[e.id] || 0,
+        matchScore: matchScoreMap.get(e.user_id) || null,
       };
     });
 
@@ -259,6 +263,9 @@ const Feed = () => {
                       {entry.username}
                     </button>
                     <div className="flex items-center gap-1.5 mt-0.5">
+                      {entry.matchScore && entry.user_id !== myId && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">{entry.matchScore}% match</span>
+                      )}
                       {entry.market_pair && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">{entry.market_pair}</span>
                       )}
@@ -298,7 +305,7 @@ const Feed = () => {
                 {/* Post Body */}
                 {entry.type === "post" && entry.image_url && (
                   <button onClick={() => setSelectedPost(entry)} className="rounded-xl overflow-hidden mb-2.5 -mx-3.5 w-[calc(100%+1.75rem)]">
-                    <img src={entry.image_url} alt="" className="w-full object-cover" />
+                    <img src={entry.image_url} alt="" className="w-full max-h-[500px] object-cover" />
                   </button>
                 )}
                 {entry.type === "post" && entry.caption && (
