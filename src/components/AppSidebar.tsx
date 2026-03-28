@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
 
 const navItems = [
-  { path: "/feed", icon: Globe, label: "Feed" },
+  { path: "/feed", icon: Globe, label: "Feed", type: "feed" },
+  { path: "/forums", icon: MessagesSquare, label: "Forums", type: "forums" },
   { path: "/discover", icon: Search, label: "Discover" },
   { path: "/partners", icon: Users, label: "Partners" },
   { path: "/log", icon: BookOpen, label: "Log" },
@@ -15,6 +16,7 @@ const navItems = [
 ];
 
 const MARKET_OPTIONS = ["All", "Forex", "Futures", "Options"] as const;
+const FORUM_OPTIONS = ["Forex", "Futures", "Options"] as const;
 
 export default function AppSidebar() {
   const location = useLocation();
@@ -23,15 +25,14 @@ export default function AppSidebar() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
-  const [showMarketDrop, setShowMarketDrop] = useState(false);
+  const [showFeedDrop, setShowFeedDrop] = useState(false);
+  const [showForumsDrop, setShowForumsDrop] = useState(false);
   const [marketCounts, setMarketCounts] = useState<Record<string, number>>({});
-  const dropRef = useRef<HTMLDivElement>(null);
+  const feedDropRef = useRef<HTMLDivElement>(null);
+  const forumsDropRef = useRef<HTMLDivElement>(null);
 
   const activeMarket = searchParams.get("market") || "All";
   const activeForum = searchParams.get("forum") || "Forex";
-  const isFeedActive = location.pathname === "/feed";
-  const isForumsActive = location.pathname === "/forums";
-  const isFeedOrForums = isFeedActive || isForumsActive;
 
   useEffect(() => {
     const load = async () => {
@@ -64,7 +65,8 @@ export default function AppSidebar() {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (dropRef.current && !dropRef.current.contains(e.target as Node)) setShowMarketDrop(false);
+      if (feedDropRef.current && !feedDropRef.current.contains(e.target as Node)) setShowFeedDrop(false);
+      if (forumsDropRef.current && !forumsDropRef.current.contains(e.target as Node)) setShowForumsDrop(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -76,7 +78,7 @@ export default function AppSidebar() {
   };
 
   const handleMarketSelect = (m: string) => {
-    setShowMarketDrop(false);
+    setShowFeedDrop(false);
     if (location.pathname === "/feed") {
       setSearchParams(m === "All" ? {} : { market: m });
     } else {
@@ -85,13 +87,12 @@ export default function AppSidebar() {
   };
 
   const handleForumSelect = (f: string) => {
-    setShowMarketDrop(false);
+    setShowForumsDrop(false);
     navigate(`/forums?forum=${f}`);
   };
 
   return (
     <aside className="hidden lg:flex flex-col w-[220px] xl:w-[245px] h-screen sticky top-0 border-r border-border bg-background px-3 py-6">
-      {/* Logo */}
       <button onClick={() => navigate("/feed")} className="flex items-center gap-2 px-3 mb-8">
         <Globe className="w-6 h-6 text-[hsl(var(--success))]" />
         <span className="text-xl font-bold tracking-tight text-foreground">
@@ -100,38 +101,49 @@ export default function AppSidebar() {
         </span>
       </button>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-0.5">
         {navItems.map((item) => {
           const active = location.pathname === item.path;
           const badge = item.path === "/notifications" ? unreadNotifs : item.path === "/messages" ? unreadMsgs : 0;
-          const isFeed = item.path === "/feed";
+          const isFeed = item.type === "feed";
+          const isForums = item.type === "forums";
 
           return (
-            <div key={item.path} className="relative" ref={isFeed ? dropRef : undefined}>
+            <div key={item.path} className="relative" ref={isFeed ? feedDropRef : isForums ? forumsDropRef : undefined}>
               <button
                 onClick={() => {
-                  if (isFeed && isFeedOrForums) {
-                    setShowMarketDrop(!showMarketDrop);
-                  } else if (isFeed) {
-                    navigate(item.path);
+                  if (isFeed) {
+                    if (location.pathname === "/feed") {
+                      setShowFeedDrop(!showFeedDrop);
+                      setShowForumsDrop(false);
+                    } else {
+                      navigate("/feed");
+                    }
+                  } else if (isForums) {
+                    if (location.pathname === "/forums") {
+                      setShowForumsDrop(!showForumsDrop);
+                      setShowFeedDrop(false);
+                    } else {
+                      navigate("/forums");
+                    }
                   } else {
                     navigate(item.path);
                   }
                 }}
                 className={cn(
                   "w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] transition-all group",
-                  (active || (isFeed && isForumsActive))
+                  active
                     ? "font-bold text-foreground bg-secondary"
                     : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 )}
               >
-                <item.icon className={cn("w-[22px] h-[22px]", (active || (isFeed && isForumsActive)) && "text-foreground")} strokeWidth={(active || (isFeed && isForumsActive)) ? 2.2 : 1.6} />
-                <span className="flex-1 text-left">
-                  {isFeed ? (isForumsActive ? "Forums" : "Feed") : item.label}
-                </span>
-                {isFeed && (
-                  <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showMarketDrop && "rotate-180")} />
+                <item.icon className={cn("w-[22px] h-[22px]", active && "text-foreground")} strokeWidth={active ? 2.2 : 1.6} />
+                <span className="flex-1 text-left">{item.label}</span>
+                {(isFeed || isForums) && (
+                  <ChevronDown className={cn(
+                    "w-3.5 h-3.5 text-muted-foreground transition-transform",
+                    (isFeed && showFeedDrop) || (isForums && showForumsDrop) ? "rotate-180" : ""
+                  )} />
                 )}
                 {badge > 0 && (
                   <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
@@ -140,41 +152,35 @@ export default function AppSidebar() {
                 )}
               </button>
 
-              {/* Dropdown under Feed: switch between Feed/Forums + market filters */}
-              {isFeed && showMarketDrop && (
+              {/* Feed market dropdown */}
+              {isFeed && showFeedDrop && (
                 <div className="ml-9 mt-0.5 mb-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
-                  {/* Feed section */}
-                  <div className="px-3 pt-2 pb-1">
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Feed</span>
-                  </div>
                   {MARKET_OPTIONS.map(m => (
                     <button
-                      key={`feed-${m}`}
+                      key={m}
                       onClick={() => handleMarketSelect(m)}
                       className={cn(
                         "flex items-center justify-between w-full px-3 py-2 text-xs transition-colors",
-                        isFeedActive && activeMarket === m ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
+                        location.pathname === "/feed" && activeMarket === m ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
                       )}
                     >
                       <span>{m}</span>
                       <span className="text-[10px] text-muted-foreground">{marketCounts[m] || 0} active</span>
                     </button>
                   ))}
+                </div>
+              )}
 
-                  {/* Divider */}
-                  <div className="border-t border-border my-1" />
-
-                  {/* Forums section */}
-                  <div className="px-3 pt-1 pb-1">
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Forums</span>
-                  </div>
-                  {(["Forex", "Futures", "Options"] as const).map(f => (
+              {/* Forums dropdown */}
+              {isForums && showForumsDrop && (
+                <div className="ml-9 mt-0.5 mb-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+                  {FORUM_OPTIONS.map(f => (
                     <button
-                      key={`forum-${f}`}
+                      key={f}
                       onClick={() => handleForumSelect(f)}
                       className={cn(
                         "flex items-center justify-between w-full px-3 py-2 text-xs transition-colors",
-                        isForumsActive && activeForum === f ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
+                        location.pathname === "/forums" && activeForum === f ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
                       )}
                     >
                       <div className="flex items-center gap-1.5">
@@ -191,7 +197,6 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      {/* Bottom */}
       <div className="space-y-0.5 pt-4 border-t border-border mt-4">
         <button
           onClick={() => {
@@ -202,11 +207,7 @@ export default function AppSidebar() {
           }}
           className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
         >
-          {isDark ? (
-            <Sun className="w-[22px] h-[22px]" strokeWidth={1.6} />
-          ) : (
-            <Moon className="w-[22px] h-[22px]" strokeWidth={1.6} />
-          )}
+          {isDark ? <Sun className="w-[22px] h-[22px]" strokeWidth={1.6} /> : <Moon className="w-[22px] h-[22px]" strokeWidth={1.6} />}
           <span>{isDark ? "Light mode" : "Dark mode"}</span>
         </button>
         <button

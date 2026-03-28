@@ -2,8 +2,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Globe, Search, Users, BookOpen, MessageSquare, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { useLocation, useNavigate } from "react-router-dom";
+import { Globe, Search, Users, BookOpen, MessageSquare, User, MessagesSquare } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 const tabs = [
-  { path: "/feed", icon: Globe, label: "Feed", alsoActive: ["/forums"] },
+  { path: "/feed", icon: Globe, label: "Feed" },
+  { path: "/forums", icon: MessagesSquare, label: "Forums" },
   { path: "/discover", icon: Search, label: "Discover" },
   { path: "/partners", icon: Users, label: "Partners" },
   { path: "/log", icon: BookOpen, label: "Log" },
