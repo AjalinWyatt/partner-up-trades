@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
-import AppLayout from "@/components/AppLayout";
 import NotificationBell from "@/components/NotificationBell";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
-import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
+import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
