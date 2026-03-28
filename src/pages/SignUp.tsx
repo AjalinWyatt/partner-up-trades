@@ -15,6 +15,11 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [traderCount, setTraderCount] = useState(0);
+
+  useEffect(() => {
+    supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
+  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
