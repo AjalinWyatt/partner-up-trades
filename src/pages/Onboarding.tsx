@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoHeader from "@/components/LogoHeader";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
