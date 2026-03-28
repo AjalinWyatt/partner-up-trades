@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import BottomNav from "@/components/BottomNav";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface Connection {
   id: string;
@@ -58,6 +59,7 @@ function formatTime(dateStr: string) {
 }
 
 export default function Messages() {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);

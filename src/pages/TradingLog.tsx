@@ -7,6 +7,7 @@ import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface JournalEntry {
   id: string;
@@ -80,6 +81,7 @@ function formatEntryDate(dateStr: string) {
 }
 
 export default function TradingLog() {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [entries, setEntries] = useState<JournalEntry[]>([]);

@@ -7,6 +7,7 @@ import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
 interface FeedEntry {
   id: string;
@@ -30,6 +31,7 @@ interface FeedEntry {
 }
 
 const Feed = () => {
+  const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [entries, setEntries] = useState<FeedEntry[]>([]);
   const [loading, setLoading] = useState(true);
