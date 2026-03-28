@@ -153,7 +153,7 @@ const Feed = () => {
 
   useEffect(() => {
     loadFeed();
-    loadMarketCounts();
+    
 
     const channel = supabase
       .channel("feed-realtime-v2")
