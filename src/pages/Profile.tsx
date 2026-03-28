@@ -91,6 +91,15 @@ const Profile = () => {
       }
       if (tData) setTradingProfile(tData);
       setPartnerCount(count ?? 0);
+
+      // Load posts
+      const { data: postsData } = await supabase
+        .from("posts" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      setPosts(postsData || []);
+
       setLoading(false);
     };
     fetchProfile();
