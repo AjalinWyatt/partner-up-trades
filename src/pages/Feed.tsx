@@ -1,0 +1,260 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { PenSquare, Bell, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
+import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
+
+interface FeedEntry {
+  id: string;
+  user_id: string;
+  mood: string | null;
+  result: string | null;
+  pnl_pips: number | null;
+  market_pair: string | null;
+  session: string | null;
+  tags: string[] | null;
+  notes: string | null;
+  share_setting: string | null;
+  created_at: string;
+  // joined
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  liked: boolean;
+  likeCount: number;
+  commentCount: number;
+}
+
+const Feed = () => {
+  const navigate = useNavigate();
+  const [entries, setEntries] = useState<FeedEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [myId, setMyId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      setMyId(user.id);
+
+      // Get accepted partner IDs
+      const { data: connections } = await supabase
+        .from("partner_connections")
+        .select("requester_id, receiver_id")
+        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq("status", "accepted");
+
+      const partnerIds = (connections || []).map(c =>
+        c.requester_id === user.id ? c.receiver_id : c.requester_id
+      );
+      const allUserIds = [user.id, ...partnerIds];
+
+      // Get journal entries from self + partners, not private
+      const { data: journalEntries } = await supabase
+        .from("journal_entries")
+        .select("*")
+        .in("user_id", allUserIds)
+        .neq("share_setting", "Private")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (!journalEntries || journalEntries.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const entryIds = journalEntries.map(e => e.id);
+      const authorIds = [...new Set(journalEntries.map(e => e.user_id))];
+
+      // Fetch profiles, likes, comments in parallel
+      const [profilesRes, likesRes, myLikesRes, commentsRes] = await Promise.all([
+        supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
+        supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds),
+        supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds).eq("user_id", user.id),
+        supabase.from("feed_comments").select("entry_id").in("entry_id", entryIds),
+      ]);
+
+      const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
+      
+      // Count likes per entry
+      const likeCounts: Record<string, number> = {};
+      (likesRes.data || []).forEach(l => { likeCounts[l.entry_id] = (likeCounts[l.entry_id] || 0) + 1; });
+      
+      const myLikedSet = new Set((myLikesRes.data || []).map(l => l.entry_id));
+      
+      const commentCounts: Record<string, number> = {};
+      (commentsRes.data || []).forEach(c => { commentCounts[c.entry_id] = (commentCounts[c.entry_id] || 0) + 1; });
+
+      const feedEntries: FeedEntry[] = journalEntries.map(e => {
+        const prof = profileMap.get(e.user_id);
+        return {
+          ...e,
+          username: prof?.username || "trader",
+          full_name: prof?.full_name || "Trader",
+          avatar_url: prof?.avatar_url || null,
+          liked: myLikedSet.has(e.id),
+          likeCount: likeCounts[e.id] || 0,
+          commentCount: commentCounts[e.id] || 0,
+        };
+      });
+
+      setEntries(feedEntries);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const toggleLike = async (entryId: string) => {
+    if (!myId) return;
+    const entry = entries.find(e => e.id === entryId);
+    if (!entry) return;
+
+    if (entry.liked) {
+      await supabase.from("feed_likes").delete().eq("user_id", myId).eq("entry_id", entryId);
+      setEntries(prev => prev.map(e => e.id === entryId ? { ...e, liked: false, likeCount: e.likeCount - 1 } : e));
+    } else {
+      await supabase.from("feed_likes").insert({ user_id: myId, entry_id: entryId });
+      setEntries(prev => prev.map(e => e.id === entryId ? { ...e, liked: true, likeCount: e.likeCount + 1 } : e));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background pb-14">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background pb-14">
+      <div className="flex-1 overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <button onClick={() => navigate("/log")} className="w-8 h-8 flex items-center justify-center">
+            <PenSquare className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <span className="text-base font-black text-foreground">traders🌐world</span>
+          <button className="w-8 h-8 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {entries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Heart className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-semibold text-foreground mb-1">Your feed is empty</p>
+            <p className="text-xs text-muted-foreground max-w-[260px] mb-4">Connect with partners to see their sessions here</p>
+            <button
+              onClick={() => navigate("/discover")}
+              className="px-6 py-2.5 rounded-xl bg-primary text-sm font-bold text-primary-foreground"
+            >
+              Find Partners
+            </button>
+          </div>
+        ) : (
+          <div className="px-5 space-y-3 pb-8">
+            {entries.map((entry) => (
+              <div key={entry.id} className="bg-card border border-border rounded-xl p-3.5">
+                {/* Post Header */}
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <button onClick={() => navigate(`/profile/${entry.user_id}`)}>
+                    {entry.avatar_url ? (
+                      <img src={entry.avatar_url} className="w-9 h-9 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-black text-primary-foreground">
+                        {getInitials(entry.full_name)}
+                      </div>
+                    )}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <button onClick={() => navigate(`/profile/${entry.user_id}`)} className="text-xs font-bold text-foreground hover:underline">
+                      {entry.username}
+                    </button>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {entry.market_pair && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">{entry.market_pair}</span>
+                      )}
+                      {entry.session && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">{entry.session}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-muted-foreground">{timeAgo(entry.created_at)}</span>
+                    <div className="relative">
+                      <button onClick={() => setMenuOpen(menuOpen === entry.id ? null : entry.id)}>
+                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      {menuOpen === entry.id && (
+                        <div className="absolute right-0 top-6 w-44 bg-card border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+                          <button
+                            onClick={() => { navigate(`/profile/${entry.user_id}`); setMenuOpen(null); }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> View Profile
+                          </button>
+                          {entry.user_id !== myId && (
+                            <button
+                              onClick={() => { navigate(`/profile/${entry.user_id}`); setMenuOpen(null); }}
+                              className="flex items-center gap-2 w-full px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors"
+                            >
+                              <Link2 className="w-3.5 h-3.5" /> Request Match
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Post Body */}
+                {entry.notes && <p className="text-xs text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
+
+                {/* Result + Tags */}
+                <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+                  {entry.result && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      entry.result === "Win"
+                        ? "text-success bg-success/15"
+                        : entry.result === "Loss"
+                        ? "text-destructive bg-destructive/15"
+                        : "text-muted-foreground bg-muted"
+                    }`}>
+                      {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
+                    </span>
+                  )}
+                  {entry.tags?.slice(0, 3).map((t) => (
+                    <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-5 pt-1 border-t border-border">
+                  <button onClick={() => toggleLike(entry.id)} className="flex items-center gap-1 pt-2">
+                    <Heart className={`w-4 h-4 ${entry.liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                    {entry.likeCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.likeCount}</span>}
+                  </button>
+                  <button className="flex items-center gap-1 pt-2">
+                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                    {entry.commentCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.commentCount}</span>}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <BottomNav />
+    </div>
+  );
+};
+
+export default Feed;
