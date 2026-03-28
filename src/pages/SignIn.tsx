@@ -18,21 +18,22 @@ const SignIn = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  // Check if user is already signed in on mount
+  // Listen for auth state changes (handles session restore on refresh + post-login)
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        console.log("[SignIn] User already has session, redirecting...");
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        navigate(profile?.onboarding_completed ? "/feed" : "/onboarding");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION")) {
+          console.log("[SignIn] Auth event:", event, "- redirecting user", session.user.id);
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("onboarding_completed")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+        }
       }
-    };
-    checkSession();
+    );
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
