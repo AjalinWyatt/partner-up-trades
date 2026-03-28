@@ -184,7 +184,7 @@ const Feed = () => {
   }
 
   return (
-    <AppLayout><div className="flex-1 overflow-y-auto">
+    <AppLayout>
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
