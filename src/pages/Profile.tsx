@@ -488,6 +488,14 @@ const Profile = () => {
           )
         )}
       </div>
+      <CreatePostModal
+        open={showCreatePost}
+        onClose={() => setShowCreatePost(false)}
+        onCreated={async () => {
+          const { data } = await supabase.from("posts" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
+          setPosts(data || []);
+        }}
+      />
     </AppLayout>
   );
 };
