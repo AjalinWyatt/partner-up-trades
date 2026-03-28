@@ -96,8 +96,11 @@ const Onboarding = () => {
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] mb-8">
               Find your accountability partner, circle, or crew — matched to how you actually trade.
             </p>
-            <div className="flex gap-7">
-              {[{ num: "12K+", label: "Active traders" }, { num: "3.2K", label: "Partnerships" }, { num: "850+", label: "Groups" }].map(s => (
+            <div className="flex gap-14">
+              {[
+                { num: traderCount.toLocaleString(), label: "Active traders" },
+                { num: partnershipCount.toLocaleString(), label: "Partnerships" },
+              ].map(s => (
                 <div key={s.label}>
                   <div className="text-[22px] font-black text-gradient-accent">{s.num}</div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{s.label}</div>
