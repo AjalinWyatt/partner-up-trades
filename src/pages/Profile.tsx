@@ -77,13 +77,13 @@ const Profile = () => {
     { title: "Sessions", data: tradingProfile?.sessions },
     { title: "Struggles", data: tradingProfile?.struggles },
     { title: "Hobbies", data: profile?.hobbies },
-    { title: "Watching for", data: tradingProfile?.chart_prompts },
-    { title: "Off the charts", data: tradingProfile?.off_chart_prompts },
+    { title: "Watching for", data: profile?.chart_prompts },
+    { title: "Off the charts", data: profile?.off_chart_prompts },
   ];
 
   const hasAnyDetails = detailSections.some(s => s.data && s.data.length > 0) ||
     !!tradingProfile?.experience_level ||
-    (tradingProfile?.primary_goals && tradingProfile.primary_goals.length > 0);
+    (tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0);
 
   if (loading) {
     return (
@@ -144,7 +144,7 @@ const Profile = () => {
               </button>
             </div>
           </div>
-          {profile?.bio && <div className="text-xs text-muted-foreground mt-0.5">{profile.bio}</div>}
+          {profile?.gender && <div className="text-xs text-muted-foreground mt-0.5">{profile.gender}</div>}
           {profile?.gender && <div className="text-[11px] text-muted-foreground mt-0.5">{profile.gender}</div>}
           {profile?.location && (
             <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
@@ -211,7 +211,7 @@ const Profile = () => {
           hasAnyDetails ? (
             <div className="px-5 py-3 space-y-2">
               {/* Experience & Goals */}
-              {(tradingProfile?.experience_level || (tradingProfile?.primary_goals && tradingProfile.primary_goals.length > 0)) && (
+              {(tradingProfile?.experience_level || (tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0)) && (
                 <div className="bg-card border border-border rounded-xl p-3">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Trading details</div>
                   {tradingProfile?.experience_level && (
@@ -220,10 +220,10 @@ const Profile = () => {
                       <span className="text-[11px] font-bold text-foreground">{tradingProfile.experience_level}</span>
                     </div>
                   )}
-                  {tradingProfile?.primary_goals && tradingProfile.primary_goals.length > 0 && (
+                  {tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0 && (
                     <div className="flex justify-between py-1.5">
                       <span className="text-[11px] text-muted-foreground">Goals</span>
-                      <span className="text-[11px] font-bold text-foreground">{tradingProfile.primary_goals.join(", ")}</span>
+                      <span className="text-[11px] font-bold text-foreground">{tradingProfile.primary_goal.join(", ")}</span>
                     </div>
                   )}
                 </div>
