@@ -8,6 +8,7 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const FORUMS = ["Forex", "Futures", "Options"] as const;
 
