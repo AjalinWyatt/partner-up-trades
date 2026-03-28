@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -11,6 +11,8 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/hooks/use-is-admin";
+import { toast } from "sonner";
 
 interface FeedPost {
   id: string;
