@@ -293,7 +293,7 @@ export default function Messages() {
           filtered.map((conn) => (
             <button
               key={conn.id}
-              onClick={() => setActiveChat(conn)}
+              onClick={() => { setActiveChat(conn); setMsgInput(""); }}
               className={cn(
                 "w-full flex items-center gap-3 py-3 px-3 rounded-xl transition-colors",
                 activeChat?.id === conn.id
