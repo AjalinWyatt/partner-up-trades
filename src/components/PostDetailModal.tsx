@@ -107,9 +107,16 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
                 )}
               </button>
               <div className="flex-1 min-w-0">
-                <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
-                  {profile?.username || "trader"}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
+                    {profile?.username || "trader"}
+                  </button>
+                  {matchScore && post.user_id !== myId && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
+                      {matchScore}% match
+                    </span>
+                  )}
+                </div>
                 <div className="text-[9px] text-muted-foreground">{timeAgo(post.created_at)}</div>
               </div>
             </div>
