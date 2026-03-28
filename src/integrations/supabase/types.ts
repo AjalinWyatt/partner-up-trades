@@ -127,6 +127,100 @@ export type Database = {
           },
         ]
       }
+      forum_post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_posts: {
+        Row: {
+          content: string
+          created_at: string
+          forum: string
+          id: string
+          likes_count: number
+          replies_count: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          forum: string
+          id?: string
+          likes_count?: number
+          replies_count?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          forum?: string
+          id?: string
+          likes_count?: number
+          replies_count?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      forum_replies: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           created_at: string
