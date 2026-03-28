@@ -8,12 +8,30 @@ import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
+type AlertType = "win" | "loss" | "breakeven" | "inactive" | "rough";
+
 interface Alert {
   userId: string;
   name: string;
   text: string;
   sub: string;
   action: "message" | "log";
+  alertType: AlertType;
+}
+
+function getAlertColors(type: AlertType) {
+  switch (type) {
+    case "win":
+      return { bg: "rgba(47,217,138,0.08)", border: "rgba(47,217,138,0.2)", icon: "🟢", btnBg: "rgba(47,217,138,0.15)", btnText: "#2fd98a" };
+    case "loss":
+      return { bg: "rgba(255,107,107,0.08)", border: "rgba(255,107,107,0.2)", icon: "🔴", btnBg: "rgba(255,107,107,0.15)", btnText: "#ff6b6b" };
+    case "breakeven":
+      return { bg: "rgba(247,192,89,0.08)", border: "rgba(247,192,89,0.2)", icon: "🟡", btnBg: "rgba(247,192,89,0.15)", btnText: "#f7c059" };
+    case "inactive":
+      return { bg: "rgba(77,159,255,0.08)", border: "rgba(77,159,255,0.2)", icon: "🔵", btnBg: "rgba(77,159,255,0.15)", btnText: "#4d9fff" };
+    case "rough":
+      return { bg: "rgba(224,82,82,0.08)", border: "rgba(224,82,82,0.2)", icon: "❤️‍🩹", btnBg: "rgba(224,82,82,0.15)", btnText: "#e05252" };
+  }
 }
 
 interface PendingRequest {
@@ -160,6 +178,7 @@ const Partners = () => {
             text: "hasn't logged in 2+ days",
             sub: "Send a check-in message",
             action: "message",
+            alertType: "inactive",
           });
         }
 
@@ -176,18 +195,22 @@ const Partners = () => {
               text: "is on a rough streak",
               sub: "3+ consecutive losses or tough sessions",
               action: "message",
+              alertType: "rough",
             });
           }
         }
 
         // Check alerts: shared a new session recently (last 24h)
         if (lastEntry && lastEntry.created_at > new Date(Date.now() - 86400000).toISOString() && (lastEntry as any).share_setting === "partners") {
+          const result = (lastEntry as any).result || "";
+          const sessionAlertType: AlertType = result === "Win" ? "win" : result === "Loss" ? "loss" : "breakeven";
           alertList.push({
             userId: id,
             name: prof?.username ? `@${prof.username}` : "Partner",
-            text: "shared a new session",
-            sub: `${(lastEntry as any).market_pair || "Trade"} · ${(lastEntry as any).result || "View details"}`,
+            text: `shared a new session`,
+            sub: `${(lastEntry as any).market_pair || "Trade"} · ${result || "View details"}`,
             action: "log",
+            alertType: sessionAlertType,
           });
         }
 
@@ -292,30 +315,34 @@ const Partners = () => {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Alerts</span>
                 </div>
-                {alerts.map((a, i) => (
-                  <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl mb-1.5" style={{ background: "rgba(228,92,45,0.08)", border: "1px solid rgba(228,92,45,0.2)" }}>
-                    <div className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: "rgba(228,92,45,0.12)" }}>
-                      <Bell className="w-4 h-4 text-orange-500" />
+                {alerts.map((a, i) => {
+                  const c = getAlertColors(a.alertType);
+                  return (
+                    <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl mb-1.5" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+                      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 text-base">
+                        {c.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-foreground">{a.name} {a.text}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{a.sub}</div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (a.action === "log") {
+                            navigate(`/profile/${a.userId}`);
+                          } else {
+                            navigate(`/messages?partner=${a.userId}`);
+                          }
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0"
+                        style={{ background: c.btnBg, color: c.btnText }}
+                      >
+                        {a.alertType === "rough" ? "Support" : a.alertType === "inactive" ? "Check in" : a.action === "log" ? "View" : "Check in"}
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-foreground">{a.name} {a.text}</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5">{a.sub}</div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (a.action === "log") {
-                          navigate(`/profile/${a.userId}`);
-                        } else {
-                          navigate(`/messages?partner=${a.userId}`);
-                        }
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-orange-500 shrink-0"
-                      style={{ background: "rgba(228,92,45,0.15)" }}
-                    >
-                      {a.action === "log" ? "View" : "Check in"}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </section>
             )}
 
