@@ -425,7 +425,7 @@ const ViewProfile = () => {
       </div>
 
       {/* Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2">
         {connectionStatus === "accepted" ? (
           <>
             <button
