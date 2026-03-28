@@ -253,7 +253,7 @@ const Landing = () => {
             [Globe, "Global community"],
             [Shield, "Vetted members"],
             [XCircle, "No gurus. No signals."],
-            [Zap, "Free to start"],
+            [Zap, "Free for traders"],
           ].map(([Icon, text], i) => (
             <div key={i} className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-white border border-[#DDE8E2] flex items-center justify-center">
