@@ -353,6 +353,7 @@ const Feed = () => {
       </div>
       <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={loadFeed} />
     </AppLayout>
+  );
 };
 
 export default Feed;
