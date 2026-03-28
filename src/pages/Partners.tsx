@@ -170,7 +170,7 @@ const Partners = () => {
           if (allRough) {
             alertList.push({
               userId: id,
-              name: prof?.full_name || "Partner",
+              name: prof?.full_name || prof?.username || "Partner",
               text: "is on a rough streak",
               sub: "3+ consecutive losses or tough sessions",
             });
@@ -180,8 +180,8 @@ const Partners = () => {
         partnerRows.push({
           connectionId: conn?.id || "",
           userId: id,
-          name: prof?.full_name || "Trader",
-          initials: getInitials(prof?.full_name),
+          name: prof?.full_name || prof?.username || "Trader",
+          initials: getInitials(prof?.full_name || prof?.username),
           avatarUrl: prof?.avatar_url || null,
           markets: tp?.markets || [],
           sessions: tp?.sessions || [],
