@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Save, LogOut } from "lucide-react";
+import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Save, LogOut, Grid3x3 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import CreatePostModal from "@/components/CreatePostModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -62,6 +63,8 @@ const Profile = () => {
   const [editGender, setEditGender] = useState("");
 
   const [partnerCount, setPartnerCount] = useState(0);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
