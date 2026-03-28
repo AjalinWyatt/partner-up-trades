@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, X } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -20,9 +20,10 @@ interface PostDetailModalProps {
     created_at: string;
   } | null;
   myId: string | null;
+  onDeleted?: () => void;
 }
 
-const PostDetailModal = ({ open, onClose, post, myId }: PostDetailModalProps) => {
+const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailModalProps) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ username: string; full_name: string; avatar_url: string | null } | null>(null);
   const [liked, setLiked] = useState(false);
@@ -125,11 +126,24 @@ const PostDetailModal = ({ open, onClose, post, myId }: PostDetailModalProps) =>
 
             {/* Actions */}
             <div className="border-t border-border px-3 py-2.5">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between">
                 <button onClick={toggleLike} className="flex items-center gap-1.5">
                   <Heart className={`w-5 h-5 ${liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
                   {likeCount > 0 && <span className="text-xs text-muted-foreground">{likeCount}</span>}
                 </button>
+                {myId === post.user_id && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Delete this post?")) return;
+                      await supabase.from("posts").delete().eq("id", post.id);
+                      onClose();
+                      onDeleted?.();
+                    }}
+                    className="flex items-center gap-1 text-destructive/70 hover:text-destructive text-xs"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
