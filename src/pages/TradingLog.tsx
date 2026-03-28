@@ -47,11 +47,7 @@ const RED_TAGS = [
   "Sized up too fast", "No plan", "Chased price", "Broke rules",
   "Emotional trade", "Didn't journal", "Tilted after loss", "Entered too early", "Exited too early",
 ];
-const NEUTRAL_TAGS = [
-  "Learning day", "Studied after session", "Reviewed charts", "Took a break",
-  "Skipped session", "Low volume day", "News event",
-];
-const ALL_TAGS = [...GREEN_TAGS, ...RED_TAGS, ...NEUTRAL_TAGS];
+const ALL_TAGS = [...GREEN_TAGS, ...RED_TAGS];
 
 function getTagType(tag: string): "green" | "red" | "neutral" {
   if (GREEN_TAGS.includes(tag)) return "green";
