@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Globe, ArrowLeft, Send, Search, Image, Mic, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
