@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           entry_id: string
           id: string
+          post_id: string | null
           user_id: string
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           entry_id: string
           id?: string
+          post_id?: string | null
           user_id: string
         }
         Update: {
@@ -34,6 +36,7 @@ export type Database = {
           created_at?: string
           entry_id?: string
           id?: string
+          post_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -44,6 +47,13 @@ export type Database = {
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "feed_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       feed_likes: {
@@ -51,18 +61,21 @@ export type Database = {
           created_at: string
           entry_id: string
           id: string
+          post_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           entry_id: string
           id?: string
+          post_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           entry_id?: string
           id?: string
+          post_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -71,6 +84,13 @@ export type Database = {
             columns: ["entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]
@@ -234,6 +254,30 @@ export type Database = {
           requester_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          user_id?: string
         }
         Relationships: []
       }
