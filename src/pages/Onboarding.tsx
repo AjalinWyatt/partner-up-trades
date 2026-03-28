@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoHeader from "@/components/LogoHeader";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
@@ -362,10 +364,61 @@ const Onboarding = () => {
       {step < 7 && (
         <div className="absolute bottom-0 left-0 right-0 p-7 pt-16 bg-gradient-to-t from-background via-background to-transparent z-10">
           <button
-            onClick={() => {
+            onClick={async () => {
               if (step === 6) {
                 goTo(7);
-                setTimeout(() => navigate("/dashboard"), 3000);
+                try {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) throw new Error("Not authenticated");
+
+                  const { error: profileError } = await supabase
+                    .from("profiles")
+                    .update({
+                      username: nickname || undefined,
+                      gender,
+                      hobbies: offChartPrompts,
+                      chart_prompts: chartPrompts,
+                      off_chart_prompts: offChartPrompts,
+                      onboarding_completed: true,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", user.id);
+
+                  if (profileError) throw profileError;
+
+                  const { error: tradingError } = await supabase
+                    .from("trading_profiles")
+                    .update({
+                      markets,
+                      sessions,
+                      trade_times: tradeTimes,
+                      trading_style: styles,
+                      strategies,
+                      timeframes,
+                      frequency,
+                      experience_level: experience,
+                      primary_goal: goals,
+                      loss_response: lossResponse,
+                      struggles,
+                      journaling,
+                      trading_plan: tradingPlan,
+                      looking_for_gender: lookingFor,
+                      connection_reach: reach,
+                      connection_types: connectionTypes,
+                      connect_frequency: connectFreq,
+                      match_priorities: matchPriorities,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("user_id", user.id);
+
+                  if (tradingError) throw tradingError;
+
+                  setTimeout(() => navigate("/dashboard"), 2500);
+                } catch (err: any) {
+                  console.error("Onboarding save error:", err);
+                  toast.error("Failed to save your profile. Please try again.");
+                  goTo(6);
+                }
               } else {
                 goTo(step + 1);
               }

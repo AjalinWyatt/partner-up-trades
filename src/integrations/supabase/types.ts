@@ -14,7 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          chart_prompts: string[] | null
+          created_at: string | null
+          full_name: string | null
+          gender: string | null
+          hobbies: string[] | null
+          id: string
+          location: string | null
+          off_chart_prompts: string[] | null
+          onboarding_completed: boolean | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          chart_prompts?: string[] | null
+          created_at?: string | null
+          full_name?: string | null
+          gender?: string | null
+          hobbies?: string[] | null
+          id: string
+          location?: string | null
+          off_chart_prompts?: string[] | null
+          onboarding_completed?: boolean | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          chart_prompts?: string[] | null
+          created_at?: string | null
+          full_name?: string | null
+          gender?: string | null
+          hobbies?: string[] | null
+          id?: string
+          location?: string | null
+          off_chart_prompts?: string[] | null
+          onboarding_completed?: boolean | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      trading_profiles: {
+        Row: {
+          connect_frequency: string[] | null
+          connection_reach: string | null
+          connection_types: string[] | null
+          created_at: string | null
+          experience_level: string | null
+          frequency: string[] | null
+          id: string
+          journaling: string[] | null
+          looking_for_gender: string | null
+          loss_response: string | null
+          markets: string[] | null
+          match_priorities: string[] | null
+          primary_goal: string[] | null
+          sessions: string[] | null
+          strategies: string[] | null
+          struggles: string[] | null
+          timeframes: string[] | null
+          trade_times: string[] | null
+          trading_plan: string[] | null
+          trading_style: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          connect_frequency?: string[] | null
+          connection_reach?: string | null
+          connection_types?: string[] | null
+          created_at?: string | null
+          experience_level?: string | null
+          frequency?: string[] | null
+          id?: string
+          journaling?: string[] | null
+          looking_for_gender?: string | null
+          loss_response?: string | null
+          markets?: string[] | null
+          match_priorities?: string[] | null
+          primary_goal?: string[] | null
+          sessions?: string[] | null
+          strategies?: string[] | null
+          struggles?: string[] | null
+          timeframes?: string[] | null
+          trade_times?: string[] | null
+          trading_plan?: string[] | null
+          trading_style?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          connect_frequency?: string[] | null
+          connection_reach?: string | null
+          connection_types?: string[] | null
+          created_at?: string | null
+          experience_level?: string | null
+          frequency?: string[] | null
+          id?: string
+          journaling?: string[] | null
+          looking_for_gender?: string | null
+          loss_response?: string | null
+          markets?: string[] | null
+          match_priorities?: string[] | null
+          primary_goal?: string[] | null
+          sessions?: string[] | null
+          strategies?: string[] | null
+          struggles?: string[] | null
+          timeframes?: string[] | null
+          trade_times?: string[] | null
+          trading_plan?: string[] | null
+          trading_style?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
