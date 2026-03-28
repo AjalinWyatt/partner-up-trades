@@ -210,7 +210,7 @@ const ViewProfile = () => {
           </div>
 
           <div className="flex items-center justify-center gap-1.5">
-            <span className="text-lg font-extrabold text-foreground">{profile?.full_name || profile?.username || "Trader"}</span>
+            <span className="text-lg font-extrabold text-foreground">{profile?.full_name || "Trader"}</span>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
               <circle cx="10" cy="10" r="9" fill="url(#vg3)" />
               <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -425,7 +425,7 @@ const ViewProfile = () => {
       </div>
 
       {/* Action Bar */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2">
+      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2">
         {connectionStatus === "accepted" ? (
           <>
             <button
