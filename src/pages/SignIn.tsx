@@ -14,6 +14,9 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Check if user is already signed in on mount
   useEffect(() => {
@@ -60,6 +63,21 @@ const SignIn = () => {
       console.error("[SignIn] Unexpected error:", err);
       toast.error("Something went wrong. Please try again.");
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Check your email for a password reset link.");
+      setShowForgot(false);
     }
   };
 
@@ -138,7 +156,7 @@ const SignIn = () => {
           </div>
 
           <div className="flex justify-end">
-            <button type="button" className="text-xs text-primary hover:underline">
+            <button type="button" onClick={() => setShowForgot(true)} className="text-xs text-primary hover:underline">
               Forgot password?
             </button>
           </div>
