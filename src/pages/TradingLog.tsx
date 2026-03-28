@@ -370,18 +370,20 @@ export default function TradingLog() {
           {/* Tags */}
           <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What went right / wrong?</p>
-            <div className="flex flex-wrap gap-[5px]">
-              {TAGS.map((t) => {
+             <div className="flex flex-wrap gap-[5px]">
+              {ALL_TAGS.map((t) => {
                 const sel = selectedTags.includes(t);
+                const type = getTagType(t);
                 return (
                   <button
                     key={t}
                     onClick={() => setSelectedTags((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
                     className={cn(
                       "px-3 py-[5px] rounded-full border-[1.5px] text-[11px] font-semibold transition-colors",
-                      sel
-                        ? "bg-gradient-to-r from-primary to-accent text-foreground border-transparent"
-                        : "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                      sel && type === "green" && "bg-accent/20 text-accent border-accent",
+                      sel && type === "red" && "bg-destructive/20 text-destructive border-destructive",
+                      sel && type === "neutral" && "bg-primary/20 text-primary border-primary",
+                      !sel && "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
                     )}
                   >
                     {t}
@@ -548,9 +550,9 @@ export default function TradingLog() {
                         return (
                           <span key={tag} className={cn(
                             "text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px]",
-                            type === "right" && "bg-accent/10 text-accent",
-                            type === "wrong" && "bg-destructive/10 text-destructive",
-                            type === "neutral" && "bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                            type === "green" && "bg-accent/10 text-accent",
+                            type === "red" && "bg-destructive/10 text-destructive",
+                            type === "neutral" && "bg-primary/10 text-primary"
                           )}>{tag}</span>
                         );
                       })}
