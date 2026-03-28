@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Zap, TrendingUp, BarChart3, Target } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Plus, X, Lock, Link, Users, Globe } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -24,50 +21,61 @@ interface JournalEntry {
 }
 
 const MOODS = [
-  { value: "rough", emoji: "😫", label: "Rough" },
+  { value: "rough", emoji: "😤", label: "Rough" },
   { value: "okay", emoji: "😐", label: "Okay" },
   { value: "good", emoji: "🙂", label: "Good" },
-  { value: "great", emoji: "😄", label: "Great" },
+  { value: "great", emoji: "🔥", label: "Great" },
 ];
 
-const RESULTS = ["Win", "Loss", "Break Even"];
-const SESSIONS = ["London", "New York", "Asian"];
+const RESULTS = [
+  { value: "Win", className: "win" },
+  { value: "Loss", className: "loss" },
+  { value: "Break Even", className: "be" },
+];
+
+const ACCOUNT_TYPES = ["Demo", "Challenge", "Funded", "Live"];
+
 const TAGS = [
-  { label: "Followed plan", type: "good" },
-  { label: "Clean entry", type: "good" },
-  { label: "Held to TP", type: "good" },
-  { label: "FOMO entry", type: "bad" },
-  { label: "Moved stop", type: "bad" },
-  { label: "Revenge trade", type: "bad" },
-  { label: "Cut early", type: "neutral" },
-  { label: "Sized up", type: "neutral" },
-  { label: "Took partials", type: "neutral" },
+  "Followed plan", "FOMO entry", "Clean entry", "Moved stop",
+  "Revenge trade", "Held to TP", "Cut early", "Overtraded", "Patience",
 ];
 
-const SHARE_OPTIONS = ["Private", "Partners", "Groups"];
+const GOOD_TAGS = ["Followed plan", "Clean entry", "Held to TP", "Patience", "Stuck to plan", "Good entry", "Textbook", "Let it run"];
+const BAD_TAGS = ["FOMO entry", "Moved stop", "Revenge trade", "Overtraded", "Cut early"];
 
-function formatDate(dateStr: string) {
+function getTagType(tag: string) {
+  if (GOOD_TAGS.includes(tag)) return "right";
+  if (BAD_TAGS.includes(tag)) return "wrong";
+  return "neutral";
+}
+
+function getMoodDotColor(mood: string | null) {
+  if (mood === "great" || mood === "good") return "bg-accent";
+  if (mood === "okay") return "bg-primary";
+  return "bg-destructive";
+}
+
+function getMoodText(mood: string | null) {
+  const m = MOODS.find((x) => x.value === mood);
+  if (!m) return mood || "";
+  if (mood === "great") return "Feeling great";
+  if (mood === "good") return "Good day";
+  if (mood === "okay") return "Okay";
+  return "Frustrated";
+}
+
+function formatEntryDate(dateStr: string) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-}
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const entryDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-function formatTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: true });
 
-function getTagColor(type: string) {
-  if (type === "good") return "bg-accent/20 text-accent";
-  if (type === "bad") return "bg-destructive/20 text-destructive";
-  return "bg-[hsl(38,92%,55%)]/20 text-[hsl(38,92%,55%)]";
-}
-
-function getMoodEmoji(mood: string | null) {
-  return MOODS.find((m) => m.value === mood)?.emoji || "😐";
-}
-
-function getMoodLabel(mood: string | null) {
-  return MOODS.find((m) => m.value === mood)?.label || mood;
+  if (entryDay.getTime() === today.getTime()) return `Today · ${time}`;
+  if (entryDay.getTime() === yesterday.getTime()) return `Yesterday · ${time}`;
+  return `${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${time}`;
 }
 
 export default function TradingLog() {
@@ -76,25 +84,22 @@ export default function TradingLog() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [period, setPeriod] = useState("This Week");
 
   // Form state
   const [mood, setMood] = useState("");
   const [result, setResult] = useState("");
   const [pnl, setPnl] = useState("");
-  const [marketPair, setMarketPair] = useState("");
-  const [session, setSession] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [marketName, setMarketName] = useState("");
+  const [pairName, setPairName] = useState("");
+  const [accountType, setAccountType] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
-  const [share, setShare] = useState("Private");
+  const [shareSettings, setShareSettings] = useState<string[]>(["private"]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        navigate("/signin");
-        return;
-      }
+      if (!data.user) { navigate("/signin"); return; }
       setUserId(data.user.id);
     });
   }, [navigate]);
@@ -115,83 +120,66 @@ export default function TradingLog() {
     setLoading(false);
   }
 
-  // Streak calculation
+  // Streak
   function getStreak() {
     if (entries.length === 0) return 0;
     let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < 30; i++) {
-      const day = new Date(today);
-      day.setDate(day.getDate() - i);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 60; i++) {
+      const day = new Date(today); day.setDate(day.getDate() - i);
       const dayStr = day.toISOString().split("T")[0];
-      const hasEntry = entries.some(
-        (e) => new Date(e.created_at).toISOString().split("T")[0] === dayStr
-      );
+      const hasEntry = entries.some((e) => new Date(e.created_at).toISOString().split("T")[0] === dayStr);
       if (hasEntry) streak++;
       else if (i > 0) break;
     }
     return streak;
   }
 
-  // Weekly dots
   function getWeekDots() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
     const dots = [];
     for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(day.getDate() + i);
+      const day = new Date(startOfWeek); day.setDate(day.getDate() + i);
       const dayStr = day.toISOString().split("T")[0];
       const todayStr = today.toISOString().split("T")[0];
-      const logged = entries.some(
-        (e) => new Date(e.created_at).toISOString().split("T")[0] === dayStr
-      );
+      const logged = entries.some((e) => new Date(e.created_at).toISOString().split("T")[0] === dayStr);
       dots.push({ logged, isToday: dayStr === todayStr });
     }
     return dots;
   }
 
-  // Stats
   function getWeekStats() {
     const today = new Date();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
-
-    const weekEntries = entries.filter(
-      (e) => new Date(e.created_at) >= startOfWeek
-    );
-
+    const weekEntries = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
     const totalPips = weekEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
     const totalTrades = weekEntries.length;
     const wins = weekEntries.filter((e) => e.result === "Win").length;
     const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-
     return { totalPips, totalTrades, winRate };
   }
 
   async function saveEntry() {
     if (!userId) return;
     setSaving(true);
+    const marketPairStr = [marketName, pairName].filter(Boolean).join(" · ");
     const { error } = await supabase.from("journal_entries").insert({
       user_id: userId,
       mood: mood || null,
       result: result || null,
       pnl_pips: pnl ? parseFloat(pnl) : null,
-      market_pair: marketPair || null,
-      session: session || null,
-      tags,
+      market_pair: marketPairStr || null,
+      session: null,
+      tags: selectedTags,
       notes: notes || null,
-      share_setting: share.toLowerCase(),
+      share_setting: shareSettings[0] || "private",
     });
     setSaving(false);
-    if (error) {
-      toast.error("Failed to save entry");
-      return;
-    }
+    if (error) { toast.error("Failed to save entry"); return; }
     toast.success("Session logged!");
     setShowForm(false);
     resetForm();
@@ -199,52 +187,239 @@ export default function TradingLog() {
   }
 
   function resetForm() {
-    setMood("");
-    setResult("");
-    setPnl("");
-    setMarketPair("");
-    setSession("");
-    setTags([]);
-    setNotes("");
-    setShare("Private");
+    setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
+    setAccountType(""); setSelectedTags([]); setNotes(""); setShareSettings(["private"]);
   }
 
   const streak = getStreak();
   const weekDots = getWeekDots();
   const stats = getWeekStats();
 
-  return (
-    <div className="flex flex-col min-h-screen bg-background pb-16">
-      <LogoHeader />
-      <div className="px-4 pt-2">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-foreground">Trading Log</h1>
-          <button className="text-xs text-muted-foreground border border-border rounded-full px-3 py-1">
-            {period} ▾
+  // ─── FORM VIEW ───
+  if (showForm) {
+    return (
+      <div className="flex flex-col h-screen" style={{ background: "#0f1318" }}>
+        {/* Form header */}
+        <div className="flex items-center justify-between px-5 py-2 shrink-0">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowForm(false)} className="w-7 h-7 flex items-center justify-center">
+              <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
+            </button>
+            <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Log Session</span>
+          </div>
+          <button
+            onClick={saveEntry}
+            disabled={saving}
+            className="px-4 py-1.5 rounded-lg bg-accent text-accent-foreground text-[13px] font-bold disabled:opacity-50"
+          >
+            Save
           </button>
         </div>
 
-        {/* Streak card */}
-        <div className="bg-card rounded-2xl p-4 mb-4 border border-border">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-5 h-5 text-[hsl(38,92%,55%)]" />
-            <span className="text-lg font-bold text-foreground">{streak} Day Streak</span>
+        <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3.5" style={{ scrollbarWidth: "none" }}>
+          {/* Mood */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How are you feeling?</p>
+            <div className="flex gap-1.5">
+              {MOODS.map((m) => (
+                <button
+                  key={m.value}
+                  onClick={() => setMood(m.value)}
+                  className={cn(
+                    "flex-1 flex flex-col items-center py-2.5 rounded-[10px] border-[1.5px] transition-colors",
+                    mood === m.value
+                      ? "border-accent bg-accent/[0.08]"
+                      : "border-border bg-[rgba(255,255,255,0.06)]"
+                  )}
+                >
+                  <span className="text-xl">{m.emoji}</span>
+                  <span className="text-[9px] text-muted-foreground mt-0.5">{m.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            {streak > 0 ? "Keep it going — log today's session" : "Start your streak — log today's session"}
-          </p>
-          <div className="flex items-center gap-2">
+
+          {/* Result */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Result</p>
+            <div className="flex gap-2 mb-2">
+              {RESULTS.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => setResult(r.value)}
+                  className={cn(
+                    "flex-1 py-2.5 rounded-[10px] border-[1.5px] text-[13px] font-bold transition-colors",
+                    result === r.value
+                      ? r.className === "win"
+                        ? "bg-accent/[0.12] text-accent border-accent"
+                        : r.className === "loss"
+                        ? "bg-destructive/[0.12] text-destructive border-destructive"
+                        : "bg-primary/[0.12] text-primary border-primary"
+                      : "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                  )}
+                >
+                  {r.value}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={pnl}
+              onChange={(e) => setPnl(e.target.value)}
+              placeholder="Pips or dollar amount (e.g. +38 pips)"
+              className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+            />
+          </div>
+
+          {/* Market & Pair */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Market & Pair</p>
+            <div className="flex gap-2">
+              <input
+                value={marketName}
+                onChange={(e) => setMarketName(e.target.value)}
+                placeholder="e.g. Gold"
+                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+              />
+              <input
+                value={pairName}
+                onChange={(e) => setPairName(e.target.value)}
+                placeholder="e.g. XAU/USD"
+                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+              />
+            </div>
+          </div>
+
+          {/* Account Type */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Account Type</p>
+            <div className="flex gap-2">
+              {ACCOUNT_TYPES.map((a) => (
+                <button
+                  key={a}
+                  onClick={() => setAccountType(a)}
+                  className={cn(
+                    "flex-1 py-2.5 rounded-[10px] border-[1.5px] text-[13px] font-bold transition-colors",
+                    accountType === a
+                      ? "bg-accent/[0.12] text-accent border-accent"
+                      : "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                  )}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What went right / wrong?</p>
+            <div className="flex flex-wrap gap-[5px]">
+              {TAGS.map((t) => {
+                const sel = selectedTags.includes(t);
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTags((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
+                    className={cn(
+                      "px-3 py-[5px] rounded-full border-[1.5px] text-[11px] font-semibold transition-colors",
+                      sel
+                        ? "bg-gradient-to-r from-primary to-accent text-foreground border-transparent"
+                        : "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                    )}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Notes</p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="What happened? What did you learn?"
+              className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
+            />
+          </div>
+
+          {/* Share with */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Share this log with</p>
+            <div className="flex gap-1.5">
+              {[
+                { value: "private", icon: Lock, label: "Private" },
+                { value: "partners", icon: Link, label: "Partners" },
+                { value: "groups", icon: Users, label: "Groups" },
+                { value: "circles", icon: Globe, label: "Circles" },
+              ].map((opt) => {
+                const sel = shareSettings.includes(opt.value);
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setShareSettings(sel ? shareSettings.filter((s) => s !== opt.value) : [...shareSettings, opt.value])}
+                    className={cn(
+                      "flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[10px] border-[1.5px] transition-colors",
+                      sel
+                        ? "border-accent bg-accent/[0.08]"
+                        : "border-border bg-[rgba(255,255,255,0.06)]"
+                    )}
+                  >
+                    <Icon className={cn("w-[18px] h-[18px]", sel ? "text-accent" : "text-muted-foreground")} strokeWidth={1.6} />
+                    <span className={cn("text-[9px] font-semibold", sel ? "text-accent" : "text-muted-foreground")}>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── MAIN LOG VIEW ───
+  return (
+    <div className="flex flex-col min-h-screen bg-background pb-14">
+      <LogoHeader />
+
+      {/* Page nav */}
+      <div className="flex items-center justify-between px-5 py-1.5">
+        <h1 className="text-lg font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Trading Log</h1>
+        <button className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+          This Week
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pb-16" style={{ scrollbarWidth: "none" }}>
+        {/* Streak */}
+        <div className="flex items-center gap-2.5 mx-5 my-2 p-2.5 px-3.5 bg-card border border-border rounded-xl">
+          <span className="text-2xl">⚡</span>
+          <div className="flex-1">
+            <div className="text-xl font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {streak} Day Streak
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {streak > 0 ? "Keep it going — log today's session" : "Start your streak — log today's session"}
+            </div>
+          </div>
+          <div className="flex gap-[3px]">
             {weekDots.map((dot, i) => (
               <div
                 key={i}
                 className={cn(
-                  "w-3 h-3 rounded-full",
+                  "w-2 h-2 rounded-full",
                   dot.logged
                     ? "bg-accent"
                     : dot.isToday
-                    ? "bg-primary animate-pulse"
-                    : "bg-muted"
+                    ? "bg-accent shadow-[0_0_6px_hsl(var(--accent))]"
+                    : "bg-[rgba(255,255,255,0.08)]"
                 )}
               />
             ))}
@@ -252,258 +427,112 @@ export default function TradingLog() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-card rounded-xl p-3 border border-border text-center">
-            <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1" />
-            <p className={cn("text-lg font-bold", stats.totalPips >= 0 ? "text-accent" : "text-destructive")}>
-              {stats.totalPips > 0 ? "+" : ""}{stats.totalPips}
-            </p>
-            <p className="text-[10px] text-muted-foreground">Pips</p>
-          </div>
-          <div className="bg-card rounded-xl p-3 border border-border text-center">
-            <BarChart3 className="w-4 h-4 text-primary mx-auto mb-1" />
-            <p className="text-lg font-bold text-foreground">{stats.totalTrades}</p>
-            <p className="text-[10px] text-muted-foreground">Trades</p>
-          </div>
-          <div className="bg-card rounded-xl p-3 border border-border text-center">
-            <Target className="w-4 h-4 text-[hsl(38,92%,55%)] mx-auto mb-1" />
-            <p className="text-lg font-bold text-foreground">{stats.winRate}%</p>
-            <p className="text-[10px] text-muted-foreground">Win Rate</p>
-          </div>
-        </div>
-
-        {/* Recent sessions */}
-        <h2 className="text-sm font-semibold text-foreground mb-3">Recent Sessions</h2>
-      </div>
-
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : entries.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <BarChart3 className="w-14 h-14 text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-1">No sessions logged yet</h2>
-          <p className="text-sm text-muted-foreground">
-            Tap + to log your first session
-          </p>
-        </div>
-      ) : (
-        <div className="px-4 space-y-3">
-          {entries.map((entry) => (
-            <div key={entry.id} className="bg-card rounded-xl p-4 border border-border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{getMoodEmoji(entry.mood)}</span>
-                  <span className="text-xs text-muted-foreground">{getMoodLabel(entry.mood)}</span>
-                </div>
-                <span className={cn("text-sm font-bold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")}>
-                  {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <span>{formatDate(entry.created_at)}</span>
-                <span>·</span>
-                <span>{formatTime(entry.created_at)}</span>
-                {entry.market_pair && (
-                  <>
-                    <span>·</span>
-                    <span>{entry.market_pair}</span>
-                  </>
-                )}
-                {entry.session && (
-                  <>
-                    <span>·</span>
-                    <span>{entry.session}</span>
-                  </>
-                )}
-              </div>
-              {entry.notes && (
-                <p className="text-xs text-muted-foreground mb-2">{entry.notes}</p>
-              )}
-              {entry.tags && entry.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {entry.tags.map((tag) => {
-                    const tagDef = TAGS.find((t) => t.label === tag);
-                    return (
-                      <span key={tag} className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium", getTagColor(tagDef?.type || "neutral"))}>
-                        {tag}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
+        <div className="grid grid-cols-3 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
+          <div className="bg-card py-2.5 px-2 text-center">
+            <div className={cn("text-base font-black", stats.totalPips >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.totalPips > 0 ? "+" : ""}{stats.totalPips} pips
             </div>
-          ))}
+            <div className="text-[9px] text-muted-foreground mt-px">This Week</div>
+          </div>
+          <div className="bg-card py-2.5 px-2 text-center">
+            <div className="text-base font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.totalTrades}
+            </div>
+            <div className="text-[9px] text-muted-foreground mt-px">Trades</div>
+          </div>
+          <div className="bg-card py-2.5 px-2 text-center">
+            <div className={cn("text-base font-black", stats.winRate > 50 ? "text-accent" : "text-foreground")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.winRate}%
+            </div>
+            <div className="text-[9px] text-muted-foreground mt-px">Win Rate</div>
+          </div>
         </div>
-      )}
+
+        {/* Section header */}
+        <div className="px-5 pt-2.5 pb-1.5">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Recent Sessions</span>
+        </div>
+
+        {/* Entries */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+            <div className="text-3xl mb-3">📓</div>
+            <h2 className="text-base font-bold text-foreground mb-1">No sessions logged yet</h2>
+            <p className="text-xs text-muted-foreground">
+              Tap + to log your first session
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1.5 mx-5">
+            {entries.map((entry) => (
+              <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
+                {/* Top row */}
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
+                  <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                    {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
+                  </span>
+                </div>
+
+                {/* Mood */}
+                {entry.mood && (
+                  <div className="flex items-center gap-1 mb-1">
+                    <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
+                    <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {entry.notes && (
+                  <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                )}
+
+                {/* Tags */}
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-[3px] mb-1">
+                    {entry.tags.map((tag) => {
+                      const type = getTagType(tag);
+                      return (
+                        <span
+                          key={tag}
+                          className={cn(
+                            "text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px]",
+                            type === "right" && "bg-accent/10 text-accent",
+                            type === "wrong" && "bg-destructive/10 text-destructive",
+                            type === "neutral" && "bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                          )}
+                        >
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Market info */}
+                {(entry.market_pair || entry.session) && (
+                  <div className="text-[9px] text-muted-foreground mt-0.5">
+                    {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* FAB */}
       <button
         onClick={() => setShowForm(true)}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/30 z-40"
+        className="fixed bottom-[68px] right-5 w-[52px] h-[52px] rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center z-40"
+        style={{ boxShadow: "0 4px 20px rgba(18,184,122,0.3)" }}
       >
-        <Plus className="w-6 h-6 text-primary-foreground" />
+        <Plus className="w-6 h-6 text-foreground" strokeWidth={2.5} />
       </button>
-
-      {/* Log Form Dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="bg-background border-border max-h-[90vh] overflow-y-auto p-0 gap-0 max-w-md">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <button onClick={() => setShowForm(false)}>
-              <X className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <h2 className="text-base font-semibold text-foreground">Log Session</h2>
-            <button
-              onClick={saveEntry}
-              disabled={saving}
-              className="text-sm font-semibold text-primary disabled:opacity-50"
-            >
-              Save
-            </button>
-          </div>
-
-          <div className="px-4 py-4 space-y-5">
-            {/* Mood */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">How are you feeling?</p>
-              <div className="flex gap-2">
-                {MOODS.map((m) => (
-                  <button
-                    key={m.value}
-                    onClick={() => setMood(m.value)}
-                    className={cn(
-                      "flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border transition-colors",
-                      mood === m.value ? "border-primary bg-primary/10" : "border-border bg-card"
-                    )}
-                  >
-                    <span className="text-xl">{m.emoji}</span>
-                    <span className="text-[10px] text-muted-foreground">{m.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Result */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Result</p>
-              <div className="flex gap-2">
-                {RESULTS.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setResult(r)}
-                    className={cn(
-                      "flex-1 py-2 rounded-full text-xs font-medium border transition-colors",
-                      result === r ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground"
-                    )}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* P&L */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">P&L (pips)</p>
-              <Input
-                type="number"
-                value={pnl}
-                onChange={(e) => setPnl(e.target.value)}
-                placeholder="e.g. +45"
-                className="bg-card border-border text-foreground"
-              />
-            </div>
-
-            {/* Market & Pair */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Market & Pair</p>
-              <Input
-                value={marketPair}
-                onChange={(e) => setMarketPair(e.target.value)}
-                placeholder="e.g. Gold · XAU/USD"
-                className="bg-card border-border text-foreground"
-              />
-            </div>
-
-            {/* Session */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Session</p>
-              <div className="flex gap-2">
-                {SESSIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSession(s)}
-                    className={cn(
-                      "flex-1 py-2 rounded-full text-xs font-medium border transition-colors",
-                      session === s ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground"
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Tags</p>
-              <div className="flex flex-wrap gap-2">
-                {TAGS.map((t) => {
-                  const selected = tags.includes(t.label);
-                  return (
-                    <button
-                      key={t.label}
-                      onClick={() =>
-                        setTags((prev) =>
-                          selected ? prev.filter((x) => x !== t.label) : [...prev, t.label]
-                        )
-                      }
-                      className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                        selected ? getTagColor(t.type) + " border-transparent" : "border-border bg-card text-muted-foreground"
-                      )}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Notes</p>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="What happened in this session..."
-                className="bg-card border-border text-foreground min-h-[80px]"
-              />
-            </div>
-
-            {/* Share with */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Share with</p>
-              <div className="flex gap-2">
-                {SHARE_OPTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setShare(s)}
-                    className={cn(
-                      "flex-1 py-2 rounded-full text-xs font-medium border transition-colors",
-                      share === s ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground"
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <BottomNav />
     </div>
