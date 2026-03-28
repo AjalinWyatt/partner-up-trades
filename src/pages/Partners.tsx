@@ -8,12 +8,30 @@ import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
+type AlertType = "win" | "loss" | "breakeven" | "inactive" | "rough";
+
 interface Alert {
   userId: string;
   name: string;
   text: string;
   sub: string;
   action: "message" | "log";
+  alertType: AlertType;
+}
+
+function getAlertColors(type: AlertType) {
+  switch (type) {
+    case "win":
+      return { bg: "rgba(47,217,138,0.08)", border: "rgba(47,217,138,0.2)", icon: "🟢", btnBg: "rgba(47,217,138,0.15)", btnText: "#2fd98a" };
+    case "loss":
+      return { bg: "rgba(255,107,107,0.08)", border: "rgba(255,107,107,0.2)", icon: "🔴", btnBg: "rgba(255,107,107,0.15)", btnText: "#ff6b6b" };
+    case "breakeven":
+      return { bg: "rgba(247,192,89,0.08)", border: "rgba(247,192,89,0.2)", icon: "🟡", btnBg: "rgba(247,192,89,0.15)", btnText: "#f7c059" };
+    case "inactive":
+      return { bg: "rgba(77,159,255,0.08)", border: "rgba(77,159,255,0.2)", icon: "🔵", btnBg: "rgba(77,159,255,0.15)", btnText: "#4d9fff" };
+    case "rough":
+      return { bg: "rgba(224,82,82,0.08)", border: "rgba(224,82,82,0.2)", icon: "❤️‍🩹", btnBg: "rgba(224,82,82,0.15)", btnText: "#e05252" };
+  }
 }
 
 interface PendingRequest {
