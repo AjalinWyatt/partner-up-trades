@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, ChevronDown, UserPlus } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
