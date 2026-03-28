@@ -28,11 +28,11 @@ interface Message {
 }
 
 const GRADIENT_COLORS = [
-  "from-emerald-400 to-cyan-500",
-  "from-violet-500 to-fuchsia-500",
-  "from-amber-400 to-orange-500",
-  "from-sky-400 to-indigo-500",
-  "from-rose-400 to-pink-500",
+  "from-primary to-accent",
+  "from-teal-500 to-emerald-400",
+  "from-emerald-500 to-cyan-500",
+  "from-cyan-500 to-teal-400",
+  "from-green-500 to-emerald-400",
 ];
 
 function getGradient(id: string) {

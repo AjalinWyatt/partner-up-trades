@@ -120,7 +120,7 @@ const SignIn = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold"
+            className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 text-sm font-semibold"
           >
             {loading ? "Signing in…" : "Sign in"}
             {!loading && <ArrowRight className="ml-2 w-4 h-4" />}
