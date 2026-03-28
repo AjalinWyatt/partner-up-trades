@@ -73,7 +73,42 @@ const Landing = () => {
   useEffect(() => {
     supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
     supabase.from("partner_connections").select("*", { count: "exact", head: true }).eq("status", "accepted").then(({ count }) => setPartnershipCount(count ?? 0));
-  }, []);
+
+    // If user is already logged in, redirect to app
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          navigate("/feed");
+        }
+      }
+    };
+    checkAuth();
+
+    // Listen for auth state changes (e.g. email verification redirect)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          navigate("/feed");
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     const handleScroll = () => setNavShadow(window.scrollY > 20);
