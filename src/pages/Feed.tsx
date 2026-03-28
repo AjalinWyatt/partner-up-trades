@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, ChevronDown, UserPlus } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -30,11 +30,13 @@ interface FeedPost {
   commentCount: number;
 }
 
-const MARKET_OPTIONS = ["All", "Forex", "Futures", "Options"] as const;
+
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const marketFilter = searchParams.get("market") || "All";
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
@@ -43,23 +45,7 @@ const Feed = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
-  const [marketFilter, setMarketFilter] = useState<string>("All");
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [marketCounts, setMarketCounts] = useState<Record<string, number>>({});
 
-  const loadMarketCounts = useCallback(async () => {
-    const { data } = await supabase.from("trading_profiles").select("markets");
-    const counts: Record<string, number> = { All: 0, Forex: 0, Futures: 0, Options: 0 };
-    (data || []).forEach((tp: any) => {
-      if (tp.markets?.length > 0) {
-        counts.All++;
-        tp.markets.forEach((m: string) => {
-          if (counts[m] !== undefined) counts[m]++;
-        });
-      }
-    });
-    setMarketCounts(counts);
-  }, []);
 
   const loadFeed = useCallback(async (filter?: string) => {
     const activeFilter = filter ?? marketFilter;
@@ -166,8 +152,8 @@ const Feed = () => {
   }, [marketFilter]);
 
   useEffect(() => {
+    setLoading(true);
     loadFeed();
-    loadMarketCounts();
 
     const channel = supabase
       .channel("feed-realtime-v2")
@@ -214,13 +200,6 @@ const Feed = () => {
     }
   };
 
-  const handleMarketFilter = (market: string) => {
-    setMarketFilter(market);
-    setShowFilterDropdown(false);
-    setLoading(true);
-    loadFeed(market);
-  };
-
   const primaryMarket = myMarkets[0] || "Forex";
 
   if (loading) {
@@ -249,38 +228,12 @@ const Feed = () => {
             <span className="text-sm font-black text-foreground tracking-tight">
               traders<span className="bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">world</span>
             </span>
+            {marketFilter !== "All" && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-primary/15 text-[10px] font-bold text-primary">{marketFilter}</span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Market filter */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-secondary border border-border text-[11px] font-semibold text-foreground"
-              >
-                {marketFilter === "All" ? "All" : marketFilter}
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              </button>
-              {showFilterDropdown && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                  {MARKET_OPTIONS.map(m => (
-                    <button
-                      key={m}
-                      onClick={() => handleMarketFilter(m)}
-                      className={cn(
-                        "flex items-center justify-between w-full px-3 py-2 text-xs transition-colors",
-                        marketFilter === m ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <span>{m}</span>
-                      <span className="text-[10px] text-muted-foreground">{marketCounts[m] || 0} active</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <NotificationBell />
-          </div>
+          <NotificationBell />
         </div>
 
         {posts.length === 0 ? (
