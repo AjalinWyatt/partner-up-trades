@@ -4,7 +4,6 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -18,18 +17,19 @@ interface SignupEmailProps {
   siteName: string
   siteUrl: string
   recipient: string
-  confirmationUrl: string
+  token: string
+  confirmationUrl?: string
 }
 
 export const SignupEmail = ({
   siteName,
   siteUrl,
   recipient,
-  confirmationUrl,
+  token,
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Welcome to TradersWorld — verify your email</Preview>
+    <Preview>Your TradersWorld verification code: {token}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={logo}>TradersWorld</Text>
@@ -42,17 +42,15 @@ export const SignupEmail = ({
           — your trading accountability partner is waiting.
         </Text>
         <Text style={text}>
-          Verify your email (
+          Enter this code to verify your email (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) to get started:
+          ):
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Verify Email
-        </Button>
+        <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          This code expires shortly. If you didn't create an account, you can safely ignore this email.
         </Text>
       </Container>
     </Body>
@@ -67,5 +65,5 @@ const logo = { fontSize: '18px', fontWeight: 'bold' as const, color: 'hsl(214, 7
 const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#0a0a0f', margin: '0 0 16px' }
 const text = { fontSize: '15px', color: '#666666', lineHeight: '1.6', margin: '0 0 20px' }
 const link = { color: 'hsl(214, 76%, 50%)', textDecoration: 'underline' }
-const button = { backgroundColor: 'hsl(214, 76%, 50%)', color: '#ffffff', fontSize: '15px', fontWeight: '600' as const, borderRadius: '12px', padding: '14px 28px', textDecoration: 'none' }
+const codeStyle = { fontFamily: 'Courier, monospace', fontSize: '32px', fontWeight: 'bold' as const, color: 'hsl(214, 76%, 50%)', margin: '0 0 30px', letterSpacing: '6px', textAlign: 'center' as const }
 const footer = { fontSize: '12px', color: '#999999', margin: '32px 0 0' }

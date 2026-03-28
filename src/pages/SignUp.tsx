@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import LogoHeader from "@/components/LogoHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -17,6 +18,9 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [traderCount, setTraderCount] = useState(0);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
@@ -30,15 +34,44 @@ const SignUp = () => {
       password,
       options: {
         data: { full_name: `${firstName} ${lastName}`.trim(), first_name: firstName, last_name: lastName },
-        emailRedirectTo: `${window.location.origin}/signin`,
       },
     });
     setLoading(false);
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Account created! Please check your email to verify before signing in.");
-      navigate("/signin");
+      toast.success("Check your email for a verification code!");
+      setShowOtp(true);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length < 6) return;
+    setVerifying(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "signup",
+    });
+    setVerifying(false);
+    if (error) {
+      toast.error(error.message);
+      setOtp("");
+    } else {
+      toast.success("Email verified! Welcome to TradersWorld.");
+      navigate("/onboarding");
+    }
+  };
+
+  const handleResendCode = async () => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("A new code has been sent to your email.");
     }
   };
 
@@ -48,6 +81,53 @@ const SignUp = () => {
     });
     if (error) toast.error(error.message);
   };
+
+  // OTP verification screen
+  if (showOtp) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background px-6 py-8">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setShowOtp(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <LogoHeader compact />
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+          <h1 className="text-2xl font-bold text-foreground text-center">Verify your email</h1>
+          <p className="mt-2 text-sm text-muted-foreground text-center">
+            We sent a 6-digit code to <span className="text-foreground font-medium">{email}</span>
+          </p>
+
+          <div className="mt-8">
+            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} className="w-12 h-14 text-lg border-border bg-secondary text-foreground" />
+                <InputOTPSlot index={1} className="w-12 h-14 text-lg border-border bg-secondary text-foreground" />
+                <InputOTPSlot index={2} className="w-12 h-14 text-lg border-border bg-secondary text-foreground" />
+                <InputOTPSlot index={3} className="w-12 h-14 text-lg border-border bg-secondary text-foreground" />
+                <InputOTPSlot index={4} className="w-12 h-14 text-lg border-border bg-secondary text-foreground" />
+                <InputOTPSlot index={5} className="w-12 h-14 text-lg border-border bg-secondary text-foreground" />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+
+          <Button
+            onClick={handleVerifyOtp}
+            disabled={otp.length < 6 || verifying}
+            className="w-full h-12 bg-gradient-brand text-white hover:opacity-90 text-sm font-semibold mt-8 border-none"
+          >
+            {verifying ? "Verifying…" : "Verify & Continue"}
+            {!verifying && <ArrowRight className="ml-2 w-4 h-4" />}
+          </Button>
+
+          <button onClick={handleResendCode} className="text-sm text-primary hover:underline mt-4">
+            Didn't get a code? Resend
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background px-6 py-8">
