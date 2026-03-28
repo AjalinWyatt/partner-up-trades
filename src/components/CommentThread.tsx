@@ -99,6 +99,17 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
       }]);
       onCountChange(entryId, 1);
       setText("");
+
+      // Send notification to post owner (not self)
+      if (entryOwnerId !== myId) {
+        await supabase.from("notifications").insert({
+          user_id: entryOwnerId,
+          actor_id: myId,
+          type: "comment",
+          entry_id: entryId,
+          comment_id: data.id,
+        });
+      }
     }
     setSending(false);
   };
