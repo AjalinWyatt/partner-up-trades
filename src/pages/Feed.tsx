@@ -125,6 +125,15 @@ const Feed = () => {
     } else {
       await supabase.from("feed_likes").insert({ user_id: myId, entry_id: entryId });
       setEntries(prev => prev.map(e => e.id === entryId ? { ...e, liked: true, likeCount: e.likeCount + 1 } : e));
+      // Send notification to post owner (not self)
+      if (entry.user_id !== myId) {
+        await supabase.from("notifications").insert({
+          user_id: entry.user_id,
+          actor_id: myId,
+          type: "like",
+          entry_id: entryId,
+        });
+      }
     }
   };
 
