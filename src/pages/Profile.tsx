@@ -418,20 +418,30 @@ const Profile = () => {
 
         {/* Tab Content */}
         {activeTab === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
-              <ImageIcon className="w-6 h-6 text-muted-foreground" />
+          posts.length > 0 ? (
+            <div className="grid grid-cols-3 gap-0.5 pb-8">
+              {posts.map((post: any) => (
+                <button key={post.id} className="aspect-square overflow-hidden bg-muted">
+                  <img src={post.image_url} alt="" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
+                </button>
+              ))}
             </div>
-            <p className="text-sm font-semibold text-foreground mb-1">No posts yet</p>
-            <p className="text-xs text-muted-foreground mb-4">Start sharing your trading journey, setups, reflections, and progress.</p>
-            <button
-              onClick={() => navigate("/log")}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--success))] text-xs font-bold text-primary-foreground flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Create first post
-            </button>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+                <ImageIcon className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-semibold text-foreground mb-1">No posts yet</p>
+              <p className="text-xs text-muted-foreground mb-4">Start sharing your trading journey, setups, reflections, and progress.</p>
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--success))] text-xs font-bold text-primary-foreground flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create first post
+              </button>
+            </div>
+          )
         ) : (
           hasAnyDetails ? (
             <div className="px-5 py-3 space-y-2">
