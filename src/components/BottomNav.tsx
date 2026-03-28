@@ -1,8 +1,4 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Globe, Search, Users, BookOpen, MessageSquare, User } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-import { useLocation, useNavigate } from "react-router-dom";
 import { Globe, Search, Users, BookOpen, MessageSquare, User, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +20,7 @@ const BottomNav = () => {
     <div className="fixed bottom-0 left-0 right-0 h-14 bg-background/95 backdrop-blur-xl border-t border-border flex items-center justify-around px-2 pb-2 z-50">
       {tabs.map((tab) => {
         const Icon = tab.icon;
-        const active = location.pathname === tab.path || tab.alsoActive?.includes(location.pathname);
+        const active = location.pathname === tab.path;
         return (
           <button
             key={tab.path}
@@ -35,9 +31,7 @@ const BottomNav = () => {
             )}
           >
             <Icon className="w-[22px] h-[22px]" strokeWidth={1.6} />
-            <span className="text-[9px] font-semibold">
-              {tab.path === "/feed" && location.pathname === "/forums" ? "Forums" : tab.label}
-            </span>
+            <span className="text-[9px] font-semibold">{tab.label}</span>
           </button>
         );
       })}
