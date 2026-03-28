@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,9 @@ const Onboarding = () => {
 
   // Step 1
   const [nickname, setNickname] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [chartPrompts, setChartPrompts] = useState<string[]>([]);
   const [offChartPrompts, setOffChartPrompts] = useState<string[]>([]);
 
@@ -114,12 +117,34 @@ const Onboarding = () => {
               className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground mb-4"
             />
 
-            <div className="flex items-center gap-3.5 mb-4">
-              <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center shrink-0 hover:border-success transition-colors cursor-pointer">
-                <Camera className="w-6 h-6 text-muted-foreground" />
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setAvatarFile(file);
+                  setAvatarPreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+            <div
+              className="flex items-center gap-3.5 mb-4 cursor-pointer"
+              onClick={() => avatarInputRef.current?.click()}
+            >
+              <div className="w-16 h-16 rounded-full border-2 border-dashed border-accent/60 flex items-center justify-center shrink-0 hover:border-accent transition-colors overflow-hidden">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <Camera className="w-6 h-6 text-muted-foreground" />
+                )}
               </div>
               <div>
-                <div className="text-[13px] font-semibold text-foreground">Add a photo (optional)</div>
+                <div className="text-[13px] font-semibold text-foreground">
+                  {avatarPreview ? "Change photo" : "Add a photo (optional)"}
+                </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">Just you, clearly visible.</div>
               </div>
             </div>
@@ -371,11 +396,27 @@ const Onboarding = () => {
                   const { data: { user } } = await supabase.auth.getUser();
                   if (!user) throw new Error("Not authenticated");
 
+                  // Upload avatar if selected
+                  let avatarUrl: string | null = null;
+                  if (avatarFile) {
+                    const ext = avatarFile.name.split(".").pop() || "jpg";
+                    const filePath = `${user.id}/avatar.${ext}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from("avatars")
+                      .upload(filePath, avatarFile, { upsert: true });
+                    if (uploadError) throw uploadError;
+                    const { data: urlData } = supabase.storage
+                      .from("avatars")
+                      .getPublicUrl(filePath);
+                    avatarUrl = urlData.publicUrl;
+                  }
+
                   const { error: profileError } = await supabase
                     .from("profiles")
                     .upsert({
                       id: user.id,
                       username: nickname || null,
+                      avatar_url: avatarUrl,
                       gender,
                       hobbies: offChartPrompts,
                       chart_prompts: chartPrompts,
