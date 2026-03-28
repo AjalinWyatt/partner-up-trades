@@ -184,7 +184,7 @@ const Feed = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-14">
+    <AppLayout><div className="flex-1 overflow-y-auto">
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
@@ -311,8 +311,7 @@ const Feed = () => {
           </div>
         )}
       </div>
-      <BottomNav />
-    </div>
+    </AppLayout>
   );
 };
 
