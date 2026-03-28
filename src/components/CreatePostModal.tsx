@@ -62,7 +62,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   };
 
   const handlePost = async () => {
-    if (!content.trim() && !file) { toast.error("Write something or add media"); return; }
+    if (!file) { toast.error("Add a photo or video to post"); return; }
     setPosting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -112,7 +112,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
     onClose();
   };
 
-  const canPost = content.trim() || file;
+  const canPost = !!file;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm pt-[env(safe-area-inset-top)]" onClick={reset}>

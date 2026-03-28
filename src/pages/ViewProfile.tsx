@@ -340,12 +340,16 @@ const ViewProfile = () => {
 
         {/* Tab Content */}
         {activeTab === 0 ? (
-          posts.length > 0 ? (
+          posts.filter((p: any) => p.image_url || p.media_url).length > 0 ? (
             <div className="grid grid-cols-3 gap-[2px] mt-[2px]">
-              {posts.map((post: any) => (
-                <div key={post.id} className="aspect-square overflow-hidden bg-muted">
-                  <img src={post.image_url} alt="" className="w-full h-full object-cover" />
-                </div>
+              {posts.filter((p: any) => p.image_url || p.media_url).map((post: any) => (
+                <button key={post.id} onClick={() => navigate(`/feed?post=${post.id}`)} className="aspect-square overflow-hidden bg-muted">
+                  {post.media_type === "video" ? (
+                    <video src={post.media_url} className="w-full h-full object-cover" muted />
+                  ) : (
+                    <img src={post.image_url || post.media_url} alt="" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
+                  )}
+                </button>
               ))}
             </div>
           ) : (
