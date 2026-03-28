@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Bell, Settings, Edit, Share2, ImageIcon, Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileData {
   username: string | null;
@@ -10,8 +10,10 @@ interface ProfileData {
   avatar_url: string | null;
   gender: string | null;
   location: string | null;
-  bio: string | null;
   hobbies: string[];
+  chart_prompts: string[];
+  off_chart_prompts: string[];
+  onboarding_completed: boolean;
 }
 
 interface TradingProfileData {
@@ -21,10 +23,16 @@ interface TradingProfileData {
   strategies: string[];
   timeframes: string[];
   experience_level: string | null;
-  primary_goals: string[];
+  primary_goal: string[];
   struggles: string[];
-  chart_prompts: string[];
-  off_chart_prompts: string[];
+  frequency: string[];
+  journaling: string[];
+  trading_plan: string[];
+  looking_for_gender: string | null;
+  connection_reach: string | null;
+  connection_types: string[];
+  connect_frequency: string[];
+  match_priorities: string[];
 }
 
 const Profile = () => {
@@ -41,8 +49,8 @@ const Profile = () => {
       if (!user) { setLoading(false); return; }
 
       const [{ data: pData }, { data: tData }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("trading_profiles").select("*").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
 
       if (pData) setProfile(pData);
@@ -69,13 +77,13 @@ const Profile = () => {
     { title: "Sessions", data: tradingProfile?.sessions },
     { title: "Struggles", data: tradingProfile?.struggles },
     { title: "Hobbies", data: profile?.hobbies },
-    { title: "Watching for", data: tradingProfile?.chart_prompts },
-    { title: "Off the charts", data: tradingProfile?.off_chart_prompts },
+    { title: "Watching for", data: profile?.chart_prompts },
+    { title: "Off the charts", data: profile?.off_chart_prompts },
   ];
 
   const hasAnyDetails = detailSections.some(s => s.data && s.data.length > 0) ||
     !!tradingProfile?.experience_level ||
-    (tradingProfile?.primary_goals && tradingProfile.primary_goals.length > 0);
+    (tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0);
 
   if (loading) {
     return (
@@ -136,7 +144,6 @@ const Profile = () => {
               </button>
             </div>
           </div>
-          {profile?.bio && <div className="text-xs text-muted-foreground mt-0.5">{profile.bio}</div>}
           {profile?.gender && <div className="text-[11px] text-muted-foreground mt-0.5">{profile.gender}</div>}
           {profile?.location && (
             <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
@@ -203,7 +210,7 @@ const Profile = () => {
           hasAnyDetails ? (
             <div className="px-5 py-3 space-y-2">
               {/* Experience & Goals */}
-              {(tradingProfile?.experience_level || (tradingProfile?.primary_goals && tradingProfile.primary_goals.length > 0)) && (
+              {(tradingProfile?.experience_level || (tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0)) && (
                 <div className="bg-card border border-border rounded-xl p-3">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Trading details</div>
                   {tradingProfile?.experience_level && (
@@ -212,10 +219,10 @@ const Profile = () => {
                       <span className="text-[11px] font-bold text-foreground">{tradingProfile.experience_level}</span>
                     </div>
                   )}
-                  {tradingProfile?.primary_goals && tradingProfile.primary_goals.length > 0 && (
+                  {tradingProfile?.primary_goal && tradingProfile.primary_goal.length > 0 && (
                     <div className="flex justify-between py-1.5">
                       <span className="text-[11px] text-muted-foreground">Goals</span>
-                      <span className="text-[11px] font-bold text-foreground">{tradingProfile.primary_goals.join(", ")}</span>
+                      <span className="text-[11px] font-bold text-foreground">{tradingProfile.primary_goal.join(", ")}</span>
                     </div>
                   )}
                 </div>

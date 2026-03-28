@@ -373,22 +373,23 @@ const Onboarding = () => {
 
                   const { error: profileError } = await supabase
                     .from("profiles")
-                    .update({
-                      username: nickname || undefined,
+                    .upsert({
+                      id: user.id,
+                      username: nickname || null,
                       gender,
                       hobbies: offChartPrompts,
                       chart_prompts: chartPrompts,
                       off_chart_prompts: offChartPrompts,
                       onboarding_completed: true,
                       updated_at: new Date().toISOString(),
-                    })
-                    .eq("id", user.id);
+                    }, { onConflict: "id" });
 
                   if (profileError) throw profileError;
 
                   const { error: tradingError } = await supabase
                     .from("trading_profiles")
-                    .update({
+                    .upsert({
+                      user_id: user.id,
                       markets,
                       sessions,
                       trade_times: tradeTimes,
@@ -408,12 +409,11 @@ const Onboarding = () => {
                       connect_frequency: connectFreq,
                       match_priorities: matchPriorities,
                       updated_at: new Date().toISOString(),
-                    })
-                    .eq("user_id", user.id);
+                    }, { onConflict: "user_id" });
 
                   if (tradingError) throw tradingError;
 
-                  setTimeout(() => navigate("/dashboard"), 2500);
+                  setTimeout(() => navigate("/profile"), 2500);
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
                   toast.error("Failed to save your profile. Please try again.");
