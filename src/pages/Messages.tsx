@@ -455,7 +455,7 @@ export default function Messages() {
   /* ---- DESKTOP VIEW: split panel ---- */
   const DesktopView = () => (
     <AppLayout>
-      <div className="flex h-[calc(100vh-0px)] -mt-0 border border-primary/20 rounded-xl overflow-hidden m-2">
+      <div className="flex h-[calc(100vh-0px)] -mt-0 border-[3px] border-primary/40 rounded-xl overflow-hidden m-2">
         {/* Left: conversation list */}
         <div className="w-[340px] xl:w-[380px] border-r border-primary/30 bg-card/50 shrink-0">
           <ConversationList />
