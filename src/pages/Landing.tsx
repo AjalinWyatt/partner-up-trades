@@ -102,7 +102,7 @@ const Landing = () => {
       {/* ── NAV ── */}
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/88 backdrop-blur-2xl border-b border-[#DDE8E2] transition-all" style={{ boxShadow: navShadow ? "0 4px 24px rgba(0,0,0,0.08)" : "none" }}>
         <div className="max-w-[1140px] mx-auto px-8 h-[68px] flex items-center justify-between">
-          <a href="#" className="font-['Gabarito'] text-xl font-black text-[#0D1410] tracking-[-0.04em] flex items-center gap-2 no-underline">
+          <a href="#" className="font-['Gabarito'] text-xl font-black text-white tracking-[-0.04em] flex items-center gap-2 no-underline">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1e70e0] to-[#12b87a] flex items-center justify-center">
               <Globe className="w-4 h-4 text-white" />
             </div>
