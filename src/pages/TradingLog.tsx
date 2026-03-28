@@ -97,8 +97,9 @@ export default function TradingLog() {
   const [accountType, setAccountType] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
-  const [shareSettings, setShareSettings] = useState<string[]>(["private"]);
+  const [shareSetting, setShareSetting] = useState("partners");
   const [saving, setSaving] = useState(false);
+  const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -110,7 +111,21 @@ export default function TradingLog() {
   useEffect(() => {
     if (!userId) return;
     loadEntries();
+    loadPartners();
   }, [userId]);
+
+  async function loadPartners() {
+    if (!userId) return;
+    const { data: conns } = await supabase
+      .from("partner_connections")
+      .select("requester_id, receiver_id")
+      .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
+      .eq("status", "accepted");
+    if (!conns || conns.length === 0) { setPartners([]); return; }
+    const partnerIds = conns.map(c => c.requester_id === userId ? c.receiver_id : c.requester_id);
+    const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", partnerIds);
+    setPartners((profiles || []).map(p => ({ id: p.id, name: p.full_name || "Partner" })));
+  }
 
   async function loadEntries() {
     setLoading(true);
@@ -179,7 +194,7 @@ export default function TradingLog() {
       session: null,
       tags: selectedTags,
       notes: notes || null,
-      share_setting: shareSettings[0] || "private",
+      share_setting: shareSetting,
     });
     setSaving(false);
     if (error) { toast.error("Failed to save entry"); return; }
@@ -221,7 +236,7 @@ export default function TradingLog() {
 
   function resetForm() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
-    setAccountType(""); setSelectedTags([]); setNotes(""); setShareSettings(["private"]);
+    setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
   }
 
   const streak = getStreak();
