@@ -100,7 +100,7 @@ const Landing = () => {
   return (
     <div className="font-['DM_Sans'] text-[#0D1410] bg-white overflow-x-hidden">
       {/* ── NAV ── */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/88 backdrop-blur-2xl border-b border-[#DDE8E2] transition-all" style={{ boxShadow: navShadow ? "0 4px 24px rgba(0,0,0,0.08)" : "none" }}>
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#0D1410] border-b border-white/[0.06] transition-all" style={{ boxShadow: navShadow ? "0 4px 24px rgba(0,0,0,0.3)" : "none" }}>
         <div className="max-w-[1140px] mx-auto px-8 h-[68px] flex items-center justify-between">
           <a href="#" className="font-['Gabarito'] text-xl font-black text-white tracking-[-0.04em] flex items-center gap-2 no-underline">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1e70e0] to-[#12b87a] flex items-center justify-center">
