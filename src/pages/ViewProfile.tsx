@@ -22,6 +22,7 @@ const ViewProfile = () => {
   const [breakdown, setBreakdown] = useState<Record<string, number>>({});
   const [posts, setPosts] = useState<any[]>([]);
   const [journalEntries, setJournalEntries] = useState<any[]>([]);
+  const [forumActivity, setForumActivity] = useState<any[]>([]);
   const [stats, setStats] = useState({ partners: 0, streak: 0, winRate: 0 });
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
