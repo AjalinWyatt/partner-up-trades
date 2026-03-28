@@ -36,6 +36,7 @@ interface FeedPost {
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
+  const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const marketFilter = searchParams.get("market") || "All";
