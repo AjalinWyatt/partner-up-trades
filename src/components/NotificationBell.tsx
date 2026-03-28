@@ -158,11 +158,19 @@ const NotificationBell = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
             <span className="text-xs font-bold text-foreground">Notifications</span>
-            {unreadCount > 0 && (
-              <button onClick={markAllRead} className="text-[10px] text-primary font-semibold">
-                Mark all read
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button onClick={markAllRead} className="text-[10px] text-primary font-semibold">
+                  Mark all read
+                </button>
+              )}
+              <button
+                onClick={() => { navigate("/notifications"); setOpen(false); }}
+                className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
+              >
+                View all
               </button>
-            )}
+            </div>
           </div>
 
           {/* List */}
