@@ -329,6 +329,7 @@ const Feed = () => {
                             <Trash2 className="w-4 h-4" /> Delete Post
                           </button>
                         )}
+                      </div>
                     )}
                   </div>
                 </div>
