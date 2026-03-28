@@ -257,7 +257,7 @@ const Notifications = () => {
         )}
       </div>
 
-      <BottomNav_REMOVE />
+      
     </AppLayout>
   );
 };

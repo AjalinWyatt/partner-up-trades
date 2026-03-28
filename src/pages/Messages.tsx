@@ -385,7 +385,7 @@ export default function Messages() {
           ))}
         </div>
       )}
-      <BottomNav_REMOVE />
+      
     </AppLayout>
   );
 }

@@ -360,7 +360,7 @@ const Discover = () => {
         )}
       </div>
 
-      <BottomNav_REMOVE />
+      
     </AppLayout>
   );
 };

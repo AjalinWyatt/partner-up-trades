@@ -565,7 +565,7 @@ export default function TradingLog() {
         <Plus className="w-6 h-6 text-foreground" strokeWidth={2.5} />
       </button>
 
-      <BottomNav_REMOVE />
+      
     </AppLayout>
   );
 }

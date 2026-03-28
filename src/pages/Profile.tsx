@@ -258,7 +258,7 @@ const Profile = () => {
           )
         )}
       </div>
-      <BottomNav_REMOVE />
+      
     </AppLayout>
   );
 };
