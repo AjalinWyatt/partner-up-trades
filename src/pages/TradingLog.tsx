@@ -378,13 +378,19 @@ export default function TradingLog() {
                   <button
                     key={t}
                     onClick={() => setSelectedTags((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
-                    className={cn(
-                      "px-3 py-[5px] rounded-full border-[1.5px] text-[11px] font-semibold transition-colors",
-                      sel && type === "green" && "bg-accent/20 text-accent border-accent",
-                      sel && type === "red" && "bg-destructive/20 text-destructive border-destructive",
-                      sel && type === "neutral" && "bg-primary/20 text-primary border-primary",
-                      !sel && "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
-                    )}
+                    className="px-3 py-[5px] rounded-full text-[11px] font-semibold transition-colors bg-transparent"
+                    style={{
+                      border: `1.5px solid ${
+                        type === "green"
+                          ? sel ? "#2fd98a" : "rgba(47,217,138,0.5)"
+                          : type === "red"
+                          ? sel ? "#ff6b6b" : "rgba(255,107,107,0.5)"
+                          : sel ? "#4d9fff" : "rgba(77,159,255,0.5)"
+                      }`,
+                      color: sel
+                        ? type === "green" ? "#2fd98a" : type === "red" ? "#ff6b6b" : "#4d9fff"
+                        : "rgba(255,255,255,0.8)",
+                    }}
                   >
                     {t}
                   </button>
