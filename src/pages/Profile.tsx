@@ -363,7 +363,7 @@ const Profile = () => {
 
           {/* Name & bio */}
           <div className="mt-3">
-            <div className="text-sm font-extrabold text-foreground">{displayName}</div>
+            <div className="text-sm font-extrabold text-foreground">{displayUsername}</div>
 
             {/* Market pills inline */}
             {tradingProfile?.markets && tradingProfile.markets.length > 0 && (

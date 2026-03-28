@@ -210,14 +210,13 @@ const ViewProfile = () => {
           </div>
 
           <div className="flex items-center justify-center gap-1.5">
-            <span className="text-lg font-extrabold text-foreground">{profile?.full_name || "Trader"}</span>
+            <span className="text-lg font-extrabold text-foreground">@{profile?.username || "trader"}</span>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
               <circle cx="10" cy="10" r="9" fill="url(#vg3)" />
               <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               <defs><linearGradient id="vg3" x1="0" y1="0" x2="20" y2="20"><stop stopColor="hsl(var(--primary))" /><stop offset="1" stopColor="hsl(var(--success))" /></linearGradient></defs>
             </svg>
           </div>
-          <div className="text-[12px] text-muted-foreground">@{profile?.username || "trader"}</div>
 
           {/* Bio */}
           {profile?.bio && (
