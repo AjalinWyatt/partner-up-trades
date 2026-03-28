@@ -101,7 +101,7 @@ const Notifications = () => {
       const prof = profileMap.get(n.actor_id);
       return {
         ...n,
-        actorName: prof?.full_name || "Trader",
+        actorName: prof?.username ? `@${prof.username}` : "trader",
         actorUsername: prof?.username || "trader",
         actorAvatar: prof?.avatar_url || null,
       };

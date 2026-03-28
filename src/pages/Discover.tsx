@@ -317,13 +317,11 @@ const Discover = () => {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <div>
+                      <div>
                       <div className="text-[14px] font-bold text-foreground truncate">
-                        {m.full_name || m.username || "Trader"}
+                        @{m.username || "trader"}
                       </div>
-                      {m.username && (
-                        <div className="text-[11px] text-muted-foreground">@{m.username}</div>
-                      )}
+                    </div>
                     </div>
                     <div className="shrink-0 ml-2 px-2.5 py-1 rounded-lg bg-success/10 border border-success/20">
                       <span className="text-[13px] font-black text-success">{m.matchPct}%</span>

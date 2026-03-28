@@ -155,7 +155,7 @@ export default function Messages() {
       connectionList.push({
         id: c.id,
         partnerId,
-        partnerName: profile?.full_name || profile?.username || "Trader",
+        partnerName: profile?.username ? `@${profile.username}` : "trader",
         partnerUsername: profile?.username || "",
         avatarUrl: profile?.avatar_url,
         lastMessage: lastMsgs?.[0]?.content,

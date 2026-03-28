@@ -170,7 +170,7 @@ const Profile = () => {
     navigate("/");
   };
 
-  const displayName = profile?.full_name || "Your Name";
+  const displayName = profile?.username ? `@${profile.username}` : "@username";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
   const displayLocation = (() => {
     if (!profile) return null;
