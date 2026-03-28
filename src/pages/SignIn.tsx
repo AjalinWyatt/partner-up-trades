@@ -14,48 +14,51 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Auto-redirect if user arrives already authenticated (e.g. after email verification)
+  // Check if user is already signed in on mount
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        console.log("[SignIn] User already has session, redirecting...");
         const { data: profile } = await supabase
           .from("profiles")
           .select("onboarding_completed")
           .eq("id", session.user.id)
           .maybeSingle();
-        if (!profile?.onboarding_completed) {
-          navigate("/onboarding");
-        } else {
-          navigate("/dashboard");
-        }
+        navigate(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
       }
-    });
-    return () => subscription.unsubscribe();
+    };
+    checkSession();
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      if (error.message.toLowerCase().includes("email not confirmed")) {
-        toast.error("Please verify your email first. Check your inbox for a confirmation link.");
-      } else {
-        toast.error(error.message);
+    console.log("[SignIn] Attempting sign in for:", email);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("[SignIn] Result:", { error: error?.message, userId: data?.user?.id });
+      if (error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          toast.error("Please verify your email first. Check your inbox for a confirmation link.");
+        } else {
+          toast.error(error.message);
+        }
+        setLoading(false);
+        return;
       }
-    } else {
       // Check onboarding status before routing
       const { data: profile } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("id", data.user.id)
         .maybeSingle();
-      if (!profile?.onboarding_completed) {
-        navigate("/onboarding");
-      } else {
-        navigate("/dashboard");
-      }
+      console.log("[SignIn] Profile:", profile);
+      navigate(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
+    } catch (err) {
+      console.error("[SignIn] Unexpected error:", err);
+      toast.error("Something went wrong. Please try again.");
+      setLoading(false);
     }
   };
 
