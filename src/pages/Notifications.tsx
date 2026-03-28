@@ -167,7 +167,7 @@ const Notifications = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-14">
+    <AppLayout>
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center">
@@ -257,8 +257,8 @@ const Notifications = () => {
         )}
       </div>
 
-      <BottomNav />
-    </div>
+      <BottomNav_REMOVE />
+    </AppLayout>
   );
 };
 

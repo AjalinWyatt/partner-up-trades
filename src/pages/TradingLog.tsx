@@ -414,7 +414,7 @@ export default function TradingLog() {
 
   // ─── MAIN LOG VIEW ───
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-14">
+    <AppLayout>
       <LogoHeader />
 
       {/* Page nav */}
@@ -565,7 +565,7 @@ export default function TradingLog() {
         <Plus className="w-6 h-6 text-foreground" strokeWidth={2.5} />
       </button>
 
-      <BottomNav />
-    </div>
+      <BottomNav_REMOVE />
+    </AppLayout>
   );
 }

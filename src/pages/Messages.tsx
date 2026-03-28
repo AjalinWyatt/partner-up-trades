@@ -314,9 +314,8 @@ export default function Messages() {
     );
   }
 
-  // Inbox view
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-16">
+    <AppLayout>
       <LogoHeader />
       <div className="px-4 pt-2">
         <div className="flex items-center justify-between mb-4">
@@ -386,7 +385,7 @@ export default function Messages() {
           ))}
         </div>
       )}
-      <BottomNav />
-    </div>
+      <BottomNav_REMOVE />
+    </AppLayout>
   );
 }
