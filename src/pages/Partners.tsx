@@ -196,6 +196,40 @@ const Partners = () => {
     load();
   }, []);
 
+  const handleAccept = async (connectionId: string, requesterId: string) => {
+    const { error } = await supabase
+      .from("partner_connections")
+      .update({ status: "accepted", updated_at: new Date().toISOString() })
+      .eq("id", connectionId);
+    if (error) {
+      toast.error("Failed to accept request");
+      return;
+    }
+    toast.success("Partner request accepted!");
+    setPending(prev => prev.filter(p => p.connectionId !== connectionId));
+    // Notify the requester
+    if (myId) {
+      await supabase.from("notifications").insert({
+        user_id: requesterId,
+        actor_id: myId,
+        type: "partner_accepted",
+      });
+    }
+  };
+
+  const handleDecline = async (connectionId: string) => {
+    const { error } = await supabase
+      .from("partner_connections")
+      .update({ status: "declined", updated_at: new Date().toISOString() })
+      .eq("id", connectionId);
+    if (error) {
+      toast.error("Failed to decline request");
+      return;
+    }
+    toast.success("Request declined");
+    setPending(prev => prev.filter(p => p.connectionId !== connectionId));
+  };
+
   const isEmpty = alerts.length === 0 && pending.length === 0 && partners.length === 0;
 
   if (loading) {
