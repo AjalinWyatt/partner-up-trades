@@ -16,12 +16,13 @@ interface Comment {
 
 interface CommentThreadProps {
   entryId: string;
+  entryOwnerId: string;
   myId: string | null;
   commentCount: number;
   onCountChange: (entryId: string, delta: number) => void;
 }
 
-const CommentThread = ({ entryId, myId, commentCount, onCountChange }: CommentThreadProps) => {
+const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChange }: CommentThreadProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
