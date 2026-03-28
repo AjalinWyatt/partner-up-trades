@@ -84,7 +84,7 @@ const Partners = () => {
       // Fetch profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, username, avatar_url")
         .in("id", allIds);
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 

@@ -112,7 +112,7 @@ const NotificationBell = () => {
     const actorIds = [...new Set(notifs.map(n => n.actor_id))];
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url")
+      .select("id, full_name, username, avatar_url")
       .in("id", actorIds);
     const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
