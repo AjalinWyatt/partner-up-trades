@@ -34,25 +34,22 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
   useEffect(() => {
     if (!post || !open) return;
     const load = async () => {
-      const promises: Promise<any>[] = [
+      const [{ data: prof }, { data: likes }, { data: myLike }, { data: comments }] = await Promise.all([
         supabase.from("profiles").select("username, full_name, avatar_url").eq("id", post.user_id).single(),
         supabase.from("feed_likes").select("id").eq("entry_id", post.id),
         myId ? supabase.from("feed_likes").select("id").eq("entry_id", post.id).eq("user_id", myId) : Promise.resolve({ data: [] }),
         supabase.from("feed_comments").select("id").eq("entry_id", post.id),
-      ];
-      if (myId && post.user_id !== myId) {
-        promises.push(
-          supabase.from("partner_connections").select("match_score").or(`and(requester_id.eq.${myId},receiver_id.eq.${post.user_id}),and(requester_id.eq.${post.user_id},receiver_id.eq.${myId})`).eq("status", "accepted").maybeSingle()
-        );
-      }
-      const results = await Promise.all(promises);
-      const [{ data: prof }, { data: likes }, { data: myLike }, { data: comments }] = results;
+      ]);
       setProfile(prof || { username: "trader", full_name: "Trader", avatar_url: null });
       setLikeCount(likes?.length || 0);
       setLiked((myLike?.length || 0) > 0);
       setCommentCount(comments?.length || 0);
-      if (results[4]?.data?.match_score) {
-        setMatchScore(results[4].data.match_score);
+
+      if (myId && post.user_id !== myId) {
+        const { data: conn } = await supabase.from("partner_connections").select("match_score")
+          .or(`and(requester_id.eq.${myId},receiver_id.eq.${post.user_id}),and(requester_id.eq.${post.user_id},receiver_id.eq.${myId})`)
+          .eq("status", "accepted").maybeSingle();
+        setMatchScore(conn?.match_score ?? null);
       } else {
         setMatchScore(null);
       }
