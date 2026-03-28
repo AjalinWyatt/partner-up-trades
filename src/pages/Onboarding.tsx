@@ -117,12 +117,34 @@ const Onboarding = () => {
               className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground mb-4"
             />
 
-            <div className="flex items-center gap-3.5 mb-4">
-              <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center shrink-0 hover:border-success transition-colors cursor-pointer">
-                <Camera className="w-6 h-6 text-muted-foreground" />
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setAvatarFile(file);
+                  setAvatarPreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+            <div
+              className="flex items-center gap-3.5 mb-4 cursor-pointer"
+              onClick={() => avatarInputRef.current?.click()}
+            >
+              <div className="w-16 h-16 rounded-full border-2 border-dashed border-accent/60 flex items-center justify-center shrink-0 hover:border-accent transition-colors overflow-hidden">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <Camera className="w-6 h-6 text-muted-foreground" />
+                )}
               </div>
               <div>
-                <div className="text-[13px] font-semibold text-foreground">Add a photo (optional)</div>
+                <div className="text-[13px] font-semibold text-foreground">
+                  {avatarPreview ? "Change photo" : "Add a photo (optional)"}
+                </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">Just you, clearly visible.</div>
               </div>
             </div>
