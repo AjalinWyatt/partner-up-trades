@@ -315,7 +315,20 @@ const Feed = () => {
                             </button>
                           </>
                         )}
-                      </div>
+                        {(isAdmin || post.user_id === myId) && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm("Delete this post?")) return;
+                              await supabase.from("posts").delete().eq("id", post.id);
+                              setPosts(prev => prev.filter(p => p.id !== post.id));
+                              setMenuOpen(null);
+                              toast.success("Post deleted");
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete Post
+                          </button>
+                        )}
                     )}
                   </div>
                 </div>
