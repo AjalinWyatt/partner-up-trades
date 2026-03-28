@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PenSquare, Bell, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
 
@@ -105,6 +106,12 @@ const Feed = () => {
     };
     load();
   }, []);
+
+  const handleCommentCountChange = (entryId: string, delta: number) => {
+    setEntries(prev => prev.map(e =>
+      e.id === entryId ? { ...e, commentCount: e.commentCount + delta } : e
+    ));
+  };
 
   const toggleLike = async (entryId: string) => {
     if (!myId) return;
@@ -237,15 +244,23 @@ const Feed = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-5 pt-1 border-t border-border">
-                  <button onClick={() => toggleLike(entry.id)} className="flex items-center gap-1 pt-2">
-                    <Heart className={`w-4 h-4 ${entry.liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
-                    {entry.likeCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.likeCount}</span>}
-                  </button>
-                  <button className="flex items-center gap-1 pt-2">
-                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                    {entry.commentCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.commentCount}</span>}
-                  </button>
+                <div className="pt-1 border-t border-border">
+                  <div className="flex items-center gap-5">
+                    <button onClick={() => toggleLike(entry.id)} className="flex items-center gap-1 pt-2">
+                      <Heart className={`w-4 h-4 ${entry.liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                      {entry.likeCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.likeCount}</span>}
+                    </button>
+                    <div className="flex items-center gap-1 pt-2">
+                      <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                      {entry.commentCount > 0 && <span className="text-[10px] text-muted-foreground">{entry.commentCount}</span>}
+                    </div>
+                  </div>
+                  <CommentThread
+                    entryId={entry.id}
+                    myId={myId}
+                    commentCount={entry.commentCount}
+                    onCountChange={handleCommentCountChange}
+                  />
                 </div>
               </div>
             ))}
