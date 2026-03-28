@@ -200,13 +200,6 @@ const Feed = () => {
     }
   };
 
-  const handleMarketFilter = (market: string) => {
-    setMarketFilter(market);
-    setShowFilterDropdown(false);
-    setLoading(true);
-    loadFeed(market);
-  };
-
   const primaryMarket = myMarkets[0] || "Forex";
 
   if (loading) {
@@ -235,38 +228,12 @@ const Feed = () => {
             <span className="text-sm font-black text-foreground tracking-tight">
               traders<span className="bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">world</span>
             </span>
+            {marketFilter !== "All" && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-primary/15 text-[10px] font-bold text-primary">{marketFilter}</span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Market filter */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-secondary border border-border text-[11px] font-semibold text-foreground"
-              >
-                {marketFilter === "All" ? "All" : marketFilter}
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              </button>
-              {showFilterDropdown && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                  {MARKET_OPTIONS.map(m => (
-                    <button
-                      key={m}
-                      onClick={() => handleMarketFilter(m)}
-                      className={cn(
-                        "flex items-center justify-between w-full px-3 py-2 text-xs transition-colors",
-                        marketFilter === m ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <span>{m}</span>
-                      <span className="text-[10px] text-muted-foreground">{marketCounts[m] || 0} active</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <NotificationBell />
-          </div>
+          <NotificationBell />
         </div>
 
         {posts.length === 0 ? (
