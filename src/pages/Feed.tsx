@@ -35,77 +35,106 @@ const Feed = () => {
   const [myId, setMyId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      setMyId(user.id);
+  const loadFeed = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+    setMyId(user.id);
 
-      // Get accepted partner IDs
-      const { data: connections } = await supabase
-        .from("partner_connections")
-        .select("requester_id, receiver_id")
-        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .eq("status", "accepted");
+    const { data: connections } = await supabase
+      .from("partner_connections")
+      .select("requester_id, receiver_id")
+      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .eq("status", "accepted");
 
-      const partnerIds = (connections || []).map(c =>
-        c.requester_id === user.id ? c.receiver_id : c.requester_id
-      );
-      const allUserIds = [user.id, ...partnerIds];
+    const partnerIds = (connections || []).map(c =>
+      c.requester_id === user.id ? c.receiver_id : c.requester_id
+    );
+    const allUserIds = [user.id, ...partnerIds];
 
-      // Get journal entries from self + partners, not private
-      const { data: journalEntries } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .in("user_id", allUserIds)
-        .neq("share_setting", "Private")
-        .order("created_at", { ascending: false })
-        .limit(50);
+    const { data: journalEntries } = await supabase
+      .from("journal_entries")
+      .select("*")
+      .in("user_id", allUserIds)
+      .neq("share_setting", "Private")
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-      if (!journalEntries || journalEntries.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const entryIds = journalEntries.map(e => e.id);
-      const authorIds = [...new Set(journalEntries.map(e => e.user_id))];
-
-      // Fetch profiles, likes, comments in parallel
-      const [profilesRes, likesRes, myLikesRes, commentsRes] = await Promise.all([
-        supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
-        supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds),
-        supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds).eq("user_id", user.id),
-        supabase.from("feed_comments").select("entry_id").in("entry_id", entryIds),
-      ]);
-
-      const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
-      
-      // Count likes per entry
-      const likeCounts: Record<string, number> = {};
-      (likesRes.data || []).forEach(l => { likeCounts[l.entry_id] = (likeCounts[l.entry_id] || 0) + 1; });
-      
-      const myLikedSet = new Set((myLikesRes.data || []).map(l => l.entry_id));
-      
-      const commentCounts: Record<string, number> = {};
-      (commentsRes.data || []).forEach(c => { commentCounts[c.entry_id] = (commentCounts[c.entry_id] || 0) + 1; });
-
-      const feedEntries: FeedEntry[] = journalEntries.map(e => {
-        const prof = profileMap.get(e.user_id);
-        return {
-          ...e,
-          username: prof?.username || "trader",
-          full_name: prof?.full_name || "Trader",
-          avatar_url: prof?.avatar_url || null,
-          liked: myLikedSet.has(e.id),
-          likeCount: likeCounts[e.id] || 0,
-          commentCount: commentCounts[e.id] || 0,
-        };
-      });
-
-      setEntries(feedEntries);
+    if (!journalEntries || journalEntries.length === 0) {
+      setEntries([]);
       setLoading(false);
-    };
-    load();
+      return;
+    }
+
+    const entryIds = journalEntries.map(e => e.id);
+    const authorIds = [...new Set(journalEntries.map(e => e.user_id))];
+
+    const [profilesRes, likesRes, myLikesRes, commentsRes] = await Promise.all([
+      supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
+      supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds),
+      supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds).eq("user_id", user.id),
+      supabase.from("feed_comments").select("entry_id").in("entry_id", entryIds),
+    ]);
+
+    const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
+    const likeCounts: Record<string, number> = {};
+    (likesRes.data || []).forEach(l => { likeCounts[l.entry_id] = (likeCounts[l.entry_id] || 0) + 1; });
+    const myLikedSet = new Set((myLikesRes.data || []).map(l => l.entry_id));
+    const commentCounts: Record<string, number> = {};
+    (commentsRes.data || []).forEach(c => { commentCounts[c.entry_id] = (commentCounts[c.entry_id] || 0) + 1; });
+
+    const feedEntries: FeedEntry[] = journalEntries.map(e => {
+      const prof = profileMap.get(e.user_id);
+      return {
+        ...e,
+        username: prof?.username || "trader",
+        full_name: prof?.full_name || "Trader",
+        avatar_url: prof?.avatar_url || null,
+        liked: myLikedSet.has(e.id),
+        likeCount: likeCounts[e.id] || 0,
+        commentCount: commentCounts[e.id] || 0,
+      };
+    });
+
+    setEntries(feedEntries);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadFeed();
+
+    // Real-time: new posts appear instantly
+    const channel = supabase
+      .channel("feed-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "journal_entries" }, () => {
+        loadFeed();
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "feed_likes" }, (payload) => {
+        const p = payload.new as { entry_id: string; user_id: string };
+        setEntries(prev => prev.map(e =>
+          e.id === p.entry_id ? { ...e, likeCount: e.likeCount + 1 } : e
+        ));
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "feed_likes" }, (payload) => {
+        const p = payload.old as { entry_id: string };
+        setEntries(prev => prev.map(e =>
+          e.id === p.entry_id ? { ...e, likeCount: Math.max(0, e.likeCount - 1) } : e
+        ));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "feed_comments" }, (payload) => {
+        const p = payload.new as { entry_id: string };
+        setEntries(prev => prev.map(e =>
+          e.id === p.entry_id ? { ...e, commentCount: e.commentCount + 1 } : e
+        ));
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "feed_comments" }, (payload) => {
+        const p = payload.old as { entry_id: string };
+        setEntries(prev => prev.map(e =>
+          e.id === p.entry_id ? { ...e, commentCount: Math.max(0, e.commentCount - 1) } : e
+        ));
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const handleCommentCountChange = (entryId: string, delta: number) => {

@@ -64,6 +64,28 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
     setLoading(false);
   };
 
+  // Real-time comment updates when thread is open
+  useEffect(() => {
+    if (!open) return;
+    const channel = supabase
+      .channel(`comments-${entryId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "feed_comments", filter: `entry_id=eq.${entryId}` }, async (payload) => {
+        const newComment = payload.new as any;
+        // Don't duplicate if we already added it optimistically
+        setComments(prev => {
+          if (prev.some(c => c.id === newComment.id)) return prev;
+          return prev; // will be picked up by loadComments below
+        });
+        loadComments();
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "feed_comments", filter: `entry_id=eq.${entryId}` }, (payload) => {
+        const deleted = payload.old as any;
+        setComments(prev => prev.filter(c => c.id !== deleted.id));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [open, entryId]);
+
   const handleOpen = () => {
     if (!open) {
       setOpen(true);
