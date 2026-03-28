@@ -62,7 +62,7 @@ const SignUp = () => {
       <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
         <h1 className="text-2xl font-bold text-foreground">Create your account.</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Join 12,000+ traders building real accountability partnerships.
+          Join {traderCount.toLocaleString()} trader{traderCount !== 1 ? "s" : ""} building real accountability partnerships.
         </p>
 
         {/* OAuth */}
