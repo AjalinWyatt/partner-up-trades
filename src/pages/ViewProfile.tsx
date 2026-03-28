@@ -284,7 +284,7 @@ const ViewProfile = () => {
           </div>
           <div className="text-center">
             <div className="text-lg font-black text-foreground flex items-center justify-center gap-0.5">
-              <Flame className="w-4 h-4 text-orange-500" /> {stats.streak}
+              <Flame className="w-4 h-4 text-destructive" /> {stats.streak}
             </div>
             <div className="text-[10px] text-muted-foreground">Day Streak</div>
           </div>
