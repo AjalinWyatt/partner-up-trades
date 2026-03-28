@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      feed_comments: {
+        Row: {
+          content: string
+          created_at: string
+          entry_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          entry_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          entry_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_comments_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_likes: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_likes_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           created_at: string
@@ -90,6 +151,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          match_breakdown: Json | null
+          match_score: number | null
           receiver_id: string
           requester_id: string
           status: string
@@ -98,6 +161,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          match_breakdown?: Json | null
+          match_score?: number | null
           receiver_id: string
           requester_id: string
           status?: string
@@ -106,6 +171,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          match_breakdown?: Json | null
+          match_score?: number | null
           receiver_id?: string
           requester_id?: string
           status?: string

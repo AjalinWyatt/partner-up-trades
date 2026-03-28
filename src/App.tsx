@@ -14,6 +14,7 @@ import Placeholder from "./pages/Placeholder";
 import Discover from "./pages/Discover";
 import Messages from "./pages/Messages";
 import TradingLog from "./pages/TradingLog";
+import Feed from "./pages/Feed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,12 +32,12 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/view-profile" element={<ViewProfile />} />
+          <Route path="/profile/:id" element={<ViewProfile />} />
           <Route path="/dashboard" element={<Partners />} />
-          <Route path="/feed" element={<Placeholder title="Feed" />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/discover" element={<Discover />} />
-           <Route path="/log" element={<TradingLog />} />
-           <Route path="/messages" element={<Messages />} />
+          <Route path="/log" element={<TradingLog />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
