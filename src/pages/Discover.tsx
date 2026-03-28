@@ -332,7 +332,7 @@ const Discover = () => {
             {filtered.map((m) => (
               <button
                 key={m.id}
-                onClick={() => navigate(`/view-profile?id=${m.id}`)}
+                onClick={() => navigate(`/profile/${m.id}`)}
                 className="w-full bg-card border border-border rounded-xl p-3.5 flex items-start gap-3 text-left hover:border-success/50 transition-colors"
               >
                 {/* Avatar */}
