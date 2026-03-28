@@ -386,7 +386,7 @@ export default function Messages() {
                           className={cn(
                             "max-w-[70%] px-3.5 py-2 text-[13px] leading-relaxed",
                             isMine
-                              ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                              ? "bg-gradient-brand text-white rounded-2xl rounded-br-md"
                               : "bg-secondary text-foreground rounded-2xl rounded-bl-md"
                           )}
                         >
