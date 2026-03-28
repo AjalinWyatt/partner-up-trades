@@ -65,6 +65,59 @@ export function computeMatch(
   return { pct, reasons, breakdown };
 }
 
+/** Convert raw breakdown scores into human-readable labels */
+export function getBreakdownLabel(
+  key: string,
+  rawScore: number,
+  myTrading?: any,
+  theirTrading?: any
+): string {
+  const overlap = (a: string[], b: string[]) => a.filter((v) => b.includes(v));
+
+  if (key === "Market") {
+    if (!myTrading || !theirTrading) return rawScore >= 80 ? "Same markets" : rawScore >= 50 ? "Partial overlap" : "Different markets";
+    const mo = overlap(myTrading.markets || [], theirTrading.markets || []);
+    if (rawScore >= 80) return `Both trade ${mo.slice(0, 2).join(" & ")}`;
+    if (rawScore >= 50) return "Partial overlap";
+    return "Different markets";
+  }
+  if (key === "Session") {
+    if (!myTrading || !theirTrading) return rawScore >= 80 ? "Same sessions" : "Different sessions";
+    const so = overlap(myTrading.sessions || [], theirTrading.sessions || []);
+    if (so.length > 0) return `${so[0]} · same`;
+    return "Different sessions";
+  }
+  if (key === "Strategy") {
+    if (!myTrading || !theirTrading) return rawScore >= 80 ? "Same strategy" : rawScore >= 50 ? "Some overlap" : "No overlap";
+    const sto = overlap(myTrading.strategies || [], theirTrading.strategies || []);
+    if (rawScore >= 80) return `${sto[0]} · same`;
+    if (rawScore >= 50) return "Some overlap";
+    return "No overlap";
+  }
+  if (key === "Style") {
+    if (!myTrading || !theirTrading) return rawScore >= 80 ? "Same style" : rawScore >= 50 ? "Adjacent styles" : "Different styles";
+    const slo = overlap(myTrading.trading_style || [], theirTrading.trading_style || []);
+    if (slo.length > 0) return `${slo[0]} · same`;
+    return "Different styles";
+  }
+  if (key === "Experience") {
+    if (rawScore >= 80) return "Same level";
+    if (rawScore >= 50) return "Close level";
+    return "Far apart";
+  }
+  if (key === "Goal") {
+    if (rawScore >= 80) return "Same goal";
+    if (rawScore >= 50) return "Related goals";
+    return "Different goals";
+  }
+  if (key === "Timeframe") {
+    if (rawScore >= 80) return "Same timeframe";
+    if (rawScore >= 50) return "Close timeframes";
+    return "Different timeframes";
+  }
+  return rawScore >= 80 ? "Strong match" : rawScore >= 50 ? "Partial match" : "Low match";
+}
+
 export function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
   return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
