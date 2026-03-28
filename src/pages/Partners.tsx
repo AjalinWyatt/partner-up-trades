@@ -129,7 +129,7 @@ const Partners = () => {
         // Fetch journal entries for this partner
         const { data: entries } = await supabase
           .from("journal_entries")
-          .select("created_at, result, mood")
+          .select("created_at, result, mood, share_setting, market_pair")
           .eq("user_id", id)
           .order("created_at", { ascending: false })
           .limit(30);
