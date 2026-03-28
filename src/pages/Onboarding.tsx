@@ -396,11 +396,27 @@ const Onboarding = () => {
                   const { data: { user } } = await supabase.auth.getUser();
                   if (!user) throw new Error("Not authenticated");
 
+                  // Upload avatar if selected
+                  let avatarUrl: string | null = null;
+                  if (avatarFile) {
+                    const ext = avatarFile.name.split(".").pop() || "jpg";
+                    const filePath = `${user.id}/avatar.${ext}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from("avatars")
+                      .upload(filePath, avatarFile, { upsert: true });
+                    if (uploadError) throw uploadError;
+                    const { data: urlData } = supabase.storage
+                      .from("avatars")
+                      .getPublicUrl(filePath);
+                    avatarUrl = urlData.publicUrl;
+                  }
+
                   const { error: profileError } = await supabase
                     .from("profiles")
                     .upsert({
                       id: user.id,
                       username: nickname || null,
+                      avatar_url: avatarUrl,
                       gender,
                       hobbies: offChartPrompts,
                       chart_prompts: chartPrompts,
