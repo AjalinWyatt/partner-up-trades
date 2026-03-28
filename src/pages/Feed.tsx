@@ -1,25 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PenSquare, Heart, MessageCircle, MoreHorizontal, UserPlus, Link2, Eye } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
-import { getInitials, timeAgo, computeMatch } from "@/lib/matchUtils";
+import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 
-interface FeedEntry {
+interface FeedPost {
   id: string;
+  type: "post" | "journal";
   user_id: string;
-  mood: string | null;
-  result: string | null;
-  pnl_pips: number | null;
-  market_pair: string | null;
-  session: string | null;
-  tags: string[] | null;
-  notes: string | null;
-  share_setting: string | null;
+  // Post fields
+  image_url?: string;
+  caption?: string | null;
+  // Journal fields
+  mood?: string | null;
+  result?: string | null;
+  pnl_pips?: number | null;
+  market_pair?: string | null;
+  session?: string | null;
+  tags?: string[] | null;
+  notes?: string | null;
+  share_setting?: string | null;
   created_at: string;
   // joined
   username: string;
@@ -33,10 +39,11 @@ interface FeedEntry {
 const Feed = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [entries, setEntries] = useState<FeedEntry[]>([]);
+  const [entries, setEntries] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   const loadFeed = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -52,43 +59,64 @@ const Feed = () => {
     const partnerIds = (connections || []).map(c =>
       c.requester_id === user.id ? c.receiver_id : c.requester_id
     );
-    const allUserIds = [...partnerIds];
+    const allUserIds = [...partnerIds, user.id];
 
-    const { data: journalEntries } = await supabase
-      .from("journal_entries")
-      .select("*")
-      .in("user_id", allUserIds)
-      .neq("share_setting", "Private")
-      .order("created_at", { ascending: false })
-      .limit(50);
+    // Load both journal entries and posts
+    const [{ data: journalEntries }, { data: postsData }] = await Promise.all([
+      supabase
+        .from("journal_entries")
+        .select("*")
+        .in("user_id", allUserIds.filter(id => id !== user.id))
+        .neq("share_setting", "Private")
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("posts" as any)
+        .select("*")
+        .in("user_id", allUserIds)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
 
-    if (!journalEntries || journalEntries.length === 0) {
+    const allItems: any[] = [
+      ...(journalEntries || []).map((e: any) => ({ ...e, _type: "journal" })),
+      ...(postsData || []).map((e: any) => ({ ...e, _type: "post" })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    if (allItems.length === 0) {
       setEntries([]);
       setLoading(false);
       return;
     }
 
-    const entryIds = journalEntries.map(e => e.id);
-    const authorIds = [...new Set(journalEntries.map(e => e.user_id))];
+    const itemIds = allItems.map(e => e.id);
+    const authorIds = [...new Set(allItems.map(e => e.user_id))];
 
     const [profilesRes, likesRes, myLikesRes, commentsRes] = await Promise.all([
       supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
-      supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds),
-      supabase.from("feed_likes").select("entry_id").in("entry_id", entryIds).eq("user_id", user.id),
-      supabase.from("feed_comments").select("entry_id").in("entry_id", entryIds),
+      supabase.from("feed_likes").select("entry_id, post_id").in("entry_id", itemIds),
+      supabase.from("feed_likes").select("entry_id, post_id").in("entry_id", itemIds).eq("user_id", user.id),
+      supabase.from("feed_comments").select("entry_id, post_id").in("entry_id", itemIds),
     ]);
 
     const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
     const likeCounts: Record<string, number> = {};
-    (likesRes.data || []).forEach(l => { likeCounts[l.entry_id] = (likeCounts[l.entry_id] || 0) + 1; });
-    const myLikedSet = new Set((myLikesRes.data || []).map(l => l.entry_id));
+    (likesRes.data || []).forEach((l: any) => {
+      const key = l.entry_id || l.post_id;
+      likeCounts[key] = (likeCounts[key] || 0) + 1;
+    });
+    const myLikedSet = new Set((myLikesRes.data || []).map((l: any) => l.entry_id || l.post_id));
     const commentCounts: Record<string, number> = {};
-    (commentsRes.data || []).forEach(c => { commentCounts[c.entry_id] = (commentCounts[c.entry_id] || 0) + 1; });
+    (commentsRes.data || []).forEach((c: any) => {
+      const key = c.entry_id || c.post_id;
+      commentCounts[key] = (commentCounts[key] || 0) + 1;
+    });
 
-    const feedEntries: FeedEntry[] = journalEntries.map(e => {
+    const feedItems: FeedPost[] = allItems.map(e => {
       const prof = profileMap.get(e.user_id);
       return {
         ...e,
+        type: e._type as "post" | "journal",
         username: prof?.username || "trader",
         full_name: prof?.full_name || "Trader",
         avatar_url: prof?.avatar_url || null,
@@ -98,7 +126,7 @@ const Feed = () => {
       };
     });
 
-    setEntries(feedEntries);
+    setEntries(feedItems);
     setLoading(false);
   };
 
@@ -188,8 +216,8 @@ const Feed = () => {
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <button onClick={() => navigate("/log")} className="w-8 h-8 flex items-center justify-center">
-            <PenSquare className="w-5 h-5 text-muted-foreground" />
+          <button onClick={() => setShowCreatePost(true)} className="w-8 h-8 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-muted-foreground" />
           </button>
           <span className="text-base font-black text-foreground">traders🌐world</span>
           <NotificationBell />
@@ -266,25 +294,37 @@ const Feed = () => {
                 </div>
 
                 {/* Post Body */}
-                {entry.notes && <p className="text-xs text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
+                {entry.type === "post" && entry.image_url && (
+                  <div className="rounded-xl overflow-hidden mb-2.5 -mx-3.5">
+                    <img src={entry.image_url} alt="" className="w-full object-cover" />
+                  </div>
+                )}
+                {entry.type === "post" && entry.caption && (
+                  <p className="text-xs text-foreground mb-2.5 leading-relaxed">
+                    <span className="font-bold mr-1">{entry.username}</span>{entry.caption}
+                  </p>
+                )}
+                {entry.type === "journal" && entry.notes && <p className="text-xs text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
 
-                {/* Result + Tags */}
-                <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-                  {entry.result && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      entry.result === "Win"
-                        ? "text-success bg-success/15"
-                        : entry.result === "Loss"
-                        ? "text-destructive bg-destructive/15"
-                        : "text-muted-foreground bg-muted"
-                    }`}>
-                      {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
-                    </span>
-                  )}
-                  {entry.tags?.slice(0, 3).map((t) => (
-                    <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
-                  ))}
-                </div>
+                {/* Result + Tags (journal only) */}
+                {entry.type === "journal" && (
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+                    {entry.result && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        entry.result === "Win"
+                          ? "text-success bg-success/15"
+                          : entry.result === "Loss"
+                          ? "text-destructive bg-destructive/15"
+                          : "text-muted-foreground bg-muted"
+                      }`}>
+                        {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
+                      </span>
+                    )}
+                    {entry.tags?.slice(0, 3).map((t) => (
+                      <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="pt-1 border-t border-border">
@@ -311,6 +351,7 @@ const Feed = () => {
           </div>
         )}
       </div>
+      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={loadFeed} />
     </AppLayout>
   );
 };

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Save, LogOut } from "lucide-react";
+import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Save, LogOut, Grid3x3 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import CreatePostModal from "@/components/CreatePostModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -62,6 +63,8 @@ const Profile = () => {
   const [editGender, setEditGender] = useState("");
 
   const [partnerCount, setPartnerCount] = useState(0);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -88,6 +91,15 @@ const Profile = () => {
       }
       if (tData) setTradingProfile(tData);
       setPartnerCount(count ?? 0);
+
+      // Load posts
+      const { data: postsData } = await supabase
+        .from("posts" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      setPosts(postsData || []);
+
       setLoading(false);
     };
     fetchProfile();
@@ -406,20 +418,30 @@ const Profile = () => {
 
         {/* Tab Content */}
         {activeTab === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
-              <ImageIcon className="w-6 h-6 text-muted-foreground" />
+          posts.length > 0 ? (
+            <div className="grid grid-cols-3 gap-0.5 pb-8">
+              {posts.map((post: any) => (
+                <button key={post.id} className="aspect-square overflow-hidden bg-muted">
+                  <img src={post.image_url} alt="" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
+                </button>
+              ))}
             </div>
-            <p className="text-sm font-semibold text-foreground mb-1">No posts yet</p>
-            <p className="text-xs text-muted-foreground mb-4">Start sharing your trading journey, setups, reflections, and progress.</p>
-            <button
-              onClick={() => navigate("/log")}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--success))] text-xs font-bold text-primary-foreground flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Create first post
-            </button>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+                <ImageIcon className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-semibold text-foreground mb-1">No posts yet</p>
+              <p className="text-xs text-muted-foreground mb-4">Start sharing your trading journey, setups, reflections, and progress.</p>
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--success))] text-xs font-bold text-primary-foreground flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create first post
+              </button>
+            </div>
+          )
         ) : (
           hasAnyDetails ? (
             <div className="px-5 py-3 space-y-2">
@@ -466,6 +488,14 @@ const Profile = () => {
           )
         )}
       </div>
+      <CreatePostModal
+        open={showCreatePost}
+        onClose={() => setShowCreatePost(false)}
+        onCreated={async () => {
+          const { data } = await supabase.from("posts" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
+          setPosts(data || []);
+        }}
+      />
     </AppLayout>
   );
 };
