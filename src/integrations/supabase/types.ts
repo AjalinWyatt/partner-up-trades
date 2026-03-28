@@ -284,6 +284,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           chart_prompts: string[] | null
           city: string | null
           country: string | null
@@ -301,6 +302,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           chart_prompts?: string[] | null
           city?: string | null
           country?: string | null
@@ -318,6 +320,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           chart_prompts?: string[] | null
           city?: string | null
           country?: string | null
