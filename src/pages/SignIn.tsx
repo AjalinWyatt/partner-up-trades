@@ -33,6 +33,7 @@ const SignIn = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
