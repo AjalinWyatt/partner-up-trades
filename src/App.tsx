@@ -15,6 +15,7 @@ import Discover from "./pages/Discover";
 import Messages from "./pages/Messages";
 import TradingLog from "./pages/TradingLog";
 import Feed from "./pages/Feed";
+import Forums from "./pages/Forums";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/profile/:id" element={<ViewProfile />} />
           <Route path="/dashboard" element={<Partners />} />
           <Route path="/feed" element={<Feed />} />
+          <Route path="/forums" element={<Forums />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/log" element={<TradingLog />} />
           <Route path="/messages" element={<Messages />} />

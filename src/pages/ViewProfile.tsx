@@ -22,6 +22,7 @@ const ViewProfile = () => {
   const [breakdown, setBreakdown] = useState<Record<string, number>>({});
   const [posts, setPosts] = useState<any[]>([]);
   const [journalEntries, setJournalEntries] = useState<any[]>([]);
+  const [forumActivity, setForumActivity] = useState<any[]>([]);
   const [stats, setStats] = useState({ partners: 0, streak: 0, winRate: 0 });
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
@@ -103,6 +104,15 @@ const ViewProfile = () => {
         .eq("user_id", id)
         .order("created_at", { ascending: false });
       setPosts(postsData || []);
+
+      // Load forum activity
+      const { data: forumPosts } = await supabase
+        .from("forum_posts")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setForumActivity(forumPosts || []);
 
       if (user && user.id !== id) {
         const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
@@ -323,7 +333,7 @@ const ViewProfile = () => {
 
         {/* Tabs */}
         <div className="flex border-b border-border mx-5 mt-5">
-          {["Profile", "Sessions", "Details"].map((tab, i) => (
+          {["Profile", "Activity", "Details"].map((tab, i) => (
             <button
               key={tab}
               onClick={() => setActiveTab(i)}
@@ -362,34 +372,65 @@ const ViewProfile = () => {
             </div>
           )
         ) : activeTab === 1 ? (
-          journalEntries.length > 0 ? (
+          (journalEntries.length > 0 || forumActivity.length > 0) ? (
             <div className="px-5 space-y-2.5 py-4">
-              {journalEntries.map((entry: any) => (
-                <div key={entry.id} className="bg-card border border-border rounded-2xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold text-foreground">{entry.mood}</span>
-                    {entry.market_pair && <span className="text-xs text-muted-foreground">· {entry.market_pair}</span>}
-                    {entry.session && <span className="text-xs text-muted-foreground">· {entry.session}</span>}
-                    <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(entry.created_at)}</span>
-                  </div>
-                  {entry.notes && <p className="text-sm text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {entry.result && (
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${entry.result === "Win" ? "text-success bg-success/15" : "text-destructive bg-destructive/15"}`}>
-                        {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
-                      </span>
-                    )}
-                    {entry.tags?.map((t: string) => (
-                      <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              {/* Forum Activity */}
+              {forumActivity.length > 0 && (
+                <>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Forum Activity</p>
+                  {forumActivity.map((fp: any) => (
+                    <button
+                      key={fp.id}
+                      onClick={() => navigate(`/forums?forum=${fp.forum}&post=${fp.id}`)}
+                      className="w-full text-left bg-card border border-border rounded-2xl p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{fp.forum}</span>
+                        <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(fp.created_at)}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-foreground mb-1">{fp.title}</h4>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">{fp.content}</p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-[10px] text-muted-foreground">❤️ {fp.likes_count}</span>
+                        <span className="text-[10px] text-muted-foreground">💬 {fp.replies_count}</span>
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {/* Shared Sessions */}
+              {journalEntries.length > 0 && (
+                <>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-3">Shared Sessions</p>
+                  {journalEntries.map((entry: any) => (
+                    <div key={entry.id} className="bg-card border border-border rounded-2xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-bold text-foreground">{entry.mood}</span>
+                        {entry.market_pair && <span className="text-xs text-muted-foreground">· {entry.market_pair}</span>}
+                        {entry.session && <span className="text-xs text-muted-foreground">· {entry.session}</span>}
+                        <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(entry.created_at)}</span>
+                      </div>
+                      {entry.notes && <p className="text-sm text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {entry.result && (
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${entry.result === "Win" ? "text-success bg-success/15" : "text-destructive bg-destructive/15"}`}>
+                            {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
+                          </span>
+                        )}
+                        {entry.tags?.map((t: string) => (
+                          <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-              <p className="text-sm font-bold text-foreground mb-1">No shared sessions</p>
-              <p className="text-xs text-muted-foreground">This trader hasn't shared any sessions yet.</p>
+              <p className="text-sm font-bold text-foreground mb-1">No activity yet</p>
+              <p className="text-xs text-muted-foreground">This trader hasn't shared any sessions or forum posts yet.</p>
             </div>
           )
         ) : (
