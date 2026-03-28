@@ -5,6 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
+import { computeMatch } from "@/lib/matchUtils";
 
 interface MatchCandidate {
   id: string;
@@ -31,59 +32,6 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   "Profitable trader": "Pro",
 };
 
-function computeMatch(
-  myTrading: any,
-  theirTrading: any
-): { pct: number; reasons: string[] } {
-  if (!myTrading || !theirTrading) return { pct: 0, reasons: [] };
-  const reasons: string[] = [];
-  let score = 0;
-  let total = 0;
-
-  const overlap = (a: string[], b: string[]) =>
-    a.filter((v) => b.includes(v));
-
-  // Markets (weight 3)
-  total += 3;
-  const mOverlap = overlap(myTrading.markets || [], theirTrading.markets || []);
-  if (mOverlap.length > 0) {
-    score += 3 * (mOverlap.length / Math.max((myTrading.markets || []).length, 1));
-    reasons.push(`Both trade ${mOverlap.slice(0, 2).join(", ")}`);
-  }
-
-  // Style (weight 2)
-  total += 2;
-  const sOverlap = overlap(myTrading.trading_style || [], theirTrading.trading_style || []);
-  if (sOverlap.length > 0) {
-    score += 2;
-    reasons.push(`${sOverlap[0]} style`);
-  }
-
-  // Sessions (weight 2)
-  total += 2;
-  const sessOverlap = overlap(myTrading.sessions || [], theirTrading.sessions || []);
-  if (sessOverlap.length > 0) {
-    score += 2;
-  }
-
-  // Experience (weight 1)
-  total += 1;
-  if (myTrading.experience_level && myTrading.experience_level === theirTrading.experience_level) {
-    score += 1;
-    reasons.push("Same experience level");
-  }
-
-  // Strategies (weight 2)
-  total += 2;
-  const stratOverlap = overlap(myTrading.strategies || [], theirTrading.strategies || []);
-  if (stratOverlap.length > 0) {
-    score += 2 * (stratOverlap.length / Math.max((myTrading.strategies || []).length, 1));
-  }
-
-  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
-  return { pct, reasons };
-}
-
 const FILTER_OPTIONS = {
   market: ["Forex", "Futures", "Options"],
   session: ["London", "New York", "Asian"],
@@ -108,6 +56,20 @@ const Discover = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
 
+      // Bug 1 fix: Get ALL partner_connections for this user (any status)
+      const { data: allConnections } = await supabase
+        .from("partner_connections")
+        .select("requester_id, receiver_id")
+        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`);
+
+      // Build a set of all user IDs this user has interacted with
+      const excludedIds = new Set<string>();
+      excludedIds.add(user.id); // exclude self
+      (allConnections || []).forEach((c: any) => {
+        excludedIds.add(c.requester_id);
+        excludedIds.add(c.receiver_id);
+      });
+
       // Get my trading profile
       const { data: myTrading } = await supabase
         .from("trading_profiles")
@@ -127,14 +89,23 @@ const Discover = () => {
         return;
       }
 
-      const userIds = allProfiles.map((p) => p.id);
+      // Filter out excluded IDs
+      const eligibleProfiles = allProfiles.filter((p: any) => !excludedIds.has(p.id));
+
+      if (eligibleProfiles.length === 0) {
+        setMatches([]);
+        setLoading(false);
+        return;
+      }
+
+      const userIds = eligibleProfiles.map((p: any) => p.id);
       const { data: allTrading } = await supabase
         .from("trading_profiles")
         .select("*")
         .in("user_id", userIds);
 
       const tradingMap = new Map<string, any>();
-      (allTrading || []).forEach((t) => tradingMap.set(t.user_id, t));
+      (allTrading || []).forEach((t: any) => tradingMap.set(t.user_id, t));
 
       // Get my profile for location matching
       const { data: myProfile } = await supabase
@@ -145,7 +116,7 @@ const Discover = () => {
 
       const myReach = myTrading?.connection_reach;
 
-      const candidates: MatchCandidate[] = allProfiles
+      const candidates: MatchCandidate[] = eligibleProfiles
         .map((p: any) => {
           const t = tradingMap.get(p.id);
           const { pct, reasons } = computeMatch(myTrading, t);
@@ -188,7 +159,6 @@ const Discover = () => {
           };
         })
         .filter((c: MatchCandidate) => {
-          // For Local reach, only show users in the same country
           if (myReach === "Local" && myProfile?.country) {
             return c.country && c.country.toLowerCase() === myProfile.country.toLowerCase();
           }
@@ -401,8 +371,6 @@ const Discover = () => {
           </div>
         )}
       </div>
-
-      
     </AppLayout>
   );
 };
