@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,13 +14,36 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Auto-redirect if user arrives already authenticated (e.g. after email verification)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          navigate("/dashboard");
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Please verify your email first. Check your inbox for a confirmation link.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       // Check onboarding status before routing
       const { data: profile } = await supabase
