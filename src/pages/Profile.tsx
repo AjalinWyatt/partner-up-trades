@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Bell, Settings, Edit, Share2, ImageIcon, Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileData {
   username: string | null;
@@ -41,8 +41,8 @@ const Profile = () => {
       if (!user) { setLoading(false); return; }
 
       const [{ data: pData }, { data: tData }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("trading_profiles").select("*").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
 
       if (pData) setProfile(pData);
