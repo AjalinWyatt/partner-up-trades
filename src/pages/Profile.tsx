@@ -503,6 +503,10 @@ const Profile = () => {
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
         myId={userId}
+        onDeleted={async () => {
+          const { data } = await supabase.from("posts" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
+          setPosts(data || []);
+        }}
       />
     </AppLayout>
   );
