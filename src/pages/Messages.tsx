@@ -80,74 +80,97 @@ export default function Messages() {
   }, [navigate]);
 
   // Load accepted connections
+  const loadConnections = async (uid: string) => {
+    setLoading(true);
+    const { data: conns } = await supabase
+      .from("partner_connections")
+      .select("*")
+      .eq("status", "accepted")
+      .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
+
+    if (!conns || conns.length === 0) {
+      setConnections([]);
+      setLoading(false);
+      return;
+    }
+
+    const partnerIds = conns.map((c: any) =>
+      c.requester_id === uid ? c.receiver_id : c.requester_id
+    );
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, full_name")
+      .in("id", partnerIds);
+
+    const profileMap = new Map(
+      (profiles || []).map((p: any) => [p.id, p])
+    );
+
+    const connectionList: Connection[] = [];
+    for (const c of conns) {
+      const partnerId =
+        c.requester_id === uid ? c.receiver_id : c.requester_id;
+      const profile = profileMap.get(partnerId);
+
+      const { data: lastMsgs } = await supabase
+        .from("messages")
+        .select("content, created_at")
+        .or(
+          `and(sender_id.eq.${uid},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${uid})`
+        )
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const { count } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("sender_id", partnerId)
+        .eq("receiver_id", uid)
+        .eq("read", false);
+
+      connectionList.push({
+        id: c.id,
+        partnerId,
+        partnerName: profile?.full_name || profile?.username || "Trader",
+        partnerUsername: profile?.username || "",
+        lastMessage: lastMsgs?.[0]?.content,
+        lastMessageTime: lastMsgs?.[0]?.created_at,
+        unreadCount: count || 0,
+      });
+    }
+
+    setConnections(connectionList);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!userId) return;
-    async function load() {
-      setLoading(true);
-      const { data: conns } = await supabase
-        .from("partner_connections")
-        .select("*")
-        .eq("status", "accepted")
-        .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`);
-
-      if (!conns || conns.length === 0) {
-        setConnections([]);
-        setLoading(false);
-        return;
-      }
-
-      const partnerIds = conns.map((c: any) =>
-        c.requester_id === userId ? c.receiver_id : c.requester_id
-      );
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, full_name")
-        .in("id", partnerIds);
-
-      const profileMap = new Map(
-        (profiles || []).map((p: any) => [p.id, p])
-      );
-
-      // Get last message for each connection
-      const connectionList: Connection[] = [];
-      for (const c of conns) {
-        const partnerId =
-          c.requester_id === userId ? c.receiver_id : c.requester_id;
-        const profile = profileMap.get(partnerId);
-
-        const { data: lastMsgs } = await supabase
-          .from("messages")
-          .select("content, created_at")
-          .or(
-            `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
-          )
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        const { count } = await supabase
-          .from("messages")
-          .select("*", { count: "exact", head: true })
-          .eq("sender_id", partnerId)
-          .eq("receiver_id", userId!)
-          .eq("read", false);
-
-        connectionList.push({
-          id: c.id,
-          partnerId,
-          partnerName: profile?.full_name || profile?.username || "Trader",
-          partnerUsername: profile?.username || "",
-          lastMessage: lastMsgs?.[0]?.content,
-          lastMessageTime: lastMsgs?.[0]?.created_at,
-          unreadCount: count || 0,
-        });
-      }
-
-      setConnections(connectionList);
-      setLoading(false);
-    }
-    load();
+    loadConnections(userId);
   }, [userId]);
+
+  // Realtime: update inbox when new messages arrive (when not in a chat)
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel("inbox-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const msg = payload.new as Message;
+          // Update inbox if message involves this user and we're on inbox view
+          if (msg.sender_id === userId || msg.receiver_id === userId) {
+            if (!activeChat) {
+              // Refresh the inbox list
+              loadConnections(userId);
+            }
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, activeChat]);
 
   // Load messages for active chat
   useEffect(() => {
