@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Globe, Search, Users, BookOpen, MessageSquare, User, Bell, Sun, Moon, LogOut, ChevronDown } from "lucide-react";
+import { Globe, Search, Users, BookOpen, MessageSquare, User, Bell, Sun, Moon, LogOut, ChevronDown, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
@@ -28,6 +28,10 @@ export default function AppSidebar() {
   const dropRef = useRef<HTMLDivElement>(null);
 
   const activeMarket = searchParams.get("market") || "All";
+  const activeForum = searchParams.get("forum") || "Forex";
+  const isFeedActive = location.pathname === "/feed";
+  const isForumsActive = location.pathname === "/forums";
+  const isFeedOrForums = isFeedActive || isForumsActive;
 
   useEffect(() => {
     const load = async () => {
@@ -80,6 +84,11 @@ export default function AppSidebar() {
     }
   };
 
+  const handleForumSelect = (f: string) => {
+    setShowMarketDrop(false);
+    navigate(`/forums?forum=${f}`);
+  };
+
   return (
     <aside className="hidden lg:flex flex-col w-[220px] xl:w-[245px] h-screen sticky top-0 border-r border-border bg-background px-3 py-6">
       {/* Logo */}
@@ -102,21 +111,25 @@ export default function AppSidebar() {
             <div key={item.path} className="relative" ref={isFeed ? dropRef : undefined}>
               <button
                 onClick={() => {
-                  if (isFeed && active) {
+                  if (isFeed && isFeedOrForums) {
                     setShowMarketDrop(!showMarketDrop);
+                  } else if (isFeed) {
+                    navigate(item.path);
                   } else {
                     navigate(item.path);
                   }
                 }}
                 className={cn(
                   "w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] transition-all group",
-                  active
+                  (active || (isFeed && isForumsActive))
                     ? "font-bold text-foreground bg-secondary"
                     : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 )}
               >
-                <item.icon className={cn("w-[22px] h-[22px]", active && "text-foreground")} strokeWidth={active ? 2.2 : 1.6} />
-                <span className="flex-1 text-left">{item.label}</span>
+                <item.icon className={cn("w-[22px] h-[22px]", (active || (isFeed && isForumsActive)) && "text-foreground")} strokeWidth={(active || (isFeed && isForumsActive)) ? 2.2 : 1.6} />
+                <span className="flex-1 text-left">
+                  {isFeed ? (isForumsActive ? "Forums" : "Feed") : item.label}
+                </span>
                 {isFeed && (
                   <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showMarketDrop && "rotate-180")} />
                 )}
@@ -127,20 +140,48 @@ export default function AppSidebar() {
                 )}
               </button>
 
-              {/* Market dropdown under Feed */}
+              {/* Dropdown under Feed: switch between Feed/Forums + market filters */}
               {isFeed && showMarketDrop && (
                 <div className="ml-9 mt-0.5 mb-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+                  {/* Feed section */}
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Feed</span>
+                  </div>
                   {MARKET_OPTIONS.map(m => (
                     <button
-                      key={m}
+                      key={`feed-${m}`}
                       onClick={() => handleMarketSelect(m)}
                       className={cn(
                         "flex items-center justify-between w-full px-3 py-2 text-xs transition-colors",
-                        activeMarket === m ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
+                        isFeedActive && activeMarket === m ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
                       )}
                     >
                       <span>{m}</span>
                       <span className="text-[10px] text-muted-foreground">{marketCounts[m] || 0} active</span>
+                    </button>
+                  ))}
+
+                  {/* Divider */}
+                  <div className="border-t border-border my-1" />
+
+                  {/* Forums section */}
+                  <div className="px-3 pt-1 pb-1">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Forums</span>
+                  </div>
+                  {(["Forex", "Futures", "Options"] as const).map(f => (
+                    <button
+                      key={`forum-${f}`}
+                      onClick={() => handleForumSelect(f)}
+                      className={cn(
+                        "flex items-center justify-between w-full px-3 py-2 text-xs transition-colors",
+                        isForumsActive && activeForum === f ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <MessagesSquare className="w-3 h-3" />
+                        <span>{f}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{marketCounts[f] || 0} traders</span>
                     </button>
                   ))}
                 </div>
