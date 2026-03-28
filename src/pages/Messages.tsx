@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Globe, ArrowLeft, Send, PenSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import BottomNav from "@/components/BottomNav";
+import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
