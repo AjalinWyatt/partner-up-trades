@@ -514,85 +514,74 @@ export default function TradingLog() {
             </p>
           </div>
         ) : (
-          <div className="space-y-1.5 mx-5">
-            {entries.map((entry) => (
-              <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
-                {/* Top row */}
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
-                  <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                    {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
-                  </span>
-                </div>
-
-                {/* Mood */}
-                {entry.mood && (
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
-                    <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
+          <>
+            <div className="space-y-1.5 mx-5">
+              {entries.map((entry) => (
+                <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
+                    <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                      {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
+                    </span>
                   </div>
-                )}
-
-                {/* Notes */}
-                {entry.notes && (
-                  <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
-                )}
-
-                {/* Tags */}
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-[3px] mb-1">
-                    {entry.tags.map((tag) => {
-                      const type = getTagType(tag);
-                      return (
-                        <span
-                          key={tag}
-                          className={cn(
+                  {entry.mood && (
+                    <div className="flex items-center gap-1 mb-1">
+                      <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
+                      <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
+                    </div>
+                  )}
+                  {entry.notes && (
+                    <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                  )}
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-[3px] mb-1">
+                      {entry.tags.map((tag) => {
+                        const type = getTagType(tag);
+                        return (
+                          <span key={tag} className={cn(
                             "text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px]",
                             type === "right" && "bg-accent/10 text-accent",
                             type === "wrong" && "bg-destructive/10 text-destructive",
                             type === "neutral" && "bg-[rgba(255,255,255,0.06)] text-muted-foreground"
-                          )}
-                        >
-                          {tag}
-                        </span>
-                      );
-                    })}
-          </div>
+                          )}>{tag}</span>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {(entry.market_pair || entry.session) && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5">
+                      {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
 
-          {/* Shared with partner card */}
-          {entries.length > 0 && entries[0].share_setting === "partners" && (
-            partners.length > 0 ? (
-              <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
-                  SHARED WITH {partners[0].name.split(" ")[0].toUpperCase()}
-                  {partners.length > 1 && ` + ${partners.length - 1} other${partners.length > 2 ? "s" : ""}`}
-                </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Your partner can see your P&L, what you did right, what went wrong, and how you felt.
-                </p>
-              </div>
-            ) : (
-              <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-primary/30 bg-primary/[0.05]">
-                <p className="text-[11px] text-muted-foreground mb-2">Connect with a partner to share your sessions</p>
-                <button
-                  onClick={() => navigate("/discover")}
-                  className="px-4 py-2 rounded-lg bg-gradient-brand text-white text-[11px] font-bold"
-                >
-                  Find a partner
-                </button>
-              </div>
-            )
-          )}
-
-                {/* Market info */}
-                {(entry.market_pair || entry.session) && (
-                  <div className="text-[9px] text-muted-foreground mt-0.5">
-                    {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+            {/* Shared with partner card */}
+            {entries[0]?.share_setting === "partners" && (
+              partners.length > 0 ? (
+                <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
+                    SHARED WITH {partners[0].name.split(" ")[0].toUpperCase()}
+                    {partners.length > 1 && ` + ${partners.length - 1} other${partners.length > 2 ? "s" : ""}`}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Your partner can see your P&L, what you did right, what went wrong, and how you felt.
+                  </p>
+                </div>
+              ) : (
+                <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-primary/30 bg-primary/[0.05]">
+                  <p className="text-[11px] text-muted-foreground mb-2">Connect with a partner to share your sessions</p>
+                  <button
+                    onClick={() => navigate("/discover")}
+                    className="px-4 py-2 rounded-lg bg-gradient-brand text-white text-[11px] font-bold"
+                  >
+                    Find a partner
+                  </button>
+                </div>
+              )
+            )}
+          </>
         )}
       </div>
 
