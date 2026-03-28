@@ -14,6 +14,9 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Check if user is already signed in on mount
   useEffect(() => {
@@ -60,6 +63,21 @@ const SignIn = () => {
       console.error("[SignIn] Unexpected error:", err);
       toast.error("Something went wrong. Please try again.");
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Check your email for a password reset link.");
+      setShowForgot(false);
     }
   };
 
@@ -138,7 +156,7 @@ const SignIn = () => {
           </div>
 
           <div className="flex justify-end">
-            <button type="button" className="text-xs text-primary hover:underline">
+            <button type="button" onClick={() => setShowForgot(true)} className="text-xs text-primary hover:underline">
               Forgot password?
             </button>
           </div>
@@ -160,6 +178,45 @@ const SignIn = () => {
           </button>
         </p>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+          <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-sm">
+            <h2 className="text-lg font-bold text-foreground">Reset password</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter your email and we'll send you a reset link.
+            </p>
+            <form onSubmit={handleForgotPassword} className="mt-4 flex flex-col gap-4">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                required
+              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForgot(false)}
+                  className="flex-1 h-10 border-border text-foreground"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="flex-1 h-10 bg-gradient-brand text-white hover:opacity-90 border-none"
+                >
+                  {forgotLoading ? "Sending…" : "Send link"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
