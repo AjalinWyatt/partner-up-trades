@@ -144,7 +144,6 @@ const Profile = () => {
               </button>
             </div>
           </div>
-          {profile?.gender && <div className="text-xs text-muted-foreground mt-0.5">{profile.gender}</div>}
           {profile?.gender && <div className="text-[11px] text-muted-foreground mt-0.5">{profile.gender}</div>}
           {profile?.location && (
             <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
