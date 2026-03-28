@@ -13,6 +13,9 @@ interface ProfileData {
   avatar_url: string | null;
   gender: string | null;
   location: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   hobbies: string[];
   chart_prompts: string[];
   off_chart_prompts: string[];
@@ -53,7 +56,9 @@ const Profile = () => {
   // Edit state
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
-  const [editLocation, setEditLocation] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editState, setEditState] = useState("");
+  const [editCountry, setEditCountry] = useState("");
   const [editGender, setEditGender] = useState("");
 
   const [partnerCount, setPartnerCount] = useState(0);
@@ -73,10 +78,12 @@ const Profile = () => {
       ]);
 
       if (pData) {
-        setProfile(pData);
+        setProfile(pData as any);
         setEditName(pData.full_name || "");
         setEditUsername(pData.username || "");
-        setEditLocation(pData.location || "");
+        setEditCity((pData as any).city || "");
+        setEditState((pData as any).state || "");
+        setEditCountry((pData as any).country || "");
         setEditGender(pData.gender || "");
       }
       if (tData) setTradingProfile(tData);
@@ -110,20 +117,28 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!userId) return;
     setSaving(true);
+    const locationParts = [editCity, editState, editCountry].filter(Boolean);
+    const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
     const { error } = await supabase.from("profiles").update({
       full_name: editName || null,
       username: editUsername || null,
-      location: editLocation || null,
+      location: locationStr,
+      city: editCity || null,
+      state: editState || null,
+      country: editCountry || null,
       gender: editGender || null,
       updated_at: new Date().toISOString(),
-    }).eq("id", userId);
+    } as any).eq("id", userId);
     setSaving(false);
     if (error) { toast.error("Failed to save"); return; }
     setProfile(prev => prev ? {
       ...prev,
       full_name: editName || null,
       username: editUsername || null,
-      location: editLocation || null,
+      location: locationStr,
+      city: editCity || null,
+      state: editState || null,
+      country: editCountry || null,
       gender: editGender || null,
     } : prev);
     setEditing(false);
@@ -220,11 +235,27 @@ const Profile = () => {
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Location</label>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">City</label>
               <input
-                value={editLocation} onChange={e => setEditLocation(e.target.value)}
+                value={editCity} onChange={e => setEditCity(e.target.value)}
                 className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
-                placeholder="City, Country"
+                placeholder="City"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">State / Region / Province</label>
+              <input
+                value={editState} onChange={e => setEditState(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="State / Region / Province"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Country</label>
+              <input
+                value={editCountry} onChange={e => setEditCountry(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="Country"
               />
             </div>
             <div>

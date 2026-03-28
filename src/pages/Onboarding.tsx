@@ -65,6 +65,9 @@ const Onboarding = () => {
   const [connectionTypes, setConnectionTypes] = useState<string[]>([]);
   const [connectFreq, setConnectFreq] = useState<string[]>([]);
   const [matchPriorities, setMatchPriorities] = useState<string[]>([]);
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [country, setCountry] = useState("");
 
   const toggle = useCallback((arr: string[], setArr: React.Dispatch<React.SetStateAction<string[]>>) => {
     return (val: string) => {
@@ -329,6 +332,32 @@ const Onboarding = () => {
             <ReachSelect selected={reach} onSelect={setReach} />
 
             <div className="h-px bg-border my-5" />
+            <div className="text-sm font-bold text-foreground mb-3">
+              Your location
+              {reach === "Local" && <span className="text-destructive ml-1">*</span>}
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              {reach === "Local" ? "Required for local matching" : "Optional — helps us match you with nearby traders"}
+            </p>
+            <div className="space-y-2.5">
+              <input
+                value={city} onChange={e => setCity(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder={reach === "Local" ? "City (required)" : "City"}
+              />
+              <input
+                value={state} onChange={e => setState(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder="State / Region / Province"
+              />
+              <input
+                value={country} onChange={e => setCountry(e.target.value)}
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                placeholder={reach === "Local" ? "Country (required)" : "Country"}
+              />
+            </div>
+
+            <div className="h-px bg-border my-5" />
             <div className="text-sm font-bold text-foreground mb-3">What kind of connection?</div>
             <BigCardSelect
               options={[
@@ -419,6 +448,11 @@ const Onboarding = () => {
           <button
             onClick={async () => {
               if (step === 6) {
+                // Validate location if reach is Local
+                if (reach === "Local" && (!city.trim() || !country.trim())) {
+                  toast.error("City and Country are required for Local matching");
+                  return;
+                }
                 goTo(7);
                 try {
                   const { data: { user } } = await supabase.auth.getUser();
@@ -439,6 +473,10 @@ const Onboarding = () => {
                     avatarUrl = urlData.publicUrl;
                   }
 
+                  // Build location string for display
+                  const locationParts = [city, state, country].filter(Boolean);
+                  const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
+
                   const { error: profileError } = await supabase
                     .from("profiles")
                     .upsert({
@@ -446,12 +484,16 @@ const Onboarding = () => {
                       username: nickname || null,
                       avatar_url: avatarUrl,
                       gender,
+                      location: locationStr,
+                      city: city || null,
+                      state: state || null,
+                      country: country || null,
                       hobbies: offChartPrompts,
                       chart_prompts: chartPrompts,
                       off_chart_prompts: offChartPrompts,
                       onboarding_completed: true,
                       updated_at: new Date().toISOString(),
-                    }, { onConflict: "id" });
+                    } as any, { onConflict: "id" });
 
                   if (profileError) throw profileError;
 
