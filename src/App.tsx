@@ -11,7 +11,7 @@ import Partners from "./pages/Partners";
 import Profile from "./pages/Profile";
 import ViewProfile from "./pages/ViewProfile";
 import Placeholder from "./pages/Placeholder";
-import NotFound from "./pages/NotFound";
+import Discover from "./pages/Discover";
 
 const queryClient = new QueryClient();
 
