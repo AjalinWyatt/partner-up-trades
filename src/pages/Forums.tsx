@@ -38,6 +38,7 @@ interface ForumReply {
 
 const Forums = () => {
   const { loading: guardLoading } = useOnboardingGuard();
+  const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeForum = searchParams.get("forum") || "Forex";
