@@ -12,6 +12,8 @@ import Profile from "./pages/Profile";
 import ViewProfile from "./pages/ViewProfile";
 import Placeholder from "./pages/Placeholder";
 import Discover from "./pages/Discover";
+import Messages from "./pages/Messages";
+import TradingLog from "./pages/TradingLog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,8 +35,8 @@ const App = () => (
           <Route path="/dashboard" element={<Partners />} />
           <Route path="/feed" element={<Placeholder title="Feed" />} />
           <Route path="/discover" element={<Discover />} />
-          <Route path="/log" element={<Placeholder title="Trade Log" />} />
-          <Route path="/messages" element={<Placeholder title="Messages" />} />
+           <Route path="/log" element={<TradingLog />} />
+           <Route path="/messages" element={<Messages />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
