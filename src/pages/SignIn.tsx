@@ -18,28 +18,33 @@ const SignIn = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  // Listen for auth state changes (handles session restore on refresh + post-login)
+  // Redirect if already signed in (session restore on refresh)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION")) {
-          console.log("[SignIn] Auth event:", event, "- redirecting user", session.user.id);
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("onboarding_completed")
-            .eq("id", session.user.id)
-            .maybeSingle();
-          navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
-        }
-      }
-    );
-    return () => subscription.unsubscribe();
+    let mounted = true;
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted || !session) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (mounted) navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted || !session) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (mounted) navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+    });
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    console.log("[SignIn] Attempting sign in for:", email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.message.toLowerCase().includes("email not confirmed")) {
@@ -47,9 +52,9 @@ const SignIn = () => {
       } else {
         toast.error(error.message);
       }
-      setLoading(false);
     }
-    // On success, the onAuthStateChange listener handles navigation
+    setLoading(false);
+    // On success, onAuthStateChange listener handles navigation
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
