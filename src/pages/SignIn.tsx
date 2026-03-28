@@ -14,7 +14,25 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  // Auto-redirect if user arrives already authenticated (e.g. after email verification)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          navigate("/dashboard");
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
     e.preventDefault();
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
