@@ -50,7 +50,7 @@ const Feed = () => {
     const partnerIds = (connections || []).map(c =>
       c.requester_id === user.id ? c.receiver_id : c.requester_id
     );
-    const allUserIds = [user.id, ...partnerIds];
+    const allUserIds = [...partnerIds];
 
     const { data: journalEntries } = await supabase
       .from("journal_entries")
