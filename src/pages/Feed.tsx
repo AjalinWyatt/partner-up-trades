@@ -265,6 +265,7 @@ const Feed = () => {
                   </div>
                   <CommentThread
                     entryId={entry.id}
+                    entryOwnerId={entry.user_id}
                     myId={myId}
                     commentCount={entry.commentCount}
                     onCountChange={handleCommentCountChange}
