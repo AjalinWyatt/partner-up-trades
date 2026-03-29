@@ -166,19 +166,60 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           )}
         </div>
 
-        {/* Text input */}
-        <div className="px-4 py-3">
-          <textarea
-            ref={textRef}
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder={`What's on your mind, ${userName}?`}
-            maxLength={1000}
-            rows={4}
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
-          />
-          <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
-        </div>
+        {/* Media preview - shown prominently first */}
+        {!preview && (
+          <div className={`flex flex-col items-center justify-center py-10 mx-4 mt-3 rounded-xl border-2 border-dashed ${dragOver ? "border-primary bg-primary/5" : "border-border"}`}>
+            <ImageIcon className="w-10 h-10 text-muted-foreground/40 mb-2" />
+            <p className="text-sm font-semibold text-foreground mb-1">Add a photo or video</p>
+            <p className="text-[11px] text-muted-foreground">Required to post</p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-bold text-primary"
+              >
+                <ImageIcon className="w-4 h-4" /> Photo
+              </button>
+              <button
+                onClick={() => { if (inputRef.current) { inputRef.current.accept = "video/*"; inputRef.current.click(); } }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-bold text-primary"
+              >
+                <Video className="w-4 h-4" /> Video
+              </button>
+            </div>
+          </div>
+        )}
+
+        {preview && (
+          <div className="relative mx-4 mt-3 rounded-xl overflow-hidden bg-muted">
+            {mediaType === "image" ? (
+              <img src={preview} alt="Preview" className="w-full max-h-[300px] object-cover" />
+            ) : (
+              <video src={preview} controls className="w-full max-h-[300px]" />
+            )}
+            <button
+              onClick={() => { setFile(null); setPreview(null); setMediaType(null); }}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Caption input - only shown after media is added */}
+        {preview && (
+          <div className="px-4 py-3">
+            <textarea
+              ref={textRef}
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Add a caption..."
+              maxLength={1000}
+              rows={2}
+              className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
+            />
+            <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
+          </div>
+        )}
 
         {/* Media preview */}
         {preview && (
