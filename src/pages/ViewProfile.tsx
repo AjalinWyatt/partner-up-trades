@@ -542,7 +542,14 @@ const ViewProfile = () => {
 
       {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2.5">
-        {connectionStatus === "accepted" ? (
+        {isBlocked ? (
+          <button
+            onClick={handleUnblock}
+            className="flex-1 py-3.5 rounded-xl bg-card border border-border flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground"
+          >
+            <ShieldOff className="w-5 h-5" strokeWidth={2} /> Unblock
+          </button>
+        ) : connectionStatus === "accepted" ? (
           <>
             <button
               onClick={() => navigate(-1)}
