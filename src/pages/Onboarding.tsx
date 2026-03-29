@@ -506,6 +506,7 @@ const Onboarding = () => {
                       username: nickname || null,
                       avatar_url: avatarUrl,
                       gender,
+                      date_of_birth: dateOfBirth || null,
                       location: locationStr,
                       city: city || null,
                       state: state || null,
