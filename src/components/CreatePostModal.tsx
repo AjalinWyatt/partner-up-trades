@@ -221,58 +221,33 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           </div>
         )}
 
-        {/* Media preview */}
+        {/* Change media button when preview exists */}
         {preview && (
-          <div className="relative mx-4 mb-3 rounded-xl overflow-hidden bg-muted">
-            {mediaType === "image" ? (
-              <img src={preview} alt="Preview" className="w-full max-h-[300px] object-cover" />
-            ) : (
-              <video src={preview} controls className="w-full max-h-[300px]" />
-            )}
+          <div className={`flex items-center gap-2 px-4 py-3 border-t border-border`}>
             <button
-              onClick={() => { setFile(null); setPreview(null); setMediaType(null); }}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80"
+              onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
             >
-              <X className="w-4 h-4" />
+              <ImageIcon className="w-4 h-4 text-primary" /> Change Photo
+            </button>
+            <button
+              onClick={() => { if (inputRef.current) { inputRef.current.accept = "video/*"; inputRef.current.click(); } }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
+            >
+              <Video className="w-4 h-4 text-accent-foreground" /> Change Video
             </button>
           </div>
         )}
-
-        {/* Media buttons */}
-        <div className={`flex items-center gap-2 px-4 py-3 border-t border-border ${dragOver ? "bg-primary/5" : ""}`}>
-          <button
-            onClick={() => {
-              if (inputRef.current) {
-                inputRef.current.accept = "image/*";
-                inputRef.current.click();
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
-          >
-            <ImageIcon className="w-4 h-4 text-primary" /> Photo
-          </button>
-          <button
-            onClick={() => {
-              if (inputRef.current) {
-                inputRef.current.accept = "video/*";
-                inputRef.current.click();
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
-          >
-            <Video className="w-4 h-4 text-accent-foreground" /> Video
-          </button>
-          <input
-            ref={inputRef}
-            type="file"
-            className="hidden"
-            onChange={e => {
-              const f = e.target.files?.[0];
-              if (f) handleFile(f);
-              e.target.value = "";
-            }}
-          />
-        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            e.target.value = "";
+          }}
+        />
       </div>
     </div>
   );
