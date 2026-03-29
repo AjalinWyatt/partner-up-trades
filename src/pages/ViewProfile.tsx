@@ -76,11 +76,21 @@ const ViewProfile = () => {
       if (user) {
         const { data: conn } = await supabase
           .from("partner_connections")
-          .select("status")
+          .select("id, status")
           .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
           .maybeSingle();
 
         setConnectionStatus(conn?.status || null);
+        setConnectionId(conn?.id || null);
+
+        // Check if blocked
+        const { data: blockData } = await supabase
+          .from("blocked_users")
+          .select("id")
+          .eq("blocker_id", user.id)
+          .eq("blocked_id", id)
+          .maybeSingle();
+        setIsBlocked(!!blockData);
 
         // Always recompute match with latest algorithm
         const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
