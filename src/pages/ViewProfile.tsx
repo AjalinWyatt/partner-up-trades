@@ -73,29 +73,20 @@ const ViewProfile = () => {
       if (user) {
         const { data: conn } = await supabase
           .from("partner_connections")
-          .select("status, match_score, match_breakdown")
+          .select("status")
           .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
           .maybeSingle();
 
         setConnectionStatus(conn?.status || null);
 
-        if (conn?.match_score) {
-          setMatchScore(conn.match_score);
-          setBreakdown((conn.match_breakdown as Record<string, number>) || {});
-        } else {
-          const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
-          const { data: myProf } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-          setMyTradingProfile(myTp);
-          if (myTp && tp) {
-            const result = computeMatch(myTp, tp, myProf, prof);
-            setMatchScore(result.excluded ? 0 : result.pct);
-            setBreakdown(result.breakdown);
-          }
-        }
-
-        if (!myTradingProfile) {
-          const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
-          setMyTradingProfile(myTp);
+        // Always recompute match with latest algorithm
+        const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
+        const { data: myProf } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+        setMyTradingProfile(myTp);
+        if (myTp && tp) {
+          const result = computeMatch(myTp, tp, myProf, prof);
+          setMatchScore(result.excluded ? 0 : result.pct);
+          setBreakdown(result.breakdown);
         }
       }
 
