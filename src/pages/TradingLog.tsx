@@ -250,7 +250,7 @@ export default function TradingLog() {
   // ─── FORM VIEW ───
   if (showForm) {
     return (
-      <div className="flex flex-col h-screen" style={{ background: "#0f1318" }}>
+      <div className="flex flex-col h-screen bg-background">
         {/* Form header */}
         <div className="flex items-center justify-between px-5 py-2 shrink-0">
           <div className="flex items-center gap-2">
@@ -281,7 +281,7 @@ export default function TradingLog() {
                     "flex-1 flex flex-col items-center py-2.5 rounded-[10px] border-[1.5px] transition-colors",
                     mood === m.value
                       ? "border-accent bg-accent/[0.08]"
-                      : "border-border bg-[rgba(255,255,255,0.06)]"
+                      : "border-border bg-secondary"
                   )}
                 >
                   <span className="text-xl">{m.emoji}</span>
@@ -307,7 +307,7 @@ export default function TradingLog() {
                         : r.className === "loss"
                         ? "bg-destructive/[0.12] text-destructive border-destructive"
                         : "bg-primary/[0.12] text-primary border-primary"
-                      : "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                      : "border-border bg-secondary text-muted-foreground"
                   )}
                 >
                   {r.value}
@@ -319,7 +319,7 @@ export default function TradingLog() {
               value={pnl}
               onChange={(e) => setPnl(e.target.value)}
               placeholder="Pips or dollar amount (e.g. +38 pips)"
-              className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+              className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
             />
           </div>
 
@@ -331,13 +331,13 @@ export default function TradingLog() {
                 value={marketName}
                 onChange={(e) => setMarketName(e.target.value)}
                 placeholder="e.g. Forex"
-                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
               />
               <input
                 value={pairName}
                 onChange={(e) => setPairName(e.target.value)}
                 placeholder="e.g. XAU/USD"
-                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
               />
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function TradingLog() {
                     "flex-1 py-2.5 rounded-[10px] border-[1.5px] text-[13px] font-bold transition-colors",
                     accountType === a
                       ? "bg-accent/[0.12] text-accent border-accent"
-                      : "border-border bg-[rgba(255,255,255,0.06)] text-muted-foreground"
+                      : "border-border bg-secondary text-muted-foreground"
                   )}
                 >
                   {a}
@@ -374,19 +374,14 @@ export default function TradingLog() {
                   <button
                     key={t}
                     onClick={() => setSelectedTags((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
-                    className="px-3 py-[5px] rounded-full text-[11px] font-semibold transition-colors bg-transparent"
-                    style={{
-                      border: `1.5px solid ${
-                        type === "green"
-                          ? sel ? "#2fd98a" : "rgba(47,217,138,0.5)"
-                          : type === "red"
-                          ? sel ? "#ff6b6b" : "rgba(255,107,107,0.5)"
-                          : sel ? "#4d9fff" : "rgba(77,159,255,0.5)"
-                      }`,
-                      color: sel
-                        ? type === "green" ? "#2fd98a" : type === "red" ? "#ff6b6b" : "#4d9fff"
-                        : "rgba(255,255,255,0.8)",
-                    }}
+                    className={cn(
+                      "px-3 py-[5px] rounded-full text-[11px] font-semibold transition-colors bg-transparent border-[1.5px]",
+                      type === "green"
+                        ? sel ? "border-accent text-accent" : "border-accent/50 text-foreground"
+                        : type === "red"
+                        ? sel ? "border-destructive text-destructive" : "border-destructive/50 text-foreground"
+                        : sel ? "border-primary text-primary" : "border-primary/50 text-foreground"
+                    )}
                   >
                     {t}
                   </button>
@@ -402,7 +397,7 @@ export default function TradingLog() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="What happened? What did you learn?"
-              className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-[rgba(255,255,255,0.06)] text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
+              className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
             />
           </div>
 
@@ -423,7 +418,7 @@ export default function TradingLog() {
                       "flex items-start gap-3 p-3 rounded-[10px] border-[1.5px] transition-colors text-left",
                       sel
                         ? "border-accent bg-accent/[0.08]"
-                        : "border-border bg-[rgba(255,255,255,0.06)]"
+                        : "border-border bg-secondary"
                     )}
                   >
                     <div className="flex flex-col">
@@ -478,7 +473,7 @@ export default function TradingLog() {
                     ? "bg-accent"
                     : dot.isToday
                     ? "bg-accent shadow-[0_0_6px_hsl(var(--accent))]"
-                    : "bg-[rgba(255,255,255,0.08)]"
+                    : "bg-muted"
                 )}
               />
             ))}
