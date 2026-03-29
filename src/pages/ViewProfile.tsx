@@ -229,6 +229,43 @@ const ViewProfile = () => {
         <button onClick={() => navigate(-1)} className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center z-10 hover:bg-black/30 transition-colors">
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
+        {myId && myId !== id && (
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center hover:bg-black/30 transition-colors"
+            >
+              <MoreVertical className="w-5 h-5 text-white" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-11 bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[180px] z-50">
+                {connectionStatus === "accepted" && (
+                  <button
+                    onClick={handleUnmatch}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    <UserX className="w-4 h-4 text-muted-foreground" /> Unmatch
+                  </button>
+                )}
+                {isBlocked ? (
+                  <button
+                    onClick={handleUnblock}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ShieldOff className="w-4 h-4 text-muted-foreground" /> Unblock
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleBlock}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Shield className="w-4 h-4" /> Block
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto pb-28 -mt-14">
