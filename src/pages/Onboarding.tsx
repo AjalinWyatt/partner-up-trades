@@ -458,6 +458,18 @@ const Onboarding = () => {
           <button
             onClick={async () => {
               if (step === 6) {
+                // Validate age 18+
+                if (dateOfBirth) {
+                  const dob = new Date(dateOfBirth);
+                  const today = new Date();
+                  let age = today.getFullYear() - dob.getFullYear();
+                  const m = today.getMonth() - dob.getMonth();
+                  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                  if (age < 18) {
+                    toast.error("You must be 18 or older to use Traders World");
+                    return;
+                  }
+                }
                 // Validate location if reach is Local
                 if (reach === "Local" && (!city.trim() || !country.trim())) {
                   toast.error("City and Country are required for Local matching");
