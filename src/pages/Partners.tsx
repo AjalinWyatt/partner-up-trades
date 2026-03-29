@@ -274,6 +274,24 @@ const Partners = () => {
     setPending(prev => prev.filter(p => p.connectionId !== connectionId));
   };
 
+  const handleUnmatch = async (connectionId: string, partnerName: string) => {
+    if (!confirm(`Unmatch ${partnerName}? This will remove them from your partners.`)) return;
+    const { error } = await supabase
+      .from("partner_connections")
+      .delete()
+      .eq("id", connectionId);
+    if (error) {
+      toast.error("Failed to unmatch");
+      return;
+    }
+    toast.success(`Unmatched ${partnerName}`);
+    setPartners(prev => prev.filter(p => p.connectionId !== connectionId));
+    setAlerts(prev => prev.filter(a => {
+      const partner = partners.find(p => p.connectionId === connectionId);
+      return !partner || a.userId !== partner.userId;
+    }));
+  };
+
   const isEmpty = alerts.length === 0 && pending.length === 0 && partners.length === 0;
 
   if (loading) {
@@ -415,11 +433,23 @@ const Partners = () => {
                         {p.markets.slice(0, 2).join(", ")}{p.sessions.length > 0 ? ` · ${p.sessions[0]}` : ""}{p.strategies.length > 0 ? ` · ${p.strategies[0]}` : ""}
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className={`flex items-center gap-1 text-sm font-extrabold ${p.loggedToday ? "text-success" : "text-muted-foreground"}`}>
-                        ⚡ {p.streak}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="text-right">
+                        <div className={`flex items-center gap-1 text-sm font-extrabold ${p.loggedToday ? "text-success" : "text-muted-foreground"}`}>
+                          ⚡ {p.streak}
+                        </div>
+                        <div className="text-[9px] text-muted-foreground mt-0.5">{p.lastActive}</div>
                       </div>
-                      <div className="text-[9px] text-muted-foreground mt-0.5">{p.lastActive}</div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnmatch(p.connectionId, p.name);
+                        }}
+                        className="w-8 h-8 rounded-lg bg-muted border border-border flex items-center justify-center hover:bg-destructive/10 hover:border-destructive/20 transition-colors"
+                        title="Unmatch"
+                      >
+                        <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                      </button>
                     </div>
                   </div>
                 ))}

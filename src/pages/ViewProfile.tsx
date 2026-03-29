@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, ChevronDown, X, MessageSquare, Link2, ImageIcon, Settings, MapPin, Flame, TrendingUp, Users } from "lucide-react";
+import { ChevronLeft, ChevronDown, X, MessageSquare, Link2, ImageIcon, Settings, MapPin, Flame, TrendingUp, Users, MoreVertical, UserX, ShieldOff, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch, getBreakdownLabel } from "@/lib/matchUtils";
@@ -25,8 +25,11 @@ const ViewProfile = () => {
   const [forumActivity, setForumActivity] = useState<any[]>([]);
   const [stats, setStats] = useState({ partners: 0, streak: 0, winRate: 0 });
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -73,11 +76,21 @@ const ViewProfile = () => {
       if (user) {
         const { data: conn } = await supabase
           .from("partner_connections")
-          .select("status")
+          .select("id, status")
           .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
           .maybeSingle();
 
         setConnectionStatus(conn?.status || null);
+        setConnectionId(conn?.id || null);
+
+        // Check if blocked
+        const { data: blockData } = await supabase
+          .from("blocked_users")
+          .select("id")
+          .eq("blocker_id", user.id)
+          .eq("blocked_id", id)
+          .maybeSingle();
+        setIsBlocked(!!blockData);
 
         // Always recompute match with latest algorithm
         const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
@@ -149,6 +162,39 @@ const ViewProfile = () => {
     setSending(false);
   };
 
+  const handleUnmatch = async () => {
+    if (!connectionId || !id) return;
+    if (!confirm("Unmatch this partner? This will remove the connection.")) return;
+    const { error } = await supabase.from("partner_connections").delete().eq("id", connectionId);
+    if (error) { toast.error("Failed to unmatch"); return; }
+    toast.success("Unmatched successfully");
+    setConnectionStatus(null);
+    setConnectionId(null);
+    setShowMenu(false);
+  };
+
+  const handleBlock = async () => {
+    if (!myId || !id) return;
+    if (!confirm(`Block @${profile?.username || "this user"}? They won't be able to see or message you.`)) return;
+    await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: id });
+    if (connectionId) {
+      await supabase.from("partner_connections").delete().eq("id", connectionId);
+      setConnectionStatus(null);
+      setConnectionId(null);
+    }
+    setIsBlocked(true);
+    setShowMenu(false);
+    toast.success(`Blocked @${profile?.username || "user"}`);
+  };
+
+  const handleUnblock = async () => {
+    if (!myId || !id) return;
+    await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", id);
+    setIsBlocked(false);
+    setShowMenu(false);
+    toast.success(`Unblocked @${profile?.username || "user"}`);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -183,6 +229,43 @@ const ViewProfile = () => {
         <button onClick={() => navigate(-1)} className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center z-10 hover:bg-black/30 transition-colors">
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
+        {myId && myId !== id && (
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center hover:bg-black/30 transition-colors"
+            >
+              <MoreVertical className="w-5 h-5 text-white" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-11 bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[180px] z-50">
+                {connectionStatus === "accepted" && (
+                  <button
+                    onClick={handleUnmatch}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    <UserX className="w-4 h-4 text-muted-foreground" /> Unmatch
+                  </button>
+                )}
+                {isBlocked ? (
+                  <button
+                    onClick={handleUnblock}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ShieldOff className="w-4 h-4 text-muted-foreground" /> Unblock
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleBlock}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Shield className="w-4 h-4" /> Block
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto pb-28 -mt-14">
@@ -459,7 +542,14 @@ const ViewProfile = () => {
 
       {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2.5">
-        {connectionStatus === "accepted" ? (
+        {isBlocked ? (
+          <button
+            onClick={handleUnblock}
+            className="flex-1 py-3.5 rounded-xl bg-card border border-border flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground"
+          >
+            <ShieldOff className="w-5 h-5" strokeWidth={2} /> Unblock
+          </button>
+        ) : connectionStatus === "accepted" ? (
           <>
             <button
               onClick={() => navigate(-1)}
