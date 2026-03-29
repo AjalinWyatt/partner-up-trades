@@ -166,23 +166,31 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           )}
         </div>
 
-        {/* Text input */}
-        <div className="px-4 py-3">
-          <textarea
-            ref={textRef}
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder={`What's on your mind, ${userName}?`}
-            maxLength={1000}
-            rows={4}
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
-          />
-          <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
-        </div>
+        {/* Media preview - shown prominently first */}
+        {!preview && (
+          <div className={`flex flex-col items-center justify-center py-10 mx-4 mt-3 rounded-xl border-2 border-dashed ${dragOver ? "border-primary bg-primary/5" : "border-border"}`}>
+            <ImageIcon className="w-10 h-10 text-muted-foreground/40 mb-2" />
+            <p className="text-sm font-semibold text-foreground mb-1">Add a photo or video</p>
+            <p className="text-[11px] text-muted-foreground">Required to post</p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-bold text-primary"
+              >
+                <ImageIcon className="w-4 h-4" /> Photo
+              </button>
+              <button
+                onClick={() => { if (inputRef.current) { inputRef.current.accept = "video/*"; inputRef.current.click(); } }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-bold text-primary"
+              >
+                <Video className="w-4 h-4" /> Video
+              </button>
+            </div>
+          </div>
+        )}
 
-        {/* Media preview */}
         {preview && (
-          <div className="relative mx-4 mb-3 rounded-xl overflow-hidden bg-muted">
+          <div className="relative mx-4 mt-3 rounded-xl overflow-hidden bg-muted">
             {mediaType === "image" ? (
               <img src={preview} alt="Preview" className="w-full max-h-[300px] object-cover" />
             ) : (
@@ -197,41 +205,49 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           </div>
         )}
 
-        {/* Media buttons */}
-        <div className={`flex items-center gap-2 px-4 py-3 border-t border-border ${dragOver ? "bg-primary/5" : ""}`}>
-          <button
-            onClick={() => {
-              if (inputRef.current) {
-                inputRef.current.accept = "image/*";
-                inputRef.current.click();
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
-          >
-            <ImageIcon className="w-4 h-4 text-primary" /> Photo
-          </button>
-          <button
-            onClick={() => {
-              if (inputRef.current) {
-                inputRef.current.accept = "video/*";
-                inputRef.current.click();
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
-          >
-            <Video className="w-4 h-4 text-accent-foreground" /> Video
-          </button>
-          <input
-            ref={inputRef}
-            type="file"
-            className="hidden"
-            onChange={e => {
-              const f = e.target.files?.[0];
-              if (f) handleFile(f);
-              e.target.value = "";
-            }}
-          />
-        </div>
+        {/* Caption input - only shown after media is added */}
+        {preview && (
+          <div className="px-4 py-3">
+            <textarea
+              ref={textRef}
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Add a caption..."
+              maxLength={1000}
+              rows={2}
+              className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
+            />
+            <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
+          </div>
+        )}
+
+        {/* Change media button when preview exists */}
+        {preview && (
+          <div className={`flex items-center gap-2 px-4 py-3 border-t border-border`}>
+            <button
+              onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
+            >
+              <ImageIcon className="w-4 h-4 text-primary" /> Change Photo
+            </button>
+            <button
+              onClick={() => { if (inputRef.current) { inputRef.current.accept = "video/*"; inputRef.current.click(); } }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
+            >
+              <Video className="w-4 h-4 text-accent-foreground" /> Change Video
+            </button>
+          </div>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            e.target.value = "";
+          }}
+        />
       </div>
     </div>
   );
