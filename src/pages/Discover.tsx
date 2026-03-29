@@ -57,18 +57,25 @@ const Discover = () => {
       if (!user) { setLoading(false); return; }
 
       // Bug 1 fix: Get ALL partner_connections for this user (any status)
-      const { data: allConnections } = await supabase
-        .from("partner_connections")
-        .select("requester_id, receiver_id")
-        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`);
+      const [{ data: allConnections }, { data: blockedData }] = await Promise.all([
+        supabase
+          .from("partner_connections")
+          .select("requester_id, receiver_id")
+          .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
+        supabase
+          .from("blocked_users")
+          .select("blocked_id")
+          .eq("blocker_id", user.id),
+      ]);
 
-      // Build a set of all user IDs this user has interacted with
+      // Build a set of all user IDs this user has interacted with or blocked
       const excludedIds = new Set<string>();
       excludedIds.add(user.id); // exclude self
       (allConnections || []).forEach((c: any) => {
         excludedIds.add(c.requester_id);
         excludedIds.add(c.receiver_id);
       });
+      (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
 
       // Get my trading profile
       const { data: myTrading } = await supabase
