@@ -35,6 +35,7 @@ const Onboarding = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [chartPrompts, setChartPrompts] = useState<string[]>([]);
   const [offChartPrompts, setOffChartPrompts] = useState<string[]>([]);
+  const [dateOfBirth, setDateOfBirth] = useState("");
 
   // Step 2
   const [markets, setMarkets] = useState<string[]>([]);
@@ -130,6 +131,15 @@ const Onboarding = () => {
               onChange={(e) => setNickname(e.target.value)}
               className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground mb-4"
             />
+
+            <div className="text-sm font-bold text-foreground mb-3">Date of birth</div>
+            <Input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground mb-1"
+            />
+            <p className="text-[11px] text-muted-foreground mb-4">You must be 18 or older to use Traders World.</p>
 
             <input
               ref={avatarInputRef}
