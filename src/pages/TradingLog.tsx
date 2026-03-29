@@ -199,7 +199,8 @@ export default function TradingLog() {
       tags: selectedTags,
       notes: notes || null,
       share_setting: shareSetting,
-    });
+      account_type: accountType || null,
+    } as any);
     setSaving(false);
     if (error) { toast.error("Failed to save entry"); return; }
     toast.success("Session logged!");

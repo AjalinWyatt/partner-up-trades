@@ -310,6 +310,7 @@ export type Database = {
       }
       journal_entries: {
         Row: {
+          account_type: string | null
           created_at: string
           id: string
           market_pair: string | null
@@ -323,6 +324,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_type?: string | null
           created_at?: string
           id?: string
           market_pair?: string | null
@@ -336,6 +338,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_type?: string | null
           created_at?: string
           id?: string
           market_pair?: string | null
