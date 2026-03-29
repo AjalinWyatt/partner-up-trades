@@ -516,6 +516,7 @@ export type Database = {
           id: string
           image_url: string | null
           likes_count: number | null
+          market: string | null
           media_type: string | null
           media_url: string | null
           user_id: string
@@ -527,6 +528,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number | null
+          market?: string | null
           media_type?: string | null
           media_url?: string | null
           user_id: string
@@ -538,6 +540,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes_count?: number | null
+          market?: string | null
           media_type?: string | null
           media_url?: string | null
           user_id?: string
