@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { X, ImageIcon, Video, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -17,7 +18,8 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   const [posting, setPosting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [userName, setUserName] = useState("");
-  const [userMarket, setUserMarket] = useState("");
+  const [userMarkets, setUserMarkets] = useState<string[]>([]);
+  const [selectedMarket, setSelectedMarket] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
@@ -31,7 +33,9 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
         supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle(),
       ]);
       setUserName(prof?.username || "trader");
-      setUserMarket(tp?.markets?.[0] || "");
+      const markets = tp?.markets || [];
+      setUserMarkets(markets);
+      setSelectedMarket(markets[0] || "");
     };
     load();
     setTimeout(() => textRef.current?.focus(), 100);
@@ -63,6 +67,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
 
   const handlePost = async () => {
     if (!file) { toast.error("Add a photo or video to post"); return; }
+    if (!selectedMarket) { toast.error("Select a market tag"); return; }
     setPosting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -88,6 +93,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
         media_url: mediaUrl,
         media_type: mediaType,
         caption: content.trim() || null,
+        market: selectedMarket,
       };
 
       const { error: insertErr } = await supabase.from("posts").insert(insertData);
@@ -109,10 +115,11 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
     setPreview(null);
     setMediaType(null);
     setContent("");
+    setSelectedMarket("");
     onClose();
   };
 
-  const canPost = !!file;
+  const canPost = !!file && !!selectedMarket;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm pt-[env(safe-area-inset-top)]" onClick={reset}>
@@ -138,12 +145,26 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           </button>
         </div>
 
-        {/* Market tag */}
-        {userMarket && (
-          <div className="px-4 pt-3 flex items-center gap-1.5">
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{userMarket}</span>
-          </div>
-        )}
+        {/* Market tag selector */}
+        <div className="px-4 pt-3 flex items-center gap-1.5 flex-wrap">
+          {userMarkets.map(m => (
+            <button
+              key={m}
+              onClick={() => setSelectedMarket(m)}
+              className={cn(
+                "text-[11px] px-2.5 py-1 rounded-full font-bold transition-colors",
+                selectedMarket === m
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-primary/10 text-primary hover:bg-primary/20"
+              )}
+            >
+              {m}
+            </button>
+          ))}
+          {userMarkets.length === 0 && (
+            <span className="text-[10px] text-muted-foreground">No markets selected in your profile</span>
+          )}
+        </div>
 
         {/* Text input */}
         <div className="px-4 py-3">
