@@ -25,8 +25,11 @@ const ViewProfile = () => {
   const [forumActivity, setForumActivity] = useState<any[]>([]);
   const [stats, setStats] = useState({ partners: 0, streak: 0, winRate: 0 });
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     if (!id) return;
