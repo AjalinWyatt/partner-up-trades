@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Heart, MessageCircle, ChevronLeft, Send, Trash2, ChevronDown } from "lucide-react";
+import { Plus, Heart, MessageCircle, ChevronLeft, Send, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import NotificationBell from "@/components/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,22 +36,25 @@ interface ForumReply {
   avatar_url: string | null;
 }
 
+type ForumTab = "my" | "world";
+
 const Forums = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeForum = searchParams.get("forum") || "Forex";
   const activePostId = searchParams.get("post") || null;
 
+  const [forumTab, setForumTab] = useState<ForumTab>("my");
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
+  const [myMarkets, setMyMarkets] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [newForum, setNewForum] = useState("");
   const [posting, setPosting] = useState(false);
-  const [forumDropdownOpen, setForumDropdownOpen] = useState(false);
 
   // Thread view state
   const [activePost, setActivePost] = useState<ForumPost | null>(null);
@@ -62,18 +65,28 @@ const Forums = () => {
   // Forum member counts
   const [forumCounts, setForumCounts] = useState<Record<string, number>>({});
 
-  const loadPosts = useCallback(async (forum?: string) => {
-    const f = forum || activeForum;
+  const loadPosts = useCallback(async (tab?: ForumTab) => {
+    const activeTab = tab ?? forumTab;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setMyId(user.id);
 
-    const { data: postsData } = await supabase
+    const { data: myTp } = await supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle();
+    const userMarkets = myTp?.markets || [];
+    setMyMarkets(userMarkets);
+    if (!newForum && userMarkets.length > 0) setNewForum(userMarkets[0]);
+
+    let query = supabase
       .from("forum_posts")
       .select("*")
-      .eq("forum", f)
       .order("created_at", { ascending: false })
       .limit(50);
+
+    if (activeTab === "my" && userMarkets.length > 0) {
+      query = query.in("forum", userMarkets);
+    }
+
+    const { data: postsData } = await query;
 
     if (!postsData || postsData.length === 0) {
       setPosts([]);
@@ -104,7 +117,7 @@ const Forums = () => {
 
     setPosts(items);
     setLoading(false);
-  }, [activeForum]);
+  }, [forumTab]);
 
   const loadForumCounts = useCallback(async () => {
     const { data } = await supabase.from("trading_profiles").select("markets");
@@ -128,7 +141,7 @@ const Forums = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [forumTab]);
 
   // Load thread when activePostId changes
   useEffect(() => {
@@ -138,7 +151,6 @@ const Forums = () => {
       const post = posts.find(p => p.id === activePostId);
       if (post) setActivePost(post);
       else {
-        // Fetch the post
         const { data: p } = await supabase.from("forum_posts").select("*").eq("id", activePostId).maybeSingle();
         if (p) {
           const { data: prof } = await supabase.from("profiles").select("username, avatar_url").eq("id", p.user_id).maybeSingle();
@@ -169,22 +181,20 @@ const Forums = () => {
     loadThread();
   }, [activePostId, posts]);
 
-  const switchForum = (f: string) => {
-    setSearchParams({ forum: f });
-    setForumDropdownOpen(false);
-    setLoading(true);
-    loadPosts(f);
+  const switchTab = (t: ForumTab) => {
+    setForumTab(t);
+    setSearchParams({});
   };
 
   const handleCreatePost = async () => {
-    if (!newTitle.trim() || !newContent.trim()) { toast.error("Title and content are required"); return; }
+    if (!newTitle.trim() || !newContent.trim() || !newForum) { toast.error("Title, content, and forum are required"); return; }
     setPosting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("forum_posts").insert({
         user_id: user.id,
-        forum: activeForum,
+        forum: newForum,
         title: newTitle.trim(),
         content: newContent.trim(),
       });
@@ -226,13 +236,11 @@ const Forums = () => {
         content: replyText.trim(),
       });
       if (error) throw error;
-      // Update replies_count
       const currentPost = posts.find(p => p.id === activePostId);
       if (currentPost) {
         await supabase.from("forum_posts").update({ replies_count: currentPost.replies_count + 1 }).eq("id", activePostId);
         setPosts(prev => prev.map(p => p.id === activePostId ? { ...p, replies_count: p.replies_count + 1 } : p));
       }
-      // Refetch replies
       const { data: prof } = await supabase.from("profiles").select("username, avatar_url").eq("id", myId).maybeSingle();
       setReplies(prev => [...prev, {
         id: crypto.randomUUID(),
@@ -256,9 +264,8 @@ const Forums = () => {
     return (
       <AppLayout>
         <div className="min-h-screen bg-background pb-20">
-          {/* Thread header */}
           <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center gap-3">
-            <button onClick={() => setSearchParams({ forum: activeForum })} className="text-foreground">
+            <button onClick={() => setSearchParams({})} className="text-foreground">
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex-1 min-w-0">
@@ -267,7 +274,6 @@ const Forums = () => {
             </div>
           </div>
 
-          {/* Original post */}
           <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2.5 mb-3">
               <button onClick={() => navigate(`/profile/${activePost.user_id}`)}>
@@ -280,17 +286,20 @@ const Forums = () => {
                 )}
               </button>
               <div className="flex-1">
-                <button onClick={() => navigate(`/profile/${activePost.user_id}`)} className="text-[13px] font-bold text-foreground hover:underline">
-                  @{activePost.username}
-                </button>
-                <span className="text-[10px] text-muted-foreground ml-2">{timeAgo(activePost.created_at)}</span>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => navigate(`/profile/${activePost.user_id}`)} className="text-[13px] font-bold text-foreground hover:underline">
+                    @{activePost.username}
+                  </button>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{activePost.forum}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">{timeAgo(activePost.created_at)}</span>
               </div>
               {(isAdmin || myId === activePost.user_id) && (
                 <button
                   onClick={async () => {
                     if (!confirm("Delete this post?")) return;
                     await supabase.from("forum_posts").delete().eq("id", activePost.id);
-                    setSearchParams({ forum: activeForum });
+                    setSearchParams({});
                     loadPosts();
                     toast.success("Post deleted");
                   }}
@@ -314,7 +323,6 @@ const Forums = () => {
             </div>
           </div>
 
-          {/* Replies */}
           <div className="px-5 py-3 space-y-3">
             {loadingReplies ? (
               <div className="flex justify-center py-10">
@@ -348,7 +356,6 @@ const Forums = () => {
             )}
           </div>
 
-          {/* Reply input */}
           <div className="px-5 py-3 flex gap-2">
             <input
               value={replyText}
@@ -374,40 +381,40 @@ const Forums = () => {
     <AppLayout>
       <div className="min-h-screen bg-background pb-20">
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border px-5 py-3 flex items-center justify-between">
-          <button onClick={() => setShowCreate(true)} className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-success flex items-center justify-center">
-            <Plus className="w-5 h-5 text-primary-foreground" />
-          </button>
-
-          {/* Forum selector */}
-          <div className="relative">
-            <button
-              onClick={() => setForumDropdownOpen(!forumDropdownOpen)}
-              className="flex items-center gap-1.5"
-            >
-              <span className="text-sm font-black text-foreground">{activeForum} Forum</span>
-              <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", forumDropdownOpen && "rotate-180")} />
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
+          <div className="px-5 py-3 flex items-center justify-between">
+            <button onClick={() => setShowCreate(true)} className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-success flex items-center justify-center">
+              <Plus className="w-5 h-5 text-primary-foreground" />
             </button>
-            {forumDropdownOpen && (
-              <div className="absolute right-0 top-9 w-56 bg-card border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                {FORUMS.map(f => (
-                  <button
-                    key={f}
-                    onClick={() => switchForum(f)}
-                    className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 text-sm transition-colors",
-                      activeForum === f ? "text-primary font-bold bg-primary/5" : "text-foreground hover:bg-muted"
-                    )}
-                  >
-                    <span>{f}</span>
-                    <span className="text-[10px] text-muted-foreground">{forumCounts[f] || 0} traders</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <span className="text-sm font-black text-foreground">Forums</span>
+            <NotificationBell />
           </div>
 
-          <NotificationBell />
+          {/* Tabs */}
+          <div className="flex px-5 gap-1">
+            <button
+              onClick={() => switchTab("my")}
+              className={cn(
+                "flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors",
+                forumTab === "my"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              My Forums
+            </button>
+            <button
+              onClick={() => switchTab("world")}
+              className={cn(
+                "flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors",
+                forumTab === "world"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              World Forum
+            </button>
+          </div>
         </div>
 
         {/* Create post modal */}
@@ -416,16 +423,33 @@ const Forums = () => {
             <div className="bg-card border border-border rounded-2xl w-full max-w-lg mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <button onClick={() => setShowCreate(false)} className="text-muted-foreground text-sm">Cancel</button>
-                <span className="text-sm font-bold text-foreground">{activeForum} Forum</span>
+                <span className="text-sm font-bold text-foreground">New Thread</span>
                 <button
                   onClick={handleCreatePost}
-                  disabled={posting || !newTitle.trim() || !newContent.trim()}
+                  disabled={posting || !newTitle.trim() || !newContent.trim() || !newForum}
                   className="text-sm font-bold text-primary disabled:opacity-40"
                 >
                   {posting ? "Posting..." : "Post"}
                 </button>
               </div>
               <div className="p-4 space-y-3">
+                {/* Forum selector */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {myMarkets.map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setNewForum(m)}
+                      className={cn(
+                        "text-[11px] px-2.5 py-1 rounded-full font-bold transition-colors",
+                        newForum === m
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-primary/10 text-primary hover:bg-primary/20"
+                      )}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
                 <input
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
@@ -456,8 +480,10 @@ const Forums = () => {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
               <MessageCircle className="w-7 h-7 text-primary" />
             </div>
-            <p className="text-sm font-bold text-foreground mb-1">Start the {activeForum} conversation</p>
-            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Be the first to post in the {activeForum} forum</p>
+            <p className="text-sm font-bold text-foreground mb-1">
+              {forumTab === "my" ? "No threads in your markets yet" : "No threads yet"}
+            </p>
+            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Be the first to start a conversation</p>
             <button
               onClick={() => setShowCreate(true)}
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-success text-sm font-bold text-primary-foreground"
@@ -470,7 +496,7 @@ const Forums = () => {
             {posts.map(post => (
               <button
                 key={post.id}
-                onClick={() => setSearchParams({ forum: activeForum, post: post.id })}
+                onClick={() => setSearchParams({ post: post.id })}
                 className="w-full text-left px-4 py-4 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center gap-2.5 mb-2">
@@ -482,8 +508,11 @@ const Forums = () => {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <span className="text-[11px] font-bold text-foreground">@{post.username}</span>
-                    <span className="text-[10px] text-muted-foreground ml-2">{timeAgo(post.created_at)}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-foreground">@{post.username}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{post.forum}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                   </div>
                 </div>
                 <h3 className="text-[13px] font-bold text-foreground mb-1">{post.title}</h3>

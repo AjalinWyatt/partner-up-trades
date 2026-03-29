@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -22,6 +22,7 @@ interface FeedPost {
   media_url?: string | null;
   media_type?: string | null;
   caption?: string | null;
+  market?: string | null;
   created_at: string;
   username: string;
   full_name: string;
@@ -32,14 +33,13 @@ interface FeedPost {
   commentCount: number;
 }
 
-
+type FeedTab = "my" | "world";
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const marketFilter = searchParams.get("market") || "All";
+  const [feedTab, setFeedTab] = useState<FeedTab>("my");
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
@@ -49,54 +49,29 @@ const Feed = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
 
-
-  const loadFeed = useCallback(async (filter?: string) => {
-    const activeFilter = filter ?? marketFilter;
+  const loadFeed = useCallback(async (tab?: FeedTab) => {
+    const activeTab = tab ?? feedTab;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setMyId(user.id);
 
-    // Get my markets for default filter
     const { data: myTp } = await supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle();
     const userMarkets = myTp?.markets || [];
     setMyMarkets(userMarkets);
 
-    // Get all trading profiles to know which users trade which markets
-    let userIdsToShow: string[] = [];
-
-    if (activeFilter === "All") {
-      // Show posts from users who share same markets as me, or all if no filter
-      if (userMarkets.length > 0) {
-        const { data: tradingProfiles } = await supabase.from("trading_profiles").select("user_id, markets");
-        userIdsToShow = (tradingProfiles || [])
-          .filter((tp: any) => tp.markets?.some((m: string) => userMarkets.includes(m)))
-          .map((tp: any) => tp.user_id);
-      }
-    } else {
-      // Filter by specific market
-      const { data: tradingProfiles } = await supabase.from("trading_profiles").select("user_id, markets");
-      userIdsToShow = (tradingProfiles || [])
-        .filter((tp: any) => tp.markets?.includes(activeFilter))
-        .map((tp: any) => tp.user_id);
-    }
-
-    // Always include self
-    if (!userIdsToShow.includes(user.id)) userIdsToShow.push(user.id);
-
-    if (userIdsToShow.length === 0) {
-      setPosts([]);
-      setLoading(false);
-      return;
-    }
-
-    // Fetch posts (media only — text-only posts belong in Forums)
-    const { data: postsData } = await supabase
+    let query = supabase
       .from("posts")
       .select("*")
-      .in("user_id", userIdsToShow)
       .not("media_url", "is", null)
       .order("created_at", { ascending: false })
       .limit(50);
+
+    // For "my" tab, filter by market column matching user's markets
+    if (activeTab === "my" && userMarkets.length > 0) {
+      query = query.in("market", userMarkets);
+    }
+
+    const { data: postsData } = await query;
 
     if (!postsData || postsData.length === 0) {
       setPosts([]);
@@ -107,7 +82,6 @@ const Feed = () => {
     const postIds = postsData.map((p: any) => p.id);
     const authorIds = [...new Set(postsData.map((p: any) => p.user_id))];
 
-    // Parallel fetches
     const [profilesRes, likesRes, myLikesRes, commentsRes, tradingRes] = await Promise.all([
       supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds),
@@ -140,6 +114,7 @@ const Feed = () => {
         media_url: p.media_url,
         media_type: p.media_type,
         caption: p.caption,
+        market: p.market,
         created_at: p.created_at,
         username: prof?.username || "trader",
         full_name: prof?.full_name || "Trader",
@@ -153,7 +128,7 @@ const Feed = () => {
 
     setPosts(feedItems);
     setLoading(false);
-  }, [marketFilter]);
+  }, [feedTab]);
 
   useEffect(() => {
     setLoading(true);
@@ -177,7 +152,11 @@ const Feed = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [feedTab]);
+
+  const switchTab = (tab: FeedTab) => {
+    setFeedTab(tab);
+  };
 
   const toggleLike = async (postId: string) => {
     if (!myId) return;
@@ -220,24 +199,49 @@ const Feed = () => {
     <AppLayout>
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2 sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-          <button onClick={() => setShowCreatePost(true)} className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-success flex items-center justify-center">
-            <Plus className="w-5 h-5 text-primary-foreground" />
-          </button>
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="flex items-center justify-between px-5 pt-4 pb-2">
+            <button onClick={() => setShowCreatePost(true)} className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-success flex items-center justify-center">
+              <Plus className="w-5 h-5 text-primary-foreground" />
+            </button>
 
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-primary to-success flex items-center justify-center">
-              <Globe className="w-3 h-3 text-primary-foreground" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-primary to-success flex items-center justify-center">
+                <Globe className="w-3 h-3 text-primary-foreground" />
+              </div>
+              <span className="text-sm font-black text-foreground tracking-tight">
+                traders<span className="bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">world</span>
+              </span>
             </div>
-            <span className="text-sm font-black text-foreground tracking-tight">
-              traders<span className="bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">world</span>
-            </span>
-            {marketFilter !== "All" && (
-              <span className="ml-1 px-2 py-0.5 rounded-full bg-primary/15 text-[10px] font-bold text-primary">{marketFilter}</span>
-            )}
+
+            <NotificationBell />
           </div>
 
-          <NotificationBell />
+          {/* Tabs */}
+          <div className="flex px-5 gap-1">
+            <button
+              onClick={() => switchTab("my")}
+              className={cn(
+                "flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors",
+                feedTab === "my"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              My Feed
+            </button>
+            <button
+              onClick={() => switchTab("world")}
+              className={cn(
+                "flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors",
+                feedTab === "world"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              World Feed
+            </button>
+          </div>
         </div>
 
         {posts.length === 0 ? (
@@ -245,7 +249,9 @@ const Feed = () => {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
               <Globe className="w-7 h-7 text-primary" />
             </div>
-            <p className="text-sm font-bold text-foreground mb-1">Be the first to post in the {primaryMarket} community</p>
+            <p className="text-sm font-bold text-foreground mb-1">
+              {feedTab === "my" ? `No posts in your markets yet` : "No posts yet"}
+            </p>
             <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share your setup, your mindset, your journey</p>
             <button
               onClick={() => setShowCreatePost(true)}
@@ -274,15 +280,16 @@ const Feed = () => {
                       <button onClick={() => navigate(`/profile/${post.user_id}`)} className="text-[13px] font-bold text-foreground hover:underline">
                         {post.username}
                       </button>
-                      {/* Verified badge */}
                       <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
                         <circle cx="10" cy="10" r="9" fill="url(#vbf)" />
                         <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                         <defs><linearGradient id="vbf" x1="0" y1="0" x2="20" y2="20"><stop stopColor="hsl(var(--primary))" /><stop offset="1" stopColor="hsl(var(--success))" /></linearGradient></defs>
                       </svg>
-                      {/* Market tag */}
-                      {post.markets[0] && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{post.markets[0]}</span>
+                      {/* Market tag from post */}
+                      {(post.market || post.markets[0]) && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
+                          {post.market || post.markets[0]}
+                        </span>
                       )}
                     </div>
                     <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
@@ -334,7 +341,7 @@ const Feed = () => {
                   </div>
                 </div>
 
-                {/* Post Content - text */}
+                {/* Post Content */}
                 {(post.content || post.caption) && (
                   <p className="text-[13px] text-foreground leading-relaxed mb-3">{post.content || post.caption}</p>
                 )}
@@ -373,7 +380,7 @@ const Feed = () => {
         )}
       </div>
 
-      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={loadFeed} />
+      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={() => loadFeed()} />
       <PostDetailModal
         open={!!selectedPost}
         onClose={() => setSelectedPost(null)}
