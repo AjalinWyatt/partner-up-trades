@@ -1,0 +1,1 @@
+ALTER TABLE public.journal_entries ADD COLUMN IF NOT EXISTS account_type text;
