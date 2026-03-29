@@ -35,6 +35,7 @@ const Onboarding = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [chartPrompts, setChartPrompts] = useState<string[]>([]);
   const [offChartPrompts, setOffChartPrompts] = useState<string[]>([]);
+  const [dateOfBirth, setDateOfBirth] = useState("");
 
   // Step 2
   const [markets, setMarkets] = useState<string[]>([]);
@@ -130,6 +131,15 @@ const Onboarding = () => {
               onChange={(e) => setNickname(e.target.value)}
               className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground mb-4"
             />
+
+            <div className="text-sm font-bold text-foreground mb-3">Date of birth</div>
+            <Input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground mb-1"
+            />
+            <p className="text-[11px] text-muted-foreground mb-4">You must be 18 or older to use Traders World.</p>
 
             <input
               ref={avatarInputRef}
@@ -448,6 +458,18 @@ const Onboarding = () => {
           <button
             onClick={async () => {
               if (step === 6) {
+                // Validate age 18+
+                if (dateOfBirth) {
+                  const dob = new Date(dateOfBirth);
+                  const today = new Date();
+                  let age = today.getFullYear() - dob.getFullYear();
+                  const m = today.getMonth() - dob.getMonth();
+                  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                  if (age < 18) {
+                    toast.error("You must be 18 or older to use Traders World");
+                    return;
+                  }
+                }
                 // Validate location if reach is Local
                 if (reach === "Local" && (!city.trim() || !country.trim())) {
                   toast.error("City and Country are required for Local matching");
@@ -484,6 +506,7 @@ const Onboarding = () => {
                       username: nickname || null,
                       avatar_url: avatarUrl,
                       gender,
+                      date_of_birth: dateOfBirth || null,
                       location: locationStr,
                       city: city || null,
                       state: state || null,

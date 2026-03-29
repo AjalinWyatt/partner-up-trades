@@ -7,7 +7,7 @@ import { getInitials, timeAgo, computeMatch, getBreakdownLabel } from "@/lib/mat
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 
-const BREAKDOWN_KEYS = ["Market", "Session", "Strategy", "Style", "Timeframe", "Experience", "Goal"];
+const BREAKDOWN_KEYS = ["Market", "Strategy", "Experience", "Style", "Goal", "Hobbies", "Struggles", "Session"];
 
 const ViewProfile = () => {
   const navigate = useNavigate();
@@ -84,10 +84,11 @@ const ViewProfile = () => {
           setBreakdown((conn.match_breakdown as Record<string, number>) || {});
         } else {
           const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
+          const { data: myProf } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
           setMyTradingProfile(myTp);
           if (myTp && tp) {
-            const result = computeMatch(myTp, tp);
-            setMatchScore(result.pct);
+            const result = computeMatch(myTp, tp, myProf, prof);
+            setMatchScore(result.excluded ? 0 : result.pct);
             setBreakdown(result.breakdown);
           }
         }

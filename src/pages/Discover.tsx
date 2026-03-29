@@ -119,7 +119,9 @@ const Discover = () => {
       const candidates: MatchCandidate[] = eligibleProfiles
         .map((p: any) => {
           const t = tradingMap.get(p.id);
-          const { pct, reasons } = computeMatch(myTrading, t);
+          const result = computeMatch(myTrading, t, myProfile, p);
+          if (result.excluded) return null;
+          const { pct, reasons } = result;
 
           // Location bonus for Local reach
           let locationBonus = 0;
@@ -158,6 +160,7 @@ const Discover = () => {
             whyMatch: reasons.slice(0, 2).join(" · "),
           };
         })
+        .filter((c: MatchCandidate | null): c is MatchCandidate => c !== null)
         .filter((c: MatchCandidate) => {
           if (myReach === "Local" && myProfile?.country) {
             return c.country && c.country.toLowerCase() === myProfile.country.toLowerCase();
