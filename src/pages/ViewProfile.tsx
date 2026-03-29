@@ -162,7 +162,39 @@ const ViewProfile = () => {
     setSending(false);
   };
 
-  if (loading) {
+  const handleUnmatch = async () => {
+    if (!connectionId || !id) return;
+    if (!confirm("Unmatch this partner? This will remove the connection.")) return;
+    const { error } = await supabase.from("partner_connections").delete().eq("id", connectionId);
+    if (error) { toast.error("Failed to unmatch"); return; }
+    toast.success("Unmatched successfully");
+    setConnectionStatus(null);
+    setConnectionId(null);
+    setShowMenu(false);
+  };
+
+  const handleBlock = async () => {
+    if (!myId || !id) return;
+    if (!confirm(`Block @${profile?.username || "this user"}? They won't be able to see or message you.`)) return;
+    await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: id });
+    if (connectionId) {
+      await supabase.from("partner_connections").delete().eq("id", connectionId);
+      setConnectionStatus(null);
+      setConnectionId(null);
+    }
+    setIsBlocked(true);
+    setShowMenu(false);
+    toast.success(`Blocked @${profile?.username || "user"}`);
+  };
+
+  const handleUnblock = async () => {
+    if (!myId || !id) return;
+    await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", id);
+    setIsBlocked(false);
+    setShowMenu(false);
+    toast.success(`Unblocked @${profile?.username || "user"}`);
+  };
+
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <div className="flex-1 flex items-center justify-center">
