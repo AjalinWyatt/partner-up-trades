@@ -1,96 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Image, Mic, Smile } from "lucide-react";
+import { Globe, ArrowLeft, Send, Search, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
-
-interface Connection {
-  id: string;
-  partnerId: string;
-  partnerName: string;
-  partnerUsername: string;
-  avatarUrl?: string | null;
-  lastMessage?: string;
-  lastMessageTime?: string;
-  unreadCount: number;
-}
-
-interface Message {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  content: string;
-  created_at: string;
-  read: boolean;
-}
-
-const GRADIENT_COLORS = [
-  "from-primary to-accent",
-  "from-teal-500 to-emerald-400",
-  "from-emerald-500 to-cyan-500",
-  "from-cyan-500 to-teal-400",
-  "from-green-500 to-emerald-400",
-];
-
-function getGradient(id: string) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  return GRADIENT_COLORS[Math.abs(hash) % GRADIENT_COLORS.length];
-}
-
-function getInitials(name: string) {
-  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
-}
-
-function formatTime(dateStr: string) {
-  const d = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (diff < 60000) return "now";
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-  if (diff < 604800000) return d.toLocaleDateString(undefined, { weekday: "short" });
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function formatMessageDate(dateStr: string) {
-  const d = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (diff < 86400000) return "Today";
-  if (diff < 172800000) return "Yesterday";
-  return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
-}
-
-function groupMessagesByDate(msgs: Message[]) {
-  const groups: { date: string; messages: Message[] }[] = [];
-  let currentDate = "";
-  for (const msg of msgs) {
-    const date = formatMessageDate(msg.created_at);
-    if (date !== currentDate) {
-      currentDate = date;
-      groups.push({ date, messages: [msg] });
-    } else {
-      groups[groups.length - 1].messages.push(msg);
-    }
-  }
-  return groups;
-}
-
-function AvatarIcon({ conn, size = "md" }: { conn: Connection; size?: "sm" | "md" | "lg" }) {
-  const sizeClasses = size === "sm" ? "w-9 h-9 text-[11px]" : size === "lg" ? "w-14 h-14 text-base" : "w-11 h-11 text-xs";
-  if (conn.avatarUrl) {
-    return <img src={conn.avatarUrl} alt={conn.partnerName} className={cn("rounded-full object-cover shrink-0", sizeClasses)} />;
-  }
-  return (
-    <div className={cn("rounded-full bg-gradient-to-br flex items-center justify-center font-bold text-white shrink-0", sizeClasses, getGradient(conn.partnerId))}>
-      {getInitials(conn.partnerName)}
-    </div>
-  );
-}
+import type { Connection, Message } from "@/components/messages/types";
+import { formatTime, groupMessagesByDate } from "@/components/messages/utils";
+import AvatarIcon from "@/components/messages/AvatarIcon";
+import MessageBubble from "@/components/messages/MessageBubble";
+import VoiceRecorder from "@/components/messages/VoiceRecorder";
+import AttachmentButton from "@/components/messages/AttachmentButton";
 
 export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
@@ -174,7 +95,6 @@ export default function Messages() {
     setConnections(connectionList);
     setLoading(false);
 
-    // Auto-select partner from URL param
     const partnerParam = new URLSearchParams(window.location.search).get("partner");
     if (partnerParam) {
       const match = connectionList.find(c => c.partnerId === partnerParam);
@@ -250,7 +170,6 @@ export default function Messages() {
     });
     setMsgInput("");
     setSendingMsg(false);
-    // Re-focus after sending
     inputRef.current?.focus();
   }
 
@@ -262,7 +181,6 @@ export default function Messages() {
 
   const grouped = activeChat ? groupMessagesByDate(messages) : [];
 
-  /* ---- Inline conversation list ---- */
   const conversationListContent = (
     <div className="flex flex-col h-full">
       <div className="px-5 pt-5 pb-3">
@@ -333,7 +251,6 @@ export default function Messages() {
     </div>
   );
 
-  /* ---- Inline chat panel ---- */
   const chatPanelContent = !activeChat ? (
     <div className="flex flex-col items-center justify-center h-full">
       <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mb-4">
@@ -346,7 +263,6 @@ export default function Messages() {
     </div>
   ) : (
     <div className="flex flex-col h-full">
-      {/* Chat header */}
       <div className="flex items-center gap-3 px-5 py-3 border-b border-primary/20 bg-card/80 backdrop-blur-sm">
         <button onClick={() => setActiveChat(null)} className="lg:hidden">
           <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -358,7 +274,6 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
@@ -375,26 +290,9 @@ export default function Messages() {
                 </span>
               </div>
               <div className="space-y-1.5">
-                {group.messages.map((msg) => {
-                  const isMine = msg.sender_id === userId;
-                  return (
-                    <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
-                      <div
-                        className={cn(
-                          "max-w-[70%] px-3.5 py-2 text-[13px] leading-relaxed",
-                          isMine
-                            ? "bg-gradient-brand text-white rounded-2xl rounded-br-md"
-                            : "bg-secondary text-foreground rounded-2xl rounded-bl-md"
-                        )}
-                      >
-                        <p>{msg.content}</p>
-                        <p className={cn("text-[9px] mt-1 text-right", isMine ? "text-primary-foreground/50" : "text-muted-foreground")}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                {group.messages.map((msg) => (
+                  <MessageBubble key={msg.id} msg={msg} isMine={msg.sender_id === userId} />
+                ))}
               </div>
             </div>
           ))
@@ -402,15 +300,20 @@ export default function Messages() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
       <div className="px-4 py-3 border-t border-primary/20 bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-2 bg-secondary rounded-2xl px-3 py-1.5">
-          <button className="p-1.5 rounded-full hover:bg-background/50 transition-colors text-muted-foreground hover:text-foreground" title="Send image">
-            <Image className="w-5 h-5" />
-          </button>
-          <button className="p-1.5 rounded-full hover:bg-background/50 transition-colors text-muted-foreground hover:text-foreground" title="Voice note">
-            <Mic className="w-5 h-5" />
-          </button>
+          <AttachmentButton
+            userId={userId!}
+            connectionId={activeChat.id}
+            partnerId={activeChat.partnerId}
+            onSent={() => {}}
+          />
+          <VoiceRecorder
+            userId={userId!}
+            connectionId={activeChat.id}
+            partnerId={activeChat.partnerId}
+            onSent={() => {}}
+          />
           <input
             ref={inputRef}
             value={msgInput}
@@ -438,7 +341,6 @@ export default function Messages() {
 
   return (
     <>
-      {/* Desktop */}
       <div className="hidden lg:block">
         <AppLayout>
           <div className="flex h-[calc(100vh-0px)] -mt-0 border-[3px] border-primary/40 rounded-xl overflow-hidden m-2">
@@ -451,7 +353,6 @@ export default function Messages() {
           </div>
         </AppLayout>
       </div>
-      {/* Mobile */}
       <div className="lg:hidden">
         <AppLayout>
           {activeChat ? (
