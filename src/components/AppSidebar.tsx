@@ -1,12 +1,12 @@
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Globe, Search, Users, BookOpen, MessageSquare, User, Bell, Sun, Moon, LogOut, ChevronDown, MessagesSquare } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Globe, Search, Users, BookOpen, MessageSquare, User, Bell, Sun, Moon, LogOut, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 const navItems = [
-  { path: "/feed", icon: Globe, label: "Feed", type: "feed" },
-  { path: "/forums", icon: MessagesSquare, label: "Forums", type: "forums" },
+  { path: "/feed", icon: Globe, label: "Feed" },
+  { path: "/forums", icon: MessagesSquare, label: "Forums" },
   { path: "/discover", icon: Search, label: "Discover" },
   { path: "/partners", icon: Users, label: "Partners" },
   { path: "/log", icon: BookOpen, label: "Log" },
@@ -15,24 +15,12 @@ const navItems = [
   { path: "/profile", icon: User, label: "Profile" },
 ];
 
-const MARKET_OPTIONS = ["All", "Forex", "Futures", "Options"] as const;
-const FORUM_OPTIONS = ["Forex", "Futures", "Options"] as const;
-
 export default function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
-  const [showFeedDrop, setShowFeedDrop] = useState(false);
-  const [showForumsDrop, setShowForumsDrop] = useState(false);
-  const [marketCounts, setMarketCounts] = useState<Record<string, number>>({});
-  const feedDropRef = useRef<HTMLDivElement>(null);
-  const forumsDropRef = useRef<HTMLDivElement>(null);
-
-  const activeMarket = searchParams.get("market") || "All";
-  const activeForum = searchParams.get("forum") || "Forex";
 
   useEffect(() => {
     const load = async () => {
