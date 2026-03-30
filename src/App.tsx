@@ -3,22 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Landing from "./pages/Landing";
-import SignUp from "./pages/SignUp";
-import SignIn from "./pages/SignIn";
-import ResetPassword from "./pages/ResetPassword";
-import Onboarding from "./pages/Onboarding";
-import Partners from "./pages/Partners";
-import Profile from "./pages/Profile";
-import ViewProfile from "./pages/ViewProfile";
-import Placeholder from "./pages/Placeholder";
-import Discover from "./pages/Discover";
-import Messages from "./pages/Messages";
-import TradingLog from "./pages/TradingLog";
-import Feed from "./pages/Feed";
-import Forums from "./pages/Forums";
-import Notifications from "./pages/Notifications";
-import NotFound from "./pages/NotFound";
+import ComingSoon from "./pages/ComingSoon";
 
 const queryClient = new QueryClient();
 
@@ -29,22 +14,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/partners" element={<Partners />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/:id" element={<ViewProfile />} />
-          <Route path="/dashboard" element={<Partners />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/forums" element={<Forums />} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/log" element={<TradingLog />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<ComingSoon />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
