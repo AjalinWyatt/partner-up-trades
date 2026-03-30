@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, CheckCircle, TrendingUp, Users, Heart, ArrowRight, Instagram, Youtube } from "lucide-react";
+import { Globe, Shield, CheckCircle, XCircle, Zap, Users, User, Search, TrendingUp, MessageSquare, BarChart3, Calendar, Bell, Heart, ArrowRight, Instagram, Youtube, Star } from "lucide-react";
 import { toast } from "sonner";
 
 const XIcon = ({ className }: { className?: string }) => (
@@ -9,12 +9,14 @@ const XIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const ComingSoon = () => {
+const LIVE_MARKETS = ["Forex", "Futures", "Options"];
+
+/* ── Inline waitlist form ── */
+const WaitlistForm = ({ variant = "dark" }: { variant?: "dark" | "light" }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedMarket, setSelectedMarket] = useState("Forex");
-  const [navShadow, setNavShadow] = useState(false);
 
   const handleSubmit = async () => {
     if (!email.trim()) return;
@@ -25,6 +27,68 @@ const ComingSoon = () => {
     setSubmitted(true);
     toast.success("You're on the list! We'll notify you when we launch.");
   };
+
+  const isDark = variant === "dark";
+
+  if (submitted) {
+    return (
+      <div className={`flex items-center gap-3 rounded-2xl px-6 py-5 ${isDark ? "bg-[#12b87a]/10 border border-[#12b87a]/20" : "bg-[#12b87a]/10 border border-[#12b87a]/20"}`}>
+        <CheckCircle className="w-6 h-6 text-[#12b87a] shrink-0" />
+        <div>
+          <p className={`font-bold font-['Gabarito'] text-lg ${isDark ? "text-white" : "text-[#0D1410]"}`}>You're on the list ✓</p>
+          <p className={`text-sm mt-0.5 ${isDark ? "text-white/50" : "text-[#6B7A72]"}`}>We'll notify you when tradersworld launches.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-4">
+        {LIVE_MARKETS.map(m => (
+          <button
+            key={m}
+            onClick={() => setSelectedMarket(m)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all cursor-pointer ${
+              selectedMarket === m
+                ? "bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-white border-transparent"
+                : isDark
+                  ? "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
+                  : "bg-[#F3F7F4] text-[#6B7A72] border-[#DDE8E2] hover:border-[#2C3830]/30"
+            }`}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleSubmit()}
+          placeholder="your@email.com"
+          className={`flex-1 rounded-full px-5 py-3.5 text-[15px] outline-none transition-colors ${
+            isDark
+              ? "bg-white/[0.06] border border-white/10 text-white placeholder:text-white/30 focus:border-[#12b87a]/50"
+              : "bg-[#F3F7F4] border border-[#DDE8E2] text-[#0D1410] placeholder:text-[#6B7A72]/50 focus:border-[#12b87a]/50"
+          }`}
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={loading || !email.trim()}
+          className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 inline-flex items-center gap-2 whitespace-nowrap"
+        >
+          {loading ? "..." : <>Join Waitlist <ArrowRight className="w-4 h-4" /></>}
+        </button>
+      </div>
+      <p className={`text-xs mt-3 ${isDark ? "text-white/30" : "text-[#6B7A72]"}`}>Free forever · No spam · Be the first to know</p>
+    </div>
+  );
+};
+
+const ComingSoon = () => {
+  const [navShadow, setNavShadow] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setNavShadow(window.scrollY > 20);
@@ -41,6 +105,10 @@ const ComingSoon = () => {
     return () => revealRef.current?.disconnect();
   }, []);
 
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="font-['DM_Sans'] text-[#0D1410] bg-white overflow-x-hidden">
       {/* ── NAV ── */}
@@ -52,6 +120,17 @@ const ComingSoon = () => {
             </div>
             traders<span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">world</span>
           </a>
+          <div className="hidden md:flex items-center gap-9">
+            <button onClick={() => scrollTo("how")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">How it works</button>
+            <button onClick={() => scrollTo("features")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">Features</button>
+            <button onClick={() => scrollTo("reviews")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">Community</button>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="inline-flex items-center gap-[7px] bg-white/[0.07] border border-white/[0.12] rounded-full px-3.5 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#f5a623] animate-pulse" />
+              <span className="text-xs font-semibold text-white/70 tracking-wider">Coming Soon</span>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -80,7 +159,7 @@ const ComingSoon = () => {
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-[7px] bg-white/[0.07] border border-white/[0.12] rounded-full px-3.5 py-1.5 mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f5a623] animate-pulse" />
-              <span className="text-xs font-semibold text-white/70 tracking-wider">Coming Soon</span>
+              <span className="text-xs font-semibold text-white/70 tracking-wider">Coming Soon — Join the waitlist</span>
             </div>
 
             <h1 className="font-['Gabarito'] text-[clamp(44px,6vw,72px)] font-black text-white leading-[1.02] tracking-[-0.04em] mb-5">
@@ -93,53 +172,9 @@ const ComingSoon = () => {
               This journey isn't meant to be walked alone.
             </p>
 
-            {/* Waitlist form */}
-            {submitted ? (
-              <div className="flex items-center gap-3 bg-[#12b87a]/10 border border-[#12b87a]/20 rounded-2xl px-6 py-5 max-w-[480px] mx-auto lg:mx-0 mb-10">
-                <CheckCircle className="w-6 h-6 text-[#12b87a] shrink-0" />
-                <div>
-                  <p className="text-white font-bold font-['Gabarito'] text-lg">You're on the list ✓</p>
-                  <p className="text-white/50 text-sm mt-0.5">We'll notify you when tradersworld launches.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="max-w-[480px] mx-auto lg:mx-0 mb-10">
-                {/* Market selector */}
-                <div className="flex gap-2 mb-4">
-                  {["Forex", "Futures", "Options"].map(m => (
-                    <button
-                      key={m}
-                      onClick={() => setSelectedMarket(m)}
-                      className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all cursor-pointer ${
-                        selectedMarket === m
-                          ? "bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-white border-transparent"
-                          : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleSubmit()}
-                    placeholder="your@email.com"
-                    className="flex-1 bg-white/[0.06] border border-white/10 rounded-full px-5 py-3.5 text-[15px] text-white placeholder:text-white/30 outline-none focus:border-[#12b87a]/50 transition-colors"
-                  />
-                  <button
-                    onClick={handleSubmit}
-                    disabled={loading || !email.trim()}
-                    className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 inline-flex items-center gap-2 whitespace-nowrap"
-                  >
-                    {loading ? "..." : <>Join Waitlist <ArrowRight className="w-4 h-4" /></>}
-                  </button>
-                </div>
-                <p className="text-xs text-white/30 mt-3">Free forever · No spam · Be the first to know</p>
-              </div>
-            )}
+            <div className="max-w-[480px] mx-auto lg:mx-0 mb-10">
+              <WaitlistForm variant="dark" />
+            </div>
           </div>
 
           {/* Phone mockup */}
@@ -199,6 +234,7 @@ const ComingSoon = () => {
                     ))}
                     <div className="w-7 h-7 rounded-full bg-white/[0.06] border border-dashed border-white/15 flex items-center justify-center text-[9px] text-white/40 -ml-1.5">+5</div>
                   </div>
+                  <div className="text-[9px] text-white/50">8 compatible traders waiting</div>
                 </div>
               </div>
             </div>
@@ -206,29 +242,284 @@ const ComingSoon = () => {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-[#0D1410] border-t border-white/[0.06] py-10">
-        <div className="max-w-[1140px] mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <a href="#" className="font-['Gabarito'] text-lg font-black text-white tracking-[-0.04em] flex items-center gap-2 no-underline">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#1e70e0] to-[#12b87a] flex items-center justify-center">
-              <Globe className="w-3.5 h-3.5 text-white" />
+      {/* ── TRUST BAR ── */}
+      <div className="bg-[#F3F7F4] border-t border-b border-[#DDE8E2] py-5">
+        <div className="max-w-[1140px] mx-auto px-8 flex items-center justify-center gap-12 flex-wrap">
+          {[
+            [Globe, "Global community"],
+            [Shield, "Vetted members"],
+            [XCircle, "No gurus. No signals."],
+            [Zap, "Free for traders"],
+          ].map(([Icon, text], i) => (
+            <div key={i} className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white border border-[#DDE8E2] flex items-center justify-center">
+                <Icon className="w-4 h-4 text-[#2C3830]" />
+              </div>
+              <span className="text-[13px] font-semibold text-[#2C3830]">{text as string}</span>
             </div>
-            traders<span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">world</span>
-          </a>
-          <div className="flex items-center gap-5">
-            <a href="https://instagram.com" target="_blank" rel="noopener" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 transition-colors no-underline">
-              <Instagram className="w-4 h-4" />
-            </a>
-            <a href="https://x.com" target="_blank" rel="noopener" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 transition-colors no-underline">
-              <XIcon className="w-4 h-4" />
-            </a>
-            <a href="https://youtube.com" target="_blank" rel="noopener" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 transition-colors no-underline">
-              <Youtube className="w-4 h-4" />
-            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MARKETS ── */}
+      <section className="py-[100px] bg-white" id="markets">
+        <div className="max-w-[1140px] mx-auto px-8">
+          <div className="text-center mb-16 landing-reveal">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">Every market. Every style. Every level.</div>
+            <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-[#0D1410] tracking-[-0.03em] leading-[1.08] mb-4">Matched to <span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">you.</span></h2>
+            <p className="text-[17px] text-[#6B7A72] leading-relaxed max-w-[520px] mx-auto">Whatever you trade, we match you with partners who trade the same markets, the same sessions, and the same strategy.</p>
           </div>
-          <p className="text-xs text-white/30">© {new Date().getFullYear()} tradersworld™ · All rights reserved</p>
+          <div className="grid grid-cols-3 max-md:grid-cols-2 gap-[2px] bg-[#DDE8E2] rounded-[20px] overflow-hidden mb-7 landing-reveal">
+            {LIVE_MARKETS.map(m => (
+              <div key={m} className="bg-white p-6 flex items-center justify-between">
+                <span className="font-['Gabarito'] text-base font-extrabold text-[#0D1410]">{m}</span>
+                <ArrowRight className="w-5 h-5 text-[#6B7A72]" />
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-sm text-[#6B7A72] landing-reveal">You tell us what you trade. <strong className="text-[#0D1410]">We match you with people who trade the same thing.</strong></p>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-[100px] bg-white" id="how">
+        <div className="max-w-[1140px] mx-auto px-8">
+          <div className="text-center mb-16 landing-reveal">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">How it works</div>
+            <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-[#0D1410] tracking-[-0.03em] leading-[1.08] mb-4">From signup to<br />accountability in minutes.</h2>
+            <p className="text-[17px] text-[#6B7A72] leading-relaxed max-w-[520px] mx-auto">Four steps to your dedicated trading accountability partner.</p>
+          </div>
+          <div className="grid grid-cols-4 max-md:grid-cols-2 gap-[2px] bg-[#DDE8E2] rounded-3xl overflow-hidden landing-reveal">
+            {[
+              { icon: User, title: "Build your profile", text: "Markets, strategy, experience level, trading schedule, and what you need to fix. The algorithm needs the truth." },
+              { icon: Search, title: "Get matched", text: "Paired with traders who complement your goals, trade the same sessions, and hold the same standards." },
+              { icon: Users, title: "Connect & commit", text: "Set accountability goals together. Daily check-ins, session reviews, and real consequences for going off-plan." },
+              { icon: TrendingUp, title: "Grow together", text: "Log every session. Track your edge. Your partner sees your progress — and your slips. That's the point." },
+            ].map((step, i) => (
+              <div key={i} className="bg-white p-9 max-md:p-7 relative">
+                <div className="font-['Gabarito'] text-5xl font-black leading-none mb-4 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">0{i + 1}</div>
+                <div className="w-10 h-10 rounded-[10px] bg-[#F3F7F4] border border-[#DDE8E2] flex items-center justify-center mb-3.5">
+                  <step.icon className="w-5 h-5 text-[#2C3830]" />
+                </div>
+                <div className="font-['Gabarito'] text-lg font-extrabold text-[#0D1410] mb-2">{step.title}</div>
+                <div className="text-sm text-[#6B7A72] leading-relaxed">{step.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section className="py-[100px] bg-[#0D1410]" id="features">
+        <div className="max-w-[1140px] mx-auto px-8">
+          <div className="text-center mb-16 landing-reveal">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 text-white/50">Everything you need</div>
+            <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-white tracking-[-0.03em] leading-[1.08] mb-4">Built for traders who<br />take this <span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">seriously.</span></h2>
+            <p className="text-[17px] text-white/50 leading-relaxed max-w-[520px] mx-auto">Everything the industry was missing. A platform that actually belongs to traders.</p>
+          </div>
+          <div className="grid grid-cols-3 max-md:grid-cols-2 gap-[2px] bg-white/[0.06] rounded-3xl overflow-hidden landing-reveal">
+            {[
+              { icon: Users, title: "Accountability Partners", text: "One dedicated partner who checks in daily, reviews your sessions, and holds you to your plan. No excuses." },
+              { icon: MessageSquare, title: "Direct Messaging", text: "Private conversations with your partner. Share charts, review sessions, and stay connected in real time." },
+              { icon: Heart, title: "Social Feed", text: "Share your sessions with partners. See their progress. Like, comment, and hold each other accountable." },
+              { icon: BarChart3, title: "Daily Trading Log", text: "Smart notifications at the end of your trading window. Log your session in seconds. Your partner sees everything." },
+              { icon: Calendar, title: "Streak Tracking", text: "Build consistency with daily logging streaks. Milestones, warnings, and accountability built right in." },
+              { icon: Bell, title: "Smart Notifications", text: "Partner alerts, session reminders, streak warnings, and match updates. Stay informed without the noise." },
+            ].map((f, i) => (
+              <div key={i} className="bg-[#141A18] p-9 max-md:p-7 hover:bg-[#1A2220] transition-colors">
+                <div className="w-12 h-12 rounded-[14px] bg-white/[0.06] flex items-center justify-center mb-[18px]">
+                  <f.icon className="w-[22px] h-[22px] text-[#12b87a]" />
+                </div>
+                <div className="font-['Gabarito'] text-lg font-extrabold text-white mb-2">{f.title}</div>
+                <div className="text-sm text-white/45 leading-relaxed">{f.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TRADING LOG SECTION ── */}
+      <section className="py-[100px] bg-[#F3F7F4]">
+        <div className="max-w-[1140px] mx-auto px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div className="relative landing-reveal hidden lg:block">
+              <div className="absolute right-[-20px] top-5 bg-white rounded-[14px] p-[10px_14px] shadow-[0_10px_30px_rgba(0,0,0,0.12)] w-[180px] border border-[#DDE8E2] animate-[notif-bounce_3s_ease-in-out_infinite]">
+                <div className="flex items-center gap-[7px] mb-1">
+                  <div className="w-[22px] h-[22px] rounded-[7px] bg-gradient-to-r from-[#1e70e0] to-[#12b87a] flex items-center justify-center">
+                    <Globe className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-[10px] font-bold text-[#6B7A72]">Traders World</span>
+                </div>
+                <div className="text-[11px] font-bold text-[#0D1410] mb-0.5">How was your session?</div>
+                <div className="text-[10px] text-[#6B7A72] leading-[1.4]">London window just closed. Log it for Amara.</div>
+              </div>
+              <div className="w-[240px] h-[420px] bg-[#0D1410] rounded-[34px] border-[1.5px] border-white/10 overflow-hidden mx-auto shadow-[0_30px_80px_rgba(0,0,0,0.2)]">
+                <div className="p-[28px_16px_16px]">
+                  <div className="bg-white/[0.07] rounded-[14px] p-3.5 mb-3.5 border border-white/[0.08]">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-5 h-5 rounded-md bg-gradient-to-r from-[#1e70e0] to-[#12b87a] flex items-center justify-center"><Globe className="w-[11px] h-[11px] text-white" /></div>
+                      <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Traders World</span>
+                    </div>
+                    <div className="text-xs font-bold text-white mb-[3px]">Session ended — how did it go?</div>
+                    <div className="text-[10px] text-white/40 leading-[1.4]">Log your session. Your partner will see it instantly.</div>
+                    <div className="flex gap-1.5 mt-2.5">
+                      <button className="flex-1 py-[7px] rounded-full text-[10px] font-bold bg-white/[0.08] text-white/50 border-none">Later</button>
+                      <button className="flex-1 py-[7px] rounded-full text-[10px] font-bold bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-white border-none">Log now</button>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/[0.08] rounded-[10px] p-[9px_10px] mb-1.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[#12b87a]" /><span className="text-[9px] font-bold text-white/60">Great session</span></div>
+                      <span className="font-['Gabarito'] text-[10px] font-extrabold text-[#12b87a]">+38 pips</span>
+                    </div>
+                    <div className="flex gap-[3px] flex-wrap">
+                      <span className="text-[7px] font-semibold px-[5px] py-[2px] rounded-[3px] bg-[#12b87a]/[0.12] text-[#12b87a]">Followed plan</span>
+                      <span className="text-[7px] font-semibold px-[5px] py-[2px] rounded-[3px] bg-[#12b87a]/[0.12] text-[#12b87a]">Clean entry</span>
+                      <span className="text-[7px] font-semibold px-[5px] py-[2px] rounded-[3px] bg-white/[0.08] text-white/40">Gold · London</span>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/[0.08] rounded-[10px] p-[9px_10px] mb-1.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[#E45C2D]" /><span className="text-[9px] font-bold text-white/60">Tough day</span></div>
+                      <span className="font-['Gabarito'] text-[10px] font-extrabold text-[#E45C2D]">-22 pips</span>
+                    </div>
+                    <div className="flex gap-[3px] flex-wrap">
+                      <span className="text-[7px] font-semibold px-[5px] py-[2px] rounded-[3px] bg-[#E45C2D]/[0.12] text-[#E45C2D]">FOMO entry</span>
+                      <span className="text-[7px] font-semibold px-[5px] py-[2px] rounded-[3px] bg-[#E45C2D]/[0.12] text-[#E45C2D]">Moved stop</span>
+                      <span className="text-[7px] font-semibold px-[5px] py-[2px] rounded-[3px] bg-white/[0.08] text-white/40">Gold · London</span>
+                    </div>
+                  </div>
+                  <div className="bg-[#12b87a]/[0.08] border border-[#12b87a]/20 rounded-xl p-[10px_12px]">
+                    <div className="text-[8px] font-bold uppercase tracking-wider text-[#12b87a] mb-1">Shared with Amara</div>
+                    <div className="text-[10px] text-white/60 leading-[1.4]">Your partner can see your P&L, what you did right, what went wrong, and how you felt.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="landing-reveal">
+              <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">Session logging & accountability</div>
+              <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-[#0D1410] tracking-[-0.03em] leading-[1.08] mb-4">Log it. Share it.<br />Hold each other accountable.</h2>
+              <p className="text-base text-[#6B7A72] leading-[1.7] mb-5">After every trading session, we send you a push notification. Log how it went — your P&L, what you did right, what you did wrong, and how you're feeling. It takes seconds.</p>
+              <p className="text-base text-[#6B7A72] leading-[1.7] mb-7">Your log is instantly shared with your accountability partner. They see everything — and you see theirs. That's how real accountability works.</p>
+              <div className="flex flex-col gap-3">
+                {[
+                  [Bell, "Push notification after your session window closes — never forget to log"],
+                  [BarChart3, "Log your P&L, mood, what went right, what went wrong — with color-coded tags"],
+                  [Users, "Shared instantly with your partner — view theirs, check in, stay accountable"],
+                  [TrendingUp, "Track your own log over time — spot patterns, measure your edge, see growth"],
+                ].map(([Icon, text], i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-[10px] bg-[#F3F7F4] border border-[#DDE8E2] flex items-center justify-center shrink-0">
+                      <Icon className="w-[18px] h-[18px] text-[#2C3830]" />
+                    </div>
+                    <span className="text-sm text-[#2C3830]">{text as string}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="py-[100px] bg-[#F3F7F4]" id="reviews">
+        <div className="max-w-[1140px] mx-auto px-8">
+          <div className="text-center mb-[52px] landing-reveal">
+            <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">Trader testimonials</div>
+            <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-[#0D1410] tracking-[-0.03em] leading-[1.08] mb-4">They found their people.</h2>
+            <p className="text-[17px] text-[#6B7A72] leading-relaxed max-w-[520px] mx-auto">From accountability breakthroughs to funded accounts — this is what happens when traders stop going it alone.</p>
+          </div>
+          <div className="grid grid-cols-3 max-md:grid-cols-1 gap-5">
+            {[
+              { text: "I went from blowing accounts every 3 months to passing my first prop challenge. My accountability partner kept me from revenge trading every single day.", name: "Kezia M.", meta: "Gold trader · London", init: "KM", grad: "from-[#0EA47A] to-[#1D4ED8]" },
+              { text: "Finally found a trader who actually trades the same session as me. We do weekly reviews and it's changed everything about how I prepare.", name: "Marcus K.", meta: "Forex trader · Lagos", init: "MK", grad: "from-[#1D4ED8] to-[#7C3AED]" },
+              { text: "The daily logging changed my game. My partner calls me out when I skip a session or go off-plan. I needed that more than any course.", name: "Sofia R.", meta: "Options trader · Dubai", init: "SR", grad: "from-[#7C3AED] to-[#DB2777]" },
+            ].map((r, i) => (
+              <div key={i} className="bg-white rounded-[20px] p-7 border border-[#DDE8E2] hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-all landing-reveal">
+                <div className="flex gap-0.5 text-[#F5A623] mb-3">
+                  {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 fill-[#F5A623]" />)}
+                </div>
+                <p className="text-[15px] text-[#2C3830] leading-relaxed mb-[18px] italic">"{r.text}"</p>
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${r.grad} flex items-center justify-center text-xs font-bold text-white font-['Gabarito']`}>{r.init}</div>
+                  <div>
+                    <div className="text-[13px] font-bold text-[#0D1410]">{r.name}</div>
+                    <div className="text-[11px] text-[#6B7A72]">{r.meta}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FINAL CTA — Waitlist ── */}
+      <section className="py-[100px] bg-white">
+        <div className="max-w-[600px] mx-auto px-8 text-center landing-reveal">
+          <div className="w-16 h-16 mx-auto mb-5 flex items-center justify-center animate-[globe-spin_10s_linear_infinite]">
+            <Globe className="w-16 h-16 text-[#0D1410]" strokeWidth={1.2} />
+          </div>
+          <h2 className="font-['Gabarito'] text-[clamp(36px,5vw,64px)] font-black text-[#0D1410] tracking-[-0.04em] mb-3.5 leading-[1.05]">Trading doesn't have<br />to be <span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">done alone.</span></h2>
+          <p className="text-[17px] text-[#6B7A72] leading-relaxed mb-9">Be the first to find your accountability partner. Join the waitlist.</p>
+          <div className="text-left">
+            <WaitlistForm variant="light" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#0D1410] pt-[52px] pb-8">
+        <div className="max-w-[1140px] mx-auto px-8">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr] max-md:grid-cols-2 gap-12 mb-12">
+            <div>
+              <div className="font-['Gabarito'] text-xl font-black text-white tracking-[-0.04em] mb-2.5 flex items-center gap-2">
+                traders<span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">world</span>
+              </div>
+              <p className="text-[13px] text-white/35 leading-relaxed">The accountability platform for serious traders. Find your partner and build the consistency your trading demands.</p>
+            </div>
+            <div>
+              <div className="text-[11px] font-bold text-white/50 uppercase tracking-wider mb-3.5">Product</div>
+              <button onClick={() => scrollTo("how")} className="block text-[13px] text-white/40 mb-2 hover:text-white transition-colors bg-transparent border-none cursor-pointer text-left">How it works</button>
+              <button onClick={() => scrollTo("features")} className="block text-[13px] text-white/40 mb-2 hover:text-white transition-colors bg-transparent border-none cursor-pointer text-left">Features</button>
+              <button onClick={() => scrollTo("markets")} className="block text-[13px] text-white/40 mb-2 hover:text-white transition-colors bg-transparent border-none cursor-pointer text-left">Markets</button>
+            </div>
+            <div>
+              <div className="text-[11px] font-bold text-white/50 uppercase tracking-wider mb-3.5">Community</div>
+              <button onClick={() => scrollTo("reviews")} className="block text-[13px] text-white/40 mb-2 hover:text-white transition-colors bg-transparent border-none cursor-pointer text-left">Testimonials</button>
+            </div>
+            <div>
+              <div className="text-[11px] font-bold text-white/50 uppercase tracking-wider mb-3.5">Company</div>
+              <a href="#" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Contact</a>
+            </div>
+          </div>
+          <div className="border-t border-white/[0.06] pt-6 flex items-center justify-between">
+            <span className="text-xs text-white/25">© {new Date().getFullYear()} Traders World. All rights reserved.</span>
+            <div className="flex gap-3">
+              {[Instagram, Youtube, XIcon].map((Icon, i) => (
+                <a key={i} href="#" className="w-[34px] h-[34px] rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+                  <Icon className="w-3.5 h-3.5 text-white/50" />
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+        @keyframes orb-pulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.8} 50%{transform:translate(-50%,-50%) scale(1.08);opacity:1} }
+        @keyframes float-l { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+        @keyframes float-r { 0%,100%{transform:translateY(0)} 50%{transform:translateY(20px)} }
+        @keyframes phone-float { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-12px) rotate(-1deg)} }
+        @keyframes fc-float-l { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes fc-float-r { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+        @keyframes notif-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes globe-spin { 0%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} 100%{transform:rotate(-3deg)} }
+        .landing-reveal { opacity:0; transform:translateY(28px); transition:opacity 0.6s ease, transform 0.6s ease; }
+        .landing-visible { opacity:1; transform:translateY(0); }
+      `}</style>
     </div>
   );
 };
