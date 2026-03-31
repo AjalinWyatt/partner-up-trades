@@ -29,7 +29,7 @@ export default function Messages() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) { navigate("/signin"); return; }
+      if (!data.user) { navigate("/sign-in"); return; }
       setUserId(data.user.id);
     });
   }, [navigate]);

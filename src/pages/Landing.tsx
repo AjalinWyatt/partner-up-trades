@@ -508,7 +508,7 @@ const Landing = () => {
           <h2 className="font-['Gabarito'] text-[clamp(36px,5vw,64px)] font-black text-[#0D1410] tracking-[-0.04em] mb-3.5 leading-[1.05]">Trading doesn't have<br />to be <span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">done alone.</span></h2>
           <p className="text-[17px] text-[#6B7A72] leading-relaxed mb-9">Join traders who found their accountability partner. Your people are already here.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <button onClick={() => navigate("/signup")} className="px-9 py-[17px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-base font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-0.5 transition-all inline-flex items-center gap-2">
+            <button onClick={() => navigate("/sign-up")} className="px-9 py-[17px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-base font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-0.5 transition-all inline-flex items-center gap-2">
               Get matched <ArrowRight className="w-4 h-4" />
             </button>
           </div>
