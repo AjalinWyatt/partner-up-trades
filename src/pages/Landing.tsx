@@ -196,7 +196,7 @@ const Landing = () => {
               This journey isn't meant to be walked alone.
             </p>
             <div className="flex gap-3 flex-wrap mb-[52px] justify-center lg:justify-start">
-              <button onClick={() => navigate("/signup")} className="px-[30px] py-[15px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all inline-flex items-center gap-2">
+              <button onClick={() => navigate("/sign-up")} className="px-[30px] py-[15px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all inline-flex items-center gap-2">
                 Find Your Partner <ArrowRight className="w-4 h-4" />
               </button>
             </div>
