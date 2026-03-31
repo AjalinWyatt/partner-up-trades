@@ -26,7 +26,8 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   useEffect(() => {
     if (!open) return;
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) return;
       const [{ data: prof }, { data: tp }] = await Promise.all([
         supabase.from("profiles").select("full_name, username").eq("id", user.id).single(),
