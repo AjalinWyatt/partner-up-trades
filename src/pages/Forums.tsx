@@ -67,7 +67,8 @@ const Forums = () => {
 
   const loadPosts = useCallback(async (tab?: ForumTab) => {
     const activeTab = tab ?? forumTab;
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) { setLoading(false); return; }
     setMyId(user.id);
 
