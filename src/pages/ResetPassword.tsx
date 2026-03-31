@@ -59,7 +59,7 @@ const ResetPassword = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background px-6 py-8">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate("/signin")} className="text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => navigate("/sign-in")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <LogoHeader compact />
