@@ -44,9 +44,9 @@ const TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; route:
   post_commented:   { icon: <MessageCircle className="w-4 h-4" />,  color: "text-primary bg-primary/15",         route: "/feed" },
   profile_viewed:   { icon: <Eye className="w-4 h-4" />,            color: "text-accent-foreground bg-accent/15", route: "/partners" },
   new_match:        { icon: <Target className="w-4 h-4" />,         color: "text-success bg-success/15",         route: "/discover" },
-  streak_warning:   { icon: <Flame className="w-4 h-4" />,          color: "text-orange-400 bg-orange-400/15",   route: "/log" },
-  streak_milestone: { icon: <Flame className="w-4 h-4" />,          color: "text-success bg-success/15",         route: "/log" },
-  partner_logged:   { icon: <BookOpen className="w-4 h-4" />,       color: "text-primary bg-primary/15",         route: "/log" },
+  streak_warning:   { icon: <Flame className="w-4 h-4" />,          color: "text-orange-400 bg-orange-400/15",   route: "/trading-log" },
+  streak_milestone: { icon: <Flame className="w-4 h-4" />,          color: "text-success bg-success/15",         route: "/trading-log" },
+  partner_logged:   { icon: <BookOpen className="w-4 h-4" />,       color: "text-primary bg-primary/15",         route: "/trading-log" },
   like:             { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/feed" },
   comment:          { icon: <MessageCircle className="w-4 h-4" />,  color: "text-primary bg-primary/15",         route: "/feed" },
 };

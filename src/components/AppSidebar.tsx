@@ -9,7 +9,7 @@ const navItems = [
   { path: "/forums", icon: MessagesSquare, label: "Forums" },
   { path: "/discover", icon: Search, label: "Discover" },
   { path: "/partners", icon: Users, label: "Partners" },
-  { path: "/log", icon: BookOpen, label: "Log" },
+  { path: "/trading-log", icon: BookOpen, label: "Log" },
   { path: "/messages", icon: MessageSquare, label: "Messages" },
   { path: "/notifications", icon: Bell, label: "Notifications" },
   { path: "/profile", icon: User, label: "Profile" },

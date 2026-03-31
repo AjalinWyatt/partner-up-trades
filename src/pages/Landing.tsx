@@ -149,8 +149,8 @@ const Landing = () => {
             <button onClick={() => scrollTo("reviews")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">Community</button>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/signin")} className="px-5 py-2 rounded-full border border-white/20 text-sm font-semibold text-white/80 hover:border-[#12b87a] hover:text-[#12b87a] transition-all bg-transparent cursor-pointer">Log in</button>
-            <button onClick={() => navigate("/signup")} className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-sm font-bold text-white border-none cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all">Get started free</button>
+            <button onClick={() => navigate("/sign-in")} className="px-5 py-2 rounded-full border border-white/20 text-sm font-semibold text-white/80 hover:border-[#12b87a] hover:text-[#12b87a] transition-all bg-transparent cursor-pointer">Log in</button>
+            <button onClick={() => navigate("/sign-up")} className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-sm font-bold text-white border-none cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all">Get started free</button>
           </div>
         </div>
       </nav>
@@ -196,7 +196,7 @@ const Landing = () => {
               This journey isn't meant to be walked alone.
             </p>
             <div className="flex gap-3 flex-wrap mb-[52px] justify-center lg:justify-start">
-              <button onClick={() => navigate("/signup")} className="px-[30px] py-[15px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all inline-flex items-center gap-2">
+              <button onClick={() => navigate("/sign-up")} className="px-[30px] py-[15px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-[15px] font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all inline-flex items-center gap-2">
                 Find Your Partner <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -508,7 +508,7 @@ const Landing = () => {
           <h2 className="font-['Gabarito'] text-[clamp(36px,5vw,64px)] font-black text-[#0D1410] tracking-[-0.04em] mb-3.5 leading-[1.05]">Trading doesn't have<br />to be <span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">done alone.</span></h2>
           <p className="text-[17px] text-[#6B7A72] leading-relaxed mb-9">Join traders who found their accountability partner. Your people are already here.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <button onClick={() => navigate("/signup")} className="px-9 py-[17px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-base font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-0.5 transition-all inline-flex items-center gap-2">
+            <button onClick={() => navigate("/sign-up")} className="px-9 py-[17px] rounded-full bg-gradient-to-r from-[#1e70e0] to-[#12b87a] text-base font-bold text-white border-none cursor-pointer hover:opacity-90 hover:-translate-y-0.5 transition-all inline-flex items-center gap-2">
               Get matched <ArrowRight className="w-4 h-4" />
             </button>
           </div>
