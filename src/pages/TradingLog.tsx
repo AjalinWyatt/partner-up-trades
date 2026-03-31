@@ -106,9 +106,9 @@ export default function TradingLog() {
   const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) { navigate("/sign-in"); return; }
-      setUserId(data.user.id);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session?.user) { navigate("/sign-in"); return; }
+      setUserId(data.session.user.id);
     });
   }, [navigate]);
 

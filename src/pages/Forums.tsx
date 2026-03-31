@@ -67,7 +67,8 @@ const Forums = () => {
 
   const loadPosts = useCallback(async (tab?: ForumTab) => {
     const activeTab = tab ?? forumTab;
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) { setLoading(false); return; }
     setMyId(user.id);
 
@@ -190,7 +191,8 @@ const Forums = () => {
     if (!newTitle.trim() || !newContent.trim() || !newForum) { toast.error("Title, content, and forum are required"); return; }
     setPosting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("forum_posts").insert({
         user_id: user.id,
