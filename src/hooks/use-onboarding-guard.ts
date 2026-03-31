@@ -17,7 +17,7 @@ export function useOnboardingGuard() {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/signin");
+        navigate("/sign-in");
         return;
       }
 
