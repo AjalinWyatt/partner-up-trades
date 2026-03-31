@@ -71,7 +71,8 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
     if (!selectedMarket) { toast.error("Select a market tag"); return; }
     setPosting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) throw new Error("Not authenticated");
 
       let mediaUrl: string | null = null;

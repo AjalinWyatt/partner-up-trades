@@ -51,7 +51,8 @@ const Feed = () => {
 
   const loadFeed = useCallback(async (tab?: FeedTab) => {
     const activeTab = tab ?? feedTab;
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) { setLoading(false); return; }
     setMyId(user.id);
 

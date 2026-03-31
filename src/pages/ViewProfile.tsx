@@ -34,7 +34,8 @@ const ViewProfile = () => {
   useEffect(() => {
     if (!id) return;
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (user) setMyId(user.id);
 
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
