@@ -27,7 +27,7 @@ const ResetPassword = () => {
           setReady(true);
         } else {
           toast.error("Invalid or expired reset link.");
-          navigate("/signin");
+          navigate("/sign-in");
         }
       });
     }
