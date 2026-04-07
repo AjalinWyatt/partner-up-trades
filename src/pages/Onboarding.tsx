@@ -356,22 +356,37 @@ const Onboarding = () => {
             <p className="text-xs text-muted-foreground mb-3">
               {reach === "Local" ? "Required for local matching" : "Optional — helps us match you with nearby traders"}
             </p>
-            <div className="space-y-2.5">
-              <input
-                value={city} onChange={e => setCity(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
-                placeholder={reach === "Local" ? "City (required)" : "City"}
-              />
-              <input
-                value={state} onChange={e => setState(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
-                placeholder="State / Region / Province"
-              />
-              <input
-                value={country} onChange={e => setCountry(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
-                placeholder={reach === "Local" ? "Country (required)" : "Country"}
-              />
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 border-b border-border pb-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+                <input
+                  value={city} onChange={e => setCity(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                  placeholder={reach === "Local" ? "City (required)" : "City"}
+                />
+              </div>
+              <div className="flex items-center gap-3 border-b border-border pb-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+                <input
+                  value={state} onChange={e => setState(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                  placeholder="State / Region / Province"
+                />
+              </div>
+              <div className="flex items-center gap-3 border-b border-border pb-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+                <input
+                  value={country} onChange={e => setCountry(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                  placeholder={reach === "Local" ? "Country (required)" : "Country"}
+                />
+              </div>
             </div>
 
             <div className="h-px bg-border my-5" />
