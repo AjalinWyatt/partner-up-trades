@@ -220,9 +220,8 @@ const Discover = () => {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="px-5 pt-4 pb-2">
-        <h1 className="text-[22px] font-black text-foreground tracking-tight">Discover</h1>
-        <p className="text-[11px] text-muted-foreground mt-0.5">Find your accountability partner</p>
+      <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+        <h1 className="text-[22px] font-black text-foreground tracking-tight">Some curated matches for you!</h1>
       </div>
 
       {/* Search + Filter */}
@@ -306,73 +305,54 @@ const Discover = () => {
             </button>
           </div>
         ) : (
-          <div className="space-y-2.5 pb-4">
-            <div className="text-[11px] text-muted-foreground font-semibold mb-1">
-              {filtered.length} {filtered.length === 1 ? "match" : "matches"}
-            </div>
+          <div className="space-y-3 pb-4">
             {filtered.map((m) => (
               <button
                 key={m.id}
                 onClick={() => navigate(`/profile/${m.id}`)}
-                className="w-full bg-card border border-border rounded-xl p-3.5 flex items-start gap-3 text-left hover:border-success/50 transition-colors"
+                className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors"
               >
-                {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-success/30 border border-border flex items-center justify-center shrink-0">
+                {/* Large photo */}
+                <div className="w-24 h-24 shrink-0 bg-secondary">
                   {m.avatar_url ? (
-                    <img src={m.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" />
+                    <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-sm font-bold text-foreground">{getInitials(m.full_name, m.username)}</span>
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
+                      <span className="text-lg font-bold text-foreground">{getInitials(m.full_name, m.username)}</span>
+                    </div>
                   )}
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 p-3 flex flex-col justify-center">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-[14px] font-bold text-foreground truncate">
-                        @{m.username || "trader"}
-                      </div>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-[14px] font-bold text-accent truncate">
+                        {m.full_name || m.username || "Trader"}
+                      </span>
+                      <span className="text-[13px] text-muted-foreground">•</span>
+                      <span className="text-[13px] text-foreground font-semibold">27</span>
                     </div>
-                    <div className="shrink-0 ml-2 px-2.5 py-1 rounded-lg bg-success/10 border border-success/20">
-                      <span className="text-[13px] font-black text-success">{m.matchPct}%</span>
+                    <div className="shrink-0 ml-2 flex items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      <span className="text-[12px] font-black text-accent">{m.matchPct}%</span>
+                      <span className="text-[9px] text-muted-foreground">Match</span>
                     </div>
                   </div>
 
                   {m.location && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
                       {m.location}
                     </div>
                   )}
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {m.markets.slice(0, 3).map((mk) => (
-                      <span key={mk} className="px-2 py-0.5 rounded-full bg-primary/10 text-[9px] font-semibold text-primary">
-                        {mk}
-                      </span>
-                    ))}
-                    {m.trading_style.slice(0, 2).map((s) => (
-                      <span key={s} className="px-2 py-0.5 rounded-full bg-accent/10 text-[9px] font-semibold text-accent-foreground">
-                        {s}
-                      </span>
-                    ))}
-                    {m.experience_level && (
-                      <span className="px-2 py-0.5 rounded-full bg-success/10 text-[9px] font-semibold text-success">
-                        {EXPERIENCE_LABELS[m.experience_level] || m.experience_level}
-                      </span>
-                    )}
+                  {/* Online indicator */}
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
+                    <span className="text-[10px] text-accent font-medium">Online Now</span>
                   </div>
-
-                  {/* Why match */}
-                  {m.whyMatch && (
-                    <div className="text-[10px] text-muted-foreground mt-1.5 italic">
-                      {m.whyMatch}
-                    </div>
-                  )}
                 </div>
               </button>
             ))}
