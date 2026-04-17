@@ -1,12 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, AlignLeft, MessageSquare, BookOpen, User } from "lucide-react";
+import { Home, Globe, AlignLeft, MessagesSquare, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home" },
   { path: "/discover", icon: Globe, label: "Discover" },
   { path: "/feed", icon: AlignLeft, label: "Feed" },
-  { path: "/messages", icon: MessageSquare, label: "Messages" },
+  { path: "/messages", icon: MessagesSquare, label: "Messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log" },
   { path: "/partners", icon: User, label: "Partners" },
 ];
