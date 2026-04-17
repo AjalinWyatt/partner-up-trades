@@ -93,7 +93,9 @@ export function computeMatch(
 
   const myPref = myTrading.looking_for_gender;
   const theirGender = theirProfile?.gender;
-  if (myPref && myPref !== "No preference" && myPref !== "no preference" && myPref !== "Co-ed" && theirGender && myPref.toLowerCase().replace(/s$/, '') !== theirGender.toLowerCase()) {
+  const prefNorm = (myPref || "").toLowerCase().replace(/[-\s]/g, "");
+  const isOpenPref = !myPref || prefNorm === "nopreference" || prefNorm === "coed" || prefNorm === "any";
+  if (!isOpenPref && theirGender && myPref!.toLowerCase().replace(/s$/, '') !== theirGender.toLowerCase()) {
     return { pct: 0, reasons: [], breakdown: {}, excluded: true, excludeReason: "Gender preference mismatch" };
   }
 
