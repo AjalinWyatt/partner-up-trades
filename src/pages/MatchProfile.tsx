@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronDown, ChevronsUp, Bookmark, Gem, Zap, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronsDown, ChevronsUp, Bookmark, Gem, Zap, ChevronLeft } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -285,22 +285,22 @@ const MatchProfile = () => {
                     label="Pass"
                     onClick={handlePass}
                     disabled={busy}
-                    bg="bg-background border border-border"
-                    icon={<ChevronDown className="w-5 h-5 text-foreground" strokeWidth={2.5} />}
+                    bg="bg-white"
+                    icon={<ChevronsDown className="w-6 h-6 text-background" strokeWidth={2.5} />}
                   />
                   <ActionButton
                     label="Save"
                     onClick={handleSave}
                     disabled={busy}
                     bg="bg-muted"
-                    icon={<Bookmark className="w-4 h-4 text-foreground" strokeWidth={2} />}
+                    icon={<Bookmark className="w-5 h-5 text-foreground" strokeWidth={2} />}
                   />
                   <ActionButton
                     label="Send Request"
                     onClick={handleSendRequest}
                     disabled={busy}
                     bg="bg-accent"
-                    icon={<ChevronsUp className="w-5 h-5 text-accent-foreground" strokeWidth={2.5} />}
+                    icon={<ChevronsUp className="w-6 h-6 text-accent-foreground" strokeWidth={2.5} />}
                   />
                 </div>
               </div>
