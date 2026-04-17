@@ -49,6 +49,7 @@ const Discover = () => {
   const [filters, setFilters] = useState<{ market: string | null; session: string | null; experience: string | null }>({
     market: null, session: null, experience: null,
   });
+  const [expandedMatch, setExpandedMatch] = useState<MatchCandidate | null>(null);
 
   useEffect(() => {
     const load = async () => {
