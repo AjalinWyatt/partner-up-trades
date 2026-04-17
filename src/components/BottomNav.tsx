@@ -1,16 +1,14 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Search, Users, BookOpen, MessageSquare, User, MessagesSquare } from "lucide-react";
+import { Home, Globe, Users, BookOpen, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home" },
+  { path: "/discover", icon: Globe, label: "Discover" },
   { path: "/feed", icon: Globe, label: "Feed" },
-  { path: "/forums", icon: MessagesSquare, label: "Forums" },
-  { path: "/discover", icon: Search, label: "Discover" },
-  { path: "/partners", icon: Users, label: "Partners" },
-  { path: "/trading-log", icon: BookOpen, label: "Log" },
   { path: "/messages", icon: MessageSquare, label: "Messages" },
-  { path: "/profile", icon: User, label: "Profile" },
+  { path: "/trading-log", icon: BookOpen, label: "Log" },
+  { path: "/partners", icon: Users, label: "Partners" },
 ];
 
 const BottomNav = () => {
