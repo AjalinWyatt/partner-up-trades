@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Earth, AlignCenter, MessagesSquare, BookOpen, UserRound, Bell, Sun, Moon, LogOut } from "lucide-react";
+import { Home, Globe, Earth, AlignCenter, MessagesSquare, BookOpen, UserRound, Bell, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
