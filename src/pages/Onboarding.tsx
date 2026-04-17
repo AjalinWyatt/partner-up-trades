@@ -171,36 +171,12 @@ const Onboarding = () => {
           <div className="px-7 pb-32 pt-14">
             <StepHeader title="Let's Complete your" accent="Profile" step={1} total={5} />
 
-            {/* Avatar upload - centered */}
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setAvatarFile(file);
-                  setAvatarPreview(URL.createObjectURL(file));
-                }
+            <AvatarPicker
+              onChange={(file, preview) => {
+                setAvatarFile(file);
+                setAvatarPreview(preview);
               }}
             />
-            <div className="flex flex-col items-center mb-7">
-              <div
-                className="relative w-28 h-28 rounded-full border-2 border-foreground/30 flex items-center justify-center cursor-pointer hover:border-accent transition-colors overflow-hidden bg-card"
-                onClick={() => avatarInputRef.current?.click()}
-              >
-                {avatarPreview ? (
-                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <Camera className="w-10 h-10 text-muted-foreground" />
-                )}
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-accent flex items-center justify-center border-4 border-background">
-                  <span className="text-accent-foreground text-lg font-bold leading-none">+</span>
-                </div>
-              </div>
-              <p className="text-[13px] text-foreground mt-3">Upload a picture (optional)</p>
-            </div>
 
             {/* Username underline input */}
             <div className="text-[15px] text-foreground mb-3">What should we call you?</div>
