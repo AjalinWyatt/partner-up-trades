@@ -149,7 +149,7 @@ const MatchProfile = () => {
 
   return (
     <AppLayout>
-      <div className="pb-20">
+      <div className="flex-1 flex flex-col pb-[88px]">
         {/* Header */}
         <div className="px-5 pt-5 flex items-center justify-between">
           <button
@@ -181,7 +181,7 @@ const MatchProfile = () => {
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="px-4 mt-3">
+          <div className="px-4 mt-3 mt-auto">
             {/* Two-toned card */}
             <div className="relative">
               <div className="bg-card rounded-3xl overflow-hidden border border-border">
