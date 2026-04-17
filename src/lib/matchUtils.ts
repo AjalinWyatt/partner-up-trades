@@ -205,7 +205,7 @@ export function computeMatch(
   if (sessO.length > 0) reasons.push(`${sessO[0]} session`);
 
   const pct = Math.round(totalScore);
-  if (pct < 50) return { pct, reasons, breakdown, excluded: true, excludeReason: `Score ${pct}% below 50% minimum` };
+  if (pct < 70) return { pct, reasons, breakdown, excluded: true, excludeReason: `Score ${pct}% below 70% minimum` };
   return { pct, reasons, breakdown, excluded: false };
 }
 
