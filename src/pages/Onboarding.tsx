@@ -299,62 +299,65 @@ const Onboarding = () => {
       case 4:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 4 of 7 · Your journey</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              Where are you<br /><span className="text-gradient-accent">right now?</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">Be honest — it helps us find the right people for where you're actually at.</p>
+            <StepHeader title="Your Trading" accent="Experience" step={4} total={6} />
 
-            <div className="text-sm font-bold text-foreground mb-3">Experience level</div>
+            <div className="text-[15px] text-foreground mb-4">Experience level</div>
             <CardSelect
               options={[
-                { icon: "🟢", label: "Just getting started" },
-                { icon: "🔵", label: "Building my edge" },
-                { icon: "🟡", label: "Consistent & growing" },
-                { icon: "⚡", label: "Profitable trader" },
+                { icon: "", label: "Beginner" },
+                { icon: "", label: "Intermediate" },
+                { icon: "", label: "Advanced" },
+                { icon: "", label: "Professional" },
               ]}
               selected={experience}
               onSelect={setExperience}
             />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Current goal</div>
+            <div className="text-[15px] text-foreground mb-3 mt-8">Current Goal</div>
             <PillSelect options={["Learn the basics", "Get consistently profitable", "Pass a prop challenge", "Scale funded accounts", "Go full-time"]} selected={goals} onToggle={toggle(goals, setGoals)} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">When a trade goes wrong, you...</div>
-            <CardSelect
-              options={[
-                { icon: "📓", label: "Review it calmly & journal" },
-                { icon: "😤", label: "Vent to someone & move on" },
-                { icon: "🤫", label: "Go quiet & process alone" },
-                { icon: "🔁", label: "Jump back in to recover it" },
-              ]}
-              selected={lossResponse}
-              onSelect={setLossResponse}
-            />
+            <div className="text-[15px] text-foreground mb-3 mt-8">What happens after a loss</div>
+            <div className="flex flex-col gap-3">
+              {["Review it calmly & journal", "Vent to someone & move on", "Go quiet & process alone", "Jump back in to recover it"].map((opt) => {
+                const isOn = lossResponse === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setLossResponse(opt)}
+                    className={`w-full px-5 py-3 rounded-full border text-left text-[14px] font-medium transition-all ${
+                      isOn ? "bg-accent border-accent text-accent-foreground" : "border-border bg-transparent text-foreground hover:border-accent/60"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Biggest struggle</div>
+            <PillSelect options={["Overtrading", "Revenge trading", "Not sticking to plan", "FOMO entries", "Moving stop loss"]} selected={struggles} onToggle={toggle(struggles, setStruggles)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Do you have a trading plan?</div>
+            <PillSelect options={["Yes", "No"]} selected={tradingPlan} onToggle={toggle(tradingPlan, setTradingPlan)} />
           </div>
         );
 
       case 5:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 5 of 7 · The real stuff</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              Let's get<br /><span className="text-gradient-accent">honest.</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">This is where the magic happens — naming your patterns is the first step to fixing them.</p>
+            <StepHeader title="Matching" accent="Preferences" step={5} total={6} />
 
-            <div className="text-sm font-bold text-foreground mb-3">What's your biggest struggle right now?</div>
-            <PillSelect options={["Overtrading", "Revenge trading", "Not sticking to plan", "Fear of entering", "Moving stop loss", "FOMO entries", "Taking profits too early", "Emotional after losses", "No consistency", "Sizing up too fast"]} selected={struggles} onToggle={toggle(struggles, setStruggles)} />
+            <div className="text-[15px] text-foreground mb-3">Looking for</div>
+            <GenderSelect options={["Male", "Female", "Co-Ed"]} selected={lookingFor} onSelect={setLookingFor} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Do you journal your trades?</div>
-            <PillSelect options={["Every trade", "Sometimes", "Never — but I want to", "Never"]} selected={journaling} onToggle={toggle(journaling, setJournaling)} />
+            <div className="text-[15px] text-foreground mb-3 mt-8">Connection Reach</div>
+            <ReachSelect selected={reach} onSelect={setReach} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Do you have a trading plan?</div>
-            <PillSelect options={["Yes and I follow it", "Yes but I drift from it", "Still building one", "No plan yet"]} selected={tradingPlan} onToggle={toggle(tradingPlan, setTradingPlan)} />
+            <div className="text-[15px] text-foreground mb-3 mt-8">Connection frequency</div>
+            <PillSelect options={["Daily", "After session", "Weekly", "Flexible"]} selected={connectFreq} onToggle={toggle(connectFreq, setConnectFreq)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Match Priorities</div>
+            <PillSelect options={["Same Strategy", "Same Session", "Same Goals", "Same Experience Level", "Interests"]} selected={matchPriorities} onToggle={toggle(matchPriorities, setMatchPriorities)} />
           </div>
         );
 
