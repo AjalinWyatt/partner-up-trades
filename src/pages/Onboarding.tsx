@@ -65,7 +65,7 @@ const Onboarding = () => {
   // Step 4
   const [experience, setExperience] = useState<string | null>(null);
   const [goals, setGoals] = useState<string[]>([]);
-  const [lossResponse, setLossResponse] = useState<string | null>(null);
+  const [lossResponse, setLossResponse] = useState<string[]>([]);
 
   // Step 5
   const [struggles, setStruggles] = useState<string[]>([]);
