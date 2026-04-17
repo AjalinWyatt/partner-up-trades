@@ -204,15 +204,15 @@ const Dashboard = () => {
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3 mb-8">
           <StatCard
-            title="Got Saved"
+            title="My Saved"
             value={stats.savedYou}
-            subtitle="Who saved you"
+            subtitle="Who you saved"
             icon={<Inbox className="w-5 h-5" strokeWidth={1.6} />}
           />
           <StatCard
             title="Matches"
             value={stats.matches}
-            subtitle={`${stats.savedTotal} Saved`}
+            subtitle="90% and up"
             icon={<MessageSquareHeart className="w-5 h-5" strokeWidth={1.6} />}
           />
           <StatCard
