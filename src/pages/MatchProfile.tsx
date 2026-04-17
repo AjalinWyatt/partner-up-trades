@@ -149,7 +149,7 @@ const MatchProfile = () => {
 
   return (
     <AppLayout>
-      <div className="flex-1 overflow-y-auto pb-20">
+      <div className="pb-20">
         {/* Header */}
         <div className="px-5 pt-5 flex items-center justify-between">
           <button
