@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronDown, ChevronsUp, Bookmark, Gem, Zap } from "lucide-react";
+import { ChevronDown, ChevronsUp, Bookmark, Gem, Zap, ChevronLeft } from "lucide-react";
+import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,21 +41,24 @@ const MatchProfile = () => {
   const [profile, setProfile] = useState<ProfileFull | null>(null);
   const [trading, setTrading] = useState<TradingFull | null>(null);
   const [myTrading, setMyTrading] = useState<TradingFull | null>(null);
+  const [me, setMe] = useState<{ avatar_url: string | null; username: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const me = session?.user;
-      const [{ data: p }, { data: t }, { data: mt }] = await Promise.all([
+      const meUser = session?.user;
+      const [{ data: p }, { data: t }, { data: mt }, { data: mp }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
-        me ? supabase.from("trading_profiles").select("*").eq("user_id", me.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        meUser ? supabase.from("trading_profiles").select("*").eq("user_id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        meUser ? supabase.from("profiles").select("avatar_url, username").eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
       setProfile(p as any);
       setTrading(t as any);
       setMyTrading(mt as any);
+      setMe(mp as any);
       setLoading(false);
     };
     load();
@@ -63,9 +67,9 @@ const MatchProfile = () => {
   const handlePass = async () => {
     setBusy(true);
     const { data: { session } } = await supabase.auth.getSession();
-    const me = session?.user;
-    if (!me) { setBusy(false); return; }
-    await supabase.from("passed_profiles").insert({ passer_id: me.id, passed_id: userId });
+    const u = session?.user;
+    if (!u) { setBusy(false); return; }
+    await supabase.from("passed_profiles").insert({ passer_id: u.id, passed_id: userId });
     toast({ title: "Passed", description: "You won't see this trader again." });
     setBusy(false);
     navigate("/discover");
@@ -74,9 +78,9 @@ const MatchProfile = () => {
   const handleSave = async () => {
     setBusy(true);
     const { data: { session } } = await supabase.auth.getSession();
-    const me = session?.user;
-    if (!me) { setBusy(false); return; }
-    const { error } = await supabase.from("saved_profiles").insert({ saver_id: me.id, saved_id: userId });
+    const u = session?.user;
+    if (!u) { setBusy(false); return; }
+    const { error } = await supabase.from("saved_profiles").insert({ saver_id: u.id, saved_id: userId });
     if (error && !error.message.includes("duplicate")) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -89,10 +93,10 @@ const MatchProfile = () => {
   const handleSendRequest = async () => {
     setBusy(true);
     const { data: { session } } = await supabase.auth.getSession();
-    const me = session?.user;
-    if (!me) { setBusy(false); return; }
+    const u = session?.user;
+    if (!u) { setBusy(false); return; }
     const { error } = await supabase.from("partner_connections").insert({
-      requester_id: me.id, receiver_id: userId, status: "pending", match_score: matchPct,
+      requester_id: u.id, receiver_id: userId, status: "pending", match_score: matchPct,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -108,7 +112,6 @@ const MatchProfile = () => {
   const isPro = trading?.experience_level === "Profitable trader";
   const dasharray = `${(matchPct / 100) * 100.53} 100.53`;
 
-  // "Why We Match" — compute shared attributes
   const reasons: string[] = [];
   if (trading && myTrading) {
     const sharedMarkets = (trading.markets || []).filter((m) => (myTrading.markets || []).includes(m));
@@ -125,21 +128,32 @@ const MatchProfile = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background overflow-y-auto">
-      <div className="min-h-full pb-8">
+    <AppLayout>
+      <div className="flex-1 overflow-y-auto pb-20">
         {/* Header */}
         <div className="px-5 pt-5 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 flex items-center justify-center"
+            className="w-10 h-10 flex items-center justify-center -ml-2"
             aria-label="Back"
           >
-            <ChevronDown className="w-6 h-6 text-foreground" />
+            <ChevronLeft className="w-7 h-7 text-foreground" strokeWidth={2.5} />
           </button>
-          <h1 className="text-[22px] font-black tracking-tight text-foreground">
+          <h1 className="text-[24px] font-black tracking-tight text-foreground">
             TradersWorld
           </h1>
-          <div className="w-10" />
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-12 h-12 rounded-full overflow-hidden border-2 border-border shrink-0"
+          >
+            {me?.avatar_url ? (
+              <img src={me.avatar_url} className="w-full h-full object-cover" alt="me" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-black text-primary-foreground">
+                {(me?.username || "U").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </button>
         </div>
 
         {loading || !profile ? (
@@ -147,10 +161,11 @@ const MatchProfile = () => {
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <>
-            {/* Photo card */}
-            <div className="px-4 mt-4">
-              <div className="relative rounded-3xl overflow-hidden bg-secondary aspect-[4/5]">
+          <div className="px-4 mt-4">
+            {/* Two-toned card */}
+            <div className="bg-card rounded-3xl overflow-hidden border border-border">
+              {/* Photo */}
+              <div className="relative aspect-[4/5] bg-secondary">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -169,7 +184,7 @@ const MatchProfile = () => {
                 )}
 
                 {/* Match badge */}
-                <div className="absolute bottom-4 right-4 bg-card/90 backdrop-blur rounded-2xl px-3 py-2 flex items-center gap-2">
+                <div className="absolute bottom-4 right-4 bg-background/85 backdrop-blur rounded-2xl px-3 py-2 flex items-center gap-2">
                   <div className="relative w-7 h-7">
                     <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                       <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
@@ -183,96 +198,97 @@ const MatchProfile = () => {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Name + age */}
-            <div className="px-5 mt-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[20px] font-black text-accent truncate">
-                  {profile.full_name || (profile.username ? `@${profile.username}` : "Trader")}
-                </span>
-                {age && (
-                  <>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="text-[18px] font-black text-foreground">{age}</span>
-                  </>
-                )}
+              {/* Card body */}
+              <div className="px-5 pt-4 pb-5">
+                {/* Name + age */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[20px] font-black text-accent truncate">
+                    {profile.full_name || (profile.username ? `@${profile.username}` : "Trader")}
+                  </span>
+                  {age && (
+                    <>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-[18px] font-black text-foreground">{age}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Pills */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {loc && (
+                    <span className="px-3.5 py-1.5 rounded-full bg-accent text-accent-foreground text-[12px] font-bold">
+                      {loc}
+                    </span>
+                  )}
+                  {profile.gender && (
+                    <span className="px-3.5 py-1.5 rounded-full border border-border text-foreground text-[12px] font-semibold">
+                      {profile.gender}
+                    </span>
+                  )}
+                  {trading?.markets?.[0] && (
+                    <span className="px-3.5 py-1.5 rounded-full border border-border text-foreground text-[12px] font-semibold">
+                      {trading.markets[0]} Trader
+                    </span>
+                  )}
+                </div>
+
+                {/* Why We Match */}
+                <div className="mt-5">
+                  <h3 className="text-[16px] font-black text-foreground mb-2">Why We Match</h3>
+                  {reasons.length > 0 ? (
+                    <ul className="space-y-1.5">
+                      {reasons.map((r, i) => (
+                        <li key={i} className="text-[14px] text-foreground/85 leading-[1.55] flex gap-2">
+                          <span className="text-accent shrink-0">•</span>
+                          <span>{r}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[14px] text-foreground/70 leading-[1.55]">
+                      Based on your shared trader profile and goals.
+                    </p>
+                  )}
+                </div>
+
+                {/* Stats row */}
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  <Stat label="Trading Style" value={trading?.trading_style?.[0] || "—"} />
+                  <Stat label="Strategy" value={trading?.strategies?.[0] || "—"} />
+                  <Stat label="Session" value={trading?.sessions?.[0] || "—"} />
+                </div>
+
+                {/* Actions inside card */}
+                <div className="mt-6 flex items-end justify-between">
+                  <ActionButton
+                    label="Pass"
+                    onClick={handlePass}
+                    disabled={busy}
+                    bg="bg-background border border-border"
+                    icon={<ChevronDown className="w-7 h-7 text-foreground" strokeWidth={2.5} />}
+                  />
+                  <ActionButton
+                    label="Save"
+                    onClick={handleSave}
+                    disabled={busy}
+                    bg="bg-muted"
+                    icon={<Bookmark className="w-6 h-6 text-foreground" strokeWidth={2} />}
+                  />
+                  <ActionButton
+                    label="Send Request"
+                    onClick={handleSendRequest}
+                    disabled={busy}
+                    bg="bg-accent"
+                    icon={<ChevronsUp className="w-7 h-7 text-accent-foreground" strokeWidth={2.5} />}
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Pills */}
-            <div className="px-5 mt-3 flex flex-wrap gap-2">
-              {loc && (
-                <span className="px-3.5 py-1.5 rounded-full bg-accent text-accent-foreground text-[12px] font-bold">
-                  {loc}
-                </span>
-              )}
-              {profile.gender && (
-                <span className="px-3.5 py-1.5 rounded-full border border-border text-foreground text-[12px] font-semibold">
-                  {profile.gender}
-                </span>
-              )}
-              {trading?.markets?.[0] && (
-                <span className="px-3.5 py-1.5 rounded-full border border-border text-foreground text-[12px] font-semibold">
-                  {trading.markets[0]} Trader
-                </span>
-              )}
-            </div>
-
-            {/* Why We Match */}
-            <div className="px-5 mt-5">
-              <h3 className="text-[16px] font-black text-foreground mb-2">Why We Match</h3>
-              {reasons.length > 0 ? (
-                <ul className="space-y-1.5">
-                  {reasons.map((r, i) => (
-                    <li key={i} className="text-[14px] text-foreground/85 leading-[1.55] flex gap-2">
-                      <span className="text-accent shrink-0">•</span>
-                      <span>{r}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[14px] text-foreground/70 leading-[1.55]">
-                  Based on your shared trader profile and goals.
-                </p>
-              )}
-            </div>
-
-            {/* Stats row */}
-            <div className="px-5 mt-5 grid grid-cols-3 gap-3">
-              <Stat label="Trading Style" value={trading?.trading_style?.[0] || "—"} />
-              <Stat label="Strategy" value={trading?.strategies?.[0] || "—"} />
-              <Stat label="Session" value={trading?.sessions?.[0] || "—"} />
-            </div>
-
-            {/* Actions */}
-            <div className="px-5 mt-7 flex items-end justify-between">
-              <ActionButton
-                label="Pass"
-                onClick={handlePass}
-                disabled={busy}
-                bg="bg-card border border-border"
-                icon={<ChevronDown className="w-7 h-7 text-foreground" strokeWidth={2.5} />}
-              />
-              <ActionButton
-                label="Save"
-                onClick={handleSave}
-                disabled={busy}
-                bg="bg-muted"
-                icon={<Bookmark className="w-6 h-6 text-foreground" strokeWidth={2} />}
-              />
-              <ActionButton
-                label="Send Request"
-                onClick={handleSendRequest}
-                disabled={busy}
-                bg="bg-accent"
-                icon={<ChevronsUp className="w-7 h-7 text-accent-foreground" strokeWidth={2.5} />}
-              />
-            </div>
-          </>
+          </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
@@ -290,7 +306,7 @@ const ActionButton = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-[72px] h-[72px] rounded-full flex items-center justify-center ${bg} disabled:opacity-50 active:scale-95 transition-transform`}
+      className={`w-[64px] h-[64px] rounded-full flex items-center justify-center ${bg} disabled:opacity-50 active:scale-95 transition-transform`}
     >
       {icon}
     </button>
