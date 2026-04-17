@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, SlidersHorizontal, X, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { computeMatch } from "@/lib/matchUtils";
 
@@ -201,66 +200,7 @@ const Discover = () => {
             : "Some curated matches for you!"}
         </h2>
 
-        {/* Search + Filter — only when we have matches */}
-        {matches.length > 0 && (
-          <>
-            <div className="px-5 pb-3 flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or market..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10 bg-card border-border text-foreground placeholder:text-muted-foreground text-[13px]"
-                />
-              </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center relative"
-              >
-                <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-accent text-[9px] font-bold text-accent-foreground flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {showFilters && (
-              <div className="px-5 pb-3 space-y-2">
-                {(["market", "session", "experience"] as const).map((key) => (
-                  <div key={key}>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{key}</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {FILTER_OPTIONS[key].map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => setFilters((f) => ({ ...f, [key]: f[key] === opt ? null : opt }))}
-                          className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
-                            filters[key] === opt
-                              ? "bg-accent border-transparent text-accent-foreground"
-                              : "border-border bg-card text-muted-foreground hover:border-accent"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={() => setFilters({ market: null, session: null, experience: null })}
-                    className="text-[11px] text-destructive font-semibold flex items-center gap-1 mt-1"
-                  >
-                    <X className="w-3 h-3" /> Clear filters
-                  </button>
-                )}
-              </div>
-            )}
-          </>
-        )}
+        {/* Search/filter removed to match design */}
 
         {/* Results — large card style matching mockup */}
         <div className="px-5 mt-2">
