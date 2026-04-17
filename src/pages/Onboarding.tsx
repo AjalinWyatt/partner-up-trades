@@ -388,11 +388,11 @@ const Onboarding = () => {
             <div className="text-[15px] text-foreground mb-3 mt-8">What happens after a loss</div>
             <div className="flex flex-col gap-3">
               {["Review it calmly & journal", "Vent to someone & move on", "Go quiet & process alone", "Jump back in to recover it"].map((opt) => {
-                const isOn = lossResponse === opt;
+                const isOn = lossResponse.includes(opt);
                 return (
                   <button
                     key={opt}
-                    onClick={() => setLossResponse(opt)}
+                    onClick={() => toggle(lossResponse, setLossResponse)(opt)}
                     className={`w-full px-5 py-3 rounded-full border text-left text-[14px] font-medium transition-all ${
                       isOn ? "bg-accent border-accent text-accent-foreground" : "border-border bg-transparent text-foreground hover:border-accent/60"
                     }`}
