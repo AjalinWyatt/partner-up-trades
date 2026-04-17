@@ -425,7 +425,7 @@ const Onboarding = () => {
   };
 
   const ctaLabels: Record<number, string> = {
-    0: "Let's find your people",
+    0: "Let's Go!",
     1: "Continue", 2: "Continue", 3: "Continue", 4: "Continue",
     5: "Almost there",
     6: "Find my matches",
