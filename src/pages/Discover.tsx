@@ -213,7 +213,7 @@ const Discover = () => {
               {filtered.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => navigate(`/profile/${m.id}`)}
+                  onClick={() => setExpandedMatch(m)}
                   className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors h-[96px]"
                 >
                   <div className="w-[96px] h-full shrink-0 bg-secondary">
@@ -274,6 +274,18 @@ const Discover = () => {
           )}
         </div>
       </div>
+
+      {expandedMatch && (
+        <MatchExpandedModal
+          userId={expandedMatch.id}
+          matchPct={expandedMatch.matchPct}
+          onClose={() => setExpandedMatch(null)}
+          onPassed={() => {
+            setMatches((prev) => prev.filter((m) => m.id !== expandedMatch.id));
+            setExpandedMatch(null);
+          }}
+        />
+      )}
     </AppLayout>
   );
 };
