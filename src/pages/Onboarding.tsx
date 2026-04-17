@@ -127,8 +127,8 @@ const Onboarding = () => {
 
       case 1:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Let's Complete your" accent="Profile" step={1} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Let's Complete your" accent="Profile" step={1} total={5} />
 
             {/* Avatar upload - centered */}
             <input
@@ -241,8 +241,8 @@ const Onboarding = () => {
 
       case 2:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Your Trading" accent="World" step={2} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Your Trading" accent="World" step={2} total={5} />
 
             <div className="text-[15px] text-foreground mb-3">What Markets do you trade?</div>
             <PillSelect options={["Forex", "Futures", "Options"]} selected={markets} onToggle={toggle(markets, setMarkets)} />
@@ -279,8 +279,8 @@ const Onboarding = () => {
 
       case 3:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Your Trading" accent="Approach" step={3} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Your Trading" accent="Approach" step={3} total={5} />
 
             <div className="text-[15px] text-foreground mb-3">Trading Style</div>
             <PillSelect options={["Scalper", "Swing", "Day Trader", "Position"]} selected={styles} onToggle={toggle(styles, setStyles)} />
@@ -298,8 +298,8 @@ const Onboarding = () => {
 
       case 4:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Your Trading" accent="Experience" step={4} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Your Trading" accent="Experience" step={4} total={5} />
 
             <div className="text-[15px] text-foreground mb-4">Experience level</div>
             <CardSelect
@@ -344,8 +344,8 @@ const Onboarding = () => {
 
       case 5:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Matching" accent="Preferences" step={5} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Matching" accent="Preferences" step={5} total={5} />
 
             <div className="text-[15px] text-foreground mb-3">Looking for</div>
             <GenderSelect options={["Male", "Female", "Co-Ed"]} selected={lookingFor} onSelect={setLookingFor} />
