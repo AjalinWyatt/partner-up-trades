@@ -383,6 +383,10 @@ const Onboarding = () => {
     5: "Complete Setup",
   };
 
+  // Step 1 needs more top padding because back button overlaps
+  const stepNeedsTopPad = step >= 1 && step <= 5;
+
+
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
       {/* Minimal back button on steps 1-6 — matches mockups (no top progress bar, no skip) */}
