@@ -189,7 +189,13 @@ const Discover = () => {
         </div>
 
         {/* Title */}
-        <h2 className="text-[22px] font-black text-foreground tracking-tight px-5 mt-2 mb-4">
+        <h2
+          className={`mt-2 mb-4 px-5 text-foreground tracking-tight ${
+            filtered.length === 0 && matches.length === 0
+              ? "mx-auto max-w-[320px] text-center text-[15px] font-medium leading-[1.55] text-foreground/88"
+              : "text-[22px] font-black"
+          }`}
+        >
           {filtered.length === 0 && matches.length === 0
             ? "No traders match your criteria right now, please check back soon as new traders join daily"
             : "Some curated matches for you!"}
