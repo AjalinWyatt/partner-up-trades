@@ -226,7 +226,7 @@ const Onboarding = () => {
                 <option value="" className="bg-background">Select...</option>
                 <option value="Male" className="bg-background">Male</option>
                 <option value="Female" className="bg-background">Female</option>
-                <option value="Other" className="bg-background">Other</option>
+                <option value="Prefer Not To Say" className="bg-background">Prefer Not To Say</option>
               </select>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" className="shrink-0">
                 <polyline points="6 9 12 15 18 9"/>
