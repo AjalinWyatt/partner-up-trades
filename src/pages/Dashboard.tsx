@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bookmark, Heart, Flame, BookOpen, ChevronRight, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck } from "lucide-react";
+import { Inbox, MessageSquareHeart, Calendar, Notebook, Flame, ChevronRight, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -207,26 +207,26 @@ const Dashboard = () => {
             title="Got Saved"
             value={stats.savedYou}
             subtitle="Who saved you"
-            icon={<Bookmark className="w-5 h-5" />}
+            icon={<Inbox className="w-5 h-5" strokeWidth={1.6} />}
           />
           <StatCard
             title="Matches"
             value={stats.matches}
             subtitle={`${stats.savedTotal} Saved`}
-            icon={<Heart className="w-5 h-5" />}
+            icon={<MessageSquareHeart className="w-5 h-5" strokeWidth={1.6} />}
           />
           <StatCard
             title="Daily Streak"
             value={stats.streak}
             subtitle={`Max ${stats.maxStreak}`}
-            icon={<BookOpen className="w-5 h-5" />}
+            icon={<Calendar className="w-5 h-5" strokeWidth={1.6} />}
             prefix={<Flame className="w-7 h-7 text-destructive" fill="currentColor" />}
           />
           <StatCard
             title="My Logs"
             value={stats.logs}
             subtitle={`${stats.activeStreaks} Active`}
-            icon={<BookOpen className="w-5 h-5" />}
+            icon={<Notebook className="w-5 h-5" strokeWidth={1.6} />}
           />
         </div>
 
