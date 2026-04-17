@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Earth, AlignCenter, MessagesSquare, BookOpen, UserRound, Bell, Sun, Moon, LogOut } from "lucide-react";
+import { Home, Globe, Earth, AlignRight, MessagesSquare, BookOpen, Users, UserRound, Bell, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -7,10 +7,10 @@ import { useEffect, useState } from "react";
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home" },
   { path: "/discover", icon: Earth, label: "Discover" },
-  { path: "/feed", icon: AlignCenter, label: "Feed" },
+  { path: "/feed", icon: AlignRight, label: "Feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log" },
-  { path: "/partners", icon: UserRound, label: "Partners" },
+  { path: "/partners", icon: Users, label: "Partners" },
   { path: "/notifications", icon: Bell, label: "Notifications" },
   { path: "/profile", icon: UserRound, label: "Profile" },
 ];
