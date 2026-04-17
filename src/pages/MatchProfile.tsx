@@ -181,11 +181,133 @@ const MatchProfile = () => {
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="px-4 mt-4">
+          <div className="px-4 mt-3">
             {/* Two-toned card */}
             <div className="bg-card rounded-3xl overflow-hidden border border-border">
-              {/* Photo */}
-              <div className="relative aspect-[4/5] bg-secondary">
+              {/* Photo — compact */}
+              <div className="relative aspect-[16/10] bg-secondary">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
+                    <span className="text-5xl font-black text-foreground">
+                      {(profile.full_name || profile.username || "?").slice(0, 1).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                {isPro && (
+                  <div className="absolute top-3 left-3 bg-accent text-accent-foreground rounded-full pl-2.5 pr-3 py-1 flex items-center gap-1.5">
+                    <Gem className="w-3 h-3" fill="currentColor" />
+                    <span className="text-[11px] font-bold">Pro Trader</span>
+                  </div>
+                )}
+
+                {/* Match badge */}
+                <div className="absolute bottom-3 right-3 bg-background/85 backdrop-blur rounded-xl px-2.5 py-1.5 flex items-center gap-1.5">
+                  <div className="relative w-6 h-6">
+                    <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                      <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round" strokeDasharray={dasharray} />
+                    </svg>
+                    <Zap className="absolute inset-0 m-auto w-2.5 h-2.5 text-accent" fill="currentColor" strokeWidth={0} />
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-[14px] font-black text-foreground">{matchPct}%</div>
+                    <div className="text-[9px] text-muted-foreground -mt-0.5">Match</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card body — tight */}
+              <div className="px-4 pt-3 pb-4">
+                {/* Name + age */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[17px] font-black text-accent truncate">
+                    {profile.full_name || (profile.username ? `@${profile.username}` : "Trader")}
+                  </span>
+                  {age && (
+                    <>
+                      <span className="text-muted-foreground text-sm">•</span>
+                      <span className="text-[15px] font-black text-foreground">{age}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Pills — single row */}
+                <div className="mt-2 flex items-center gap-1.5 flex-nowrap overflow-hidden">
+                  {loc && (
+                    <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold whitespace-nowrap">
+                      {loc}
+                    </span>
+                  )}
+                  {profile.gender && (
+                    <span className="px-2.5 py-1 rounded-full border border-border text-foreground text-[10px] font-semibold whitespace-nowrap">
+                      {profile.gender}
+                    </span>
+                  )}
+                  {trading?.markets?.[0] && (
+                    <span className="px-2.5 py-1 rounded-full border border-border text-foreground text-[10px] font-semibold whitespace-nowrap">
+                      {trading.markets[0]} Trader
+                    </span>
+                  )}
+                </div>
+
+                {/* Why We Match */}
+                <div className="mt-3">
+                  <h3 className="text-[13px] font-black text-foreground mb-1">Why We Match</h3>
+                  {reasons.length > 0 ? (
+                    <ul className="space-y-0.5">
+                      {reasons.map((r, i) => (
+                        <li key={i} className="text-[11.5px] text-foreground/85 leading-[1.4] flex gap-1.5">
+                          <span className="text-accent shrink-0">•</span>
+                          <span>{r}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[11.5px] text-foreground/70 leading-[1.4]">
+                      Based on your shared trader profile and goals.
+                    </p>
+                  )}
+                </div>
+
+                {/* Stats row */}
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <Stat label="Trading Style" value={trading?.trading_style?.[0] || "—"} />
+                  <Stat label="Strategy" value={trading?.strategies?.[0] || "—"} />
+                  <Stat label="Session" value={trading?.sessions?.[0] || "—"} />
+                </div>
+
+                {/* Actions inside card */}
+                <div className="mt-4 flex items-end justify-between">
+                  <ActionButton
+                    label="Pass"
+                    onClick={handlePass}
+                    disabled={busy}
+                    bg="bg-background border border-border"
+                    icon={<ChevronDown className="w-5 h-5 text-foreground" strokeWidth={2.5} />}
+                  />
+                  <ActionButton
+                    label="Save"
+                    onClick={handleSave}
+                    disabled={busy}
+                    bg="bg-muted"
+                    icon={<Bookmark className="w-4 h-4 text-foreground" strokeWidth={2} />}
+                  />
+                  <ActionButton
+                    label="Send Request"
+                    onClick={handleSendRequest}
+                    disabled={busy}
+                    bg="bg-accent"
+                    icon={<ChevronsUp className="w-5 h-5 text-accent-foreground" strokeWidth={2.5} />}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
