@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-import AnimatedGlobe from "@/components/AnimatedGlobe";
+import authGlobe from "@/assets/auth-globe.png";
 import StepperGlobe from "@/components/onboarding/StepperGlobe";
 import PillSelect from "@/components/onboarding/PillSelect";
 import CardSelect from "@/components/onboarding/CardSelect";
@@ -109,9 +109,13 @@ const Onboarding = () => {
               Traders<span className="font-black">World</span>
             </h1>
             <div className="flex-1 flex items-center justify-center w-full my-8">
-              <div className="w-full max-w-[340px]">
-                <AnimatedGlobe />
-              </div>
+              <img
+                src={authGlobe}
+                alt=""
+                aria-hidden="true"
+                className="w-full max-w-[360px] select-none"
+                draggable={false}
+              />
             </div>
             <h2 className="text-[26px] font-bold text-foreground tracking-tight mb-3">
               Let's Meet People!
