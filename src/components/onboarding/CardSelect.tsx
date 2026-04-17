@@ -12,31 +12,44 @@ interface CardSelectProps {
   onSelect: (label: string) => void;
 }
 
+/**
+ * Vertical stepper-style selector matching the "Experience level" mockup —
+ * connected dots on the left with labels on the right.
+ */
 const CardSelect = ({ options, selected, onSelect }: CardSelectProps) => (
-  <div className="flex flex-col gap-2">
-    {options.map((opt) => (
-      <button
-        key={opt.label}
-        onClick={() => onSelect(opt.label)}
-        className={cn(
-          "flex items-center gap-3 p-3.5 rounded-xl border-[1.5px] transition-all text-left",
-          selected === opt.label
-            ? "border-success bg-success/10"
-            : "border-border bg-secondary hover:border-success"
-        )}
-      >
-        <div className={cn(
-          "w-9 h-9 rounded-[10px] flex items-center justify-center text-lg shrink-0",
-          selected === opt.label ? "bg-success/15" : "bg-muted"
-        )}>
-          {opt.icon}
-        </div>
-        <div>
-          <div className="text-sm font-bold text-foreground">{opt.label}</div>
-          {opt.description && <div className="text-xs text-muted-foreground mt-0.5">{opt.description}</div>}
-        </div>
-      </button>
-    ))}
+  <div className="relative">
+    {/* Vertical connector line */}
+    <div className="absolute left-[11px] top-3 bottom-3 w-px bg-gradient-to-b from-muted via-muted-foreground/30 to-muted" />
+
+    <div className="flex flex-col">
+      {options.map((opt) => {
+        const isOn = selected === opt.label;
+        return (
+          <button
+            key={opt.label}
+            onClick={() => onSelect(opt.label)}
+            className="flex items-center gap-4 py-3 text-left group"
+          >
+            <span
+              className={cn(
+                "relative z-10 w-[22px] h-[22px] rounded-full border-2 shrink-0 transition-all flex items-center justify-center",
+                isOn
+                  ? "bg-accent border-accent"
+                  : "bg-background border-foreground/80"
+              )}
+            />
+            <span
+              className={cn(
+                "text-[18px] transition-colors",
+                isOn ? "text-accent font-semibold" : "text-foreground font-medium"
+              )}
+            >
+              {opt.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   </div>
 );
 
