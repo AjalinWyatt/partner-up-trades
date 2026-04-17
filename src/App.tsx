@@ -18,6 +18,7 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import ViewProfile from "./pages/ViewProfile";
 import TradingLog from "./pages/TradingLog";
+import Saved from "./pages/Saved";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:userId" element={<ViewProfile />} />
           <Route path="/trading-log" element={<TradingLog />} />
+          <Route path="/saved" element={<Saved />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
