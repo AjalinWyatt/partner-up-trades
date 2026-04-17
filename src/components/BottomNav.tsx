@@ -1,13 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Earth, AlignCenter, MessagesSquare, BookOpen, UserRound } from "lucide-react";
+import { Home, Earth, AlignRight, MessagesSquare, BookOpen, Users } from "lucide-react";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home" },
   { path: "/discover", icon: Earth, label: "Discover" },
-  { path: "/feed", icon: AlignCenter, label: "Feed" },
+  { path: "/feed", icon: AlignRight, label: "Feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log" },
-  { path: "/partners", icon: UserRound, label: "Partners" },
+  { path: "/partners", icon: Users, label: "Partners" },
 ];
 
 const BottomNav = () => {

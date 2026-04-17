@@ -191,7 +191,7 @@ const Discover = () => {
         {/* Title */}
         <h2 className="text-[22px] font-black text-foreground tracking-tight px-5 mt-2 mb-4">
           {filtered.length === 0 && matches.length === 0
-            ? "No matches yet — check back soon!"
+            ? "No traders match your criteria right now, please check back soon as new traders join daily"
             : "Some curated matches for you!"}
         </h2>
 
