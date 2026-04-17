@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import LogoHeader from "@/components/LogoHeader";
+
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import StepperGlobe from "@/components/onboarding/StepperGlobe";
 import PillSelect from "@/components/onboarding/PillSelect";
@@ -25,7 +25,7 @@ const StepHeader = ({ title, accent, step, total }: { title: string; accent: str
   </div>
 );
 
-const TOTAL_STEPS = 7;
+
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ const Onboarding = () => {
     exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%", opacity: 0 }),
   };
 
-  const progressPct = step === 0 ? 0 : (step / TOTAL_STEPS) * 100;
+  
 
   const renderStep = () => {
     switch (step) {
