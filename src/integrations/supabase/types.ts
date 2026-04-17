@@ -628,6 +628,27 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          saved_id: string
+          saver_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          saved_id: string
+          saver_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          saved_id?: string
+          saver_id?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
