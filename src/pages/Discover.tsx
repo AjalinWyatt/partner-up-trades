@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
+import MatchExpandedModal from "@/components/MatchExpandedModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { computeMatch } from "@/lib/matchUtils";
@@ -48,6 +49,7 @@ const Discover = () => {
   const [filters, setFilters] = useState<{ market: string | null; session: string | null; experience: string | null }>({
     market: null, session: null, experience: null,
   });
+  const [expandedMatch, setExpandedMatch] = useState<MatchCandidate | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -55,9 +57,10 @@ const Discover = () => {
       const user = session?.user;
       if (!user) { setLoading(false); return; }
 
-      const [{ data: allConnections }, { data: blockedData }, { data: meData }] = await Promise.all([
+      const [{ data: allConnections }, { data: blockedData }, { data: passedData }, { data: meData }] = await Promise.all([
         supabase.from("partner_connections").select("requester_id, receiver_id").or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
         supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
+        supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
         supabase.from("profiles").select("avatar_url, username").eq("id", user.id).maybeSingle(),
       ]);
       setMe(meData || null);
@@ -65,6 +68,7 @@ const Discover = () => {
       const excludedIds = new Set<string>([user.id]);
       (allConnections || []).forEach((c: any) => { excludedIds.add(c.requester_id); excludedIds.add(c.receiver_id); });
       (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
+      (passedData || []).forEach((p: any) => excludedIds.add(p.passed_id));
 
       const { data: myTrading } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
       const { data: allProfiles } = await supabase.from("profiles").select("*").neq("id", user.id).eq("onboarding_completed", true);
@@ -209,7 +213,7 @@ const Discover = () => {
               {filtered.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => navigate(`/profile/${m.id}`)}
+                  onClick={() => setExpandedMatch(m)}
                   className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors h-[96px]"
                 >
                   <div className="w-[96px] h-full shrink-0 bg-secondary">
@@ -270,6 +274,18 @@ const Discover = () => {
           )}
         </div>
       </div>
+
+      {expandedMatch && (
+        <MatchExpandedModal
+          userId={expandedMatch.id}
+          matchPct={expandedMatch.matchPct}
+          onClose={() => setExpandedMatch(null)}
+          onPassed={() => {
+            setMatches((prev) => prev.filter((m) => m.id !== expandedMatch.id));
+            setExpandedMatch(null);
+          }}
+        />
+      )}
     </AppLayout>
   );
 };
