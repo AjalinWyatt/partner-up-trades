@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoHeader from "@/components/LogoHeader";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
+import StepperGlobe from "@/components/onboarding/StepperGlobe";
 import PillSelect from "@/components/onboarding/PillSelect";
 import CardSelect from "@/components/onboarding/CardSelect";
 import BigCardSelect from "@/components/onboarding/BigCardSelect";
@@ -13,6 +14,16 @@ import ReachSelect from "@/components/onboarding/ReachSelect";
 import GenderSelect from "@/components/onboarding/GenderSelect";
 import PromptCard from "@/components/onboarding/PromptCard";
 import { Input } from "@/components/ui/input";
+
+/** Header used on steps 1-6 — large title on the left, stepper-globe on the right */
+const StepHeader = ({ title, accent, step, total }: { title: string; accent: string; step: number; total: number }) => (
+  <div className="flex items-end justify-between mb-8">
+    <h2 className="text-[28px] font-bold text-foreground tracking-tight leading-tight max-w-[230px]">
+      {title} <span className="text-accent font-bold">{accent}</span>
+    </h2>
+    <StepperGlobe step={step} total={total} />
+  </div>
+);
 
 const TOTAL_STEPS = 7;
 
@@ -117,7 +128,7 @@ const Onboarding = () => {
       case 1:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 1 of 7 · About you</div>
+            <StepHeader title="Let's Complete your" accent="Profile" step={1} total={6} />
 
             {/* Avatar upload - centered */}
             <input
@@ -133,53 +144,82 @@ const Onboarding = () => {
                 }
               }}
             />
-            <div className="flex flex-col items-center mb-6">
+            <div className="flex flex-col items-center mb-7">
               <div
-                className="relative w-24 h-24 rounded-full border-2 border-dashed border-accent/60 flex items-center justify-center cursor-pointer hover:border-accent transition-colors overflow-hidden"
+                className="relative w-28 h-28 rounded-full border-2 border-foreground/30 flex items-center justify-center cursor-pointer hover:border-accent transition-colors overflow-hidden bg-card"
                 onClick={() => avatarInputRef.current?.click()}
               >
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <Camera className="w-8 h-8 text-muted-foreground" />
+                  <Camera className="w-10 h-10 text-muted-foreground" />
                 )}
-                <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                  <span className="text-accent-foreground text-sm font-bold leading-none">+</span>
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-accent flex items-center justify-center border-4 border-background">
+                  <span className="text-accent-foreground text-lg font-bold leading-none">+</span>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Upload a picture (optional)</p>
+              <p className="text-[13px] text-foreground mt-3">Upload a picture (optional)</p>
             </div>
 
             {/* Username underline input */}
-            <div className="text-sm font-bold text-foreground mb-3">What should we call you?</div>
-            <div className="flex items-center gap-3 border-b border-border pb-2 mb-5">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            <div className="text-[15px] text-foreground mb-3">What should we call you?</div>
+            <div className="flex items-center gap-3 pb-2 mb-1">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="hsl(var(--accent))" className="shrink-0">
+                <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1z"/>
               </svg>
               <input
                 placeholder="Username"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
               />
             </div>
+            <div className="h-px bg-border mb-6" />
 
             {/* Date of birth underline input */}
-            <div className="text-sm font-bold text-foreground mb-3">When were you born?</div>
-            <div className="flex items-center gap-3 border-b border-border pb-2 mb-1">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <div className="text-[15px] text-foreground mb-3">When were you born?</div>
+            <div className="flex items-center gap-3 pb-2 mb-1">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                <rect x="3" y="5" width="18" height="16" rx="2" fill="hsl(var(--accent))"/>
+                <rect x="3" y="5" width="18" height="4" fill="hsl(var(--accent))"/>
+                <line x1="8" y1="3" x2="8" y2="7" stroke="hsl(var(--accent-foreground))" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="3" x2="16" y2="7" stroke="hsl(var(--accent-foreground))" strokeWidth="2" strokeLinecap="round"/>
               </svg>
               <input
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none [color-scheme:dark]"
               />
             </div>
-            <p className="text-[11px] text-muted-foreground mb-5">You must be 18 or older to use Traders World.</p>
+            <div className="h-px bg-border mb-6" />
 
-            <div className="text-sm font-bold text-foreground mb-3 mt-5">Pick a prompt for your profile</div>
+            {/* Gender — moved earlier into Profile step per mockup */}
+            <div className="text-[15px] text-foreground mb-3">Your Gender</div>
+            <div className="flex items-center gap-3 pb-2 mb-1">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="hsl(var(--accent))" className="shrink-0">
+                <circle cx="10" cy="14" r="5" fill="none" stroke="hsl(var(--accent))" strokeWidth="2"/>
+                <path d="M14.5 9.5 L20 4 M15 4 H20 V9" stroke="hsl(var(--accent))" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              </svg>
+              <select
+                value={gender || ""}
+                onChange={(e) => setGender(e.target.value)}
+                className="flex-1 bg-transparent text-[15px] text-foreground outline-none appearance-none cursor-pointer"
+              >
+                <option value="" className="bg-background">Select...</option>
+                <option value="Male" className="bg-background">Male</option>
+                <option value="Female" className="bg-background">Female</option>
+                <option value="Other" className="bg-background">Other</option>
+              </select>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" className="shrink-0">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <div className="h-px bg-border mb-6" />
+
+            <p className="text-[11px] text-muted-foreground -mt-4 mb-5">You must be 18 or older to use Traders World.</p>
+
+            <div className="text-[15px] text-foreground mb-3 mt-5">Pick a prompt for your profile</div>
             <PromptCard
               icon="📈"
               title="My Charts"
@@ -202,40 +242,37 @@ const Onboarding = () => {
       case 2:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 2 of 7 · Your market</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              What's your<br /><span className="text-gradient-accent">trading world?</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">Select all that apply — this is the foundation of your match.</p>
+            <StepHeader title="Your Trading" accent="World" step={2} total={6} />
 
-            <div className="text-sm font-bold text-foreground mb-3">What do you trade?</div>
+            <div className="text-[15px] text-foreground mb-3">What Markets do you trade?</div>
             <PillSelect options={["Forex", "Futures", "Options"]} selected={markets} onToggle={toggle(markets, setMarkets)} />
 
             {markets.includes("Forex") && (
               <>
-                <div className="text-sm font-bold text-foreground mb-3 mt-5">Forex instruments</div>
+                <div className="text-[15px] text-foreground mb-3 mt-6">Forex instruments</div>
                 <PillSelect options={["Major pairs", "Minor pairs", "Indices (NAS100, US30)", "Gold/XAU", "Exotics"]} selected={instruments} onToggle={toggle(instruments, setInstruments)} />
               </>
             )}
             {markets.includes("Futures") && (
               <>
-                <div className="text-sm font-bold text-foreground mb-3 mt-5">Futures instruments</div>
+                <div className="text-[15px] text-foreground mb-3 mt-6">Futures instruments</div>
                 <PillSelect options={["Equity indices (NQ, ES, YM, RTY)", "Commodities (Oil, Gas, Wheat)", "Crypto futures (BTC, ETH)", "Metals"]} selected={instruments} onToggle={toggle(instruments, setInstruments)} />
               </>
             )}
             {markets.includes("Options") && (
               <>
-                <div className="text-sm font-bold text-foreground mb-3 mt-5">Options instruments</div>
+                <div className="text-[15px] text-foreground mb-3 mt-6">Options instruments</div>
                 <PillSelect options={["Stock options", "Index options (SPX, NDX)", "ETF options", "Futures options"]} selected={instruments} onToggle={toggle(instruments, setInstruments)} />
               </>
             )}
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Which session do you mainly trade?</div>
+            <div className="text-[15px] text-foreground mb-3 mt-6">What Session(s) Do You Trade?</div>
             <PillSelect options={["London", "New York", "Asian", "Multiple / flexible"]} selected={sessions} onToggle={toggle(sessions, setSessions)} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">What time do you usually trade?</div>
+            <div className="text-[15px] text-foreground mb-3 mt-6">Trading Style</div>
+            <PillSelect options={["Scalper", "Day trader", "Swing trader", "Position trader"]} selected={styles} onToggle={toggle(styles, setStyles)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-6">What time do you usually trade?</div>
             <PillSelect options={["Morning", "Afternoon", "Evening", "Night", "Varies"]} selected={tradeTimes} onToggle={toggle(tradeTimes, setTradeTimes)} />
           </div>
         );
@@ -243,175 +280,91 @@ const Onboarding = () => {
       case 3:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 3 of 7 · Your style</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              How do you<br /><span className="text-gradient-accent">actually trade?</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">Your personality as a trader — helps us find people who think like you.</p>
+            <StepHeader title="Your Trading" accent="Approach" step={3} total={6} />
 
-            <div className="text-sm font-bold text-foreground mb-3">Trading style</div>
-            <PillSelect options={["Scalper", "Day trader", "Swing trader", "Position trader"]} selected={styles} onToggle={toggle(styles, setStyles)} />
+            <div className="text-[15px] text-foreground mb-3">Trading Style</div>
+            <PillSelect options={["Scalper", "Swing", "Day Trader", "Position"]} selected={styles} onToggle={toggle(styles, setStyles)} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Strategy approach</div>
-            <PillSelect options={["Price action", "Supply & demand", "Smart money / ICT", "Indicators", "Mixed"]} selected={strategies} onToggle={toggle(strategies, setStrategies)} />
+            <div className="text-[15px] text-foreground mb-3 mt-6">Strategy Approach</div>
+            <PillSelect options={["Supply/Demand", "Price Action", "Smart Money/ICT", "Indicators", "Mixed"]} selected={strategies} onToggle={toggle(strategies, setStrategies)} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Preferred timeframe</div>
-            <PillSelect options={["1m – 5m", "15m – 1H", "4H – Daily", "Weekly – Monthly", "Mixed"]} selected={timeframes} onToggle={toggle(timeframes, setTimeframes)} />
+            <div className="text-[15px] text-foreground mb-3 mt-6">What Timeframe Do You Trade On?</div>
+            <PillSelect options={["1-30m", "1H-2H", "4H-Daily", "Weekly-Monthly", "Mixed"]} selected={timeframes} onToggle={toggle(timeframes, setTimeframes)} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">How often do you trade?</div>
-            <PillSelect options={["Daily", "Few times a week", "High quality setups only", "Inconsistent"]} selected={frequency} onToggle={toggle(frequency, setFrequency)} />
+            <div className="text-[15px] text-foreground mb-3 mt-6">How Often Do You Trade?</div>
+            <PillSelect options={["Daily", "Few times a week", "High quality only", "Inconsistent"]} selected={frequency} onToggle={toggle(frequency, setFrequency)} />
           </div>
         );
 
       case 4:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 4 of 7 · Your journey</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              Where are you<br /><span className="text-gradient-accent">right now?</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">Be honest — it helps us find the right people for where you're actually at.</p>
+            <StepHeader title="Your Trading" accent="Experience" step={4} total={6} />
 
-            <div className="text-sm font-bold text-foreground mb-3">Experience level</div>
+            <div className="text-[15px] text-foreground mb-4">Experience level</div>
             <CardSelect
               options={[
-                { icon: "🟢", label: "Just getting started" },
-                { icon: "🔵", label: "Building my edge" },
-                { icon: "🟡", label: "Consistent & growing" },
-                { icon: "⚡", label: "Profitable trader" },
+                { icon: "", label: "Beginner" },
+                { icon: "", label: "Intermediate" },
+                { icon: "", label: "Advanced" },
+                { icon: "", label: "Professional" },
               ]}
               selected={experience}
               onSelect={setExperience}
             />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Current goal</div>
+            <div className="text-[15px] text-foreground mb-3 mt-8">Current Goal</div>
             <PillSelect options={["Learn the basics", "Get consistently profitable", "Pass a prop challenge", "Scale funded accounts", "Go full-time"]} selected={goals} onToggle={toggle(goals, setGoals)} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">When a trade goes wrong, you...</div>
-            <CardSelect
-              options={[
-                { icon: "📓", label: "Review it calmly & journal" },
-                { icon: "😤", label: "Vent to someone & move on" },
-                { icon: "🤫", label: "Go quiet & process alone" },
-                { icon: "🔁", label: "Jump back in to recover it" },
-              ]}
-              selected={lossResponse}
-              onSelect={setLossResponse}
-            />
+            <div className="text-[15px] text-foreground mb-3 mt-8">What happens after a loss</div>
+            <div className="flex flex-col gap-3">
+              {["Review it calmly & journal", "Vent to someone & move on", "Go quiet & process alone", "Jump back in to recover it"].map((opt) => {
+                const isOn = lossResponse === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setLossResponse(opt)}
+                    className={`w-full px-5 py-3 rounded-full border text-left text-[14px] font-medium transition-all ${
+                      isOn ? "bg-accent border-accent text-accent-foreground" : "border-border bg-transparent text-foreground hover:border-accent/60"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Biggest struggle</div>
+            <PillSelect options={["Overtrading", "Revenge trading", "Not sticking to plan", "FOMO entries", "Moving stop loss"]} selected={struggles} onToggle={toggle(struggles, setStruggles)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Do you have a trading plan?</div>
+            <PillSelect options={["Yes", "No"]} selected={tradingPlan} onToggle={toggle(tradingPlan, setTradingPlan)} />
           </div>
         );
 
       case 5:
         return (
           <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 5 of 7 · The real stuff</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              Let's get<br /><span className="text-gradient-accent">honest.</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">This is where the magic happens — naming your patterns is the first step to fixing them.</p>
+            <StepHeader title="Matching" accent="Preferences" step={5} total={6} />
 
-            <div className="text-sm font-bold text-foreground mb-3">What's your biggest struggle right now?</div>
-            <PillSelect options={["Overtrading", "Revenge trading", "Not sticking to plan", "Fear of entering", "Moving stop loss", "FOMO entries", "Taking profits too early", "Emotional after losses", "No consistency", "Sizing up too fast"]} selected={struggles} onToggle={toggle(struggles, setStruggles)} />
+            <div className="text-[15px] text-foreground mb-3">Looking for</div>
+            <GenderSelect options={["Male", "Female", "Co-Ed"]} selected={lookingFor} onSelect={setLookingFor} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Do you journal your trades?</div>
-            <PillSelect options={["Every trade", "Sometimes", "Never — but I want to", "Never"]} selected={journaling} onToggle={toggle(journaling, setJournaling)} />
+            <div className="text-[15px] text-foreground mb-3 mt-8">Connection Reach</div>
+            <ReachSelect selected={reach} onSelect={setReach} />
 
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Do you have a trading plan?</div>
-            <PillSelect options={["Yes and I follow it", "Yes but I drift from it", "Still building one", "No plan yet"]} selected={tradingPlan} onToggle={toggle(tradingPlan, setTradingPlan)} />
+            <div className="text-[15px] text-foreground mb-3 mt-8">Connection frequency</div>
+            <PillSelect options={["Daily", "After session", "Weekly", "Flexible"]} selected={connectFreq} onToggle={toggle(connectFreq, setConnectFreq)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Match Priorities</div>
+            <PillSelect options={["Same Strategy", "Same Session", "Same Goals", "Same Experience Level", "Interests"]} selected={matchPriorities} onToggle={toggle(matchPriorities, setMatchPriorities)} />
           </div>
         );
 
       case 6:
         return (
-          <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 6 of 7 · Your people</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              Who are you<br /><span className="text-gradient-accent">looking for?</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">You can pick more than one — you can be in a duo and a group at the same time.</p>
-
-            <div className="text-sm font-bold text-foreground mb-3">I am a...</div>
-            <GenderSelect options={["Male", "Female"]} selected={gender} onSelect={setGender} />
-
-            <div className="text-sm font-bold text-foreground mb-3 mt-4">Looking to connect with...</div>
-            <GenderSelect options={["Males", "Females", "Co-ed"]} selected={lookingFor} onSelect={setLookingFor} />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Connection reach</div>
-            <ReachSelect selected={reach} onSelect={setReach} />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">
-              Your location
-              {reach === "Local" && <span className="text-destructive ml-1">*</span>}
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              {reach === "Local" ? "Required for local matching" : "Optional — helps us match you with nearby traders"}
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-border pb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                <input
-                  value={city} onChange={e => setCity(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                  placeholder={reach === "Local" ? "City (required)" : "City"}
-                />
-              </div>
-              <div className="flex items-center gap-3 border-b border-border pb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                <input
-                  value={state} onChange={e => setState(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                  placeholder="State / Region / Province"
-                />
-              </div>
-              <div className="flex items-center gap-3 border-b border-border pb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                <input
-                  value={country} onChange={e => setCountry(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                  placeholder={reach === "Local" ? "Country (required)" : "Country"}
-                />
-              </div>
-            </div>
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">What kind of connection?</div>
-            <BigCardSelect
-              options={[
-                { icon: "🤝", title: "Partner(s)", description: "1-on-1 connections. No limit to how many partners you have." },
-              ]}
-              selected={connectionTypes}
-              onToggle={toggle(connectionTypes, setConnectionTypes)}
-            />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">How often do you want to connect?</div>
-            <PillSelect options={["Daily", "After each session", "Weekly", "Flexible"]} selected={connectFreq} onToggle={toggle(connectFreq, setConnectFreq)} />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">What matters most in a match?</div>
-            <PillSelect options={["Same strategy", "Same schedule", "Same goals", "Same experience level", "Same discipline level"]} selected={matchPriorities} onToggle={toggle(matchPriorities, setMatchPriorities)} />
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-7">
-            <div className="w-16 h-16 rounded-full border-[3px] border-border border-t-success animate-spin mb-6" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-7 py-20">
+            <div className="w-16 h-16 rounded-full border-[3px] border-border border-t-accent animate-spin mb-6" />
             <h2 className="text-[22px] font-black text-foreground mb-2">Finding your people...</h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
               Matching you with traders who complement your style, goals, and schedule.
@@ -427,8 +380,7 @@ const Onboarding = () => {
   const ctaLabels: Record<number, string> = {
     0: "Let's Go!",
     1: "Continue", 2: "Continue", 3: "Continue", 4: "Continue",
-    5: "Almost there",
-    6: "Find my matches",
+    5: "Complete Setup",
   };
 
   return (

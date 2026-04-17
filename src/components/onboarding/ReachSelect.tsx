@@ -1,10 +1,9 @@
 import { cn } from "@/lib/utils";
-import { MapPin, Globe, Compass } from "lucide-react";
 
 const reachOptions = [
-  { key: "Local", icon: MapPin, desc: "Near you" },
-  { key: "Global", icon: Globe, desc: "Worldwide" },
-  { key: "Both", icon: Compass, desc: "Open to all" },
+  { key: "Local", pos: 0 },
+  { key: "Global", pos: 50 },
+  { key: "Both", pos: 100 },
 ];
 
 interface ReachSelectProps {
@@ -12,28 +11,54 @@ interface ReachSelectProps {
   onSelect: (v: string) => void;
 }
 
-const ReachSelect = ({ selected, onSelect }: ReachSelectProps) => (
-  <div className="grid grid-cols-3 gap-2">
-    {reachOptions.map((opt) => {
-      const Icon = opt.icon;
-      return (
-        <button
-          key={opt.key}
-          onClick={() => onSelect(opt.key)}
-          className={cn(
-            "p-4 rounded-xl border-[1.5px] transition-all text-center",
-            selected === opt.key
-              ? "border-success bg-success/5"
-              : "border-border bg-secondary hover:border-success"
-          )}
-        >
-          <Icon className={cn("w-5 h-5 mx-auto mb-1.5", selected === opt.key ? "text-success" : "text-muted-foreground")} />
-          <div className="text-xs font-bold text-foreground">{opt.key}</div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</div>
-        </button>
-      );
-    })}
-  </div>
-);
+/**
+ * Slider-style selector matching the mockup.
+ * A horizontal track with three handles; selected handle is filled cyan, others white.
+ */
+const ReachSelect = ({ selected, onSelect }: ReachSelectProps) => {
+  return (
+    <div className="px-2 pt-2 pb-1">
+      <div className="relative h-3 mx-3">
+        {/* Track */}
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[3px] bg-gradient-to-r from-muted via-foreground/40 to-muted-foreground rounded-full" />
+
+        {/* Handles */}
+        {reachOptions.map((opt) => {
+          const isOn = selected === opt.key;
+          return (
+            <button
+              key={opt.key}
+              onClick={() => onSelect(opt.key)}
+              aria-label={opt.key}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 transition-all",
+                isOn
+                  ? "bg-accent border-accent scale-110"
+                  : "bg-background border-foreground"
+              )}
+              style={{ left: `${opt.pos}%` }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Labels */}
+      <div className="flex justify-between mt-3 px-0">
+        {reachOptions.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => onSelect(opt.key)}
+            className={cn(
+              "text-[15px] font-medium transition-colors",
+              selected === opt.key ? "text-accent" : "text-foreground"
+            )}
+          >
+            {opt.key}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default ReachSelect;
