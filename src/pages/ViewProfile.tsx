@@ -95,6 +95,15 @@ const ViewProfile = () => {
           .maybeSingle();
         setIsBlocked(!!blockData);
 
+        // Check if saved
+        const { data: savedData } = await supabase
+          .from("saved_profiles")
+          .select("id")
+          .eq("saver_id", user.id)
+          .eq("saved_id", id)
+          .maybeSingle();
+        setIsSaved(!!savedData);
+
         // Always recompute match with latest algorithm
         const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
         const { data: myProf } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
@@ -196,6 +205,21 @@ const ViewProfile = () => {
     setIsBlocked(false);
     setShowMenu(false);
     toast.success(`Unblocked @${profile?.username || "user"}`);
+  };
+
+  const handleSave = async () => {
+    if (!myId || !id || savingState) return;
+    setSavingState(true);
+    if (isSaved) {
+      const { error } = await supabase.from("saved_profiles").delete().eq("saver_id", myId).eq("saved_id", id);
+      if (error) toast.error("Failed to unsave");
+      else { setIsSaved(false); toast.success("Removed from saved"); }
+    } else {
+      const { error } = await supabase.from("saved_profiles").insert({ saver_id: myId, saved_id: id });
+      if (error) toast.error("Failed to save");
+      else { setIsSaved(true); toast.success("Saved"); }
+    }
+    setSavingState(false);
   };
 
   if (loading) {
