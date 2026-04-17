@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, ChevronDown, X, MessageSquare, Link2, ImageIcon, Settings, MapPin, Flame, TrendingUp, Users, MoreVertical, UserX, ShieldOff, Shield } from "lucide-react";
+import { ChevronLeft, ChevronDown, X, MessageSquare, Link2, ImageIcon, Settings, MapPin, Flame, TrendingUp, Users, MoreVertical, UserX, ShieldOff, Shield, ChevronsDown, ChevronsUp, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo, computeMatch, getBreakdownLabel } from "@/lib/matchUtils";
@@ -30,6 +30,8 @@ const ViewProfile = () => {
   const [sending, setSending] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingState, setSavingState] = useState(false);
 
   useEffect(() => {
     if (!id) return;
