@@ -419,12 +419,11 @@ const Onboarding = () => {
       </div>
 
       {/* Bottom CTA */}
-      {step < 7 && (
-        <div className="absolute bottom-0 left-0 right-0 p-7 pt-16 bg-gradient-to-t from-background via-background to-transparent z-10">
+      {step < 6 && (
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-7 pt-16 bg-gradient-to-t from-background via-background to-transparent z-10">
           <button
             onClick={async () => {
-              if (step === 6) {
-                // Validate age 18+
+              if (step === 5) {
                 if (dateOfBirth) {
                   const dob = new Date(dateOfBirth);
                   const today = new Date();
@@ -436,18 +435,16 @@ const Onboarding = () => {
                     return;
                   }
                 }
-                // Validate location if reach is Local
                 if (reach === "Local" && (!city.trim() || !country.trim())) {
                   toast.error("City and Country are required for Local matching");
                   return;
                 }
-                goTo(7);
+                goTo(6);
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
-                   const user = session?.user;
-                   if (!user) throw new Error("Not authenticated");
+                  const user = session?.user;
+                  if (!user) throw new Error("Not authenticated");
 
-                  // Upload avatar if selected
                   let avatarUrl: string | null = null;
                   if (avatarFile) {
                     const ext = avatarFile.name.split(".").pop() || "jpg";
@@ -462,7 +459,6 @@ const Onboarding = () => {
                     avatarUrl = urlData.publicUrl;
                   }
 
-                  // Build location string for display
                   const locationParts = [city, state, country].filter(Boolean);
                   const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
 
@@ -519,20 +515,15 @@ const Onboarding = () => {
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
                   toast.error("Failed to save your profile. Please try again.");
-                  goTo(6);
+                  goTo(5);
                 }
               } else {
                 goTo(step + 1);
               }
             }}
-            className={
-              step === 0
-                ? "w-full py-4 rounded-2xl bg-accent text-[16px] font-bold text-accent-foreground flex items-center justify-center"
-                : "w-full py-4 rounded-xl bg-gradient-to-r from-primary to-success text-[15px] font-bold text-primary-foreground flex items-center justify-center gap-2"
-            }
+            className="w-full py-4 rounded-2xl bg-accent text-[16px] font-bold text-accent-foreground flex items-center justify-center hover:bg-accent/90 transition-colors"
           >
             {ctaLabels[step]}
-            {step !== 0 && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>
       )}
