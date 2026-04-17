@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, SlidersHorizontal, X, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { computeMatch } from "@/lib/matchUtils";
 
