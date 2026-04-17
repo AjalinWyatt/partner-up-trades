@@ -80,6 +80,7 @@ const Onboarding = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
+  const [locationEnabled, setLocationEnabled] = useState(true);
 
   const toggle = useCallback((arr: string[], setArr: React.Dispatch<React.SetStateAction<string[]>>) => {
     return (val: string) => {
@@ -221,21 +222,45 @@ const Onboarding = () => {
             </div>
             <div className="h-px bg-border mb-6" />
 
-            <p className="text-[11px] text-muted-foreground -mt-4 mb-5">You must be 18 or older to use Traders World.</p>
+            <p className="text-[11px] text-muted-foreground -mt-4 mb-6">You must be 18 or older to use Traders World.</p>
 
-            <div className="text-[15px] text-foreground mb-3 mt-5">Pick a prompt for your profile</div>
-            <PromptCard
-              icon="📈"
-              title="My Charts"
-              question="When I look at a chart, I'm always watching for..."
+            {/* Location toggle card */}
+            <div className="rounded-2xl bg-card border border-border px-4 py-3.5 flex items-center gap-3 mb-8">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z" fill="hsl(var(--muted-foreground))" stroke="hsl(var(--foreground))" strokeWidth="0.5"/>
+                <circle cx="12" cy="9" r="2.5" fill="hsl(var(--background))"/>
+              </svg>
+              <div className="flex-1">
+                <div className="text-[16px] font-semibold text-foreground leading-tight">Location</div>
+                <div className="text-[12px] text-muted-foreground">Turn on location settings</div>
+              </div>
+              <button
+                onClick={() => setLocationEnabled(!locationEnabled)}
+                role="switch"
+                aria-checked={locationEnabled}
+                className={cn(
+                  "relative w-11 h-6 rounded-full transition-colors shrink-0",
+                  locationEnabled ? "bg-foreground/90" : "bg-muted"
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 w-5 h-5 rounded-full transition-all",
+                    locationEnabled ? "left-[22px] bg-accent" : "left-0.5 bg-background"
+                  )}
+                />
+              </button>
+            </div>
+
+            <div className="text-[15px] text-foreground mb-3">What do you look for in charts?</div>
+            <PillSelect
               options={["Order blocks", "FVGs", "Key levels", "Fibonacci", "Support & resistance", "Liquidity zones", "Market structure", "BOS / CHOCH", "Moving averages", "VWAP", "Volume profile", "Supply & demand", "Imbalances", "EMA crosses", "RSI divergence", "Trendlines"]}
               selected={chartPrompts}
               onToggle={toggle(chartPrompts, setChartPrompts)}
             />
-            <PromptCard
-              icon="🌴"
-              title="Off The Charts"
-              question="When I'm not trading, I'm usually..."
+
+            <div className="text-[15px] text-foreground mb-3 mt-7">Interests Outside of Trading</div>
+            <PillSelect
               options={["Gym", "Football", "Basketball", "Music", "Travel", "Cars", "Gaming", "Family time", "Cooking", "Reading", "Content creation", "Fitness", "Golf", "Business", "Meditation"]}
               selected={offChartPrompts}
               onToggle={toggle(offChartPrompts, setOffChartPrompts)}
