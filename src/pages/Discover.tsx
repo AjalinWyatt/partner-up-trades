@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
+import MatchExpandedModal from "@/components/MatchExpandedModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { computeMatch } from "@/lib/matchUtils";
