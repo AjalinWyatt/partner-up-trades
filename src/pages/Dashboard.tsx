@@ -4,7 +4,7 @@ import { Inbox, MessageSquareHeart, Calendar, Notebook, Flame, ChevronRight, Bel
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
-import { timeAgo } from "@/lib/matchUtils";
+import { timeAgo, computeMatch } from "@/lib/matchUtils";
 
 interface StatCardProps {
   title: string;
@@ -12,10 +12,16 @@ interface StatCardProps {
   subtitle: string;
   icon: React.ReactNode;
   prefix?: React.ReactNode;
+  onClick?: () => void;
 }
 
-const StatCard = ({ title, value, subtitle, icon, prefix }: StatCardProps) => (
-  <div className="bg-card border border-border rounded-2xl p-4 flex flex-col justify-between min-h-[120px]">
+const StatCard = ({ title, value, subtitle, icon, prefix, onClick }: StatCardProps) => {
+  const Tag: any = onClick ? "button" : "div";
+  return (
+  <Tag
+    onClick={onClick}
+    className={`bg-card border border-border rounded-2xl p-4 flex flex-col justify-between min-h-[120px] text-left ${onClick ? "hover:border-accent/40 transition-colors" : ""}`}
+  >
     <div className="flex items-start justify-between">
       <span className="text-[14px] font-bold text-foreground">{title}</span>
       <span className="text-muted-foreground/60">{icon}</span>
@@ -25,8 +31,9 @@ const StatCard = ({ title, value, subtitle, icon, prefix }: StatCardProps) => (
       <span className="text-[32px] font-black text-accent leading-none">{value}</span>
     </div>
     <span className="text-[11px] text-muted-foreground mt-2">{subtitle}</span>
-  </div>
-);
+  </Tag>
+  );
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -48,21 +55,49 @@ const Dashboard = () => {
         { data: prof },
         { count: savedYouCount },
         { count: savedByMeCount },
-        { count: matchesCount },
         { data: entries },
         { data: notifs },
         { count: pendingRequests },
       ] = await Promise.all([
         supabase.from("profiles").select("username, avatar_url").eq("id", user.id).maybeSingle(),
-        supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saved_id", user.id),
         supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saver_id", user.id),
-        supabase.from("partner_connections").select("*", { count: "exact", head: true }).or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`).eq("status", "accepted"),
+        supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saver_id", user.id),
         supabase.from("journal_entries").select("id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
         supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         supabase.from("partner_connections").select("*", { count: "exact", head: true }).eq("receiver_id", user.id).eq("status", "pending"),
       ]);
 
       setProfile(prof || null);
+
+      // Matches count: traders with 90%+ score (excluding existing connections & blocks)
+      let matchesCount = 0;
+      try {
+        const [{ data: myTrading }, { data: myProfile }, { data: connRows }, { data: blockedRows }] = await Promise.all([
+          supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+          supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+          supabase.from("partner_connections").select("requester_id, receiver_id").or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
+          supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
+        ]);
+        const excluded = new Set<string>([user.id]);
+        (connRows || []).forEach((c: any) => { excluded.add(c.requester_id); excluded.add(c.receiver_id); });
+        (blockedRows || []).forEach((b: any) => excluded.add(b.blocked_id));
+
+        const { data: allProfiles } = await supabase
+          .from("profiles").select("*").neq("id", user.id).eq("onboarding_completed", true);
+        const eligible = (allProfiles || []).filter((p: any) => !excluded.has(p.id));
+        if (eligible.length > 0 && myTrading) {
+          const ids = eligible.map((p: any) => p.id);
+          const { data: allTrading } = await supabase.from("trading_profiles").select("*").in("user_id", ids);
+          const tMap = new Map<string, any>();
+          (allTrading || []).forEach((t: any) => tMap.set(t.user_id, t));
+          matchesCount = eligible.reduce((acc: number, p: any) => {
+            const r = computeMatch(myTrading, tMap.get(p.id), myProfile, p);
+            return !r.excluded && r.pct >= 90 ? acc + 1 : acc;
+          }, 0);
+        }
+      } catch (e) {
+        console.error("matches calc failed", e);
+      }
 
       // Streak calculations
       const days = new Set((entries || []).map(e => e.created_at.slice(0, 10)));
@@ -85,7 +120,7 @@ const Dashboard = () => {
       setStats({
         savedYou: savedYouCount || 0,
         savedTotal: savedByMeCount || 0,
-        matches: matchesCount || 0,
+        matches: matchesCount,
         streak,
         maxStreak,
         logs: entries?.length || 0,
@@ -208,12 +243,14 @@ const Dashboard = () => {
             value={stats.savedYou}
             subtitle="Who you saved"
             icon={<Inbox className="w-5 h-5" strokeWidth={1.6} />}
+            onClick={() => navigate("/saved")}
           />
           <StatCard
             title="Matches"
             value={stats.matches}
             subtitle="90% and up"
             icon={<MessageSquareHeart className="w-5 h-5" strokeWidth={1.6} />}
+            onClick={() => navigate("/discover")}
           />
           <StatCard
             title="Daily Streak"
