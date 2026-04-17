@@ -19,6 +19,7 @@ import Profile from "./pages/Profile";
 import ViewProfile from "./pages/ViewProfile";
 import TradingLog from "./pages/TradingLog";
 import Saved from "./pages/Saved";
+import MatchProfile from "./pages/MatchProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/profile/:userId" element={<ViewProfile />} />
           <Route path="/trading-log" element={<TradingLog />} />
           <Route path="/saved" element={<Saved />} />
+          <Route path="/match/:userId" element={<MatchProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Zap } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
-import MatchExpandedModal from "@/components/MatchExpandedModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { computeMatch } from "@/lib/matchUtils";
@@ -49,7 +48,7 @@ const Discover = () => {
   const [filters, setFilters] = useState<{ market: string | null; session: string | null; experience: string | null }>({
     market: null, session: null, experience: null,
   });
-  const [expandedMatch, setExpandedMatch] = useState<MatchCandidate | null>(null);
+  
 
   useEffect(() => {
     const load = async () => {
@@ -213,7 +212,7 @@ const Discover = () => {
               {filtered.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => setExpandedMatch(m)}
+                  onClick={() => navigate(`/match/${m.id}`, { state: { matchPct: m.matchPct } })}
                   className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors h-[96px]"
                 >
                   <div className="w-[96px] h-full shrink-0 bg-secondary">
@@ -275,17 +274,6 @@ const Discover = () => {
         </div>
       </div>
 
-      {expandedMatch && (
-        <MatchExpandedModal
-          userId={expandedMatch.id}
-          matchPct={expandedMatch.matchPct}
-          onClose={() => setExpandedMatch(null)}
-          onPassed={() => {
-            setMatches((prev) => prev.filter((m) => m.id !== expandedMatch.id));
-            setExpandedMatch(null);
-          }}
-        />
-      )}
     </AppLayout>
   );
 };
