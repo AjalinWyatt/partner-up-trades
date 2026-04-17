@@ -239,8 +239,20 @@ const Discover = () => {
                       </div>
                       <div className="shrink-0 flex flex-col items-end">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-[18px] h-[18px] rounded-full border-[1.5px] border-accent flex items-center justify-center">
-                            <Zap className="w-2.5 h-2.5 text-accent" fill="currentColor" strokeWidth={0} />
+                          <div className="relative w-[20px] h-[20px]">
+                            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                              <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
+                              <circle
+                                cx="18" cy="18" r="16" fill="none"
+                                stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round"
+                                strokeDasharray={`${(m.matchPct / 100) * 100.53} 100.53`}
+                              />
+                            </svg>
+                            <Zap
+                              className="absolute inset-0 m-auto w-2.5 h-2.5 text-accent"
+                              fill="currentColor"
+                              strokeWidth={0}
+                            />
                           </div>
                           <span className="text-[15px] font-black text-foreground">{m.matchPct}%</span>
                         </div>
