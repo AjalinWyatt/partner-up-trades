@@ -258,14 +258,7 @@ const Discover = () => {
 
         {/* Results — large card style matching mockup */}
         <div className="px-5 mt-2">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center py-8">
-              <h3 className="text-[15px] font-bold text-foreground mb-1">No partner matches yet</h3>
-              <p className="text-[12px] text-muted-foreground max-w-[260px]">
-                We're still finding the best trading partners for you. Check back soon!
-              </p>
-            </div>
-          ) : (
+          {filtered.length === 0 ? null : (
             <div className="space-y-3">
               {filtered.map((m) => (
                 <button
