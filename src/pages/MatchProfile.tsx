@@ -181,7 +181,7 @@ const MatchProfile = () => {
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="px-4 mt-3">
+          <div className="px-4 mt-3 mt-auto">
             {/* Two-toned card */}
             <div className="relative">
               <div className="bg-card rounded-3xl overflow-hidden border border-border">
