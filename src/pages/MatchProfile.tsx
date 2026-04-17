@@ -1,14 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChevronDown, ChevronsUp, Bookmark, Gem, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Props {
-  userId: string;
-  matchPct: number;
-  onClose: () => void;
-  onPassed: () => void;
-}
 
 interface ProfileFull {
   id: string;
@@ -36,21 +30,31 @@ const calcAge = (dob: string | null) => {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 };
 
-const MatchExpandedModal = ({ userId, matchPct, onClose, onPassed }: Props) => {
+const MatchProfile = () => {
+  const { userId = "" } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const matchPct: number = (location.state as any)?.matchPct ?? 0;
+
   const [profile, setProfile] = useState<ProfileFull | null>(null);
   const [trading, setTrading] = useState<TradingFull | null>(null);
+  const [myTrading, setMyTrading] = useState<TradingFull | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: p }, { data: t }] = await Promise.all([
+      const { data: { session } } = await supabase.auth.getSession();
+      const me = session?.user;
+      const [{ data: p }, { data: t }, { data: mt }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        me ? supabase.from("trading_profiles").select("*").eq("user_id", me.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
       setProfile(p as any);
       setTrading(t as any);
+      setMyTrading(mt as any);
       setLoading(false);
     };
     load();
@@ -64,7 +68,7 @@ const MatchExpandedModal = ({ userId, matchPct, onClose, onPassed }: Props) => {
     await supabase.from("passed_profiles").insert({ passer_id: me.id, passed_id: userId });
     toast({ title: "Passed", description: "You won't see this trader again." });
     setBusy(false);
-    onPassed();
+    navigate("/discover");
   };
 
   const handleSave = async () => {
@@ -79,7 +83,7 @@ const MatchExpandedModal = ({ userId, matchPct, onClose, onPassed }: Props) => {
       toast({ title: "Saved", description: "Added to My Saved." });
     }
     setBusy(false);
-    onClose();
+    navigate("/discover");
   };
 
   const handleSendRequest = async () => {
@@ -96,7 +100,7 @@ const MatchExpandedModal = ({ userId, matchPct, onClose, onPassed }: Props) => {
       toast({ title: "Request sent!", description: "They'll be notified." });
     }
     setBusy(false);
-    onClose();
+    navigate("/discover");
   };
 
   const age = calcAge(profile?.date_of_birth ?? null);
@@ -104,15 +108,31 @@ const MatchExpandedModal = ({ userId, matchPct, onClose, onPassed }: Props) => {
   const isPro = trading?.experience_level === "Profitable trader";
   const dasharray = `${(matchPct / 100) * 100.53} 100.53`;
 
+  // "Why We Match" — compute shared attributes
+  const reasons: string[] = [];
+  if (trading && myTrading) {
+    const sharedMarkets = (trading.markets || []).filter((m) => (myTrading.markets || []).includes(m));
+    const sharedStyles = (trading.trading_style || []).filter((m) => (myTrading.trading_style || []).includes(m));
+    const sharedStrategies = (trading.strategies || []).filter((m) => (myTrading.strategies || []).includes(m));
+    const sharedSessions = (trading.sessions || []).filter((m) => (myTrading.sessions || []).includes(m));
+    if (sharedMarkets.length) reasons.push(`You both trade ${sharedMarkets.join(", ")}`);
+    if (sharedStyles.length) reasons.push(`Shared trading style: ${sharedStyles.join(", ")}`);
+    if (sharedStrategies.length) reasons.push(`Common strategy: ${sharedStrategies.join(", ")}`);
+    if (sharedSessions.length) reasons.push(`Active in the same ${sharedSessions.join(", ")} session`);
+    if (trading.experience_level && trading.experience_level === myTrading.experience_level) {
+      reasons.push(`Same experience level: ${trading.experience_level}`);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] bg-background overflow-y-auto">
       <div className="min-h-full pb-8">
         {/* Header */}
         <div className="px-5 pt-5 flex items-center justify-between">
           <button
-            onClick={onClose}
+            onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center"
-            aria-label="Close"
+            aria-label="Back"
           >
             <ChevronDown className="w-6 h-6 text-foreground" />
           </button>
@@ -199,12 +219,24 @@ const MatchExpandedModal = ({ userId, matchPct, onClose, onPassed }: Props) => {
               )}
             </div>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p className="px-5 mt-4 text-[14px] text-foreground/85 leading-[1.55]">
-                {profile.bio}
-              </p>
-            )}
+            {/* Why We Match */}
+            <div className="px-5 mt-5">
+              <h3 className="text-[16px] font-black text-foreground mb-2">Why We Match</h3>
+              {reasons.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {reasons.map((r, i) => (
+                    <li key={i} className="text-[14px] text-foreground/85 leading-[1.55] flex gap-2">
+                      <span className="text-accent shrink-0">•</span>
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[14px] text-foreground/70 leading-[1.55]">
+                  Based on your shared trader profile and goals.
+                </p>
+              )}
+            </div>
 
             {/* Stats row */}
             <div className="px-5 mt-5 grid grid-cols-3 gap-3">
@@ -266,4 +298,4 @@ const ActionButton = ({
   </div>
 );
 
-export default MatchExpandedModal;
+export default MatchProfile;
