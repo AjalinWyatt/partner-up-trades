@@ -16,6 +16,7 @@ interface ProfileFull {
   city: string | null;
   state: string | null;
   country: string | null;
+  hobbies: string[] | null;
 }
 
 interface TradingFull {
@@ -39,8 +40,9 @@ const MatchProfile = () => {
   const matchPct: number = (location.state as any)?.matchPct ?? 0;
 
   const [profile, setProfile] = useState<ProfileFull | null>(null);
-  const [trading, setTrading] = useState<TradingFull | null>(null);
-  const [myTrading, setMyTrading] = useState<TradingFull | null>(null);
+  const [trading, setTrading] = useState<any>(null);
+  const [myTrading, setMyTrading] = useState<any>(null);
+  const [myProfile, setMyProfile] = useState<any>(null);
   const [me, setMe] = useState<{ avatar_url: string | null; username: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -53,12 +55,13 @@ const MatchProfile = () => {
         supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
         meUser ? supabase.from("trading_profiles").select("*").eq("user_id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
-        meUser ? supabase.from("profiles").select("avatar_url, username").eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        meUser ? supabase.from("profiles").select("*").eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
       setProfile(p as any);
-      setTrading(t as any);
-      setMyTrading(mt as any);
-      setMe(mp as any);
+      setTrading(t);
+      setMyTrading(mt);
+      setMyProfile(mp);
+      setMe(mp ? { avatar_url: (mp as any).avatar_url, username: (mp as any).username } : null);
       setLoading(false);
     };
     load();
@@ -114,16 +117,33 @@ const MatchProfile = () => {
 
   const reasons: string[] = [];
   if (trading && myTrading) {
-    const sharedMarkets = (trading.markets || []).filter((m) => (myTrading.markets || []).includes(m));
-    const sharedStyles = (trading.trading_style || []).filter((m) => (myTrading.trading_style || []).includes(m));
-    const sharedStrategies = (trading.strategies || []).filter((m) => (myTrading.strategies || []).includes(m));
-    const sharedSessions = (trading.sessions || []).filter((m) => (myTrading.sessions || []).includes(m));
-    if (sharedMarkets.length) reasons.push(`You both trade ${sharedMarkets.join(", ")}`);
-    if (sharedStyles.length) reasons.push(`Shared trading style: ${sharedStyles.join(", ")}`);
-    if (sharedStrategies.length) reasons.push(`Common strategy: ${sharedStrategies.join(", ")}`);
+    const inter = (a: any, b: any) => (a || []).filter((x: any) => (b || []).includes(x));
+    const sharedMarkets = inter(trading.markets, myTrading.markets);
+    const sharedStyles = inter(trading.trading_style, myTrading.trading_style);
+    const sharedStrategies = inter(trading.strategies, myTrading.strategies);
+    const sharedSessions = inter(trading.sessions, myTrading.sessions);
+    const sharedTimeframes = inter(trading.timeframes, myTrading.timeframes);
+    const sharedInstruments = inter(trading.instruments, myTrading.instruments);
+    const sharedGoals = inter(trading.primary_goal, myTrading.primary_goal);
+    const sharedConnTypes = inter(trading.connection_types, myTrading.connection_types);
+    const sharedStruggles = inter(trading.struggles, myTrading.struggles);
+    const sharedHobbies = inter(profile?.hobbies, myProfile?.hobbies);
+
+    if (sharedMarkets.length) reasons.push(`Both trade ${sharedMarkets.join(", ")}`);
+    if (sharedStyles.length) reasons.push(`Same trading style: ${sharedStyles.join(", ")}`);
+    if (sharedStrategies.length) reasons.push(`Shared strategy: ${sharedStrategies.join(", ")}`);
     if (sharedSessions.length) reasons.push(`Active in the same ${sharedSessions.join(", ")} session`);
+    if (sharedTimeframes.length) reasons.push(`Common timeframe: ${sharedTimeframes.join(", ")}`);
+    if (sharedInstruments.length) reasons.push(`Trade the same instruments: ${sharedInstruments.slice(0, 3).join(", ")}`);
     if (trading.experience_level && trading.experience_level === myTrading.experience_level) {
       reasons.push(`Same experience level: ${trading.experience_level}`);
+    }
+    if (sharedGoals.length) reasons.push(`Same goal: ${sharedGoals.join(", ")}`);
+    if (sharedConnTypes.length) reasons.push(`Both want: ${sharedConnTypes.join(", ")}`);
+    if (sharedStruggles.length) reasons.push(`Relate on: ${sharedStruggles.slice(0, 2).join(", ")}`);
+    if (sharedHobbies.length) reasons.push(`Shared interests: ${sharedHobbies.slice(0, 3).join(", ")}`);
+    if (profile?.country && myProfile?.country && profile.country.toLowerCase() === myProfile.country.toLowerCase()) {
+      reasons.push(`Both based in ${profile.country}`);
     }
   }
 
@@ -161,126 +181,126 @@ const MatchProfile = () => {
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="px-4 mt-4">
+          <div className="px-4 mt-3">
             {/* Two-toned card */}
             <div className="bg-card rounded-3xl overflow-hidden border border-border">
-              {/* Photo */}
-              <div className="relative aspect-[4/5] bg-secondary">
+              {/* Photo — compact */}
+              <div className="relative aspect-[16/10] bg-secondary">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-                    <span className="text-6xl font-black text-foreground">
+                    <span className="text-5xl font-black text-foreground">
                       {(profile.full_name || profile.username || "?").slice(0, 1).toUpperCase()}
                     </span>
                   </div>
                 )}
 
                 {isPro && (
-                  <div className="absolute top-4 left-4 bg-accent text-accent-foreground rounded-full pl-3 pr-4 py-1.5 flex items-center gap-1.5">
-                    <Gem className="w-3.5 h-3.5" fill="currentColor" />
-                    <span className="text-[13px] font-bold">Pro Trader</span>
+                  <div className="absolute top-3 left-3 bg-accent text-accent-foreground rounded-full pl-2.5 pr-3 py-1 flex items-center gap-1.5">
+                    <Gem className="w-3 h-3" fill="currentColor" />
+                    <span className="text-[11px] font-bold">Pro Trader</span>
                   </div>
                 )}
 
                 {/* Match badge */}
-                <div className="absolute bottom-4 right-4 bg-background/85 backdrop-blur rounded-2xl px-3 py-2 flex items-center gap-2">
-                  <div className="relative w-7 h-7">
+                <div className="absolute bottom-3 right-3 bg-background/85 backdrop-blur rounded-xl px-2.5 py-1.5 flex items-center gap-1.5">
+                  <div className="relative w-6 h-6">
                     <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                       <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
                       <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round" strokeDasharray={dasharray} />
                     </svg>
-                    <Zap className="absolute inset-0 m-auto w-3 h-3 text-accent" fill="currentColor" strokeWidth={0} />
+                    <Zap className="absolute inset-0 m-auto w-2.5 h-2.5 text-accent" fill="currentColor" strokeWidth={0} />
                   </div>
                   <div className="leading-tight">
-                    <div className="text-[16px] font-black text-foreground">{matchPct}%</div>
-                    <div className="text-[10px] text-muted-foreground -mt-0.5">Match</div>
+                    <div className="text-[14px] font-black text-foreground">{matchPct}%</div>
+                    <div className="text-[9px] text-muted-foreground -mt-0.5">Match</div>
                   </div>
                 </div>
               </div>
 
-              {/* Card body */}
-              <div className="px-5 pt-4 pb-5">
+              {/* Card body — tight */}
+              <div className="px-4 pt-3 pb-4">
                 {/* Name + age */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[20px] font-black text-accent truncate">
+                  <span className="text-[17px] font-black text-accent truncate">
                     {profile.full_name || (profile.username ? `@${profile.username}` : "Trader")}
                   </span>
                   {age && (
                     <>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-[18px] font-black text-foreground">{age}</span>
+                      <span className="text-muted-foreground text-sm">•</span>
+                      <span className="text-[15px] font-black text-foreground">{age}</span>
                     </>
                   )}
                 </div>
 
-                {/* Pills */}
-                <div className="mt-3 flex flex-wrap gap-2">
+                {/* Pills — single row */}
+                <div className="mt-2 flex items-center gap-1.5 flex-nowrap overflow-hidden">
                   {loc && (
-                    <span className="px-3.5 py-1.5 rounded-full bg-accent text-accent-foreground text-[12px] font-bold">
+                    <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold whitespace-nowrap">
                       {loc}
                     </span>
                   )}
                   {profile.gender && (
-                    <span className="px-3.5 py-1.5 rounded-full border border-border text-foreground text-[12px] font-semibold">
+                    <span className="px-2.5 py-1 rounded-full border border-border text-foreground text-[10px] font-semibold whitespace-nowrap">
                       {profile.gender}
                     </span>
                   )}
                   {trading?.markets?.[0] && (
-                    <span className="px-3.5 py-1.5 rounded-full border border-border text-foreground text-[12px] font-semibold">
+                    <span className="px-2.5 py-1 rounded-full border border-border text-foreground text-[10px] font-semibold whitespace-nowrap">
                       {trading.markets[0]} Trader
                     </span>
                   )}
                 </div>
 
                 {/* Why We Match */}
-                <div className="mt-5">
-                  <h3 className="text-[16px] font-black text-foreground mb-2">Why We Match</h3>
+                <div className="mt-3">
+                  <h3 className="text-[13px] font-black text-foreground mb-1">Why We Match</h3>
                   {reasons.length > 0 ? (
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-0.5">
                       {reasons.map((r, i) => (
-                        <li key={i} className="text-[14px] text-foreground/85 leading-[1.55] flex gap-2">
+                        <li key={i} className="text-[11.5px] text-foreground/85 leading-[1.4] flex gap-1.5">
                           <span className="text-accent shrink-0">•</span>
                           <span>{r}</span>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-[14px] text-foreground/70 leading-[1.55]">
+                    <p className="text-[11.5px] text-foreground/70 leading-[1.4]">
                       Based on your shared trader profile and goals.
                     </p>
                   )}
                 </div>
 
                 {/* Stats row */}
-                <div className="mt-5 grid grid-cols-3 gap-3">
+                <div className="mt-3 grid grid-cols-3 gap-2">
                   <Stat label="Trading Style" value={trading?.trading_style?.[0] || "—"} />
                   <Stat label="Strategy" value={trading?.strategies?.[0] || "—"} />
                   <Stat label="Session" value={trading?.sessions?.[0] || "—"} />
                 </div>
 
                 {/* Actions inside card */}
-                <div className="mt-6 flex items-end justify-between">
+                <div className="mt-4 flex items-end justify-between">
                   <ActionButton
                     label="Pass"
                     onClick={handlePass}
                     disabled={busy}
                     bg="bg-background border border-border"
-                    icon={<ChevronDown className="w-7 h-7 text-foreground" strokeWidth={2.5} />}
+                    icon={<ChevronDown className="w-5 h-5 text-foreground" strokeWidth={2.5} />}
                   />
                   <ActionButton
                     label="Save"
                     onClick={handleSave}
                     disabled={busy}
                     bg="bg-muted"
-                    icon={<Bookmark className="w-6 h-6 text-foreground" strokeWidth={2} />}
+                    icon={<Bookmark className="w-4 h-4 text-foreground" strokeWidth={2} />}
                   />
                   <ActionButton
                     label="Send Request"
                     onClick={handleSendRequest}
                     disabled={busy}
                     bg="bg-accent"
-                    icon={<ChevronsUp className="w-7 h-7 text-accent-foreground" strokeWidth={2.5} />}
+                    icon={<ChevronsUp className="w-5 h-5 text-accent-foreground" strokeWidth={2.5} />}
                   />
                 </div>
               </div>
