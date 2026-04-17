@@ -16,7 +16,7 @@ const BottomNav = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around rounded-t-[30px] border-t border-border/60 bg-card/95 px-4 pt-4 pb-6 backdrop-blur-xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around rounded-t-[28px] bg-card/95 px-3 pt-2.5 pb-5 backdrop-blur-xl">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = location.pathname === tab.path;
@@ -30,13 +30,13 @@ const BottomNav = () => {
           >
             {active ? (
               <div
-                className="flex h-[58px] w-[58px] items-center justify-center bg-accent"
+                className="flex h-[44px] w-[40px] items-center justify-center bg-accent"
                 style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
               >
-                <Icon className="h-7 w-7 text-accent-foreground" strokeWidth={2.1} />
+                <Icon className="h-[20px] w-[20px] text-accent-foreground" strokeWidth={2} />
               </div>
             ) : (
-              <Icon className="h-8 w-8 text-foreground" strokeWidth={1.9} />
+              <Icon className="h-[22px] w-[22px] text-foreground" strokeWidth={1.8} />
             )}
           </button>
         );
