@@ -563,7 +563,7 @@ const Onboarding = () => {
                       frequency,
                       experience_level: experience,
                       primary_goal: goals,
-                      loss_response: lossResponse,
+                      loss_response: lossResponse.join(", ") || null,
                       struggles,
                       journaling,
                       trading_plan: tradingPlan,
