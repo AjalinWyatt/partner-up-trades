@@ -39,8 +39,9 @@ const MatchProfile = () => {
   const matchPct: number = (location.state as any)?.matchPct ?? 0;
 
   const [profile, setProfile] = useState<ProfileFull | null>(null);
-  const [trading, setTrading] = useState<TradingFull | null>(null);
-  const [myTrading, setMyTrading] = useState<TradingFull | null>(null);
+  const [trading, setTrading] = useState<any>(null);
+  const [myTrading, setMyTrading] = useState<any>(null);
+  const [myProfile, setMyProfile] = useState<any>(null);
   const [me, setMe] = useState<{ avatar_url: string | null; username: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -53,12 +54,13 @@ const MatchProfile = () => {
         supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
         meUser ? supabase.from("trading_profiles").select("*").eq("user_id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
-        meUser ? supabase.from("profiles").select("avatar_url, username").eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        meUser ? supabase.from("profiles").select("*").eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
       setProfile(p as any);
-      setTrading(t as any);
-      setMyTrading(mt as any);
-      setMe(mp as any);
+      setTrading(t);
+      setMyTrading(mt);
+      setMyProfile(mp);
+      setMe(mp ? { avatar_url: (mp as any).avatar_url, username: (mp as any).username } : null);
       setLoading(false);
     };
     load();
