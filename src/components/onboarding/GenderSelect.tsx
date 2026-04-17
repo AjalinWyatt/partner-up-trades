@@ -1,11 +1,27 @@
 import { cn } from "@/lib/utils";
-import { Mars, Venus, Link2 } from "lucide-react";
+import { Link2 } from "lucide-react";
 
-const iconFor = (label: string) => {
+const MaleIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="10" cy="14" r="5" />
+    <path d="M14.5 9.5 L20 4" />
+    <path d="M15 4 H20 V9" />
+  </svg>
+);
+
+const FemaleIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="9" r="5" />
+    <path d="M12 14 V21" />
+    <path d="M9 18 H15" />
+  </svg>
+);
+
+const iconFor = (label: string): (() => JSX.Element) => {
   const l = label.toLowerCase();
-  if (l.includes("female")) return Venus;
-  if (l.includes("male")) return Mars;
-  return Link2;
+  if (l.includes("female")) return FemaleIcon;
+  if (l.includes("male")) return MaleIcon;
+  return () => <Link2 className="w-4 h-4" />;
 };
 
 interface GenderSelectProps {
@@ -30,7 +46,7 @@ const GenderSelect = ({ options, selected, onSelect }: GenderSelectProps) => (
               : "border-border bg-transparent text-foreground hover:border-accent/60"
           )}
         >
-          <Icon className="w-4 h-4" />
+          <Icon />
           {opt}
         </button>
       );
