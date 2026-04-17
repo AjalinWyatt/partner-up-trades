@@ -65,7 +65,7 @@ const Onboarding = () => {
   // Step 4
   const [experience, setExperience] = useState<string | null>(null);
   const [goals, setGoals] = useState<string[]>([]);
-  const [lossResponse, setLossResponse] = useState<string | null>(null);
+  const [lossResponse, setLossResponse] = useState<string[]>([]);
 
   // Step 5
   const [struggles, setStruggles] = useState<string[]>([]);
@@ -388,11 +388,11 @@ const Onboarding = () => {
             <div className="text-[15px] text-foreground mb-3 mt-8">What happens after a loss</div>
             <div className="flex flex-col gap-3">
               {["Review it calmly & journal", "Vent to someone & move on", "Go quiet & process alone", "Jump back in to recover it"].map((opt) => {
-                const isOn = lossResponse === opt;
+                const isOn = lossResponse.includes(opt);
                 return (
                   <button
                     key={opt}
-                    onClick={() => setLossResponse(opt)}
+                    onClick={() => toggle(lossResponse, setLossResponse)(opt)}
                     className={`w-full px-5 py-3 rounded-full border text-left text-[14px] font-medium transition-all ${
                       isOn ? "bg-accent border-accent text-accent-foreground" : "border-border bg-transparent text-foreground hover:border-accent/60"
                     }`}
@@ -563,7 +563,7 @@ const Onboarding = () => {
                       frequency,
                       experience_level: experience,
                       primary_goal: goals,
-                      loss_response: lossResponse,
+                      loss_response: lossResponse.join(", ") || null,
                       struggles,
                       journaling,
                       trading_plan: tradingPlan,
