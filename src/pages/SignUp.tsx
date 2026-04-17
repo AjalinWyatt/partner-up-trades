@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, User, Mail, Lock } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, User, Mail, Lock, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import LogoHeader from "@/components/LogoHeader";
-import AnimatedGlobe from "@/components/AnimatedGlobe";
+import AuthGlobeBackground from "@/components/AuthGlobeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
@@ -81,13 +81,6 @@ const SignUp = () => {
     }
   };
 
-  const handleOAuth = async (provider: "google" | "apple") => {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-    });
-    if (error) toast.error(error.message);
-  };
-
   if (showOtp) {
     return (
       <div className="flex flex-col min-h-screen bg-background px-6 py-8">
@@ -117,7 +110,7 @@ const SignUp = () => {
           <Button
             onClick={handleVerifyOtp}
             disabled={otp.length < 6 || verifying}
-            className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-sm font-bold mt-8 border-none rounded-xl"
+            className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-sm font-bold mt-8 border-none rounded-2xl"
           >
             {verifying ? "Verifying…" : "Verify & Continue"}
             {!verifying && <ArrowRight className="ml-2 w-4 h-4" />}
@@ -132,96 +125,112 @@ const SignUp = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Globe header */}
-      <div className="relative pt-6 pb-1 flex flex-col items-center">
-        <div className="w-28 h-28">
-          <AnimatedGlobe />
-        </div>
-        <h1 className="text-2xl font-black text-foreground tracking-tight mt-1">
+    <div className="relative flex flex-col min-h-screen bg-background overflow-hidden">
+      {/* Globe background bleeding from top (smaller for sign-up) */}
+      <AuthGlobeBackground height={340} />
+
+      {/* Back button */}
+      <button
+        onClick={() => navigate("/sign-in")}
+        className="absolute top-6 left-5 z-20 w-10 h-10 flex items-center justify-center text-foreground"
+      >
+        <ChevronLeft className="w-7 h-7" />
+      </button>
+
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col px-7 pb-8 pt-[200px] max-w-md mx-auto w-full">
+        <h1 className="text-[40px] font-black text-foreground tracking-tight text-center leading-none">
           Traders<span className="font-black">World</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Create an account</p>
-      </div>
+        <p className="text-[18px] text-foreground text-center mt-4">Create an account</p>
 
-      {/* Form */}
-      <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full px-8 pb-8">
-        <form onSubmit={handleSignUp} className="flex flex-col gap-5 mt-4">
-          {/* First Name */}
-          <div className="flex items-center gap-3 border-b border-border pb-2">
-            <User className="w-4 h-4 text-accent shrink-0" />
-            <input
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-              required
-            />
+        {/* Form */}
+        <form onSubmit={handleSignUp} className="flex flex-col gap-6 mt-8">
+          <div>
+            <div className="flex items-center gap-3 pb-2">
+              <User className="w-5 h-5 text-accent shrink-0" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth={1.5} />
+              <input
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
+                required
+              />
+            </div>
+            <div className="h-px bg-border" />
           </div>
 
-          {/* Last Name */}
-          <div className="flex items-center gap-3 border-b border-border pb-2">
-            <User className="w-4 h-4 text-accent shrink-0" />
-            <input
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-              required
-            />
+          <div>
+            <div className="flex items-center gap-3 pb-2">
+              <User className="w-5 h-5 text-accent shrink-0" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth={1.5} />
+              <input
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
+                required
+              />
+            </div>
+            <div className="h-px bg-border" />
           </div>
 
-          {/* Email */}
-          <div className="flex items-center gap-3 border-b border-border pb-2">
-            <Mail className="w-4 h-4 text-accent shrink-0" />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-              required
-            />
+          <div>
+            <div className="flex items-center gap-3 pb-2">
+              <Mail className="w-5 h-5 text-accent shrink-0" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth={1.5} />
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
+                required
+              />
+            </div>
+            <div className="h-px bg-border" />
           </div>
 
-          {/* Password */}
-          <div className="flex items-center gap-3 border-b border-border pb-2">
-            <Lock className="w-4 h-4 text-accent shrink-0" />
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-              required
-              minLength={6}
-            />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground shrink-0">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+          <div>
+            <div className="flex items-center gap-3 pb-2">
+              <Lock className="w-5 h-5 text-accent shrink-0" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth={1.5} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
+                required
+                minLength={6}
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground shrink-0">
+                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
+            </div>
+            <div className="h-px bg-border" />
           </div>
 
-          {/* Confirm Password */}
-          <div className="flex items-center gap-3 border-b border-border pb-2">
-            <Lock className="w-4 h-4 text-accent shrink-0" />
-            <input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-              required
-              minLength={6}
-            />
-            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-muted-foreground hover:text-foreground shrink-0">
-              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+          <div>
+            <div className="flex items-center gap-3 pb-2">
+              <Lock className="w-5 h-5 text-accent shrink-0" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth={1.5} />
+              <input
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
+                required
+                minLength={6}
+              />
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-muted-foreground hover:text-foreground shrink-0">
+                {showConfirm ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
+            </div>
+            <div className="h-px bg-border" />
           </div>
 
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground text-sm font-bold rounded-xl border-none mt-2"
+            className="w-full h-14 bg-accent hover:bg-accent/90 text-accent-foreground text-[16px] font-bold rounded-2xl border-none mt-4 shadow-none"
           >
             {loading ? "Creating…" : "Sign Up"}
           </Button>
@@ -233,9 +242,9 @@ const SignUp = () => {
           <span className="text-accent cursor-pointer">Privacy Policy</span>.
         </p>
 
-        <p className="text-sm text-muted-foreground text-center mt-6">
-          Don't have an Account?{" "}
-          <button onClick={() => navigate("/sign-in")} className="text-accent font-medium hover:underline">
+        <p className="text-sm text-muted-foreground text-center mt-4">
+          Already have an account?{" "}
+          <button onClick={() => navigate("/sign-in")} className="text-accent font-semibold hover:underline">
             Sign In
           </button>
         </p>
