@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import LogoHeader from "@/components/LogoHeader";
+
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import StepperGlobe from "@/components/onboarding/StepperGlobe";
 import PillSelect from "@/components/onboarding/PillSelect";
@@ -25,7 +25,7 @@ const StepHeader = ({ title, accent, step, total }: { title: string; accent: str
   </div>
 );
 
-const TOTAL_STEPS = 7;
+
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ const Onboarding = () => {
     exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%", opacity: 0 }),
   };
 
-  const progressPct = step === 0 ? 0 : (step / TOTAL_STEPS) * 100;
+  
 
   const renderStep = () => {
     switch (step) {
@@ -127,8 +127,8 @@ const Onboarding = () => {
 
       case 1:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Let's Complete your" accent="Profile" step={1} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Let's Complete your" accent="Profile" step={1} total={5} />
 
             {/* Avatar upload - centered */}
             <input
@@ -241,8 +241,8 @@ const Onboarding = () => {
 
       case 2:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Your Trading" accent="World" step={2} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Your Trading" accent="World" step={2} total={5} />
 
             <div className="text-[15px] text-foreground mb-3">What Markets do you trade?</div>
             <PillSelect options={["Forex", "Futures", "Options"]} selected={markets} onToggle={toggle(markets, setMarkets)} />
@@ -279,8 +279,8 @@ const Onboarding = () => {
 
       case 3:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Your Trading" accent="Approach" step={3} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Your Trading" accent="Approach" step={3} total={5} />
 
             <div className="text-[15px] text-foreground mb-3">Trading Style</div>
             <PillSelect options={["Scalper", "Swing", "Day Trader", "Position"]} selected={styles} onToggle={toggle(styles, setStyles)} />
@@ -298,8 +298,8 @@ const Onboarding = () => {
 
       case 4:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Your Trading" accent="Experience" step={4} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Your Trading" accent="Experience" step={4} total={5} />
 
             <div className="text-[15px] text-foreground mb-4">Experience level</div>
             <CardSelect
@@ -344,8 +344,8 @@ const Onboarding = () => {
 
       case 5:
         return (
-          <div className="px-7 pb-32">
-            <StepHeader title="Matching" accent="Preferences" step={5} total={6} />
+          <div className="px-7 pb-32 pt-14">
+            <StepHeader title="Matching" accent="Preferences" step={5} total={5} />
 
             <div className="text-[15px] text-foreground mb-3">Looking for</div>
             <GenderSelect options={["Male", "Female", "Co-Ed"]} selected={lookingFor} onSelect={setLookingFor} />
@@ -383,28 +383,18 @@ const Onboarding = () => {
     5: "Complete Setup",
   };
 
+
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
-      {/* Nav bar (hidden on step 0 and 7) */}
+      {/* Minimal back button on steps 1-6 — matches mockups (no top progress bar, no skip) */}
       {step > 0 && step < 7 && (
-        <div className="flex items-center justify-between px-7 pt-4 pb-2 shrink-0">
-          <button onClick={() => goTo(step - 1)} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:border-success transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <LogoHeader compact />
-          <button onClick={() => goTo(Math.min(step + 1, 7))} className="text-xs font-semibold text-muted-foreground px-2 py-1">
-            Skip
-          </button>
-        </div>
-      )}
-
-      {/* Progress bar */}
-      {step > 0 && step < 7 && (
-        <div className="px-7 pb-3 shrink-0">
-          <div className="h-1 bg-border rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary to-success rounded-full transition-all duration-400" style={{ width: `${progressPct}%` }} />
-          </div>
-        </div>
+        <button
+          onClick={() => goTo(step - 1)}
+          className="absolute top-5 left-5 z-20 w-9 h-9 flex items-center justify-center text-foreground/80 hover:text-foreground"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
       )}
 
       {/* Content with slide animation */}
@@ -426,12 +416,11 @@ const Onboarding = () => {
       </div>
 
       {/* Bottom CTA */}
-      {step < 7 && (
-        <div className="absolute bottom-0 left-0 right-0 p-7 pt-16 bg-gradient-to-t from-background via-background to-transparent z-10">
+      {step < 6 && (
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-7 pt-16 bg-gradient-to-t from-background via-background to-transparent z-10">
           <button
             onClick={async () => {
-              if (step === 6) {
-                // Validate age 18+
+              if (step === 5) {
                 if (dateOfBirth) {
                   const dob = new Date(dateOfBirth);
                   const today = new Date();
@@ -443,18 +432,16 @@ const Onboarding = () => {
                     return;
                   }
                 }
-                // Validate location if reach is Local
                 if (reach === "Local" && (!city.trim() || !country.trim())) {
                   toast.error("City and Country are required for Local matching");
                   return;
                 }
-                goTo(7);
+                goTo(6);
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
-                   const user = session?.user;
-                   if (!user) throw new Error("Not authenticated");
+                  const user = session?.user;
+                  if (!user) throw new Error("Not authenticated");
 
-                  // Upload avatar if selected
                   let avatarUrl: string | null = null;
                   if (avatarFile) {
                     const ext = avatarFile.name.split(".").pop() || "jpg";
@@ -469,7 +456,6 @@ const Onboarding = () => {
                     avatarUrl = urlData.publicUrl;
                   }
 
-                  // Build location string for display
                   const locationParts = [city, state, country].filter(Boolean);
                   const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
 
@@ -526,20 +512,15 @@ const Onboarding = () => {
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
                   toast.error("Failed to save your profile. Please try again.");
-                  goTo(6);
+                  goTo(5);
                 }
               } else {
                 goTo(step + 1);
               }
             }}
-            className={
-              step === 0
-                ? "w-full py-4 rounded-2xl bg-accent text-[16px] font-bold text-accent-foreground flex items-center justify-center"
-                : "w-full py-4 rounded-xl bg-gradient-to-r from-primary to-success text-[15px] font-bold text-primary-foreground flex items-center justify-center gap-2"
-            }
+            className="w-full py-4 rounded-2xl bg-accent text-[16px] font-bold text-accent-foreground flex items-center justify-center hover:bg-accent/90 transition-colors"
           >
             {ctaLabels[step]}
-            {step !== 0 && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>
       )}
