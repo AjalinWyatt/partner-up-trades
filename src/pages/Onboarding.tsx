@@ -82,6 +82,40 @@ const Onboarding = () => {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
   const [locationEnabled, setLocationEnabled] = useState(true);
+  const [locating, setLocating] = useState(false);
+
+  const detectLocation = useCallback(() => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&zoom=10&addressdetails=1`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          const data = await res.json();
+          const a = data?.address ?? {};
+          setCity(a.city || a.town || a.village || a.hamlet || a.suburb || "");
+          setState(a.state || a.region || "");
+          setCountry(a.country || "");
+          toast.success("Location detected — feel free to edit");
+        } catch {
+          toast.error("Couldn't fetch your location");
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        toast.error(err.code === 1 ? "Location permission denied" : "Couldn't get your location");
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+    );
+  }, []);
 
   const toggle = useCallback((arr: string[], setArr: React.Dispatch<React.SetStateAction<string[]>>) => {
     return (val: string) => {
