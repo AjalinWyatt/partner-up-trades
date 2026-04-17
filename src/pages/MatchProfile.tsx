@@ -116,16 +116,33 @@ const MatchProfile = () => {
 
   const reasons: string[] = [];
   if (trading && myTrading) {
-    const sharedMarkets = (trading.markets || []).filter((m) => (myTrading.markets || []).includes(m));
-    const sharedStyles = (trading.trading_style || []).filter((m) => (myTrading.trading_style || []).includes(m));
-    const sharedStrategies = (trading.strategies || []).filter((m) => (myTrading.strategies || []).includes(m));
-    const sharedSessions = (trading.sessions || []).filter((m) => (myTrading.sessions || []).includes(m));
-    if (sharedMarkets.length) reasons.push(`You both trade ${sharedMarkets.join(", ")}`);
-    if (sharedStyles.length) reasons.push(`Shared trading style: ${sharedStyles.join(", ")}`);
-    if (sharedStrategies.length) reasons.push(`Common strategy: ${sharedStrategies.join(", ")}`);
+    const inter = (a: any, b: any) => (a || []).filter((x: any) => (b || []).includes(x));
+    const sharedMarkets = inter(trading.markets, myTrading.markets);
+    const sharedStyles = inter(trading.trading_style, myTrading.trading_style);
+    const sharedStrategies = inter(trading.strategies, myTrading.strategies);
+    const sharedSessions = inter(trading.sessions, myTrading.sessions);
+    const sharedTimeframes = inter(trading.timeframes, myTrading.timeframes);
+    const sharedInstruments = inter(trading.instruments, myTrading.instruments);
+    const sharedGoals = inter(trading.primary_goal, myTrading.primary_goal);
+    const sharedConnTypes = inter(trading.connection_types, myTrading.connection_types);
+    const sharedStruggles = inter(trading.struggles, myTrading.struggles);
+    const sharedHobbies = inter(profile?.hobbies, myProfile?.hobbies);
+
+    if (sharedMarkets.length) reasons.push(`Both trade ${sharedMarkets.join(", ")}`);
+    if (sharedStyles.length) reasons.push(`Same trading style: ${sharedStyles.join(", ")}`);
+    if (sharedStrategies.length) reasons.push(`Shared strategy: ${sharedStrategies.join(", ")}`);
     if (sharedSessions.length) reasons.push(`Active in the same ${sharedSessions.join(", ")} session`);
+    if (sharedTimeframes.length) reasons.push(`Common timeframe: ${sharedTimeframes.join(", ")}`);
+    if (sharedInstruments.length) reasons.push(`Trade the same instruments: ${sharedInstruments.slice(0, 3).join(", ")}`);
     if (trading.experience_level && trading.experience_level === myTrading.experience_level) {
       reasons.push(`Same experience level: ${trading.experience_level}`);
+    }
+    if (sharedGoals.length) reasons.push(`Same goal: ${sharedGoals.join(", ")}`);
+    if (sharedConnTypes.length) reasons.push(`Both want: ${sharedConnTypes.join(", ")}`);
+    if (sharedStruggles.length) reasons.push(`Relate on: ${sharedStruggles.slice(0, 2).join(", ")}`);
+    if (sharedHobbies.length) reasons.push(`Shared interests: ${sharedHobbies.slice(0, 3).join(", ")}`);
+    if (profile?.country && myProfile?.country && profile.country.toLowerCase() === myProfile.country.toLowerCase()) {
+      reasons.push(`Both based in ${profile.country}`);
     }
   }
 
