@@ -57,9 +57,10 @@ const Discover = () => {
       const user = session?.user;
       if (!user) { setLoading(false); return; }
 
-      const [{ data: allConnections }, { data: blockedData }, { data: meData }] = await Promise.all([
+      const [{ data: allConnections }, { data: blockedData }, { data: passedData }, { data: meData }] = await Promise.all([
         supabase.from("partner_connections").select("requester_id, receiver_id").or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
         supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
+        supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
         supabase.from("profiles").select("avatar_url, username").eq("id", user.id).maybeSingle(),
       ]);
       setMe(meData || null);
@@ -67,6 +68,7 @@ const Discover = () => {
       const excludedIds = new Set<string>([user.id]);
       (allConnections || []).forEach((c: any) => { excludedIds.add(c.requester_id); excludedIds.add(c.receiver_id); });
       (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
+      (passedData || []).forEach((p: any) => excludedIds.add(p.passed_id));
 
       const { data: myTrading } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
       const { data: allProfiles } = await supabase.from("profiles").select("*").neq("id", user.id).eq("onboarding_completed", true);
