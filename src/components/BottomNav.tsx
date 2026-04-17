@@ -1,14 +1,14 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Users, BookOpen, MessageSquare } from "lucide-react";
+import { Home, Globe, AlignLeft, MessageSquare, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home" },
   { path: "/discover", icon: Globe, label: "Discover" },
-  { path: "/feed", icon: Globe, label: "Feed" },
+  { path: "/feed", icon: AlignLeft, label: "Feed" },
   { path: "/messages", icon: MessageSquare, label: "Messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log" },
-  { path: "/partners", icon: Users, label: "Partners" },
+  { path: "/partners", icon: User, label: "Partners" },
 ];
 
 const BottomNav = () => {
@@ -16,7 +16,7 @@ const BottomNav = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-14 bg-background/95 backdrop-blur-xl border-t border-border flex items-center justify-around px-2 pb-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl rounded-t-3xl flex items-center justify-around px-3 pt-3 pb-5 z-50">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = location.pathname === tab.path;
@@ -24,13 +24,19 @@ const BottomNav = () => {
           <button
             key={tab.path}
             onClick={() => navigate(tab.path)}
-            className={cn(
-              "flex flex-col items-center gap-0.5 transition-colors",
-              active ? "text-foreground" : "text-muted-foreground"
-            )}
+            className="flex items-center justify-center"
+            aria-label={tab.label}
           >
-            <Icon className="w-[22px] h-[22px]" strokeWidth={1.6} />
-            <span className="text-[9px] font-semibold">{tab.label}</span>
+            {active ? (
+              <div
+                className="w-12 h-[52px] flex items-center justify-center bg-accent"
+                style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
+              >
+                <Icon className="w-6 h-6 text-accent-foreground" strokeWidth={2} />
+              </div>
+            ) : (
+              <Icon className="w-7 h-7 text-foreground" strokeWidth={1.6} />
+            )}
           </button>
         );
       })}
