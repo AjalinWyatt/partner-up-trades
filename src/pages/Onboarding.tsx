@@ -93,25 +93,24 @@ const Onboarding = () => {
     switch (step) {
       case 0:
         return (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-7 pb-32">
-            <AnimatedGlobe />
-            <h1 className="text-[28px] font-black text-foreground tracking-tight leading-tight mt-6 mb-3">
-              Trading is better<br />with <span className="text-gradient-accent">your people.</span>
+          <div className="flex-1 flex flex-col items-center text-center px-7 pb-32 pt-10">
+            <h1 className="text-[28px] font-black text-foreground tracking-tight">
+              Traders<span className="font-black">World</span>
             </h1>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] mb-8">
-              Find your accountability partner, circle, or crew — matched to how you actually trade.
-            </p>
-            <div className="flex gap-14">
-              {[
-                { num: traderCount.toLocaleString(), label: "Active traders" },
-                { num: partnershipCount.toLocaleString(), label: "Partnerships" },
-              ].map(s => (
-                <div key={s.label}>
-                  <div className="text-[22px] font-black text-gradient-accent">{s.num}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">{s.label}</div>
-                </div>
-              ))}
+            <div className="flex-1 flex items-center justify-center w-full my-8">
+              <div className="w-full max-w-[340px]">
+                <AnimatedGlobe />
+              </div>
             </div>
+            <h2 className="text-[26px] font-bold text-foreground tracking-tight mb-3">
+              Let's Meet People!
+            </h2>
+            <p className="text-[15px] italic font-semibold text-foreground mb-5">
+              You're not trading alone!
+            </p>
+            <p className="text-[15px] text-muted-foreground leading-relaxed max-w-[320px]">
+              Join a community focused on accountability, growth, and real results.
+            </p>
           </div>
         );
 
@@ -426,7 +425,7 @@ const Onboarding = () => {
   };
 
   const ctaLabels: Record<number, string> = {
-    0: "Let's find your people",
+    0: "Let's Go!",
     1: "Continue", 2: "Continue", 3: "Continue", 4: "Continue",
     5: "Almost there",
     6: "Find my matches",
@@ -581,10 +580,14 @@ const Onboarding = () => {
                 goTo(step + 1);
               }
             }}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-success text-[15px] font-bold text-primary-foreground flex items-center justify-center gap-2"
+            className={
+              step === 0
+                ? "w-full py-4 rounded-2xl bg-accent text-[16px] font-bold text-accent-foreground flex items-center justify-center"
+                : "w-full py-4 rounded-xl bg-gradient-to-r from-primary to-success text-[15px] font-bold text-primary-foreground flex items-center justify-center gap-2"
+            }
           >
             {ctaLabels[step]}
-            <ArrowRight className="w-4 h-4" />
+            {step !== 0 && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>
       )}
