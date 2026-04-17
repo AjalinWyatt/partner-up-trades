@@ -14,6 +14,7 @@ import ReachSelect from "@/components/onboarding/ReachSelect";
 import GenderSelect from "@/components/onboarding/GenderSelect";
 import PromptCard from "@/components/onboarding/PromptCard";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 /** Header used on steps 1-6 — large title on the left, stepper-globe on the right */
 const StepHeader = ({ title, accent, step, total }: { title: string; accent: string; step: number; total: number }) => (
