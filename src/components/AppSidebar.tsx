@@ -1,18 +1,18 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, AlignLeft, MessagesSquare, BookOpen, User, Bell, Sun, Moon, LogOut } from "lucide-react";
+import { Home, Globe, Earth, AlignCenter, MessagesSquare, BookOpen, UserRound, Bell, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home" },
-  { path: "/discover", icon: Globe, label: "Discover" },
-  { path: "/feed", icon: AlignLeft, label: "Feed" },
+  { path: "/discover", icon: Earth, label: "Discover" },
+  { path: "/feed", icon: AlignCenter, label: "Feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log" },
-  { path: "/partners", icon: User, label: "Partners" },
+  { path: "/partners", icon: UserRound, label: "Partners" },
   { path: "/notifications", icon: Bell, label: "Notifications" },
-  { path: "/profile", icon: User, label: "Profile" },
+  { path: "/profile", icon: UserRound, label: "Profile" },
 ];
 
 export default function AppSidebar() {
