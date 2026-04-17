@@ -298,13 +298,13 @@ const Discover = () => {
                         )}
                       </div>
                       <div className="shrink-0 flex flex-col items-end">
-                        <div className="flex items-center gap-1">
-                          <div className="w-5 h-5 rounded-full border-[1.5px] border-accent flex items-center justify-center">
-                            <Zap className="w-2.5 h-2.5 text-accent" fill="currentColor" />
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-[18px] h-[18px] rounded-full border-[1.5px] border-accent flex items-center justify-center">
+                            <Zap className="w-2.5 h-2.5 text-accent" fill="currentColor" strokeWidth={0} />
                           </div>
-                          <span className="text-[14px] font-black text-foreground">{m.matchPct}%</span>
+                          <span className="text-[15px] font-black text-foreground">{m.matchPct}%</span>
                         </div>
-                        <span className="text-[10px] text-muted-foreground">Match</span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">Match</span>
                       </div>
                     </div>
 
