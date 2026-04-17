@@ -316,7 +316,7 @@ const Onboarding = () => {
             <PillSelect options={["Scalper", "Swing", "Day Trader", "Position"]} selected={styles} onToggle={toggle(styles, setStyles)} />
 
             <div className="text-[15px] text-foreground mb-3 mt-6">Strategy Approach</div>
-            <PillSelect options={["Supply/Demand", "Price Action", "Smart Money/ICT", "Indicators", "Mixed"]} selected={strategies} onToggle={toggle(strategies, setStrategies)} />
+            <PillSelect options={["Supply/Demand", "Price Action", "Smart Money/ICT", "ICC", "Indicators", "Mixed"]} selected={strategies} onToggle={toggle(strategies, setStrategies)} />
 
             <div className="text-[15px] text-foreground mb-3 mt-6">What Timeframe Do You Trade On?</div>
             <PillSelect options={["1-30m", "1H-2H", "4H-Daily", "Weekly-Monthly", "Mixed"]} selected={timeframes} onToggle={toggle(timeframes, setTimeframes)} />
