@@ -293,7 +293,12 @@ const MatchProfile = () => {
                     onClick={handleSave}
                     disabled={busy}
                     bg="bg-muted"
-                    icon={<Bookmark className="w-5 h-5 text-foreground" strokeWidth={2} />}
+                    icon={
+                      <span className="relative inline-block w-5 h-5">
+                        <Bookmark className="absolute top-0 right-0 w-4 h-4 text-foreground" strokeWidth={2} />
+                        <Bookmark className="absolute bottom-0 left-0 w-4 h-4 text-foreground" strokeWidth={2} fill="hsl(var(--muted))" />
+                      </span>
+                    }
                   />
                   <ActionButton
                     label="Send Request"
