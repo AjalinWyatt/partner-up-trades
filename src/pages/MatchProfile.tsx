@@ -16,6 +16,7 @@ interface ProfileFull {
   city: string | null;
   state: string | null;
   country: string | null;
+  hobbies: string[] | null;
 }
 
 interface TradingFull {
