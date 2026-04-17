@@ -568,49 +568,73 @@ const ViewProfile = () => {
       </div>
 
       {/* Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-background via-background to-transparent z-50 flex gap-2.5">
+      <div className="fixed bottom-14 lg:bottom-0 left-0 right-0 px-5 pb-4 pt-4 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
         {isBlocked ? (
           <button
             onClick={handleUnblock}
-            className="flex-1 py-3.5 rounded-xl bg-card border border-border flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground"
+            className="w-full py-3.5 rounded-xl bg-card border border-border flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground"
           >
             <ShieldOff className="w-5 h-5" strokeWidth={2} /> Unblock
           </button>
         ) : connectionStatus === "accepted" ? (
-          <>
-            <button
-              onClick={() => navigate(-1)}
-              className="w-14 py-3 rounded-xl bg-card border border-border flex items-center justify-center"
-            >
-              <X className="w-5 h-5 text-muted-foreground" strokeWidth={2} />
-            </button>
-            <button
-              onClick={() => navigate("/messages")}
-              className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-primary to-success flex items-center justify-center gap-2 text-sm font-bold text-primary-foreground shadow-lg"
-            >
-              <MessageSquare className="w-5 h-5" strokeWidth={2} /> Message
-            </button>
-          </>
-        ) : connectionStatus === "pending" ? (
-          <button disabled className="flex-1 py-3.5 rounded-xl bg-card border border-border flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground">
-            Request Pending
+          <button
+            onClick={() => navigate("/messages")}
+            className="w-full py-3.5 rounded-xl bg-accent flex items-center justify-center gap-2 text-sm font-bold text-accent-foreground shadow-lg"
+          >
+            <MessageSquare className="w-5 h-5" strokeWidth={2} /> Message
           </button>
         ) : (
-          <>
-            <button
-              onClick={() => navigate(-1)}
-              className="w-14 py-3 rounded-xl bg-card border border-border flex items-center justify-center"
-            >
-              <X className="w-5 h-5 text-muted-foreground" strokeWidth={2} />
-            </button>
-            <button
-              onClick={handleConnect}
-              disabled={sending}
-              className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-primary to-success flex items-center justify-center gap-2 text-sm font-bold text-primary-foreground shadow-lg"
-            >
-              <Link2 className="w-5 h-5" strokeWidth={2} /> Connect
-            </button>
-          </>
+          <div className="flex items-center justify-around max-w-[420px] mx-auto">
+            {/* Pass */}
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                onClick={() => navigate(-1)}
+                className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                aria-label="Pass"
+              >
+                <ChevronsDown className="w-7 h-7 text-background" strokeWidth={2.5} />
+              </button>
+              <span className="text-[11px] font-semibold text-foreground">Pass</span>
+            </div>
+
+            {/* Save */}
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                onClick={handleSave}
+                disabled={savingState}
+                className={cn(
+                  "w-16 h-16 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all",
+                  isSaved ? "bg-accent" : "bg-muted-foreground/40"
+                )}
+                aria-label="Save"
+              >
+                <Bookmark
+                  className={cn("w-6 h-6", isSaved ? "text-accent-foreground" : "text-foreground")}
+                  fill={isSaved ? "currentColor" : "none"}
+                  strokeWidth={2}
+                />
+              </button>
+              <span className="text-[11px] font-semibold text-foreground">Save</span>
+            </div>
+
+            {/* Send Request */}
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                onClick={handleConnect}
+                disabled={sending || connectionStatus === "pending"}
+                className={cn(
+                  "w-16 h-16 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform",
+                  connectionStatus === "pending" ? "bg-muted-foreground/40" : "bg-accent"
+                )}
+                aria-label="Send Request"
+              >
+                <ChevronsUp className="w-7 h-7 text-accent-foreground" strokeWidth={2.5} />
+              </button>
+              <span className="text-[11px] font-semibold text-foreground">
+                {connectionStatus === "pending" ? "Pending" : "Send Request"}
+              </span>
+            </div>
+          </div>
         )}
       </div>
     </div>
