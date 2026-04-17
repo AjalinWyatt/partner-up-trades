@@ -385,26 +385,15 @@ const Onboarding = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
-      {/* Nav bar (hidden on step 0 and 7) */}
+      {/* Minimal back button on steps 1-6 — matches mockups (no top progress bar, no skip) */}
       {step > 0 && step < 7 && (
-        <div className="flex items-center justify-between px-7 pt-4 pb-2 shrink-0">
-          <button onClick={() => goTo(step - 1)} className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:border-success transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <LogoHeader compact />
-          <button onClick={() => goTo(Math.min(step + 1, 7))} className="text-xs font-semibold text-muted-foreground px-2 py-1">
-            Skip
-          </button>
-        </div>
-      )}
-
-      {/* Progress bar */}
-      {step > 0 && step < 7 && (
-        <div className="px-7 pb-3 shrink-0">
-          <div className="h-1 bg-border rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary to-success rounded-full transition-all duration-400" style={{ width: `${progressPct}%` }} />
-          </div>
-        </div>
+        <button
+          onClick={() => goTo(step - 1)}
+          className="absolute top-5 left-5 z-20 w-9 h-9 flex items-center justify-center text-foreground/80 hover:text-foreground"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
       )}
 
       {/* Content with slide animation */}
