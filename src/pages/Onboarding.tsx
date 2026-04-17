@@ -580,10 +580,14 @@ const Onboarding = () => {
                 goTo(step + 1);
               }
             }}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-success text-[15px] font-bold text-primary-foreground flex items-center justify-center gap-2"
+            className={
+              step === 0
+                ? "w-full py-4 rounded-2xl bg-accent text-[16px] font-bold text-accent-foreground flex items-center justify-center"
+                : "w-full py-4 rounded-xl bg-gradient-to-r from-primary to-success text-[15px] font-bold text-primary-foreground flex items-center justify-center gap-2"
+            }
           >
             {ctaLabels[step]}
-            <ArrowRight className="w-4 h-4" />
+            {step !== 0 && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>
       )}
