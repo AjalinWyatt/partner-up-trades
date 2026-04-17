@@ -270,10 +270,9 @@ const Discover = () => {
                 <button
                   key={m.id}
                   onClick={() => navigate(`/profile/${m.id}`)}
-                  className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors h-[110px]"
+                  className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors h-[96px]"
                 >
-                  {/* Photo */}
-                  <div className="w-[110px] h-full shrink-0 bg-secondary">
+                  <div className="w-[96px] h-full shrink-0 bg-secondary">
                     {m.avatar_url ? (
                       <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -285,8 +284,7 @@ const Discover = () => {
                     )}
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+                  <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-[15px] font-bold text-accent truncate">
@@ -310,15 +308,9 @@ const Discover = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-end justify-between">
-                      {m.location && (
-                        <div className="text-[12px] text-foreground/90">{m.location}</div>
-                      )}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="w-2 h-2 rounded-full bg-success" />
-                        <span className="text-[11px] text-foreground">Online Now</span>
-                      </div>
-                    </div>
+                    {m.location && (
+                      <div className="text-[12px] text-foreground/90 truncate">{m.location}</div>
+                    )}
                   </div>
                 </button>
               ))}
