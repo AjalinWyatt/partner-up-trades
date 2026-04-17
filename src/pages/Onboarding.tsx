@@ -341,9 +341,6 @@ const Onboarding = () => {
             <div className="text-[15px] text-foreground mb-3 mt-6">What Session(s) Do You Trade?</div>
             <PillSelect options={["London", "New York", "Asian", "Multiple / flexible"]} selected={sessions} onToggle={toggle(sessions, setSessions)} />
 
-            <div className="text-[15px] text-foreground mb-3 mt-6">Trading Style</div>
-            <PillSelect options={["Scalper", "Day trader", "Swing trader", "Position trader"]} selected={styles} onToggle={toggle(styles, setStyles)} />
-
             <div className="text-[15px] text-foreground mb-3 mt-6">What time do you usually trade?</div>
             <PillSelect options={["Morning", "Afternoon", "Evening", "Night", "Varies"]} selected={tradeTimes} onToggle={toggle(tradeTimes, setTradeTimes)} />
           </div>
