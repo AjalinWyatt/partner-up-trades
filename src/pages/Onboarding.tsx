@@ -363,88 +363,8 @@ const Onboarding = () => {
 
       case 6:
         return (
-          <div className="px-7 pb-32">
-            <div className="text-[11px] font-semibold text-muted-foreground mb-4 tracking-wide">Step 6 of 7 · Your people</div>
-            <h2 className="text-[28px] font-black text-foreground tracking-tight leading-tight mb-2">
-              Who are you<br /><span className="text-gradient-accent">looking for?</span>
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">You can pick more than one — you can be in a duo and a group at the same time.</p>
-
-            <div className="text-sm font-bold text-foreground mb-3">I am a...</div>
-            <GenderSelect options={["Male", "Female"]} selected={gender} onSelect={setGender} />
-
-            <div className="text-sm font-bold text-foreground mb-3 mt-4">Looking to connect with...</div>
-            <GenderSelect options={["Males", "Females", "Co-ed"]} selected={lookingFor} onSelect={setLookingFor} />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">Connection reach</div>
-            <ReachSelect selected={reach} onSelect={setReach} />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">
-              Your location
-              {reach === "Local" && <span className="text-destructive ml-1">*</span>}
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              {reach === "Local" ? "Required for local matching" : "Optional — helps us match you with nearby traders"}
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-border pb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                <input
-                  value={city} onChange={e => setCity(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                  placeholder={reach === "Local" ? "City (required)" : "City"}
-                />
-              </div>
-              <div className="flex items-center gap-3 border-b border-border pb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                <input
-                  value={state} onChange={e => setState(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                  placeholder="State / Region / Province"
-                />
-              </div>
-              <div className="flex items-center gap-3 border-b border-border pb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                <input
-                  value={country} onChange={e => setCountry(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                  placeholder={reach === "Local" ? "Country (required)" : "Country"}
-                />
-              </div>
-            </div>
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">What kind of connection?</div>
-            <BigCardSelect
-              options={[
-                { icon: "🤝", title: "Partner(s)", description: "1-on-1 connections. No limit to how many partners you have." },
-              ]}
-              selected={connectionTypes}
-              onToggle={toggle(connectionTypes, setConnectionTypes)}
-            />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">How often do you want to connect?</div>
-            <PillSelect options={["Daily", "After each session", "Weekly", "Flexible"]} selected={connectFreq} onToggle={toggle(connectFreq, setConnectFreq)} />
-
-            <div className="h-px bg-border my-5" />
-            <div className="text-sm font-bold text-foreground mb-3">What matters most in a match?</div>
-            <PillSelect options={["Same strategy", "Same schedule", "Same goals", "Same experience level", "Same discipline level"]} selected={matchPriorities} onToggle={toggle(matchPriorities, setMatchPriorities)} />
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-7">
-            <div className="w-16 h-16 rounded-full border-[3px] border-border border-t-success animate-spin mb-6" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-7 py-20">
+            <div className="w-16 h-16 rounded-full border-[3px] border-border border-t-accent animate-spin mb-6" />
             <h2 className="text-[22px] font-black text-foreground mb-2">Finding your people...</h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
               Matching you with traders who complement your style, goals, and schedule.
@@ -460,8 +380,7 @@ const Onboarding = () => {
   const ctaLabels: Record<number, string> = {
     0: "Let's Go!",
     1: "Continue", 2: "Continue", 3: "Continue", 4: "Continue",
-    5: "Almost there",
-    6: "Find my matches",
+    5: "Complete Setup",
   };
 
   return (
