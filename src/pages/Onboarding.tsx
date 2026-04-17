@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import authGlobe from "@/assets/auth-globe.png";
 import StepperGlobe from "@/components/onboarding/StepperGlobe";
+import AvatarPicker from "@/components/onboarding/AvatarPicker";
 import PillSelect from "@/components/onboarding/PillSelect";
 import CardSelect from "@/components/onboarding/CardSelect";
 import BigCardSelect from "@/components/onboarding/BigCardSelect";
