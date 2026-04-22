@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import PillSelect from "@/components/onboarding/PillSelect";
 
@@ -34,9 +35,9 @@ export interface TradingEditorDraft {
 
 interface TradingProfileEditorProps {
   profileDraft: ProfileEditorDraft;
-  setProfileDraft: React.Dispatch<React.SetStateAction<ProfileEditorDraft>>;
+  setProfileDraft: Dispatch<SetStateAction<ProfileEditorDraft>>;
   tradingDraft: TradingEditorDraft;
-  setTradingDraft: React.Dispatch<React.SetStateAction<TradingEditorDraft>>;
+  setTradingDraft: Dispatch<SetStateAction<TradingEditorDraft>>;
 }
 
 const forexInstrumentOptions = ["Major pairs", "Minor pairs", "Indices (NAS100, US30)", "Gold/XAU", "Exotics"];

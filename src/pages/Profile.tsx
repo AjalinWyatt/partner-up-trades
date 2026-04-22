@@ -335,6 +335,7 @@ const Profile = () => {
             <EditField label="State / Region / Province" value={editState} onChange={setEditState} placeholder="State / Region" />
             <EditField label="Country" value={editCountry} onChange={setEditCountry} placeholder="Country" />
             <EditField label="Gender" value={editGender} onChange={setEditGender} placeholder="Gender" />
+            <TradingProfileEditor profileDraft={profileDraft} setProfileDraft={setProfileDraft} tradingDraft={tradingDraft} setTradingDraft={setTradingDraft} />
 
             <div className="pt-2">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
@@ -355,12 +356,6 @@ const Profile = () => {
                   <div className={`absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform ${isDark ? "left-[20px]" : "left-[2px]"}`} />
                 </button>
               </div>
-            </div>
-
-            <div className="pt-3">
-              <button onClick={() => navigate("/onboarding")} className="w-full py-3 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors">
-                Update trading details
-              </button>
             </div>
 
             <button onClick={handleLogout} className="w-full py-3 rounded-xl border border-destructive/30 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center gap-2">
