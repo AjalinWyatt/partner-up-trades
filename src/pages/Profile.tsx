@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
+import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 
 interface ProfileData {
   username: string | null;
@@ -64,6 +65,8 @@ const Profile = () => {
   const [editState, setEditState] = useState("");
   const [editCountry, setEditCountry] = useState("");
   const [editGender, setEditGender] = useState("");
+  const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
+  const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
 
   const [partnerCount, setPartnerCount] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -98,8 +101,39 @@ const Profile = () => {
         setEditState((pData as any).state || "");
         setEditCountry((pData as any).country || "");
         setEditGender(pData.gender || "");
+        setProfileDraft({
+          gender: pData.gender || "",
+          city: (pData as any).city || "",
+          state: (pData as any).state || "",
+          country: (pData as any).country || "",
+          hobbies: pData.hobbies || [],
+          chart_prompts: pData.chart_prompts || [],
+          off_chart_prompts: pData.off_chart_prompts || [],
+        });
       }
-      if (tData) setTradingProfile(tData);
+      if (tData) {
+        setTradingProfile(tData);
+        setTradingDraft({
+          markets: tData.markets || [],
+          instruments: (tData as any).instruments || [],
+          sessions: tData.sessions || [],
+          trade_times: (tData as any).trade_times || [],
+          trading_style: tData.trading_style || [],
+          strategies: tData.strategies || [],
+          timeframes: tData.timeframes || [],
+          frequency: tData.frequency || [],
+          experience_level: tData.experience_level || "",
+          primary_goal: tData.primary_goal || [],
+          loss_response: typeof (tData as any).loss_response === "string" ? (tData as any).loss_response.split(", ").filter(Boolean) : [],
+          struggles: tData.struggles || [],
+          journaling: (tData as any).journaling || [],
+          trading_plan: (tData as any).trading_plan || [],
+          looking_for_gender: tData.looking_for_gender || "",
+          connection_reach: tData.connection_reach || "",
+          connect_frequency: (tData as any).connect_frequency || [],
+          match_priorities: (tData as any).match_priorities || [],
+        });
+      }
       setPartnerCount(count ?? 0);
 
       // Streak
@@ -153,25 +187,72 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!userId) return;
     setSaving(true);
-    const locationParts = [editCity, editState, editCountry].filter(Boolean);
+    const nextCity = profileDraft.city || editCity;
+    const nextState = profileDraft.state || editState;
+    const nextCountry = profileDraft.country || editCountry;
+    const nextGender = profileDraft.gender || editGender;
+    const locationParts = [nextCity, nextState, nextCountry].filter(Boolean);
     const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
-    const { error } = await supabase.from("profiles").update({
+    const { error: profileError } = await supabase.from("profiles").update({
       full_name: editName || null,
       username: editUsername || null,
       bio: editBio || null,
       location: locationStr,
-      city: editCity || null,
-      state: editState || null,
-      country: editCountry || null,
-      gender: editGender || null,
+      city: nextCity || null,
+      state: nextState || null,
+      country: nextCountry || null,
+      gender: nextGender || null,
+      hobbies: profileDraft.hobbies,
+      chart_prompts: profileDraft.chart_prompts,
+      off_chart_prompts: profileDraft.off_chart_prompts,
       updated_at: new Date().toISOString(),
     } as any).eq("id", userId);
+    const { error: tradingError } = await supabase.from("trading_profiles").update({
+      markets: tradingDraft.markets,
+      instruments: tradingDraft.instruments,
+      sessions: tradingDraft.sessions,
+      trade_times: tradingDraft.trade_times,
+      trading_style: tradingDraft.trading_style,
+      strategies: tradingDraft.strategies,
+      timeframes: tradingDraft.timeframes,
+      frequency: tradingDraft.frequency,
+      experience_level: tradingDraft.experience_level || null,
+      primary_goal: tradingDraft.primary_goal,
+      loss_response: tradingDraft.loss_response.join(", ") || null,
+      struggles: tradingDraft.struggles,
+      journaling: tradingDraft.journaling,
+      trading_plan: tradingDraft.trading_plan,
+      looking_for_gender: tradingDraft.looking_for_gender || null,
+      connection_reach: tradingDraft.connection_reach || null,
+      connect_frequency: tradingDraft.connect_frequency,
+      match_priorities: tradingDraft.match_priorities,
+      updated_at: new Date().toISOString(),
+    } as any).eq("user_id", userId);
     setSaving(false);
-    if (error) { toast.error("Failed to save"); return; }
+    if (profileError || tradingError) { toast.error("Failed to save"); return; }
     setProfile(prev => prev ? {
       ...prev, full_name: editName || null, username: editUsername || null,
-      bio: editBio || null, location: locationStr, city: editCity || null,
-      state: editState || null, country: editCountry || null, gender: editGender || null,
+      bio: editBio || null, location: locationStr, city: nextCity || null,
+      state: nextState || null, country: nextCountry || null, gender: nextGender || null,
+      hobbies: profileDraft.hobbies, chart_prompts: profileDraft.chart_prompts, off_chart_prompts: profileDraft.off_chart_prompts,
+    } : prev);
+    setTradingProfile(prev => prev ? {
+      ...prev,
+      markets: tradingDraft.markets,
+      sessions: tradingDraft.sessions,
+      trading_style: tradingDraft.trading_style,
+      strategies: tradingDraft.strategies,
+      timeframes: tradingDraft.timeframes,
+      experience_level: tradingDraft.experience_level || null,
+      primary_goal: tradingDraft.primary_goal,
+      struggles: tradingDraft.struggles,
+      frequency: tradingDraft.frequency,
+      journaling: tradingDraft.journaling,
+      trading_plan: tradingDraft.trading_plan,
+      looking_for_gender: tradingDraft.looking_for_gender || null,
+      connection_reach: tradingDraft.connection_reach || null,
+      connect_frequency: tradingDraft.connect_frequency,
+      match_priorities: tradingDraft.match_priorities,
     } : prev);
     setEditing(false);
     toast.success("Profile updated!");
@@ -254,6 +335,7 @@ const Profile = () => {
             <EditField label="State / Region / Province" value={editState} onChange={setEditState} placeholder="State / Region" />
             <EditField label="Country" value={editCountry} onChange={setEditCountry} placeholder="Country" />
             <EditField label="Gender" value={editGender} onChange={setEditGender} placeholder="Gender" />
+            <TradingProfileEditor profileDraft={profileDraft} setProfileDraft={setProfileDraft} tradingDraft={tradingDraft} setTradingDraft={setTradingDraft} />
 
             <div className="pt-2">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Appearance</label>
@@ -274,12 +356,6 @@ const Profile = () => {
                   <div className={`absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform ${isDark ? "left-[20px]" : "left-[2px]"}`} />
                 </button>
               </div>
-            </div>
-
-            <div className="pt-3">
-              <button onClick={() => navigate("/onboarding")} className="w-full py-3 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors">
-                Update trading details
-              </button>
             </div>
 
             <button onClick={handleLogout} className="w-full py-3 rounded-xl border border-destructive/30 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center gap-2">

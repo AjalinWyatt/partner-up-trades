@@ -1,8 +1,10 @@
+import * as React from "react";
 import globeImg from "@/assets/auth-globe.png";
 
-const AnimatedGlobe = ({ size = 240 }: { size?: number }) => {
+const AnimatedGlobe = React.forwardRef<HTMLDivElement, { size?: number }>(({ size = 240 }, ref) => {
   return (
     <div
+      ref={ref}
       className="relative mx-auto pointer-events-none select-none"
       style={{ width: size, height: size }}
     >
@@ -15,6 +17,8 @@ const AnimatedGlobe = ({ size = 240 }: { size?: number }) => {
       />
     </div>
   );
-};
+});
+
+AnimatedGlobe.displayName = "AnimatedGlobe";
 
 export default AnimatedGlobe;
