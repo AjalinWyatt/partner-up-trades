@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Heart, Trash2 } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { DialogTitle } from "@radix-ui/react-dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
@@ -86,7 +84,7 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-3xl p-0 overflow-hidden bg-card border-border rounded-xl max-h-[90vh]">
-        <VisuallyHidden><DialogTitle>Post Detail</DialogTitle></VisuallyHidden>
+        <DialogTitle className="sr-only">Post Detail</DialogTitle>
         <div className="flex flex-col md:flex-row max-h-[90vh]">
           {/* Image */}
           <div className="md:w-[60%] bg-black flex items-center justify-center min-h-[300px] max-h-[60vh] md:max-h-none">
