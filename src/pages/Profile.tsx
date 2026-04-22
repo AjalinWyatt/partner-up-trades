@@ -369,25 +369,20 @@ const Profile = () => {
 
   return (
     <AppLayout>
-      {/* Gradient Banner */}
-      <div className="relative h-36 bg-gradient-to-br from-primary via-accent/80 to-success overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15)_0%,_transparent_60%)]" />
-        <div className="absolute top-3 right-3 flex items-center gap-2">
-          <button onClick={() => setShowCreatePost(true)} className="w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center hover:bg-black/30 transition-colors">
-            <Plus className="w-4 h-4 text-white" strokeWidth={2.5} />
+      <div className="flex-1 overflow-y-auto pb-24">
+        <div className="flex items-center justify-end gap-2 px-5 pt-4">
+          <button onClick={() => setShowCreatePost(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
           </button>
-          <button onClick={() => navigate("/notifications")} className="w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center hover:bg-black/30 transition-colors">
-            <Bell className="w-4 h-4 text-white" strokeWidth={2} />
+          <button onClick={() => navigate("/notifications")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+            <Bell className="w-4 h-4" strokeWidth={2} />
           </button>
-          <button onClick={() => setEditing(true)} className="w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center hover:bg-black/30 transition-colors">
-            <Settings className="w-4 h-4 text-white" strokeWidth={2} />
+          <button onClick={() => setEditing(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+            <Settings className="w-4 h-4" strokeWidth={2} />
           </button>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto pb-24">
-        {/* Avatar overlapping banner */}
-        <div className="relative -mt-14 px-5">
+        <div className="relative px-5 pt-3">
           <button onClick={() => avatarInputRef.current?.click()} className="relative group">
             <div className="w-[88px] h-[88px] rounded-full p-[3px] bg-background shadow-lg">
               {profile?.avatar_url ? (
