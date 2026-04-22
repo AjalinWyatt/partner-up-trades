@@ -57,7 +57,11 @@ const Discover = () => {
       if (!user) { setLoading(false); return; }
 
       const [{ data: allConnections }, { data: blockedData }, { data: passedData }, { data: meData }] = await Promise.all([
-        supabase.from("partner_connections").select("requester_id, receiver_id").or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
+        supabase
+          .from("partner_connections")
+          .select("requester_id, receiver_id")
+          .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+          .in("status", ["pending", "accepted"]),
         supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
         supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
         supabase.from("profiles").select("avatar_url, username").eq("id", user.id).maybeSingle(),
