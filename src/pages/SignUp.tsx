@@ -25,6 +25,34 @@ const SignUp = () => {
   const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted || !session) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+    });
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted || !session) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  useEffect(() => {
     supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
   }, []);
 
@@ -39,6 +67,7 @@ const SignUp = () => {
       email,
       password,
       options: {
+        emailRedirectTo: window.location.origin,
         data: { full_name: `${firstName} ${lastName}`.trim(), first_name: firstName, last_name: lastName },
       },
     });
@@ -46,7 +75,7 @@ const SignUp = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Check your email for a verification code!");
+      toast.success("Check your email for your verification code, then enter it here.");
       setShowOtp(true);
     }
   };
@@ -73,11 +102,14 @@ const SignUp = () => {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
     });
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("A new code has been sent to your email.");
+      toast.success("A new verification code has been sent to your email.");
     }
   };
 
