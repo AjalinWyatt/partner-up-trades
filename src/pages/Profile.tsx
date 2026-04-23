@@ -575,6 +575,7 @@ const Profile = () => {
         {activeTab === 0 ? (
           <PostList
             posts={posts}
+            savedPosts={savedPosts}
             avatarUrl={profile?.avatar_url}
             initials={getInitials()}
             username={displayUsername}
@@ -619,20 +620,22 @@ const Profile = () => {
 
 const PostList = ({
   posts,
+  savedPosts,
   avatarUrl,
   initials,
   username,
   onOpenPost,
   onCreate,
 }: {
-  posts: any[];
+  posts: ProfilePostItem[];
+  savedPosts: ProfilePostItem[];
   avatarUrl: string | null | undefined;
   initials: string;
   username: string;
   onOpenPost: (post: any) => void;
   onCreate: () => void;
 }) => {
-  if (posts.length === 0) {
+  if (posts.length === 0 && savedPosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
@@ -661,9 +664,12 @@ const PostList = ({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-foreground">{username}</span>
+                  <span className="text-sm font-bold text-foreground">{post.username || username}</span>
                   <span className="text-[11px] text-muted-foreground">{formatProfileDate(post.created_at)}</span>
                 </div>
+                {post.kind === "repost" && (
+                  <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
+                )}
                 {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
                 {!!post.tags?.length && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -682,6 +688,49 @@ const PostList = ({
           </button>
         );
       })}
+
+      {savedPosts.length > 0 && (
+        <div className="px-5 py-5">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Saved</p>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {savedPosts.map((post, index) => {
+              const media = post.media_urls?.[0] || post.media_url || post.image_url;
+              return (
+                <button
+                  key={`saved-${post.id}`}
+                  onClick={() => onOpenPost(post)}
+                  className={cn(
+                    "block w-full px-4 py-4 text-left transition-colors hover:bg-muted/20",
+                    index !== savedPosts.length - 1 && "border-b border-border"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-secondary">
+                      {post.avatar_url ? (
+                        <img src={post.avatar_url} alt="Saved post author" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{(post.originalUsername || post.username || "@").slice(1, 2).toUpperCase()}</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-foreground">{post.originalUsername || post.username}</span>
+                        <span className="text-[11px] text-muted-foreground">Saved {formatProfileDate(post.created_at)}</span>
+                      </div>
+                      {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
+                      {media && (
+                        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-secondary">
+                          <img src={media} alt="Saved post media" className="max-h-[280px] w-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
