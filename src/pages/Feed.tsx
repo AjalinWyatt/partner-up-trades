@@ -79,6 +79,7 @@ const Feed = () => {
   const [sendingToId, setSendingToId] = useState<string | null>(null);
   const [myProfile, setMyProfile] = useState<StoryProfileRow | null>(null);
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
+  const [viewedStoryIds, setViewedStoryIds] = useState<string[]>([]);
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
@@ -103,6 +104,7 @@ const Feed = () => {
     ]);
 
     const viewedIds = new Set(((viewRows as any[]) || []).map((row) => row.story_id));
+    setViewedStoryIds([...viewedIds]);
     const profileMap = new Map((profileRows || []).map((row: any) => [row.id, row as StoryProfileRow]));
     const groupsMap = new Map<string, StoryGroup>();
 
@@ -264,12 +266,12 @@ const Feed = () => {
         setPosts(prev => prev.map(e => e.id === p.post_id ? { ...e, commentCount: e.commentCount + 1 } : e));
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, () => {
-        if (user?.id) loadStories(user.id);
+        if (myId) loadStories(myId);
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [loadFeed, loadStories]);
+  }, [loadFeed, loadStories, myId]);
 
   const allStoryGroups = useMemo(() => storyGroups, [storyGroups]);
   const ownStoryGroup = useMemo(() => allStoryGroups.find((group) => group.isOwn) || null, [allStoryGroups]);
@@ -279,15 +281,20 @@ const Feed = () => {
   const markStorySeen = useCallback(async (story: StoryItem) => {
     if (!myId || story.userId === myId) return;
     await supabase.from("story_views" as any).upsert({ story_id: story.id, viewer_id: myId }, { onConflict: "story_id,viewer_id" });
-    setStoryGroups((current) =>
-      current.map((group) => {
-        if (group.userId !== story.userId) return group;
-        return {
-          ...group,
-          viewed: group.stories.every((item) => item.id === story.id || item.userId === myId || true),
-        };
-      })
-    );
+    setViewedStoryIds((current) => {
+      if (current.includes(story.id)) return current;
+      const next = [...current, story.id];
+      setStoryGroups((groups) =>
+        groups.map((group) => {
+          if (group.userId !== story.userId) return group;
+          return {
+            ...group,
+            viewed: group.stories.every((item) => next.includes(item.id)),
+          };
+        })
+      );
+      return next;
+    });
   }, [myId]);
 
   useEffect(() => {
