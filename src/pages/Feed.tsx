@@ -716,6 +716,18 @@ const Feed = () => {
                         )}
                         {(isAdmin || post.user_id === myId) && (
                           <button
+                            onClick={() => {
+                              setEditingPost(post);
+                              setShowCreatePost(true);
+                              setMenuOpen(null);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
+                          >
+                            <PenSquare className="w-4 h-4" /> Edit Post
+                          </button>
+                        )}
+                        {(isAdmin || post.user_id === myId) && (
+                          <button
                             onClick={async () => {
                               if (!confirm("Delete this post?")) return;
                               await supabase.from("posts").delete().eq("id", post.id);
