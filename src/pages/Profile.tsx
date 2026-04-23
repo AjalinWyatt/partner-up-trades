@@ -468,10 +468,10 @@ const Profile = () => {
         </div>
 
         <div className="mt-5 flex gap-2 px-5">
-          <button onClick={() => setEditing(true)} className="flex-1 rounded-xl border border-border bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted">
+          <button onClick={() => setEditing(true)} className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-secondary px-3 text-xs font-bold text-foreground transition-colors hover:bg-muted">
             Edit profile
           </button>
-          <button onClick={() => setShowCreatePost(true)} className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
+          <button onClick={() => setShowCreatePost(true)} className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90">
             New post
           </button>
         </div>
