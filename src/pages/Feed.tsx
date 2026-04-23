@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2 } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -249,20 +249,19 @@ const Feed = () => {
           </div>
         </div>
 
-        <div className="px-4 pt-4">
+        <div className="border-b border-border px-4 py-3">
           <button
             onClick={() => setShowCreatePost(true)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/40"
+            className="flex w-full items-center gap-3 text-left transition-colors hover:opacity-90"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-success/20 text-sm font-black text-primary">
               {primaryMarket.slice(0, 1)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground">Create a post</p>
-              <p className="text-xs text-muted-foreground">Share a thought, chart, recap, or setup</p>
+              <p className="text-sm text-muted-foreground">Share a thought, chart, recap, or setup</p>
             </div>
-            <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
-              Post
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary text-foreground">
+              <PenSquare className="h-4 w-4" />
             </div>
           </button>
         </div>
@@ -284,11 +283,11 @@ const Feed = () => {
             </button>
           </div>
         ) : (
-          <div className="px-4 pb-4 pt-3 space-y-3">
+          <div>
             {posts.map((post) => (
-              <div key={post.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div key={post.id} className="border-b border-border px-4 py-4">
                 {/* Post Header */}
-                <div className="flex items-center gap-2.5 px-4 pb-3 pt-4">
+                <div className="flex items-start gap-3">
                   <button onClick={() => navigate(`/profile/${post.user_id}`)}>
                     {post.avatar_url ? (
                       <img src={post.avatar_url} className="w-10 h-10 rounded-full object-cover" />
@@ -298,7 +297,7 @@ const Feed = () => {
                       </div>
                     )}
                   </button>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <button onClick={() => navigate(`/profile/${post.user_id}`)} className="text-[13px] font-bold text-foreground hover:underline">
                         {post.username}
@@ -315,7 +314,53 @@ const Feed = () => {
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
+                      <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
+                    </div>
+
+                    {(post.content || post.caption) && (
+                      <div className="pt-1">
+                        <p className="whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>
+                      </div>
+                    )}
+
+                    {!!post.tags?.length && (
+                      <div className="flex flex-wrap gap-1.5 pt-3">
+                        {post.tags.map((tag) => (
+                          <span key={tag} className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {!!post.media_urls?.length && (
+                      <button onClick={() => setSelectedPost(post)} className="mt-3 block w-full overflow-hidden rounded-2xl border border-border bg-muted">
+                        {post.media_urls.length === 1 ? (
+                          <img src={post.media_urls[0]} alt="" className="w-full max-h-[500px] object-cover" />
+                        ) : (
+                          <Carousel opts={{ loop: true }} className="w-full">
+                            <CarouselContent className="ml-0">
+                              {post.media_urls.map((url) => (
+                                <CarouselItem key={url} className="pl-0">
+                                  <img src={url} alt="" className="w-full max-h-[500px] object-cover" />
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                          </Carousel>
+                        )}
+                      </button>
+                    )}
+
+                    <div className="flex items-center gap-6 pt-3">
+                      <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
+                        <Heart className={cn("w-5 h-5 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
+                        {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
+                      </button>
+                      <button onClick={() => setCommentPostId(post.id)} className="flex items-center gap-1.5 group">
+                        <MessageCircle className="w-5 h-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                        {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
+                      </button>
+                    </div>
                   </div>
                   <div className="relative">
                     <button onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
@@ -362,54 +407,6 @@ const Feed = () => {
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Post Content */}
-                {(post.content || post.caption) && (
-                  <div className="px-4 pb-3">
-                    <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">{post.content || post.caption}</p>
-                  </div>
-                )}
-
-                {!!post.tags?.length && (
-                  <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-                    {post.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Post Media - image */}
-                {!!post.media_urls?.length && (
-                  <button onClick={() => setSelectedPost(post)} className="mb-3 block w-full overflow-hidden border-y border-border bg-muted">
-                    {post.media_urls.length === 1 ? (
-                      <img src={post.media_urls[0]} alt="" className="w-full max-h-[500px] object-cover" />
-                    ) : (
-                      <Carousel opts={{ loop: true }} className="w-full">
-                        <CarouselContent className="ml-0">
-                          {post.media_urls.map((url) => (
-                            <CarouselItem key={url} className="pl-0">
-                              <img src={url} alt="" className="w-full max-h-[500px] object-cover" />
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                      </Carousel>
-                    )}
-                  </button>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-5 border-t border-border px-4 py-3">
-                  <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
-                    <Heart className={cn("w-5 h-5 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
-                    {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
-                  </button>
-                  <button onClick={() => setCommentPostId(post.id)} className="flex items-center gap-1.5 group">
-                    <MessageCircle className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
-                  </button>
                 </div>
               </div>
             ))}
