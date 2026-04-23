@@ -37,13 +37,10 @@ interface FeedPost {
   commentCount: number;
 }
 
-type FeedTab = "my" | "world";
-
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
   const navigate = useNavigate();
-  const [feedTab, setFeedTab] = useState<FeedTab>("my");
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
@@ -54,8 +51,7 @@ const Feed = () => {
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [showTopics, setShowTopics] = useState(false);
 
-  const loadFeed = useCallback(async (tab?: FeedTab) => {
-    const activeTab = tab ?? feedTab;
+  const loadFeed = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     if (!user) { setLoading(false); return; }
@@ -71,8 +67,7 @@ const Feed = () => {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    // For "my" tab, filter by market column matching user's markets
-    if (activeTab === "my" && userMarkets.length > 0) {
+    if (userMarkets.length > 0) {
       query = query.in("market", userMarkets);
     }
 
@@ -135,7 +130,7 @@ const Feed = () => {
 
     setPosts(feedItems);
     setLoading(false);
-  }, [feedTab]);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -159,11 +154,7 @@ const Feed = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [feedTab]);
-
-  const switchTab = (tab: FeedTab) => {
-    setFeedTab(tab);
-  };
+  }, [loadFeed]);
 
   const toggleLike = async (postId: string) => {
     if (!myId) return;
@@ -207,68 +198,42 @@ const Feed = () => {
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between px-5 pt-4 pb-2">
-            <button onClick={() => setShowTopics(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-              <Menu className="h-4 w-4" />
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <button onClick={() => setShowTopics(true)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+              <Menu className="h-3.5 w-3.5" />
             </button>
 
             <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-primary to-success flex items-center justify-center">
-                <Globe className="w-3 h-3 text-primary-foreground" />
+              <div className="flex h-4.5 w-4.5 items-center justify-center rounded-md bg-gradient-to-br from-primary to-success">
+                <Globe className="h-2.5 w-2.5 text-primary-foreground" />
               </div>
-              <span className="text-sm font-black text-foreground tracking-tight">
+              <span className="text-xs font-black text-foreground tracking-tight">
                 traders<span className="bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">world</span>
               </span>
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setShowTopics(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-                <Search className="h-4 w-4" />
+              <button onClick={() => setShowTopics(true)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+                <Search className="h-3.5 w-3.5" />
               </button>
               <NotificationBell />
             </div>
           </div>
-
-          {/* Tabs */}
-          <div className="flex px-5 gap-1">
-            <button
-              onClick={() => switchTab("my")}
-              className={cn(
-                "flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors",
-                feedTab === "my"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              My Feed
-            </button>
-            <button
-              onClick={() => switchTab("world")}
-              className={cn(
-                "flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors",
-                feedTab === "world"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              World Feed
-            </button>
-          </div>
         </div>
 
-        <div className="border-b border-border px-4 py-3">
+        <div className="border-b border-border px-4 py-2.5">
           <button
             onClick={() => setShowCreatePost(true)}
             className="flex w-full items-center gap-3 text-left transition-colors hover:opacity-90"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-success/20 text-sm font-black text-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-success/20 text-xs font-black text-primary">
               {primaryMarket.slice(0, 1)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-muted-foreground">Share a thought, chart, recap, or setup</p>
+              <p className="text-[13px] text-muted-foreground">Share a thought, chart, recap, or setup</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary text-foreground">
-              <PenSquare className="h-4 w-4" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground">
+              <PenSquare className="h-3.5 w-3.5" />
             </div>
           </button>
         </div>
@@ -278,9 +243,7 @@ const Feed = () => {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
               <Globe className="w-7 h-7 text-primary" />
             </div>
-            <p className="text-sm font-bold text-foreground mb-1">
-              {feedTab === "my" ? `No posts in your markets yet` : "No posts yet"}
-            </p>
+            <p className="mb-1 text-sm font-bold text-foreground">No posts in your markets yet</p>
             <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share your setup, your mindset, your journey, or a quick update.</p>
             <button
               onClick={() => setShowCreatePost(true)}
@@ -292,31 +255,31 @@ const Feed = () => {
         ) : (
           <div>
             {posts.map((post) => (
-              <div key={post.id} className="border-b border-border px-4 py-4">
+                <div key={post.id} className="border-b border-border px-4 py-3">
                 {/* Post Header */}
-                <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2.5">
                   <button onClick={() => navigate(`/profile/${post.user_id}`)}>
                     {post.avatar_url ? (
-                      <img src={post.avatar_url} className="w-10 h-10 rounded-full object-cover" />
+                        <img src={post.avatar_url} className="h-8.5 w-8.5 rounded-full object-cover" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-black text-primary-foreground">
+                        <div className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-[10px] font-black text-primary-foreground">
                         {getInitials(post.full_name)}
                       </div>
                     )}
                   </button>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <button onClick={() => navigate(`/profile/${post.user_id}`)} className="text-[13px] font-bold text-foreground hover:underline">
+                        <button onClick={() => navigate(`/profile/${post.user_id}`)} className="text-xs font-bold text-foreground hover:underline">
                         {post.username}
                       </button>
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
                         <circle cx="10" cy="10" r="9" fill="url(#vbf)" />
                         <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                         <defs><linearGradient id="vbf" x1="0" y1="0" x2="20" y2="20"><stop stopColor="hsl(var(--primary))" /><stop offset="1" stopColor="hsl(var(--success))" /></linearGradient></defs>
                       </svg>
                       {/* Market tag from post */}
                       {(post.market || post.markets[0]) && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
+                          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-bold text-primary">
                           {post.market || post.markets[0]}
                         </span>
                       )}
@@ -324,15 +287,15 @@ const Feed = () => {
                     </div>
 
                     {(post.content || post.caption) && (
-                      <div className="pt-1">
-                        <p className="whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>
+                        <div className="pt-1">
+                          <p className="whitespace-pre-wrap text-[13px] leading-6 text-foreground">{post.content || post.caption}</p>
                       </div>
                     )}
 
                     {!!post.tags?.length && (
-                      <div className="flex flex-wrap gap-1.5 pt-3">
+                        <div className="flex flex-wrap gap-1.5 pt-2.5">
                         {post.tags.map((tag) => (
-                          <span key={tag} className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                            <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
                             #{tag}
                           </span>
                         ))}
@@ -340,7 +303,7 @@ const Feed = () => {
                     )}
 
                     {!!post.media_urls?.length && (
-                      <button onClick={() => setSelectedPost(post)} className="mt-3 block w-full overflow-hidden rounded-2xl border border-border bg-muted">
+                        <button onClick={() => setSelectedPost(post)} className="mt-2.5 block w-full overflow-hidden rounded-xl border border-border bg-muted">
                         {post.media_urls.length === 1 ? (
                           <img src={post.media_urls[0]} alt="" className="w-full max-h-[500px] object-cover" />
                         ) : (
@@ -357,13 +320,13 @@ const Feed = () => {
                       </button>
                     )}
 
-                    <div className="flex items-center gap-6 pt-3">
+                      <div className="flex items-center gap-5 pt-2.5">
                       <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
-                        <Heart className={cn("w-5 h-5 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
+                          <Heart className={cn("h-4 w-4 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
                         {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
                       </button>
                       <button onClick={() => setCommentPostId(post.id)} className="flex items-center gap-1.5 group">
-                        <MessageCircle className="w-5 h-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                          <MessageCircle className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
                       </button>
                     </div>
@@ -371,7 +334,7 @@ const Feed = () => {
 
                   <div className="relative">
                     <button onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
-                      <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
+                      <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                     </button>
                     {menuOpen === post.id && (
                       <div className="absolute right-0 top-7 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden">
