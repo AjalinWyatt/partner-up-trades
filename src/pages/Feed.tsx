@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -9,7 +9,6 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import StoriesBar, { type StoryGroup, type StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
 import wordmark from "@/assets/tradersworld-wordmark.png";
@@ -60,7 +59,8 @@ interface StoryProfileRow {
   avatar_url: string | null;
 }
 
-const FEED_MARKETS = ["Forex", "Futures", "Options"] as const;
+const FEED_FILTERS = ["All", "Crypto", "Forex", "Indices", "Futures", "Options", "Commodities"] as const;
+const FEED_MODES = ["Feed", "Pulse"] as const;
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
@@ -85,7 +85,8 @@ const Feed = () => {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-  const [selectedFeedMarket, setSelectedFeedMarket] = useState<(typeof FEED_MARKETS)[number]>("Forex");
+  const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Feed");
+  const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
