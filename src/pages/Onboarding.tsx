@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import authGlobe from "@/assets/auth-globe.png";
+import wordmark from "@/assets/tradersworld-wordmark.png";
 import StepperGlobe from "@/components/onboarding/StepperGlobe";
 import AvatarPicker from "@/components/onboarding/AvatarPicker";
 import PillSelect from "@/components/onboarding/PillSelect";
@@ -142,9 +143,7 @@ const Onboarding = () => {
       case 0:
         return (
           <div className="flex-1 flex flex-col items-center text-center px-7 pb-32 pt-10">
-            <h1 className="text-[28px] font-black text-foreground tracking-tight">
-              Traders<span className="font-black">World</span>
-            </h1>
+            <img src={wordmark} alt="TradersWorld" className="h-8 w-auto" loading="eager" />
             <div className="flex-1 flex items-center justify-center w-full my-8">
               <img
                 src={authGlobe}

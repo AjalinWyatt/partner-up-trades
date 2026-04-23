@@ -6,6 +6,7 @@ import AuthGlobeBackground from "@/components/AuthGlobeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import wordmark from "@/assets/tradersworld-wordmark.png";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -85,9 +86,7 @@ const SignIn = () => {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col px-7 pb-8 pt-[360px] max-w-md mx-auto w-full">
         {/* Brand + tagline */}
-        <h1 className="text-[44px] font-black text-foreground tracking-tight text-center leading-none">
-          Traders<span className="font-black">World</span>
-        </h1>
+        <img src={wordmark} alt="TradersWorld" className="mx-auto h-10 w-auto" loading="eager" />
         <p className="text-[15px] text-foreground text-center mt-3 flex items-center justify-center gap-3">
           <span>Trade Smarter</span>
           <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import StoriesBar, { type StoryGroup, type StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
+import lockup from "@/assets/tradersworld-lockup.png";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -544,14 +545,7 @@ const Feed = () => {
               <Menu className="h-3.5 w-3.5" />
             </button>
 
-            <div className="flex items-center gap-1.5">
-              <div className="flex h-4.5 w-4.5 items-center justify-center rounded-md bg-gradient-to-br from-primary to-success">
-                <Globe className="h-2.5 w-2.5 text-primary-foreground" />
-              </div>
-              <span className="text-xs font-black text-foreground tracking-tight">
-                traders<span className="bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">world</span>
-              </span>
-            </div>
+            <img src={lockup} alt="TradersWorld" className="h-5 w-auto" loading="eager" />
 
             <div className="flex items-center gap-2">
               <button onClick={() => setShowTopics(true)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
