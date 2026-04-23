@@ -60,7 +60,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [commentPreview, setCommentPreview] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const postId = post?.id ?? null;
   const media = post?.media_urls?.[0] || post?.media_url || post?.image_url || null;
