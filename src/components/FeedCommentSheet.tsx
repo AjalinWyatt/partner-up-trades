@@ -351,72 +351,6 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                   </button>
                 </div>
 
-                {myId && (
-                  <div className="relative mt-3 pl-11">
-                    <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
-                    <div className="relative flex gap-2.5">
-                      <div className="relative z-10 shrink-0 bg-card">
-                        {viewerProfile?.avatar_url ? (
-                          <img src={viewerProfile.avatar_url} alt="Your avatar" className="h-8 w-8 rounded-full object-cover" />
-                        ) : (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-foreground">
-                            {getInitials(viewerProfile?.full_name || "You")}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1 pt-0.5">
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                          <span className="font-bold text-foreground">{viewerProfile?.username || "you"}</span>
-                          <span className="text-muted-foreground">{editingCommentId ? "editing reply" : "replying"}</span>
-                        </div>
-                        <div className="mt-1 border-b border-border pb-2">
-                          <input
-                            ref={inputRef}
-                            value={text}
-                            onChange={e => setText(e.target.value)}
-                            onKeyDown={e => e.key === "Enter" && handleSend()}
-                            placeholder={`Reply to ${post.username}...`}
-                            className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
-                          />
-                          {commentPreview && (
-                            <div className="relative mt-2 inline-flex">
-                              <img src={commentPreview} alt="Reply upload" className="h-24 w-24 rounded-xl object-cover" />
-                              <button
-                                onClick={() => {
-                                  setCommentFile(null);
-                                  setCommentPreview(null);
-                                  if (fileInputRef.current) fileInputRef.current.value = "";
-                                }}
-                                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 pt-2">
-                          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground">
-                            <Camera className="h-4 w-4" />
-                            Photo
-                          </button>
-                          {(text || commentPreview || editingCommentId) && (
-                            <button onClick={clearComposer} className="text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground">
-                              Cancel
-                            </button>
-                          )}
-                          <button
-                            onClick={handleSend}
-                            disabled={(!text.trim() && !commentPreview && !editingCommentId) || sending}
-                            className="ml-auto text-[11px] font-bold text-primary transition-opacity disabled:opacity-40"
-                          >
-                            {editingCommentId ? "Save" : "Reply"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleCommentFile(e.target.files)} />
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -433,7 +367,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
               <p className="text-xs text-muted-foreground">No comments yet. Be the first!</p>
             </div>
           ) : (
-             comments.map(c => (
+            <>
+             {comments.map(c => (
                <div key={c.id} className="relative flex gap-2.5 pl-11">
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                 <button onClick={() => { onClose(); navigate(`/profile/${c.user_id}`); }} className="shrink-0">
@@ -469,7 +404,72 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                   </div>
                 </div>
               </div>
-            ))
+             ))}
+             {myId && (
+               <div className="relative flex gap-2.5 pl-11 pt-1">
+                 <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+                 <div className="relative z-10 shrink-0 bg-card">
+                   {viewerProfile?.avatar_url ? (
+                     <img src={viewerProfile.avatar_url} alt="Your avatar" className="h-8 w-8 rounded-full object-cover" />
+                   ) : (
+                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-foreground">
+                       {getInitials(viewerProfile?.full_name || "You")}
+                     </div>
+                   )}
+                 </div>
+                 <div className="min-w-0 flex-1 pt-0.5">
+                   <div className="flex items-center gap-1.5 text-[11px]">
+                     <span className="font-bold text-foreground">{viewerProfile?.username || "you"}</span>
+                     <span className="text-muted-foreground">{editingCommentId ? "editing reply" : "add reply"}</span>
+                   </div>
+                   <div className="mt-1 border-b border-border pb-2">
+                     <input
+                       ref={inputRef}
+                       value={text}
+                       onChange={e => setText(e.target.value)}
+                       onKeyDown={e => e.key === "Enter" && handleSend()}
+                       placeholder={`Reply to ${post.username}...`}
+                       className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                     />
+                     {commentPreview && (
+                       <div className="relative mt-2 inline-flex">
+                         <img src={commentPreview} alt="Reply upload" className="h-24 w-24 rounded-xl object-cover" />
+                         <button
+                           onClick={() => {
+                             setCommentFile(null);
+                             setCommentPreview(null);
+                             if (fileInputRef.current) fileInputRef.current.value = "";
+                           }}
+                           className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm"
+                         >
+                           <X className="h-3 w-3" />
+                         </button>
+                       </div>
+                     )}
+                   </div>
+                   <div className="flex items-center gap-4 pt-2">
+                     <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+                       <Camera className="h-4 w-4" />
+                       Photo
+                     </button>
+                     {(text || commentPreview || editingCommentId) && (
+                       <button onClick={clearComposer} className="text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+                         Cancel
+                       </button>
+                     )}
+                     <button
+                       onClick={handleSend}
+                       disabled={(!text.trim() && !commentPreview && !editingCommentId) || sending}
+                       className="ml-auto text-[11px] font-bold text-primary transition-opacity disabled:opacity-40"
+                     >
+                       {editingCommentId ? "Save" : "Reply"}
+                     </button>
+                   </div>
+                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleCommentFile(e.target.files)} />
+                 </div>
+               </div>
+             )}
+            </>
           )}
         </div>
 
