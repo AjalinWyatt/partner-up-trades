@@ -9,6 +9,14 @@ interface CreatePostModalProps {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  initialPost?: {
+    id: string;
+    content?: string | null;
+    caption?: string | null;
+    media_urls?: string[] | null;
+    market?: string | null;
+    tags?: string[] | null;
+  } | null;
 }
 
 const TAGS_BY_MARKET: Record<string, string[]> = {
@@ -19,7 +27,7 @@ const TAGS_BY_MARKET: Record<string, string[]> = {
 
 const COMMON_TAGS = ["crypto", "trading plan", "recap", "mindset", "breakout", "discipline"];
 
-export default function CreatePostModal({ open, onClose, onCreated }: CreatePostModalProps) {
+export default function CreatePostModal({ open, onClose, onCreated, initialPost = null }: CreatePostModalProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [content, setContent] = useState("");
@@ -55,6 +63,17 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
     load();
     setTimeout(() => textRef.current?.focus(), 60);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setContent(initialPost?.content || initialPost?.caption || "");
+    setSelectedMarket(initialPost?.market || "");
+    setSelectedTags(initialPost?.tags || []);
+    setFiles([]);
+    previews.forEach((url) => URL.revokeObjectURL(url));
+    setPreviews(initialPost?.media_urls || []);
+  }, [initialPost, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -98,7 +117,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   const handlePost = async () => {
     const trimmedContent = content.trim();
     if (!trimmedContent && files.length === 0) {
-      toast.error("Write something or add up to 4 images");
+      toast.error(initialPost ? "Add text or at least one image" : "Write something or add up to 4 images");
       return;
     }
 
@@ -132,10 +151,25 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
         tags: selectedTags,
       };
 
-      const { error: insertErr } = await supabase.from("posts").insert(insertData);
-      if (insertErr) throw insertErr;
+      if (initialPost) {
+        const payload = {
+          content: trimmedContent || null,
+          caption: trimmedContent || null,
+          image_url: mediaUrls[0] || initialPost.media_urls?.[0] || null,
+          media_url: mediaUrls[0] || initialPost.media_urls?.[0] || null,
+          media_type: (mediaUrls.length > 0 || initialPost.media_urls?.length) ? "image" : null,
+          media_urls: mediaUrls.length > 0 ? mediaUrls : initialPost.media_urls || [],
+          market: selectedMarket || null,
+          tags: selectedTags,
+        };
+        const { error: updateErr } = await supabase.from("posts").update(payload).eq("id", initialPost.id).eq("user_id", user.id);
+        if (updateErr) throw updateErr;
+      } else {
+        const { error: insertErr } = await supabase.from("posts").insert(insertData);
+        if (insertErr) throw insertErr;
+      }
 
-      toast.success("Posted!");
+      toast.success(initialPost ? "Post updated" : "Posted!");
       reset();
       onCreated();
     } catch (error) {
@@ -155,13 +189,13 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           <button onClick={reset} className="text-base font-semibold text-muted-foreground transition-colors hover:text-foreground">
             Cancel
           </button>
-          <span className="text-base font-extrabold text-foreground">New post</span>
+          <span className="text-base font-extrabold text-foreground">{initialPost ? "Edit post" : "New post"}</span>
           <button
             onClick={handlePost}
             disabled={posting || !canPost}
             className="rounded-full bg-gradient-to-r from-primary to-success px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
           >
-            {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Post"}
+            {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : initialPost ? "Save" : "Post"}
           </button>
         </div>
 
@@ -180,7 +214,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
                 ref={textRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="What's new?"
+                placeholder={initialPost ? "Edit your post..." : "What's new?"}
                 rows={6}
                 maxLength={1000}
                 className="w-full resize-none bg-transparent text-[15px] leading-7 text-foreground outline-none placeholder:text-muted-foreground"

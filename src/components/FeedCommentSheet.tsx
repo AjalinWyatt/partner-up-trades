@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Send, Heart, MessageCircle, Repeat2, Bookmark } from "lucide-react";
+import { X, Send, Heart, MessageCircle, Repeat2, Bookmark, Camera, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -11,6 +11,9 @@ interface Comment {
   user_id: string;
   content: string;
   created_at: string;
+  updated_at?: string;
+  media_url?: string | null;
+  media_type?: string | null;
   username: string;
   full_name: string;
   avatar_url: string | null;
@@ -53,12 +56,16 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [commentFile, setCommentFile] = useState<File | null>(null);
+  const [commentPreview, setCommentPreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const postId = post?.id ?? null;
   const media = post?.media_urls?.[0] || post?.media_url || post?.image_url || null;
 
   useEffect(() => {
-    if (!postId) { setComments([]); return; }
+    if (!postId) { setComments([]); setEditingCommentId(null); setCommentFile(null); setCommentPreview(null); return; }
     const load = async () => {
       setLoading(true);
       const { data: rawComments } = await supabase
@@ -127,12 +134,58 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
   }, [postId]);
 
   const handleSend = async () => {
-    if (!myId || !text.trim() || !postId || sending) return;
+    if (!myId || !postId || sending || (!text.trim() && !commentFile && !editingCommentId)) return;
     setSending(true);
+
+    let mediaUrl: string | null = null;
+    let mediaType: string | null = null;
+
+    if (commentFile) {
+      const ext = commentFile.name.split(".").pop() || "jpg";
+      const filePath = `${myId}/${Date.now()}-comment.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("post-images")
+        .upload(filePath, commentFile, { upsert: true, contentType: commentFile.type });
+      if (uploadErr) {
+        setSending(false);
+        return;
+      }
+      mediaUrl = supabase.storage.from("post-images").getPublicUrl(filePath).data.publicUrl;
+      mediaType = commentFile.type.startsWith("image/") ? "image" : null;
+    }
+
+    const trimmed = text.trim();
+
+    if (editingCommentId) {
+      const current = comments.find((comment) => comment.id === editingCommentId);
+      const payload = {
+        content: trimmed,
+        media_url: mediaUrl ?? current?.media_url ?? null,
+        media_type: mediaType ?? current?.media_type ?? null,
+      };
+      const { data, error } = await supabase
+        .from("comments")
+        .update(payload)
+        .eq("id", editingCommentId)
+        .eq("user_id", myId)
+        .select()
+        .single();
+
+      if (!error && data) {
+        setComments((prev) => prev.map((comment) => comment.id === editingCommentId ? { ...comment, ...data } : comment));
+        setText("");
+        setEditingCommentId(null);
+        setCommentFile(null);
+        setCommentPreview(null);
+      }
+
+      setSending(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("comments")
-      .insert({ post_id: postId, user_id: myId, content: text.trim() })
+      .insert({ post_id: postId, user_id: myId, content: trimmed, media_url: mediaUrl, media_type: mediaType })
       .select()
       .single();
 
@@ -146,6 +199,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
       }]);
       onCountChange(postId, 1);
       setText("");
+      setCommentFile(null);
+      setCommentPreview(null);
 
       // Get post owner
       const { data: post } = await supabase.from("posts").select("user_id").eq("id", postId).single();
@@ -168,6 +223,28 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
     await supabase.from("comments").delete().eq("id", commentId);
     setComments(prev => prev.filter(c => c.id !== commentId));
     onCountChange(postId, -1);
+  };
+
+  const handleEdit = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setText(comment.content || "");
+    setCommentFile(null);
+    setCommentPreview(comment.media_url || null);
+    inputRef.current?.focus();
+  };
+
+  const handleCommentFile = (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    setCommentFile(file);
+    setCommentPreview(URL.createObjectURL(file));
+  };
+
+  const clearComposer = () => {
+    setText("");
+    setEditingCommentId(null);
+    setCommentFile(null);
+    setCommentPreview(null);
   };
 
   if (!postId) return null;
@@ -258,7 +335,13 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
 
                 {myId && (
                   <div className="pt-3">
-                    <div className="flex items-center gap-2 rounded-2xl border border-border bg-secondary px-3 py-2.5">
+                    <div className="rounded-2xl border border-border bg-secondary px-3 py-2.5">
+                      {commentPreview && (
+                        <div className="pb-2">
+                          <img src={commentPreview} alt="Comment upload" className="h-24 w-24 rounded-xl object-cover" />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
                       <input
                         ref={inputRef}
                         value={text}
@@ -267,14 +350,24 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                         placeholder={`Comment on ${post.username}'s post...`}
                         className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
                       />
+                        <button onClick={() => fileInputRef.current?.click()} className="text-muted-foreground transition-colors hover:text-foreground">
+                          <Camera className="h-4 w-4" />
+                        </button>
+                        {(text || commentPreview || editingCommentId) && (
+                          <button onClick={clearComposer} className="text-[10px] font-semibold text-muted-foreground hover:text-foreground">
+                            Cancel
+                          </button>
+                        )}
                       <button
                         onClick={handleSend}
-                        disabled={!text.trim() || sending}
+                        disabled={(!text.trim() && !commentPreview && !editingCommentId) || sending}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
                       >
                         <Send className="h-3.5 w-3.5" />
                       </button>
+                      </div>
                     </div>
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleCommentFile(e.target.files)} />
                   </div>
                 )}
               </div>
@@ -293,8 +386,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
               <p className="text-xs text-muted-foreground">No comments yet. Be the first!</p>
             </div>
           ) : (
-            comments.map(c => (
-              <div key={c.id} className="flex gap-2.5 group">
+             comments.map(c => (
+               <div key={c.id} className="flex gap-2.5 group">
                 <button onClick={() => { onClose(); navigate(`/profile/${c.user_id}`); }} className="shrink-0">
                   {c.avatar_url ? (
                     <img src={c.avatar_url} className="w-8 h-8 rounded-full object-cover" />
@@ -305,19 +398,25 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                   )}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <div className="bg-secondary rounded-xl px-3 py-2">
-                    <span className="text-[11px] font-bold text-foreground">{c.username}</span>
-                    <p className="text-xs text-foreground/90 leading-relaxed mt-0.5">{c.content}</p>
-                  </div>
+                   <div className="px-0.5 py-1">
+                     <div className="flex items-center gap-2">
+                       <span className="text-[11px] font-bold text-foreground">{c.username}</span>
+                       <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
+                       {c.updated_at && c.updated_at !== c.created_at && <span className="text-[9px] text-muted-foreground">edited</span>}
+                     </div>
+                     {!!c.content && <p className="mt-0.5 text-xs leading-relaxed text-foreground/90">{c.content}</p>}
+                     {c.media_url && <img src={c.media_url} alt="Comment attachment" className="mt-2 h-28 w-28 rounded-xl object-cover" />}
+                   </div>
                   <div className="flex items-center gap-3 mt-1 px-1">
-                    <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
                     {c.user_id === myId && (
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-[9px] text-destructive/70 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        Delete
-                      </button>
+                       <>
+                         <button onClick={() => handleEdit(c)} className="text-[9px] text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                           <Pencil className="mr-1 inline h-3 w-3" />Edit
+                         </button>
+                         <button onClick={() => handleDelete(c.id)} className="text-[9px] text-destructive/70 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                           <Trash2 className="mr-1 inline h-3 w-3" />Delete
+                         </button>
+                       </>
                     )}
                   </div>
                 </div>

@@ -71,6 +71,7 @@ const Feed = () => {
   const [myMarkets, setMyMarkets] = useState<string[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [showTopics, setShowTopics] = useState(false);
@@ -715,6 +716,18 @@ const Feed = () => {
                         )}
                         {(isAdmin || post.user_id === myId) && (
                           <button
+                            onClick={() => {
+                              setEditingPost(post);
+                              setShowCreatePost(true);
+                              setMenuOpen(null);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
+                          >
+                            <PenSquare className="w-4 h-4" /> Edit Post
+                          </button>
+                        )}
+                        {(isAdmin || post.user_id === myId) && (
+                          <button
                             onClick={async () => {
                               if (!confirm("Delete this post?")) return;
                               await supabase.from("posts").delete().eq("id", post.id);
@@ -737,13 +750,30 @@ const Feed = () => {
         )}
       </div>
 
-      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={() => loadFeed()} />
+      <CreatePostModal
+        open={showCreatePost}
+        onClose={() => {
+          setShowCreatePost(false);
+          setEditingPost(null);
+        }}
+        onCreated={() => {
+          setShowCreatePost(false);
+          setEditingPost(null);
+          loadFeed();
+        }}
+        initialPost={editingPost}
+      />
       <FeedTopicsSheet open={showTopics} onClose={() => setShowTopics(false)} currentMarket={primaryMarket} />
       <PostDetailModal
         open={!!selectedPost}
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
         myId={myId}
+        onEdit={(post) => {
+          setSelectedPost(null);
+          setEditingPost(post as FeedPost);
+          setShowCreatePost(true);
+        }}
       />
       <FeedCommentSheet
         post={posts.find((entry) => entry.id === commentPostId) || null}

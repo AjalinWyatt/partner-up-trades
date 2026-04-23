@@ -107,6 +107,7 @@ const Profile = () => {
   const [posts, setPosts] = useState<ProfilePostItem[]>([]);
   const [savedPosts, setSavedPosts] = useState<ProfilePostItem[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
@@ -612,8 +613,31 @@ const Profile = () => {
         )}
       </div>
 
-      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={refreshPosts} />
-      <PostDetailModal open={!!selectedPost} onClose={() => setSelectedPost(null)} post={selectedPost} myId={userId} onDeleted={refreshPosts} />
+      <CreatePostModal
+        open={showCreatePost}
+        onClose={() => {
+          setShowCreatePost(false);
+          setEditingPost(null);
+        }}
+        onCreated={() => {
+          setShowCreatePost(false);
+          setEditingPost(null);
+          refreshPosts();
+        }}
+        initialPost={editingPost}
+      />
+      <PostDetailModal
+        open={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        post={selectedPost}
+        myId={userId}
+        onDeleted={refreshPosts}
+        onEdit={(post) => {
+          setSelectedPost(null);
+          setEditingPost(post as ProfilePostItem);
+          setShowCreatePost(true);
+        }}
+      />
     </AppLayout>
   );
 };

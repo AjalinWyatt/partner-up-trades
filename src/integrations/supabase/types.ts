@@ -40,21 +40,30 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          media_type: string | null
+          media_url: string | null
           post_id: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           content: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           post_id: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           post_id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -584,6 +593,7 @@ export type Database = {
           media_url: string | null
           media_urls: string[]
           tags: string[]
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -598,6 +608,7 @@ export type Database = {
           media_url?: string | null
           media_urls?: string[]
           tags?: string[]
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -612,6 +623,7 @@ export type Database = {
           media_url?: string | null
           media_urls?: string[]
           tags?: string[]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
