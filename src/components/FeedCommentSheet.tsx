@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Send } from "lucide-react";
+import { X, Send, Heart, MessageCircle, Repeat2, Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface Comment {
   id: string;
@@ -16,19 +17,45 @@ interface Comment {
 }
 
 interface FeedCommentSheetProps {
-  postId: string | null;
+  post: {
+    id: string;
+    user_id: string;
+    content?: string | null;
+    caption?: string | null;
+    media_url?: string | null;
+    media_urls?: string[] | null;
+    image_url?: string | null;
+    media_type?: string | null;
+    created_at: string;
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
+    market?: string | null;
+    tags?: string[] | null;
+    liked: boolean;
+    saved: boolean;
+    reposted: boolean;
+    likeCount: number;
+    commentCount: number;
+  } | null;
   myId: string | null;
   onClose: () => void;
   onCountChange: (postId: string, delta: number) => void;
+  onToggleLike: (postId: string) => void;
+  onToggleSave: (postId: string) => void;
+  onToggleRepost: (postId: string) => void;
+  onShare: () => void;
 }
 
-export default function FeedCommentSheet({ postId, myId, onClose, onCountChange }: FeedCommentSheetProps) {
+export default function FeedCommentSheet({ post, myId, onClose, onCountChange, onToggleLike, onToggleSave, onToggleRepost, onShare }: FeedCommentSheetProps) {
   const navigate = useNavigate();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const postId = post?.id ?? null;
+  const media = post?.media_urls?.[0] || post?.media_url || post?.image_url || null;
 
   useEffect(() => {
     if (!postId) { setComments([]); return; }
@@ -163,6 +190,98 @@ export default function FeedCommentSheet({ postId, myId, onClose, onCountChange 
           <button onClick={onClose}><X className="w-5 h-5 text-muted-foreground" /></button>
         </div>
 
+        {post && (
+          <div className="border-b border-border px-4 py-3">
+            <div className="flex items-start gap-2.5">
+              <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="shrink-0">
+                {post.avatar_url ? (
+                  <img src={post.avatar_url} alt="Profile photo" className="h-8.5 w-8.5 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-foreground">
+                    {getInitials(post.full_name)}
+                  </div>
+                )}
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
+                    {post.username}
+                  </button>
+                  {post.market && (
+                    <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-bold text-primary">
+                      {post.market}
+                    </span>
+                  )}
+                  <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
+                </div>
+
+                {(post.content || post.caption) && (
+                  <p className="pt-1 whitespace-pre-wrap text-[13px] leading-6 text-foreground">{post.content || post.caption}</p>
+                )}
+
+                {!!post.tags?.length && (
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {post.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {media && (
+                  <button className="mt-2.5 block w-full overflow-hidden rounded-xl border border-border bg-muted">
+                    <img src={media} alt="Post media" className="aspect-[4/5] w-full object-cover" />
+                  </button>
+                )}
+
+                <div className="flex items-center gap-4 pt-2.5">
+                  <button onClick={() => onToggleLike(post.id)} className="flex items-center gap-1.5 group">
+                    <Heart className={cn("h-4 w-4 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
+                    {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
+                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <MessageCircle className="h-4 w-4 text-foreground" />
+                    {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
+                  </div>
+                  <button onClick={() => onToggleRepost(post.id)} className="group">
+                    <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                  </button>
+                  <button onClick={onShare} className="group">
+                    <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+                  </button>
+                  <button onClick={() => onToggleSave(post.id)} className="group ml-auto">
+                    <Bookmark className={cn("h-4 w-4 transition-colors", post.saved ? "fill-primary text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                  </button>
+                </div>
+
+                {myId && (
+                  <div className="pt-3">
+                    <div className="flex items-center gap-2 rounded-2xl border border-border bg-secondary px-3 py-2.5">
+                      <input
+                        ref={inputRef}
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && handleSend()}
+                        placeholder={`Comment on ${post.username}'s post...`}
+                        className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                      />
+                      <button
+                        onClick={handleSend}
+                        disabled={!text.trim() || sending}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Comments list */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {loading ? (
@@ -207,26 +326,6 @@ export default function FeedCommentSheet({ postId, myId, onClose, onCountChange 
           )}
         </div>
 
-        {/* Input */}
-        {myId && (
-          <div className="flex items-center gap-2 px-4 py-3 border-t border-border bg-card">
-            <input
-              ref={inputRef}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSend()}
-              placeholder="Add a comment..."
-              className="flex-1 bg-secondary border border-border rounded-full px-4 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!text.trim() || sending}
-              className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-success flex items-center justify-center shrink-0 disabled:opacity-40"
-            >
-              <Send className="w-4 h-4 text-primary-foreground" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
