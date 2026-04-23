@@ -243,9 +243,7 @@ const Feed = () => {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
               <Globe className="w-7 h-7 text-primary" />
             </div>
-            <p className="text-sm font-bold text-foreground mb-1">
-              {feedTab === "my" ? `No posts in your markets yet` : "No posts yet"}
-            </p>
+            <p className="mb-1 text-sm font-bold text-foreground">No posts in your markets yet</p>
             <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share your setup, your mindset, your journey, or a quick update.</p>
             <button
               onClick={() => setShowCreatePost(true)}
