@@ -60,7 +60,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [commentPreview, setCommentPreview] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const postId = post?.id ?? null;
   const media = post?.media_urls?.[0] || post?.media_url || post?.image_url || null;
@@ -229,8 +229,6 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
           entryId: postId,
         });
       }
-
-      onClose();
     }
     setSending(false);
   };
@@ -271,7 +269,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative bg-card border-t border-border rounded-t-2xl w-full max-w-lg max-h-[70vh] flex flex-col"
+        className="relative flex max-h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card"
         onClick={e => e.stopPropagation()}
       >
         {/* Handle */}
@@ -357,7 +355,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         )}
 
         {/* Comments list */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 space-y-3 overscroll-contain">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -423,13 +421,13 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                      <span className="text-muted-foreground">{editingCommentId ? "editing reply" : "add reply"}</span>
                    </div>
                    <div className="mt-1 border-b border-border pb-2">
-                     <input
+                      <textarea
                        ref={inputRef}
                        value={text}
                        onChange={e => setText(e.target.value)}
-                       onKeyDown={e => e.key === "Enter" && handleSend()}
                        placeholder={`Reply to ${post.username}...`}
-                       className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                        rows={2}
+                        className="w-full resize-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
                      />
                      {commentPreview && (
                        <div className="relative mt-2 inline-flex">
