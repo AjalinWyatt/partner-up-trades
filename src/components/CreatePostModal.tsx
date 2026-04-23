@@ -224,7 +224,7 @@ export default function CreatePostModal({ open, onClose, onCreated, initialPost 
             ))}
           </div>
 
-          {step === 1 && (
+          {step === 1 ? (
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 {userProfile?.avatar_url ? (
@@ -286,9 +286,7 @@ export default function CreatePostModal({ open, onClose, onCreated, initialPost 
                 <span>{content.length}/1000</span>
               </div>
             </div>
-          )}
-
-          {step === 2 && (
+          ) : step === 2 ? (
             <div className="space-y-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -341,9 +339,7 @@ export default function CreatePostModal({ open, onClose, onCreated, initialPost 
                 </div>
               </div>
             </div>
-          )}
-
-          {step === 3 && (
+          ) : (
             <div className="space-y-4">
               <div className="rounded-[22px] border border-border bg-secondary/40 p-4">
                 <div className="flex items-center justify-between gap-3">
