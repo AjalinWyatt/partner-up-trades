@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu, Repeat2, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
 import PostDetailModal from "@/components/PostDetailModal";
-import FeedTopicsSheet from "@/components/FeedTopicsSheet";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import StoriesBar, { type StoryGroup, type StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
-import lockup from "@/assets/tradersworld-lockup.png";
+import wordmark from "@/assets/tradersworld-wordmark.png";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -61,6 +60,8 @@ interface StoryProfileRow {
   avatar_url: string | null;
 }
 
+const FEED_MARKETS = ["Forex", "Futures", "Options"] as const;
+
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
@@ -74,7 +75,6 @@ const Feed = () => {
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
-  const [showTopics, setShowTopics] = useState(false);
   const [postToShare, setPostToShare] = useState<FeedPost | null>(null);
   const [shareTargets, setShareTargets] = useState<ShareTarget[]>([]);
   const [shareSearch, setShareSearch] = useState("");
@@ -85,6 +85,7 @@ const Feed = () => {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+  const [selectedFeedMarket, setSelectedFeedMarket] = useState<(typeof FEED_MARKETS)[number]>("Forex");
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
@@ -524,7 +525,18 @@ const Feed = () => {
     toast.success(`Sent to ${target.username}`);
   };
 
-  const primaryMarket = myMarkets[0] || "Forex";
+  const primaryMarket = FEED_MARKETS.includes((myMarkets[0] || "Forex") as (typeof FEED_MARKETS)[number])
+    ? (myMarkets[0] as (typeof FEED_MARKETS)[number])
+    : "Forex";
+
+  const visiblePosts = useMemo(
+    () => posts.filter((post) => (post.market || "Forex") === selectedFeedMarket),
+    [posts, selectedFeedMarket]
+  );
+
+  useEffect(() => {
+    setSelectedFeedMarket(primaryMarket);
+  }, [primaryMarket]);
 
   if (loading) {
     return (
@@ -542,18 +554,38 @@ const Feed = () => {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <button onClick={() => setShowTopics(true)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-              <Menu className="h-3.5 w-3.5" />
-            </button>
-
-            <img src={lockup} alt="TradersWorld" className="h-5 w-auto" loading="eager" />
+            <img src={wordmark} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setShowTopics(true)} className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-                <Search className="h-3.5 w-3.5" />
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+                aria-label="Create post"
+              >
+                <Plus className="h-4 w-4" />
               </button>
               <NotificationBell />
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto px-4 pb-3 scrollbar-none">
+            {FEED_MARKETS.map((market) => {
+              const active = selectedFeedMarket === market;
+              return (
+                <button
+                  key={market}
+                  onClick={() => setSelectedFeedMarket(market)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-secondary text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  {market}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -566,30 +598,13 @@ const Feed = () => {
           onOpenStory={openStoryGroup}
         />
 
-        <div className="border-b border-border px-4 py-2.5">
-          <button
-            onClick={() => setShowCreatePost(true)}
-            className="flex w-full items-center gap-3 text-left transition-colors hover:opacity-90"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-success/20 text-xs font-black text-primary">
-              {primaryMarket.slice(0, 1)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] text-muted-foreground">Share a thought, chart, recap, or setup</p>
-            </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground">
-              <PenSquare className="h-3.5 w-3.5" />
-            </div>
-          </button>
-        </div>
-
-        {posts.length === 0 ? (
+        {visiblePosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
               <Globe className="w-7 h-7 text-primary" />
             </div>
-            <p className="mb-1 text-sm font-bold text-foreground">No posts in your markets yet</p>
-            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share your setup, your mindset, your journey, or a quick update.</p>
+            <p className="mb-1 text-sm font-bold text-foreground">No {selectedFeedMarket} posts yet</p>
+            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share a chart, setup, recap, or quick update for this market.</p>
             <button
               onClick={() => setShowCreatePost(true)}
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-success text-sm font-bold text-primary-foreground"
@@ -599,7 +614,7 @@ const Feed = () => {
           </div>
         ) : (
           <div>
-            {posts.map((post) => (
+            {visiblePosts.map((post) => (
                 <div key={post.id} className="border-b border-border px-4 py-3">
                 {/* Post Header */}
                   <div className="flex items-start gap-2.5">
@@ -763,7 +778,6 @@ const Feed = () => {
         }}
         initialPost={editingPost}
       />
-      <FeedTopicsSheet open={showTopics} onClose={() => setShowTopics(false)} currentMarket={primaryMarket} />
       <PostDetailModal
         open={!!selectedPost}
         onClose={() => setSelectedPost(null)}
