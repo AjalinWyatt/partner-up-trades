@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Trash2, Pencil } from "lucide-react";
+import { Heart, Trash2, Pencil, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,11 +91,17 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden bg-card border-border rounded-xl max-h-[90vh]">
+      <DialogContent className="max-h-[100dvh] max-w-3xl overflow-hidden rounded-none border-border bg-card p-0 sm:max-h-[90vh] sm:rounded-xl">
         <DialogTitle className="sr-only">Post Detail</DialogTitle>
-        <div className="flex flex-col md:flex-row max-h-[90vh]">
+        <div className="flex max-h-[100dvh] flex-col md:max-h-[90vh] md:flex-row">
           {/* Media / Content */}
-          <div className="md:w-[60%] bg-black/30 flex items-center justify-center min-h-[300px] max-h-[60vh] md:max-h-none">
+          <div className="relative flex min-h-[260px] max-h-[48dvh] items-center justify-center bg-black/30 md:max-h-none md:w-[60%]">
+            <button
+              onClick={onClose}
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-background/60 text-foreground backdrop-blur-sm"
+            >
+              <X className="h-4 w-4" />
+            </button>
             {(post.media_urls?.length || 0) > 1 ? (
               <Carousel opts={{ loop: true }} className="w-full">
                 <CarouselContent className="ml-0">
@@ -118,9 +124,9 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
           </div>
 
           {/* Details */}
-          <div className="md:w-[40%] flex flex-col overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:w-[40%]">
             {/* Header */}
-            <div className="flex items-center gap-2.5 p-3 border-b border-border">
+            <div className="flex items-center gap-2.5 border-b border-border p-3">
               <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }}>
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} className="w-8 h-8 rounded-full object-cover" />
@@ -165,7 +171,7 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
             )}
 
             {/* Comments */}
-            <div className="flex-1 px-3 py-2 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
               <CommentThread
                 entryId={post.id}
                 entryOwnerId={post.user_id}
