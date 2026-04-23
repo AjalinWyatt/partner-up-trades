@@ -381,13 +381,13 @@ const Feed = () => {
                     {!!post.media_urls?.length && (
                         <button onClick={() => setSelectedPost(post)} className="mt-2.5 block w-full overflow-hidden rounded-xl border border-border bg-muted">
                         {post.media_urls.length === 1 ? (
-                          <img src={post.media_urls[0]} alt="" className="w-full max-h-[500px] object-cover" />
+                          <img src={post.media_urls[0]} alt="" className="aspect-[4/5] w-full object-cover" />
                         ) : (
                           <Carousel opts={{ loop: true }} className="w-full">
                             <CarouselContent className="ml-0">
                               {post.media_urls.map((url) => (
                                 <CarouselItem key={url} className="pl-0">
-                                  <img src={url} alt="" className="w-full max-h-[500px] object-cover" />
+                                  <img src={url} alt="" className="aspect-[4/5] w-full object-cover" />
                                 </CarouselItem>
                               ))}
                             </CarouselContent>
@@ -396,7 +396,7 @@ const Feed = () => {
                       </button>
                     )}
 
-                      <div className="flex items-center gap-5 pt-2.5">
+                      <div className="flex items-center gap-4 pt-2.5">
                       <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
                           <Heart className={cn("h-4 w-4 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
                         {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
@@ -405,6 +405,15 @@ const Feed = () => {
                           <MessageCircle className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
                       </button>
+                        <button onClick={() => toggleRepost(post.id)} className="group">
+                          <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                        </button>
+                        <button onClick={() => sharePost(post)} className="group">
+                          <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+                        </button>
+                        <button onClick={() => toggleSave(post.id)} className="group ml-auto">
+                          <Bookmark className={cn("h-4 w-4 transition-colors", post.saved ? "fill-primary text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                        </button>
                     </div>
                   </div>
 
