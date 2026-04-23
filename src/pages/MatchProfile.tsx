@@ -4,6 +4,7 @@ import { ChevronDown, ChevronsDown, ChevronsUp, Bookmark, Gem, Zap, ChevronLeft 
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import lockup from "@/assets/tradersworld-lockup.png";
 
 interface ProfileFull {
   id: string;
@@ -159,9 +160,7 @@ const MatchProfile = () => {
           >
             <ChevronLeft className="w-7 h-7 text-foreground" strokeWidth={2.5} />
           </button>
-          <h1 className="text-[24px] font-black tracking-tight text-foreground">
-            TradersWorld
-          </h1>
+          <img src={lockup} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
           <button
             onClick={() => navigate("/profile")}
             className="w-12 h-12 rounded-full overflow-hidden border-2 border-border shrink-0"
