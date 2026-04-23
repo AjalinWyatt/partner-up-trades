@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,9 +26,10 @@ interface PostDetailModalProps {
   } | null;
   myId: string | null;
   onDeleted?: () => void;
+  onEdit?: (post: NonNullable<PostDetailModalProps["post"]>) => void;
 }
 
-const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailModalProps) => {
+const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostDetailModalProps) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ username: string; full_name: string; avatar_url: string | null } | null>(null);
   const [liked, setLiked] = useState(false);
@@ -182,17 +183,28 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
                   {likeCount > 0 && <span className="text-xs text-muted-foreground">{likeCount}</span>}
                 </button>
                 {myId === post.user_id && (
-                  <button
-                    onClick={async () => {
-                      if (!confirm("Delete this post?")) return;
-                      await supabase.from("posts").delete().eq("id", post.id);
-                      onClose();
-                      onDeleted?.();
-                    }}
-                    className="flex items-center gap-1 text-destructive/70 hover:text-destructive text-xs"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onEdit?.(post);
+                      }}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Delete this post?")) return;
+                        await supabase.from("posts").delete().eq("id", post.id);
+                        onClose();
+                        onDeleted?.();
+                      }}
+                      className="flex items-center gap-1 text-destructive/70 hover:text-destructive text-xs"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
