@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Globe, Shield, CheckCircle, XCircle, Zap, Users, User, Search, TrendingUp, MessageSquare, BarChart3, Calendar, Bell, Heart, ArrowRight, Instagram, Youtube, Star } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import lockup from "@/assets/tradersworld-lockup.png";
 
 /* ─── Waitlist Modal ─── */
 const WaitlistModal = ({ open, onClose, market }: { open: boolean; onClose: () => void; market: string }) => {
@@ -138,11 +139,8 @@ const Landing = () => {
       {/* ── NAV ── */}
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#0D1410] border-b border-white/[0.06] transition-all" style={{ boxShadow: navShadow ? "0 4px 24px rgba(0,0,0,0.3)" : "none" }}>
         <div className="max-w-[1140px] mx-auto px-8 h-[68px] flex items-center justify-between">
-          <a href="#" className="font-['Gabarito'] text-xl font-black text-white tracking-[-0.04em] flex items-center gap-2 no-underline">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1e70e0] to-[#12b87a] flex items-center justify-center">
-              <Globe className="w-4 h-4 text-white" />
-            </div>
-            traders<span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">world</span>
+          <a href="#" className="flex items-center no-underline">
+            <img src={lockup} alt="TradersWorld" className="h-7 w-auto" loading="eager" />
           </a>
           <div className="hidden md:flex items-center gap-9">
             <button onClick={() => scrollTo("how")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">How it works</button>
@@ -522,9 +520,7 @@ const Landing = () => {
         <div className="max-w-[1140px] mx-auto px-8">
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr] max-md:grid-cols-2 gap-12 mb-12">
             <div>
-              <div className="font-['Gabarito'] text-xl font-black text-white tracking-[-0.04em] mb-2.5 flex items-center gap-2">
-                traders<span className="bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">world</span>
-              </div>
+              <img src={lockup} alt="TradersWorld" className="mb-2.5 h-7 w-auto" loading="lazy" />
               <p className="text-[13px] text-white/35 leading-relaxed">The accountability platform for serious traders. Find your partner and build the consistency your trading demands.</p>
             </div>
             <div>
