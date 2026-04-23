@@ -52,7 +52,7 @@ const ViewProfile = () => {
         supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
       ]);
 
-      const { data: ownPosts } = await supabase.from("posts").select("*").eq("user_id", id).order("created_at", { ascending: false });
+      const { data: ownPosts } = await supabase.from("posts").select("*").eq("user_id", userId).order("created_at", { ascending: false });
       const repostIds = [...new Set((repostRows || []).map((row: any) => row.post_id))];
       const { data: repostPosts } = repostIds.length > 0 ? await supabase.from("posts").select("*").in("id", repostIds) : { data: [] as any[] };
       const repostAuthorIds = [...new Set((repostPosts || []).map((post: any) => post.user_id))];
@@ -270,7 +270,7 @@ const ViewProfile = () => {
           </div>
         </div>
 
-        {myId && myId !== id && (
+        {myId && myId !== userId && (
           <div className="mt-5 px-5">
             {isBlocked ? (
               <button onClick={handleUnblock} className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted">
@@ -278,7 +278,7 @@ const ViewProfile = () => {
                 Unblock
               </button>
             ) : connectionStatus === "accepted" ? (
-              <button onClick={() => navigate(`/messages?partner=${id}`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
+              <button onClick={() => navigate(`/messages?partner=${userId}`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
                 <MessageSquare className="h-4 w-4" />
                 Message
               </button>
