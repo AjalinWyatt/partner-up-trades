@@ -28,6 +28,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   const [selectedMarket, setSelectedMarket] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,10 +43,14 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) return;
-      const { data: tp } = await supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle();
+      const [{ data: tp }, { data: profile }] = await Promise.all([
+        supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("username, avatar_url").eq("id", user.id).maybeSingle(),
+      ]);
       const markets = tp?.markets || [];
       setUserMarkets(markets);
       setSelectedMarket(current => current || markets[0] || "");
+      setUserProfile(profile || null);
     };
     load();
     setTimeout(() => textRef.current?.focus(), 60);
@@ -145,31 +150,43 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm pt-[env(safe-area-inset-top)]" onClick={reset}>
-      <div className="mx-4 mt-16 w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <button onClick={reset} className="text-muted-foreground transition-colors hover:text-foreground">
-            <X className="h-5 w-5" />
+      <div className="mx-4 mt-10 w-full max-w-lg overflow-hidden rounded-[28px] border border-border bg-card" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-4">
+          <button onClick={reset} className="text-base font-semibold text-muted-foreground transition-colors hover:text-foreground">
+            Cancel
           </button>
-          <span className="text-sm font-extrabold text-foreground">Create post</span>
+          <span className="text-base font-extrabold text-foreground">New post</span>
           <button
             onClick={handlePost}
             disabled={posting || !canPost}
-            className="rounded-full bg-gradient-to-r from-primary to-success px-4 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
+            className="rounded-full bg-gradient-to-r from-primary to-success px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
           >
             {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Post"}
           </button>
         </div>
 
         <div className="px-4 pt-4">
-          <textarea
-            ref={textRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Share your idea, recap, or setup..."
-            rows={5}
-            maxLength={1000}
-            className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
-          />
+          <div className="flex items-start gap-3">
+            {userProfile?.avatar_url ? (
+              <img src={userProfile.avatar_url} alt="Your avatar" className="h-11 w-11 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                {(userProfile?.username || "@").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="pb-2 text-sm font-bold text-foreground">@{userProfile?.username || "trader"}</div>
+              <textarea
+                ref={textRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What's new?"
+                rows={6}
+                maxLength={1000}
+                className="w-full resize-none bg-transparent text-[15px] leading-7 text-foreground outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
           <div className="mt-2 text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
         </div>
 
@@ -193,7 +210,9 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
               <Hash className="h-5 w-5" />
             </button>
           </div>
-          <span className="text-[10px] text-muted-foreground">Up to 4 images</span>
+          <button onClick={reset} className="text-muted-foreground transition-colors hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3">

@@ -524,15 +524,44 @@ const Profile = () => {
 
         {/* Tab Content */}
         {activeTab === 0 ? (
-          posts.filter((p: any) => p.image_url || p.media_url).length > 0 ? (
-            <div className="grid grid-cols-3 gap-[2px] mt-[2px]">
-              {posts.filter((p: any) => p.image_url || p.media_url).map((post: any) => (
-                <button key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square overflow-hidden bg-muted">
-                  {post.media_type === "video" ? (
-                    <video src={post.media_url} className="w-full h-full object-cover" muted />
-                  ) : (
-                    <img src={post.image_url || post.media_url} alt="" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
-                  )}
+          posts.length > 0 ? (
+            <div>
+              {posts.map((post: any) => (
+                <button
+                  key={post.id}
+                  onClick={() => setSelectedPost(post)}
+                  className="block w-full border-b border-border px-5 py-4 text-left transition-colors hover:bg-muted/20"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="h-11 w-11 overflow-hidden rounded-full bg-muted">
+                      {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{getInitials()}</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-foreground">{displayUsername}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(post.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {(post.content || post.caption) && (
+                        <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>
+                      )}
+                      {!!post.tags?.length && (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {post.tags.map((tag: string) => (
+                            <span key={tag} className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                      {!!(post.media_urls?.length || post.media_url || post.image_url) && (
+                        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-muted">
+                          <img src={post.media_urls?.[0] || post.media_url || post.image_url} alt="Post media" className="max-h-[320px] w-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
