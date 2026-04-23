@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu, Repeat2, Send, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -33,6 +33,8 @@ interface FeedPost {
   avatar_url: string | null;
   markets: string[];
   liked: boolean;
+  saved: boolean;
+  reposted: boolean;
   likeCount: number;
   commentCount: number;
 }
@@ -82,12 +84,14 @@ const Feed = () => {
     const postIds = postsData.map((p: any) => p.id);
     const authorIds = [...new Set(postsData.map((p: any) => p.user_id))];
 
-    const [profilesRes, likesRes, myLikesRes, commentsRes, tradingRes] = await Promise.all([
+    const [profilesRes, likesRes, myLikesRes, commentsRes, tradingRes, savedRes, repostedRes] = await Promise.all([
       supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds).eq("user_id", user.id),
       supabase.from("comments").select("post_id").in("post_id", postIds),
       supabase.from("trading_profiles").select("user_id, markets").in("user_id", authorIds),
+      supabase.from("saved_posts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
+      supabase.from("post_reposts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
     ]);
 
     const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.id, p]));
@@ -98,6 +102,8 @@ const Feed = () => {
       likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1;
     });
     const myLikedSet = new Set((myLikesRes.data || []).map((l: any) => l.post_id));
+    const mySavedSet = new Set((savedRes.data || []).map((s: any) => s.post_id));
+    const myRepostedSet = new Set((repostedRes.data || []).map((r: any) => r.post_id));
     const commentCounts: Record<string, number> = {};
     (commentsRes.data || []).forEach((c: any) => {
       commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1;
@@ -123,6 +129,8 @@ const Feed = () => {
         avatar_url: prof?.avatar_url || null,
         markets: tp?.markets || [],
         liked: myLikedSet.has(p.id),
+        saved: mySavedSet.has(p.id),
+        reposted: myRepostedSet.has(p.id),
         likeCount: likeCounts[p.id] || 0,
         commentCount: commentCounts[p.id] || 0,
       };
@@ -178,6 +186,74 @@ const Feed = () => {
           entryId: postId,
         });
       }
+    }
+  };
+
+  const toggleSave = async (postId: string) => {
+    if (!myId) return;
+    const post = posts.find((entry) => entry.id === postId);
+    if (!post) return;
+
+    if (post.saved) {
+      const { error } = await supabase.from("saved_posts" as any).delete().eq("user_id", myId).eq("post_id", postId);
+      if (error) {
+        toast.error("Could not remove saved post");
+        return;
+      }
+      setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, saved: false } : entry)));
+      return;
+    }
+
+    const { error } = await supabase.from("saved_posts" as any).insert({ user_id: myId, post_id: postId });
+    if (error) {
+      toast.error("Could not save post");
+      return;
+    }
+    setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, saved: true } : entry)));
+    toast.success("Post saved");
+  };
+
+  const toggleRepost = async (postId: string) => {
+    if (!myId) return;
+    const post = posts.find((entry) => entry.id === postId);
+    if (!post) return;
+
+    if (post.reposted) {
+      const { error } = await supabase.from("post_reposts" as any).delete().eq("user_id", myId).eq("post_id", postId);
+      if (error) {
+        toast.error("Could not remove repost");
+        return;
+      }
+      setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, reposted: false } : entry)));
+      return;
+    }
+
+    const { error } = await supabase.from("post_reposts" as any).insert({ user_id: myId, post_id: postId });
+    if (error) {
+      toast.error("Could not repost");
+      return;
+    }
+    setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, reposted: true } : entry)));
+    toast.success("Reposted");
+  };
+
+  const sharePost = async (post: FeedPost) => {
+    const shareUrl = `${window.location.origin}/profile/${post.user_id}`;
+    const shareData = {
+      title: `${post.username} on TradersWorld`,
+      text: post.content || "Check out this post",
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copied");
+      }
+    } catch {
+      return;
     }
   };
 
