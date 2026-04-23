@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -9,7 +9,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import StoriesBar, { type StoryGroup, type StoryItem } from "@/components/feed/StoriesBar";
+import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
 import wordmark from "@/assets/tradersworld-wordmark.png";
@@ -60,7 +60,8 @@ interface StoryProfileRow {
   avatar_url: string | null;
 }
 
-const FEED_MARKETS = ["Forex", "Futures", "Options"] as const;
+const FEED_FILTERS = ["All", "Crypto", "Forex", "Indices", "Futures", "Options", "Commodities"] as const;
+const FEED_MODES = ["Feed", "Pulse"] as const;
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
@@ -85,7 +86,8 @@ const Feed = () => {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-  const [selectedFeedMarket, setSelectedFeedMarket] = useState<(typeof FEED_MARKETS)[number]>("Forex");
+  const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Feed");
+  const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
@@ -525,18 +527,35 @@ const Feed = () => {
     toast.success(`Sent to ${target.username}`);
   };
 
-  const primaryMarket = FEED_MARKETS.includes((myMarkets[0] || "Forex") as (typeof FEED_MARKETS)[number])
-    ? (myMarkets[0] as (typeof FEED_MARKETS)[number])
-    : "Forex";
+  const pulseHasNew = useMemo(
+    () => allStoryGroups.some((group) => !group.isOwn && !group.viewed),
+    [allStoryGroups]
+  );
 
-  const visiblePosts = useMemo(
-    () => posts.filter((post) => (post.market || "Forex") === selectedFeedMarket),
-    [posts, selectedFeedMarket]
+  const visiblePosts = useMemo(() => {
+    if (selectedFeedFilter === "All") return posts;
+
+    return posts.filter((post) => {
+      const postTags = (post.tags || []).map((tag) => tag.trim().toLowerCase());
+      return [post.market, ...post.tags || []]
+        .filter(Boolean)
+        .some((value) => value!.toString().trim().toLowerCase() === selectedFeedFilter.toLowerCase()) || postTags.includes(selectedFeedFilter.toLowerCase());
+    });
+  }, [posts, selectedFeedFilter]);
+
+  const pulseRows = useMemo(
+    () => allStoryGroups.map((group, index) => ({
+      group,
+      index,
+      latestStory: group.stories[group.stories.length - 1],
+    })),
+    [allStoryGroups]
   );
 
   useEffect(() => {
-    setSelectedFeedMarket(primaryMarket);
-  }, [primaryMarket]);
+    if (myMarkets.includes(selectedFeedFilter)) return;
+    setSelectedFeedFilter("All");
+  }, [myMarkets, selectedFeedFilter]);
 
   if (loading) {
     return (
@@ -551,215 +570,286 @@ const Feed = () => {
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <img src={wordmark} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
+        <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
+          <div className="space-y-4 px-4 pb-4 pt-3">
+            <div className="flex items-center justify-between gap-3">
+              <img src={wordmark} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowCreatePost(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
-                aria-label="Create post"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-              <NotificationBell />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto px-4 pb-3 scrollbar-none">
-            {FEED_MARKETS.map((market) => {
-              const active = selectedFeedMarket === market;
-              return (
+              <div className="flex items-center gap-2">
                 <button
-                  key={market}
-                  onClick={() => setSelectedFeedMarket(market)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-secondary text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
+                  onClick={() => activeMode === "Feed" ? setShowCreatePost(true) : setShowCreateStory(true)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+                  aria-label={activeMode === "Feed" ? "Create post" : "Create pulse"}
                 >
-                  {market}
+                  <Plus className="h-4 w-4" />
                 </button>
-              );
-            })}
+                <NotificationBell />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="grid h-10 w-full max-w-[220px] grid-cols-2 rounded-full border border-border bg-secondary p-1">
+                {FEED_MODES.map((mode) => {
+                  const active = activeMode === mode;
+                  const isPulse = mode === "Pulse";
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => setActiveMode(mode)}
+                      className={cn(
+                        "relative rounded-full text-sm font-medium transition-all",
+                        active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        {mode}
+                        {isPulse && pulseHasNew && !active && <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary))]" />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeMode === "Feed" ? (
+                <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Trader social</span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-primary">
+                  <Sparkles className="h-3.5 w-3.5" /> Live now
+                </span>
+              )}
+            </div>
+
+            {activeMode === "Feed" && (
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+                {FEED_FILTERS.map((filter) => {
+                  const active = selectedFeedFilter === filter;
+                  return (
+                    <button
+                      key={filter}
+                      onClick={() => setSelectedFeedFilter(filter)}
+                      className={cn(
+                        "shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all",
+                        active
+                          ? "border-primary bg-primary/12 text-foreground shadow-[0_0_22px_hsl(var(--primary)/0.2)]"
+                          : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {filter}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
-        <StoriesBar
-          groups={otherStoryGroups}
-          ownGroup={ownStoryGroup}
-          myAvatarUrl={myProfile?.avatar_url || null}
-          myName={myProfile?.full_name || myProfile?.username || "You"}
-          onAddStory={() => setShowCreateStory(true)}
-          onOpenStory={openStoryGroup}
-        />
+        {activeMode === "Pulse" ? (
+          <div className="space-y-4 px-4 py-4">
+            <div className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+              <div className="border-b border-border px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Pulse</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <div>
+                    <h1 className="text-lg font-semibold text-foreground">Quick market snapshots</h1>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">Live reactions, wins, losses, and chart moments that disappear after 24 hours.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateStory(true)}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+                    aria-label="Add pulse"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
-        {visiblePosts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
-              <Globe className="w-7 h-7 text-primary" />
+              {pulseRows.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-secondary text-primary">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-foreground">No live pulse yet</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Drop the first market reaction, chart screenshot, or quick thought.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {pulseRows.map(({ group, index, latestStory }) => (
+                    <button
+                      key={group.userId}
+                      onClick={() => openStoryGroup(index)}
+                      className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-secondary/60"
+                    >
+                      <div className={cn(
+                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border bg-secondary text-sm font-semibold text-foreground",
+                        group.viewed ? "border-border" : "border-primary/40 shadow-[0_0_18px_hsl(var(--primary)/0.16)]"
+                      )}>
+                        {group.avatarUrl ? (
+                          <img src={group.avatarUrl} alt={group.fullName} className="h-full w-full rounded-2xl object-cover" />
+                        ) : (
+                          getInitials(group.fullName || group.username)
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-foreground">{group.username}</p>
+                          <span className="text-[11px] text-muted-foreground">{latestStory ? timeAgo(latestStory.createdAt) : "now"}</span>
+                        </div>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{latestStory?.caption || "Live pulse"}</p>
+                      </div>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <p className="mb-1 text-sm font-bold text-foreground">No {selectedFeedMarket} posts yet</p>
-            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share a chart, setup, recap, or quick update for this market.</p>
+          </div>
+        ) : visiblePosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-border bg-secondary text-primary">
+              <Globe className="h-6 w-6" />
+            </div>
+            <p className="mt-4 text-sm font-semibold text-foreground">No {selectedFeedFilter === "All" ? "posts" : `${selectedFeedFilter} posts`} yet</p>
+            <p className="mt-1 max-w-[280px] text-xs leading-5 text-muted-foreground">Post a chart, idea, meme, question, or recap to start shaping the conversation.</p>
             <button
               onClick={() => setShowCreatePost(true)}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-success text-sm font-bold text-primary-foreground"
+              className="mt-5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.22)]"
             >
               Create post
             </button>
           </div>
         ) : (
-          <div>
+          <div className="space-y-4 px-4 py-4">
             {visiblePosts.map((post) => (
-                <div key={post.id} className="border-b border-border px-4 py-3">
-                {/* Post Header */}
-                  <div className="flex items-start gap-2.5">
-                  <button onClick={() => navigate(`/profile/${post.user_id}`)}>
-                    {post.avatar_url ? (
-                        <img src={post.avatar_url} className="h-8.5 w-8.5 rounded-full object-cover" />
-                    ) : (
-                        <div className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-[10px] font-black text-primary-foreground">
-                        {getInitials(post.full_name)}
-                      </div>
-                    )}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                        <button onClick={() => navigate(`/profile/${post.user_id}`)} className="text-xs font-bold text-foreground hover:underline">
-                        {post.username}
-                      </button>
-                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                        <circle cx="10" cy="10" r="9" fill="url(#vbf)" />
-                        <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        <defs><linearGradient id="vbf" x1="0" y1="0" x2="20" y2="20"><stop stopColor="hsl(var(--primary))" /><stop offset="1" stopColor="hsl(var(--success))" /></linearGradient></defs>
-                      </svg>
-                      {/* Market tag from post */}
-                      {(post.market || post.markets[0]) && (
-                          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-bold text-primary">
-                          {post.market || post.markets[0]}
-                        </span>
+              <article key={post.id} className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_18px_48px_hsl(var(--background)/0.4)]">
+                <div className="p-4">
+                  <div className="flex items-start gap-3">
+                    <button onClick={() => navigate(`/profile/${post.user_id}`)} className="shrink-0">
+                      {post.avatar_url ? (
+                        <img src={post.avatar_url} alt={post.full_name} className="h-10 w-10 rounded-xl object-cover" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-secondary text-xs font-semibold text-foreground">
+                          {getInitials(post.full_name)}
+                        </div>
                       )}
-                      <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
-                    </div>
-
-                    {(post.content || post.caption) && (
-                        <div className="pt-1">
-                          <p className="whitespace-pre-wrap text-[13px] leading-6 text-foreground">{post.content || post.caption}</p>
-                      </div>
-                    )}
-
-                    {!!post.tags?.length && (
-                        <div className="flex flex-wrap gap-1.5 pt-2.5">
-                        {post.tags.map((tag) => (
-                            <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {!!post.media_urls?.length && (
-                        <button onClick={() => setSelectedPost(post)} className="mt-2.5 block w-full overflow-hidden rounded-xl border border-border bg-muted">
-                        {post.media_urls.length === 1 ? (
-                          <img src={post.media_urls[0]} alt="" className="aspect-[4/5] w-full object-cover" />
-                        ) : (
-                          <Carousel opts={{ loop: true }} className="w-full">
-                            <CarouselContent className="ml-0">
-                              {post.media_urls.map((url) => (
-                                <CarouselItem key={url} className="pl-0">
-                                  <img src={url} alt="" className="aspect-[4/5] w-full object-cover" />
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                          </Carousel>
-                        )}
-                      </button>
-                    )}
-
-                      <div className="flex items-center gap-4 pt-2.5">
-                      <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
-                          <Heart className={cn("h-4 w-4 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
-                        {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
-                      </button>
-                      <button onClick={() => setCommentPostId(post.id)} className="flex items-center gap-1.5 group">
-                          <MessageCircle className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-                        {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
-                      </button>
-                        <button onClick={() => toggleRepost(post.id)} className="group">
-                          <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                        </button>
-                        <button onClick={() => setPostToShare(post)} className="group">
-                          <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-                        </button>
-                        <button onClick={() => toggleSave(post.id)} className="group ml-auto">
-                          <Bookmark className={cn("h-4 w-4 transition-colors", post.saved ? "fill-primary text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                        </button>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <button onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
-                      <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                     </button>
-                    {menuOpen === post.id && (
-                      <div className="absolute right-0 top-7 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                        <button
-                          onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
-                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                        >
-                          <Eye className="w-4 h-4" /> View Profile
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => navigate(`/profile/${post.user_id}`)} className="truncate text-sm font-semibold text-foreground hover:underline">
+                          @{post.username.replace(/^@+/, "")}
                         </button>
-                        {post.user_id !== myId && (
-                          <>
-                            <button
-                              onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                            >
-                              <Link2 className="w-4 h-4" /> Request Match
-                            </button>
-                            <button
-                              onClick={() => setMenuOpen(null)}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                            >
-                              <UserPlus className="w-4 h-4" /> Follow
-                            </button>
-                          </>
+                        <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
+                      </div>
+                      <div className="mt-3 space-y-3">
+                        {(post.content || post.caption) && <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
+
+                        {!!post.tags?.length && (
+                          <div className="flex flex-wrap gap-2">
+                            {post.tags.slice(0, 3).map((tag) => (
+                              <span key={tag} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         )}
-                        {(isAdmin || post.user_id === myId) && (
-                          <button
-                            onClick={() => {
-                              setEditingPost(post);
-                              setShowCreatePost(true);
-                              setMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                          >
-                            <PenSquare className="w-4 h-4" /> Edit Post
-                          </button>
-                        )}
-                        {(isAdmin || post.user_id === myId) && (
-                          <button
-                            onClick={async () => {
-                              if (!confirm("Delete this post?")) return;
-                              await supabase.from("posts").delete().eq("id", post.id);
-                              setPosts(prev => prev.filter(p => p.id !== post.id));
-                              setMenuOpen(null);
-                              toast.success("Post deleted");
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" /> Delete Post
+
+                        {!!post.media_urls?.length && (
+                          <button onClick={() => setSelectedPost(post)} className="block w-full overflow-hidden rounded-[20px] border border-border bg-muted">
+                            {post.media_urls.length === 1 ? (
+                              <img src={post.media_urls[0]} alt="Post media" className="aspect-[4/5] w-full object-cover" />
+                            ) : (
+                              <Carousel opts={{ loop: true }} className="w-full">
+                                <CarouselContent className="ml-0">
+                                  {post.media_urls.map((url) => (
+                                    <CarouselItem key={url} className="pl-0">
+                                      <img src={url} alt="Post media" className="aspect-[4/5] w-full object-cover" />
+                                    </CarouselItem>
+                                  ))}
+                                </CarouselContent>
+                              </Carousel>
+                            )}
                           </button>
                         )}
                       </div>
-                    )}
+
+                      <div className="mt-4 flex items-center gap-5">
+                        <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                          <Heart className={cn("h-4 w-4", post.liked ? "fill-destructive text-destructive" : "")} />
+                          <span className="text-[11px]">{post.likeCount || "Like"}</span>
+                        </button>
+                        <button onClick={() => setCommentPostId(post.id)} className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                          <MessageCircle className="h-4 w-4" />
+                          <span className="text-[11px]">{post.commentCount || "Comment"}</span>
+                        </button>
+                        <button onClick={() => setPostToShare(post)} className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                          <Send className="h-4 w-4" />
+                          <span className="text-[11px]">Share</span>
+                        </button>
+                        <button onClick={() => toggleSave(post.id)} className="ml-auto text-muted-foreground transition-colors hover:text-foreground">
+                          <Bookmark className={cn("h-4 w-4", post.saved ? "fill-primary text-primary" : "")} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <button onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)} className="text-muted-foreground transition-colors hover:text-foreground">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                      {menuOpen === post.id && (
+                        <div className="absolute right-0 top-7 z-50 w-48 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-xl">
+                          <button
+                            onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                          >
+                            <Eye className="h-4 w-4" /> View Profile
+                          </button>
+                          {post.user_id !== myId && (
+                            <>
+                              <button
+                                onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
+                                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                              >
+                                <Link2 className="h-4 w-4" /> Request Match
+                              </button>
+                              <button
+                                onClick={() => setMenuOpen(null)}
+                                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                              >
+                                <UserPlus className="h-4 w-4" /> Follow
+                              </button>
+                            </>
+                          )}
+                          {(isAdmin || post.user_id === myId) && (
+                            <button
+                              onClick={() => {
+                                setEditingPost(post);
+                                setShowCreatePost(true);
+                                setMenuOpen(null);
+                              }}
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                            >
+                              <PenSquare className="h-4 w-4" /> Edit Post
+                            </button>
+                          )}
+                          {(isAdmin || post.user_id === myId) && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm("Delete this post?")) return;
+                                await supabase.from("posts").delete().eq("id", post.id);
+                                setPosts((prev) => prev.filter((p) => p.id !== post.id));
+                                setMenuOpen(null);
+                                toast.success("Post deleted");
+                              }}
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" /> Delete Post
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
