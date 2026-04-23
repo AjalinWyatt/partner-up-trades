@@ -9,6 +9,14 @@ interface CreatePostModalProps {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  initialPost?: {
+    id: string;
+    content?: string | null;
+    caption?: string | null;
+    media_urls?: string[] | null;
+    market?: string | null;
+    tags?: string[] | null;
+  } | null;
 }
 
 const TAGS_BY_MARKET: Record<string, string[]> = {
@@ -19,7 +27,7 @@ const TAGS_BY_MARKET: Record<string, string[]> = {
 
 const COMMON_TAGS = ["crypto", "trading plan", "recap", "mindset", "breakout", "discipline"];
 
-export default function CreatePostModal({ open, onClose, onCreated }: CreatePostModalProps) {
+export default function CreatePostModal({ open, onClose, onCreated, initialPost = null }: CreatePostModalProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [content, setContent] = useState("");
@@ -55,6 +63,17 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
     load();
     setTimeout(() => textRef.current?.focus(), 60);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setContent(initialPost?.content || initialPost?.caption || "");
+    setSelectedMarket(initialPost?.market || "");
+    setSelectedTags(initialPost?.tags || []);
+    setFiles([]);
+    previews.forEach((url) => URL.revokeObjectURL(url));
+    setPreviews(initialPost?.media_urls || []);
+  }, [initialPost, open]);
 
   useEffect(() => {
     if (!open) return;
