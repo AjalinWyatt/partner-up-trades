@@ -746,11 +746,18 @@ const Feed = () => {
         myId={myId}
       />
       <FeedCommentSheet
-        postId={commentPostId}
+        post={posts.find((entry) => entry.id === commentPostId) || null}
         myId={myId}
         onClose={() => setCommentPostId(null)}
         onCountChange={(postId, delta) => {
           setPosts(prev => prev.map(p => p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p));
+        }}
+        onToggleLike={toggleLike}
+        onToggleSave={toggleSave}
+        onToggleRepost={toggleRepost}
+        onShare={() => {
+          const post = posts.find((entry) => entry.id === commentPostId);
+          if (post) setPostToShare(post);
         }}
       />
       <CreateStoryDialog open={showCreateStory} onClose={() => setShowCreateStory(false)} onCreated={() => loadFeed()} />
