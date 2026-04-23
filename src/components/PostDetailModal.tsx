@@ -91,9 +91,9 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-h-[100dvh] max-w-3xl overflow-hidden rounded-none border-border bg-card p-0 sm:max-h-[90vh] sm:rounded-xl">
+      <DialogContent className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] max-w-3xl overflow-hidden rounded-none border-border bg-card p-0 sm:rounded-xl">
         <DialogTitle className="sr-only">Post Detail</DialogTitle>
-        <div className="flex max-h-[100dvh] flex-col md:max-h-[90vh] md:flex-row">
+        <div className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] flex-col md:flex-row">
           {/* Media / Content */}
           <div className="relative flex min-h-[260px] max-h-[48dvh] items-center justify-center bg-black/30 md:max-h-none md:w-[60%]">
             <button
