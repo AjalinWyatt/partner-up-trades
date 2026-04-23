@@ -313,7 +313,6 @@ const Feed = () => {
                           {post.market || post.markets[0]}
                         </span>
                       )}
-                    </div>
                       <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                     </div>
 
@@ -362,6 +361,7 @@ const Feed = () => {
                       </button>
                     </div>
                   </div>
+
                   <div className="relative">
                     <button onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)}>
                       <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
