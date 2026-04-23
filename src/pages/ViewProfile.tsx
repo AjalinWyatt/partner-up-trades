@@ -1,166 +1,96 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, ChevronDown, X, MessageSquare, Link2, ImageIcon, Settings, MapPin, Flame, TrendingUp, Users, MoreVertical, UserX, ShieldOff, Shield, ChevronsDown, ChevronsUp, Bookmark } from "lucide-react";
+import { ChevronLeft, MessageSquare, MoreVertical, Shield, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { getInitials, timeAgo, computeMatch, getBreakdownLabel } from "@/lib/matchUtils";
+import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
-
-const BREAKDOWN_KEYS = ["Market", "Strategy", "Experience", "Style", "Goal", "Hobbies", "Struggles", "Session"];
 
 const ViewProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState(0);
-  const [matchOpen, setMatchOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tradingProfile, setTradingProfile] = useState<any>(null);
-  const [myTradingProfile, setMyTradingProfile] = useState<any>(null);
-  const [matchScore, setMatchScore] = useState<number | null>(null);
-  const [breakdown, setBreakdown] = useState<Record<string, number>>({});
   const [posts, setPosts] = useState<any[]>([]);
   const [journalEntries, setJournalEntries] = useState<any[]>([]);
-  const [forumActivity, setForumActivity] = useState<any[]>([]);
-  const [stats, setStats] = useState({ partners: 0, streak: 0, winRate: 0 });
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [savingState, setSavingState] = useState(false);
 
   useEffect(() => {
     if (!id) return;
+
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (user) setMyId(user.id);
 
-      const { data: prof } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+      const [{ data: prof }, { data: tp }, { data: postsData }, journalResponse] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
+        supabase.from("trading_profiles").select("*").eq("user_id", id).maybeSingle(),
+        supabase.from("posts").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+        supabase.from("journal_entries").select("*").eq("user_id", id).order("created_at", { ascending: false }).limit(20),
+      ]);
+
       setProfile(prof);
-
-      const { data: tp } = await supabase.from("trading_profiles").select("*").eq("user_id", id).maybeSingle();
       setTradingProfile(tp);
-
-      const { count: pCount } = await supabase
-        .from("partner_connections")
-        .select("*", { count: "exact", head: true })
-        .or(`requester_id.eq.${id},receiver_id.eq.${id}`)
-        .eq("status", "accepted");
-
-      const { data: entries } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("user_id", id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      let streak = 0;
-      if (entries && entries.length > 0) {
-        const days = new Set(entries.map(e => e.created_at.slice(0, 10)));
-        let d = new Date();
-        for (let i = 0; i < 30; i++) {
-          if (days.has(d.toISOString().slice(0, 10))) { streak++; d = new Date(d.getTime() - 86400000); }
-          else break;
-        }
-      }
-
-      const withResult = (entries || []).filter(e => e.result === "Win" || e.result === "Loss");
-      const wins = withResult.filter(e => e.result === "Win").length;
-      const winRate = withResult.length > 0 ? Math.round((wins / withResult.length) * 100) : 0;
-
-      setStats({ partners: pCount || 0, streak, winRate });
-      setJournalEntries((entries || []).filter(e => e.share_setting === "partners"));
+      setPosts(postsData || []);
+      setJournalEntries(journalResponse.data || []);
 
       if (user) {
-        const { data: conn } = await supabase
-          .from("partner_connections")
-          .select("id, status")
-          .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
-          .maybeSingle();
+        const [{ data: conn }, { data: blockData }] = await Promise.all([
+          supabase
+            .from("partner_connections")
+            .select("id, status")
+            .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
+            .maybeSingle(),
+          supabase.from("blocked_users").select("id").eq("blocker_id", user.id).eq("blocked_id", id).maybeSingle(),
+        ]);
 
         setConnectionStatus(conn?.status || null);
         setConnectionId(conn?.id || null);
-
-        // Check if blocked
-        const { data: blockData } = await supabase
-          .from("blocked_users")
-          .select("id")
-          .eq("blocker_id", user.id)
-          .eq("blocked_id", id)
-          .maybeSingle();
         setIsBlocked(!!blockData);
 
-        // Check if saved
-        const { data: savedData } = await supabase
-          .from("saved_profiles")
-          .select("id")
-          .eq("saver_id", user.id)
-          .eq("saved_id", id)
-          .maybeSingle();
-        setIsSaved(!!savedData);
-
-        // Always recompute match with latest algorithm
-        const { data: myTp } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
-        const { data: myProf } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-        setMyTradingProfile(myTp);
-        if (myTp && tp) {
-          const result = computeMatch(myTp, tp, myProf, prof);
-          setMatchScore(result.excluded ? 0 : result.pct);
-          setBreakdown(result.breakdown);
+        if (user.id !== id) {
+          const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
+          sendNotification({
+            userId: id,
+            type: "profile_viewed",
+            title: `@${myProf?.username || "someone"} viewed your profile`,
+            body: "They might be interested in connecting",
+            relatedUserId: user.id,
+          });
         }
-      }
-
-      const { data: postsData } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("user_id", id)
-        .order("created_at", { ascending: false });
-      setPosts(postsData || []);
-
-      // Load forum activity
-      const { data: forumPosts } = await supabase
-        .from("forum_posts")
-        .select("*")
-        .eq("user_id", id)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      setForumActivity(forumPosts || []);
-
-      if (user && user.id !== id) {
-        const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
-        sendNotification({
-          userId: id,
-          type: "profile_viewed",
-          title: `@${myProf?.username || "someone"} viewed your profile`,
-          body: "They might be interested in connecting",
-          relatedUserId: user.id,
-        });
       }
 
       setLoading(false);
     };
+
     load();
   }, [id]);
 
   const handleConnect = async () => {
-    if (!myId || !id || sending) return;
+    if (!myId || !id || sending || connectionStatus === "pending") return;
     setSending(true);
+
     const { error } = await supabase.from("partner_connections").insert({
       requester_id: myId,
       receiver_id: id,
       status: "pending",
-      match_score: matchScore || 0,
-      match_breakdown: breakdown,
+      match_score: 0,
+      match_breakdown: {},
     });
+
     if (error) {
       toast.error("Could not send request");
     } else {
-      toast.success("Partner request sent!");
+      toast.success("Match request sent");
       setConnectionStatus("pending");
       const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
       await sendNotification({
@@ -171,29 +101,37 @@ const ViewProfile = () => {
         relatedUserId: myId,
       });
     }
+
     setSending(false);
   };
 
   const handleUnmatch = async () => {
-    if (!connectionId || !id) return;
-    if (!confirm("Unmatch this partner? This will remove the connection.")) return;
+    if (!connectionId) return;
+    if (!confirm("Unmatch this partner?")) return;
+
     const { error } = await supabase.from("partner_connections").delete().eq("id", connectionId);
-    if (error) { toast.error("Failed to unmatch"); return; }
-    toast.success("Unmatched successfully");
+    if (error) {
+      toast.error("Failed to unmatch");
+      return;
+    }
+
     setConnectionStatus(null);
     setConnectionId(null);
     setShowMenu(false);
+    toast.success("Unmatched");
   };
 
   const handleBlock = async () => {
     if (!myId || !id) return;
-    if (!confirm(`Block @${profile?.username || "this user"}? They won't be able to see or message you.`)) return;
+    if (!confirm(`Block @${profile?.username || "this user"}?`)) return;
+
     await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: id });
     if (connectionId) {
       await supabase.from("partner_connections").delete().eq("id", connectionId);
       setConnectionStatus(null);
       setConnectionId(null);
     }
+
     setIsBlocked(true);
     setShowMenu(false);
     toast.success(`Blocked @${profile?.username || "user"}`);
@@ -207,438 +145,243 @@ const ViewProfile = () => {
     toast.success(`Unblocked @${profile?.username || "user"}`);
   };
 
-  const handleSave = async () => {
-    if (!myId || !id || savingState) return;
-    setSavingState(true);
-    if (isSaved) {
-      const { error } = await supabase.from("saved_profiles").delete().eq("saver_id", myId).eq("saved_id", id);
-      if (error) toast.error("Failed to unsave");
-      else { setIsSaved(false); toast.success("Removed from saved"); }
-    } else {
-      const { error } = await supabase.from("saved_profiles").insert({ saver_id: myId, saved_id: id });
-      if (error) toast.error("Failed to save");
-      else { setIsSaved(true); toast.success("Saved"); }
-    }
-    setSavingState(false);
-  };
-
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen flex-col bg-background">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       </div>
     );
   }
 
-  const displayLocation = (() => {
-    if (!profile) return null;
-    const parts = [profile.city, profile.state, profile.country].filter(Boolean);
-    return parts.length > 0 ? parts.join(", ") : profile.location || null;
-  })();
-
+  const displayName = profile?.full_name || `@${profile?.username || "trader"}`;
+  const displayUsername = profile?.username ? `@${profile.username}` : "@trader";
   const detailSections = [
-    { label: "Markets", items: tradingProfile?.markets, icon: "📊" },
-    { label: "Sessions", items: tradingProfile?.sessions, icon: "🌍" },
-    { label: "Strategies", items: tradingProfile?.strategies, icon: "🎯" },
-    { label: "Trading Style", items: tradingProfile?.trading_style, icon: "⚡" },
-    { label: "Timeframes", items: tradingProfile?.timeframes, icon: "⏱" },
-    { label: "Primary Goals", items: tradingProfile?.primary_goal, icon: "🏆" },
-    { label: "Struggles", items: tradingProfile?.struggles, icon: "💪" },
-  ];
+    { title: "Markets", items: tradingProfile?.markets || [] },
+    { title: "Instruments", items: tradingProfile?.instruments || [] },
+    { title: "Sessions", items: tradingProfile?.sessions || [] },
+    { title: "Trade Times", items: tradingProfile?.trade_times || [] },
+    { title: "Trading Style", items: tradingProfile?.trading_style || [] },
+    { title: "Strategies", items: tradingProfile?.strategies || [] },
+    { title: "Timeframes", items: tradingProfile?.timeframes || [] },
+    { title: "Primary Goals", items: tradingProfile?.primary_goal || [] },
+    { title: "Struggles", items: tradingProfile?.struggles || [] },
+    { title: "Interests", items: profile?.hobbies || [] },
+    { title: "Chart Prompts", items: profile?.chart_prompts || [] },
+    { title: "Off Chart", items: profile?.off_chart_prompts || [] },
+  ].filter((section) => section.items.length > 0);
+
+  const profileFacts = [
+    { label: "Experience", value: tradingProfile?.experience_level || null },
+    { label: "Gender", value: profile?.gender || null },
+    { label: "Looking For", value: tradingProfile?.looking_for_gender || null },
+    { label: "Connection Reach", value: tradingProfile?.connection_reach || null },
+  ].filter((item) => item.value);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Gradient Banner */}
-      <div className="relative h-40 bg-gradient-to-br from-primary via-accent/80 to-success overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15)_0%,_transparent_60%)]" />
-        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center z-10 hover:bg-black/30 transition-colors">
-          <ChevronLeft className="w-5 h-5 text-white" />
+    <div className="flex min-h-screen flex-col bg-background">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-5 py-4 backdrop-blur">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+          <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
         </button>
-        {myId && myId !== id && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center hover:bg-black/30 transition-colors"
-            >
-              <MoreVertical className="w-5 h-5 text-white" />
+        {myId && myId !== id ? (
+          <div className="relative">
+            <button onClick={() => setShowMenu((current) => !current)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+              <MoreVertical className="h-4 w-4" />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-11 bg-card border border-border rounded-xl shadow-lg overflow-hidden min-w-[180px] z-50">
+              <div className="absolute right-0 top-11 min-w-[180px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
                 {connectionStatus === "accepted" && (
-                  <button
-                    onClick={handleUnmatch}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    <UserX className="w-4 h-4 text-muted-foreground" /> Unmatch
+                  <button onClick={handleUnmatch} className="w-full px-4 py-3 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted">
+                    Unmatch
                   </button>
                 )}
                 {isBlocked ? (
-                  <button
-                    onClick={handleUnblock}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    <ShieldOff className="w-4 h-4 text-muted-foreground" /> Unblock
+                  <button onClick={handleUnblock} className="w-full px-4 py-3 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted">
+                    Unblock
                   </button>
                 ) : (
-                  <button
-                    onClick={handleBlock}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <Shield className="w-4 h-4" /> Block
+                  <button onClick={handleBlock} className="w-full px-4 py-3 text-left text-xs font-medium text-destructive transition-colors hover:bg-destructive/10">
+                    Block
                   </button>
                 )}
               </div>
             )}
           </div>
-        )}
+        ) : <div className="h-9 w-9" />}
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-28 -mt-14">
-        {/* Avatar */}
-        <div className="px-5">
-          <div className="relative w-[96px] h-[96px]">
-            <div className="w-full h-full rounded-full p-[3px] bg-background shadow-lg">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} className="w-full h-full rounded-full object-cover" />
+      <div className="flex-1 overflow-y-auto pb-16">
+        <div className="px-5 pt-6">
+          <div className="flex items-start gap-4">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Profile photo" className="h-24 w-24 shrink-0 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground">
+                {getInitials(profile?.full_name || profile?.username || "T")}
+              </div>
+            )}
+            <div className="min-w-0 flex-1 pt-1">
+              <h1 className="text-[1.8rem] font-extrabold leading-none text-foreground">{displayName}</h1>
+              <p className="mt-1 text-sm font-medium text-muted-foreground">{displayUsername}</p>
+              {profile?.bio ? (
+                <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-foreground">{profile.bio}</p>
               ) : (
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[28px] font-black text-primary-foreground">
-                  {getInitials(profile?.full_name)}
-                </div>
+                <p className="mt-3 text-sm text-muted-foreground">No bio yet.</p>
               )}
             </div>
-            <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-success border-[3px] border-background" />
           </div>
         </div>
 
-        {/* Name + Bio */}
-        <div className="px-5 mt-3">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-extrabold text-foreground tracking-tight">@{profile?.username || "trader"}</h1>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" fill="url(#vg3)" />
-              <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <defs><linearGradient id="vg3" x1="0" y1="0" x2="20" y2="20"><stop stopColor="hsl(var(--primary))" /><stop offset="1" stopColor="hsl(var(--success))" /></linearGradient></defs>
-            </svg>
-          </div>
-
-          {tradingProfile?.experience_level && (
-            <span className="text-xs text-muted-foreground">{tradingProfile.experience_level} Trader</span>
-          )}
-
-          {profile?.bio && (
-            <p className="text-sm text-muted-foreground mt-2 max-w-[320px] leading-relaxed">{profile.bio}</p>
-          )}
-
-          {displayLocation && (
-            <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" />
-              {displayLocation}
-            </div>
-          )}
-
-          {/* Market pills */}
-          {tradingProfile?.markets?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {tradingProfile.markets.map((m: string) => (
-                <span key={m} className="px-3 py-1 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 text-xs font-semibold text-primary">{m}</span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Match Card */}
-        {matchScore !== null && (
-          <div className="mx-5 mt-4 bg-card border border-primary/15 rounded-2xl overflow-hidden">
-            <button onClick={() => setMatchOpen(!matchOpen)} className="w-full flex items-center gap-3 p-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-success flex items-center justify-center shadow-md">
-                <span className="text-lg font-black text-white">{matchScore}%</span>
-              </div>
-              <div className="flex-1 text-left">
-                <div className="text-sm font-bold text-foreground">Match Score</div>
-                <div className="text-xs text-muted-foreground">Tap to see breakdown</div>
-              </div>
-              <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform", matchOpen && "rotate-180")} />
-            </button>
-            {matchOpen && (
-              <div className="px-4 pb-4 space-y-1">
-                {BREAKDOWN_KEYS.map((key) => {
-                  const val = breakdown[key] ?? 0;
-                  const dotColor = val >= 80 ? "bg-success" : val >= 50 ? "bg-primary" : "bg-muted-foreground/40";
-                  const label = getBreakdownLabel(key, val, myTradingProfile, tradingProfile);
-                  return (
-                    <div key={key} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn("w-2.5 h-2.5 rounded-full", dotColor)} />
-                        <span className="text-xs font-medium text-muted-foreground">{key}</span>
-                      </div>
-                      <span className={cn("text-xs font-semibold", val >= 80 ? "text-success" : val >= 50 ? "text-primary" : "text-muted-foreground")}>{label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3 px-5 mt-5">
-          <div className="bg-card border border-border rounded-2xl p-3 text-center">
-            <div className="flex items-center justify-center gap-1 mb-0.5">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              <span className="text-lg font-black text-foreground">{stats.partners}</span>
-            </div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Partners</span>
-          </div>
-          <div className="bg-card border border-border rounded-2xl p-3 text-center">
-            <div className="flex items-center justify-center gap-1 mb-0.5">
-              <Flame className="w-3.5 h-3.5 text-destructive" />
-              <span className="text-lg font-black text-foreground">{stats.streak}</span>
-            </div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Day Streak</span>
-          </div>
-          <div className="bg-card border border-border rounded-2xl p-3 text-center">
-            <div className="flex items-center justify-center gap-1 mb-0.5">
-              <TrendingUp className="w-3.5 h-3.5 text-success" />
-              <span className="text-lg font-black text-foreground">{stats.winRate}%</span>
-            </div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Win Rate</span>
-          </div>
-        </div>
-
-        {/* Prompt Cards */}
-        {((profile?.chart_prompts?.length > 0) || (profile?.off_chart_prompts?.length > 0)) && (
-          <div className="px-5 space-y-2.5 mt-4">
-            {profile?.chart_prompts?.length > 0 && (
-              <div className="bg-card border border-primary/15 rounded-2xl p-4">
-                <div className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2.5">📊 My Charts</div>
-                <div className="flex flex-wrap gap-2">
-                  {profile.chart_prompts.map((p: string) => (
-                    <span key={p} className="px-3 py-1.5 rounded-full bg-primary/10 text-xs font-semibold text-primary">{p}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {profile?.off_chart_prompts?.length > 0 && (
-              <div className="bg-card border border-accent/15 rounded-2xl p-4">
-                <div className="text-[11px] font-bold text-accent uppercase tracking-wider mb-2.5">🎯 Off The Charts</div>
-                <div className="flex flex-wrap gap-2">
-                  {profile.off_chart_prompts.map((p: string) => (
-                    <span key={p} className="px-3 py-1.5 rounded-full bg-accent/10 text-xs font-semibold text-accent">{p}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="flex border-b border-border mx-5 mt-5">
-          {["Profile", "Activity", "Details"].map((tab, i) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(i)}
-              className={cn(
-                "flex-1 py-3 text-xs font-bold uppercase tracking-wider relative transition-colors text-center",
-                activeTab === i ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              {tab}
-              {activeTab === i && <div className="absolute bottom-0 left-[15%] right-[15%] h-[2px] rounded-full bg-gradient-to-r from-primary to-accent" />}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 0 ? (
-          posts.filter((p: any) => p.image_url || p.media_url).length > 0 ? (
-            <div className="grid grid-cols-3 gap-[2px] mt-[2px]">
-              {posts.filter((p: any) => p.image_url || p.media_url).map((post: any) => (
-                <button key={post.id} onClick={() => navigate(`/feed?post=${post.id}`)} className="aspect-square overflow-hidden bg-muted">
-                  {post.media_type === "video" ? (
-                    <video src={post.media_url} className="w-full h-full object-cover" muted />
-                  ) : (
-                    <img src={post.image_url || post.media_url} alt="" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
-                  )}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-              <div className="w-14 h-14 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center mb-4">
-                <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm font-bold text-foreground mb-1">No posts yet</p>
-              <p className="text-xs text-muted-foreground">This trader hasn't shared any photos.</p>
-            </div>
-          )
-        ) : activeTab === 1 ? (
-          (journalEntries.length > 0 || forumActivity.length > 0) ? (
-            <div className="px-5 space-y-2.5 py-4">
-              {/* Forum Activity */}
-              {forumActivity.length > 0 && (
-                <>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Forum Activity</p>
-                  {forumActivity.map((fp: any) => (
-                    <button
-                      key={fp.id}
-                      onClick={() => navigate(`/forums?forum=${fp.forum}&post=${fp.id}`)}
-                      className="w-full text-left bg-card border border-border rounded-2xl p-4 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{fp.forum}</span>
-                        <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(fp.created_at)}</span>
-                      </div>
-                      <h4 className="text-xs font-bold text-foreground mb-1">{fp.title}</h4>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">{fp.content}</p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-[10px] text-muted-foreground">❤️ {fp.likes_count}</span>
-                        <span className="text-[10px] text-muted-foreground">💬 {fp.replies_count}</span>
-                      </div>
-                    </button>
-                  ))}
-                </>
-              )}
-
-              {/* Shared Sessions */}
-              {journalEntries.length > 0 && (
-                <>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-3">Shared Sessions</p>
-                  {journalEntries.map((entry: any) => (
-                    <div key={entry.id} className="bg-card border border-border rounded-2xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold text-foreground">{entry.mood}</span>
-                        {entry.market_pair && <span className="text-xs text-muted-foreground">· {entry.market_pair}</span>}
-                        {entry.session && <span className="text-xs text-muted-foreground">· {entry.session}</span>}
-                        <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(entry.created_at)}</span>
-                      </div>
-                      {entry.notes && <p className="text-sm text-foreground mb-2.5 leading-relaxed">{entry.notes}</p>}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {entry.result && (
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${entry.result === "Win" ? "text-success bg-success/15" : "text-destructive bg-destructive/15"}`}>
-                            {entry.result}{entry.pnl_pips ? ` ${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips` : ""}
-                          </span>
-                        )}
-                        {entry.tags?.map((t: string) => (
-                          <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-              <p className="text-sm font-bold text-foreground mb-1">No activity yet</p>
-              <p className="text-xs text-muted-foreground">This trader hasn't shared any sessions or forum posts yet.</p>
-            </div>
-          )
-        ) : (
-          detailSections.some(s => s.items?.length > 0) || tradingProfile?.experience_level ? (
-            <div className="px-5 py-4 space-y-2.5">
-              {tradingProfile?.experience_level && (
-                <div className="bg-card border border-border rounded-2xl p-4">
-                  <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">🏅 Experience</div>
-                  <span className="text-sm font-bold text-foreground">{tradingProfile.experience_level}</span>
-                </div>
-              )}
-              {detailSections.map(s => s.items?.length > 0 && (
-                <div key={s.label} className="bg-card border border-border rounded-2xl p-4">
-                  <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">{s.icon} {s.label}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {s.items!.map((d: string) => (
-                      <span key={d} className="px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground">{d}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-              <div className="w-14 h-14 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center mb-4">
-                <Settings className="w-6 h-6 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm font-bold text-foreground mb-1">No details yet</p>
-              <p className="text-xs text-muted-foreground">This trader hasn't filled in their details.</p>
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Action Bar */}
-      <div className="fixed bottom-14 lg:bottom-0 left-0 right-0 px-5 pb-4 pt-4 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
-        {isBlocked ? (
-          <button
-            onClick={handleUnblock}
-            className="w-full py-3.5 rounded-xl bg-card border border-border flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground"
-          >
-            <ShieldOff className="w-5 h-5" strokeWidth={2} /> Unblock
-          </button>
-        ) : connectionStatus === "accepted" ? (
-          <button
-            onClick={() => navigate("/messages")}
-            className="w-full py-3.5 rounded-xl bg-accent flex items-center justify-center gap-2 text-sm font-bold text-accent-foreground shadow-lg"
-          >
-            <MessageSquare className="w-5 h-5" strokeWidth={2} /> Message
-          </button>
-        ) : (
-          <div className="flex items-center justify-around max-w-[420px] mx-auto">
-            {/* Pass */}
-            <div className="flex flex-col items-center gap-1.5">
-              <button
-                onClick={() => navigate(-1)}
-                className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                aria-label="Pass"
-              >
-                <ChevronsDown className="w-7 h-7 text-background" strokeWidth={2.5} />
+        {myId && myId !== id && (
+          <div className="mt-5 px-5">
+            {isBlocked ? (
+              <button onClick={handleUnblock} className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted">
+                <ShieldOff className="h-4 w-4" />
+                Unblock
               </button>
-              <span className="text-[11px] font-semibold text-foreground">Pass</span>
-            </div>
-
-            {/* Save */}
-            <div className="flex flex-col items-center gap-1.5">
-              <button
-                onClick={handleSave}
-                disabled={savingState}
-                className={cn(
-                  "w-16 h-16 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all",
-                  isSaved ? "bg-accent" : "bg-muted-foreground/40"
-                )}
-                aria-label="Save"
-              >
-                <Bookmark
-                  className={cn("w-6 h-6", isSaved ? "text-accent-foreground" : "text-foreground")}
-                  fill={isSaved ? "currentColor" : "none"}
-                  strokeWidth={2}
-                />
+            ) : connectionStatus === "accepted" ? (
+              <button onClick={() => navigate(`/messages?partner=${id}`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
+                <MessageSquare className="h-4 w-4" />
+                Message
               </button>
-              <span className="text-[11px] font-semibold text-foreground">Save</span>
-            </div>
-
-            {/* Send Request */}
-            <div className="flex flex-col items-center gap-1.5">
+            ) : (
               <button
                 onClick={handleConnect}
                 disabled={sending || connectionStatus === "pending"}
                 className={cn(
-                  "w-16 h-16 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform",
-                  connectionStatus === "pending" ? "bg-muted-foreground/40" : "bg-accent"
+                  "flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-opacity",
+                  connectionStatus === "pending" ? "bg-secondary text-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
                 )}
-                aria-label="Send Request"
               >
-                <ChevronsUp className="w-7 h-7 text-accent-foreground" strokeWidth={2.5} />
+                {connectionStatus === "pending" ? "Pending" : "Match request"}
               </button>
-              <span className="text-[11px] font-semibold text-foreground">
-                {connectionStatus === "pending" ? "Pending" : "Send Request"}
-              </span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-6 flex border-b border-border px-5">
+          {["Posts", "Journal", "Details"].map((tab, index) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(index)}
+              className={cn(
+                "relative flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider transition-colors",
+                activeTab === index ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              {tab}
+              {activeTab === index && <div className="absolute bottom-0 left-[18%] right-[18%] h-0.5 rounded-full bg-primary" />}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 0 ? (
+          posts.length > 0 ? (
+            <div>
+              {posts.map((post) => {
+                const media = post.media_urls?.[0] || post.media_url || post.image_url;
+                return (
+                  <button key={post.id} onClick={() => navigate(`/feed?post=${post.id}`)} className="block w-full border-b border-border px-5 py-4 text-left transition-colors hover:bg-muted/20">
+                    <div className="flex items-start gap-3">
+                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-secondary">
+                        {profile?.avatar_url ? (
+                          <img src={profile.avatar_url} alt="Profile photo" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{getInitials(profile?.full_name || profile?.username || "T")}</div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">{displayUsername}</span>
+                          <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
+                        </div>
+                        {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
+                        {!!post.tags?.length && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {post.tags.map((tag: string) => (
+                              <span key={tag} className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-foreground">#{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                        {media && (
+                          <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-secondary">
+                            <img src={media} alt="Post media" className="max-h-[340px] w-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          ) : (
+            <EmptyState title="No posts yet" description="This trader hasn’t posted anything yet." />
+          )
+        ) : activeTab === 1 ? (
+          journalEntries.length > 0 ? (
+            <div className="space-y-3 px-5 py-4">
+              {journalEntries.map((entry) => (
+                <div key={entry.id} className="rounded-2xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {entry.result && <span className="text-sm font-bold text-foreground">{entry.result}</span>}
+                        {entry.market_pair && <span className="text-xs text-muted-foreground">{entry.market_pair}</span>}
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{timeAgo(entry.created_at)}</p>
+                    </div>
+                    {typeof entry.pnl_pips === "number" && (
+                      <span className="text-sm font-bold text-foreground">{entry.pnl_pips > 0 ? "+" : ""}{entry.pnl_pips} pips</span>
+                    )}
+                  </div>
+                  {entry.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{entry.notes}</p>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No journal yet" description="Nothing shared here yet." />
+          )
+        ) : (
+          <div className="space-y-3 px-5 py-4 pb-8">
+            {profileFacts.length > 0 && (
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Overview</p>
+                <div className="space-y-3">
+                  {profileFacts.map((item) => (
+                    <div key={item.label} className="flex items-start justify-between gap-4 border-b border-border/60 pb-3 last:border-b-0 last:pb-0">
+                      <span className="text-xs text-muted-foreground">{item.label}</span>
+                      <span className="text-right text-xs font-semibold text-foreground">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {detailSections.length > 0 ? detailSections.map((section) => (
+              <div key={section.title} className="rounded-2xl border border-border bg-card p-4">
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{section.title}</p>
+                <div className="flex flex-wrap gap-2">
+                  {section.items.map((item: string) => (
+                    <span key={item} className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground">{item}</span>
+                  ))}
+                </div>
+              </div>
+            )) : (
+              <EmptyState title="No details yet" description="This trader hasn’t filled out their trading details." />
+            )}
           </div>
         )}
       </div>
     </div>
   );
 };
+
+const EmptyState = ({ title, description }: { title: string; description: string }) => (
+  <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+    <p className="text-base font-bold text-foreground">{title}</p>
+    <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">{description}</p>
+  </div>
+);
 
 export default ViewProfile;
