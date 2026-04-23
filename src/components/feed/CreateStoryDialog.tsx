@@ -136,6 +136,7 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
     setFile(trimmedFile);
     setVideoDuration(Math.min(45, segmentDuration));
     setTrimStart(0);
+    return trimmedFile;
   };
 
   const handleCreate = async () => {
