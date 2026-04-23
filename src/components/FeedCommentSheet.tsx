@@ -269,7 +269,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative flex max-h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card"
+        className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         onClick={e => e.stopPropagation()}
       >
         {/* Handle */}

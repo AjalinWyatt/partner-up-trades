@@ -196,7 +196,7 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="max-h-[92dvh] overflow-hidden border-border bg-card p-0 sm:max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] overflow-hidden border-border bg-card p-0 sm:max-w-md">
         <div className="border-b border-border px-4 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Pulse</p>
           <div className="mt-1 flex items-center justify-between gap-3">
@@ -206,7 +206,7 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
             </button>
           </div>
         </div>
-        <div className="max-h-[calc(92dvh-72px)] overflow-y-auto px-4 py-4">
+        <div className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-5rem)] overflow-y-auto px-4 py-4">
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <button
