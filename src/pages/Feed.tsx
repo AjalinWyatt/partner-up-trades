@@ -63,7 +63,6 @@ const Feed = () => {
     let query = supabase
       .from("posts")
       .select("*")
-      .not("media_url", "is", null)
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -245,6 +244,24 @@ const Feed = () => {
           </div>
         </div>
 
+        <div className="px-4 pt-4">
+          <button
+            onClick={() => setShowCreatePost(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/40"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-success/20 text-sm font-black text-primary">
+              {primaryMarket.slice(0, 1)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">Create a post</p>
+              <p className="text-xs text-muted-foreground">Share a thought, chart, recap, or setup</p>
+            </div>
+            <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+              Post
+            </div>
+          </button>
+        </div>
+
         {posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-success/20 border border-primary/20 flex items-center justify-center mb-4">
@@ -253,7 +270,7 @@ const Feed = () => {
             <p className="text-sm font-bold text-foreground mb-1">
               {feedTab === "my" ? `No posts in your markets yet` : "No posts yet"}
             </p>
-            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share your setup, your mindset, your journey</p>
+            <p className="text-xs text-muted-foreground max-w-[260px] mb-5">Share your setup, your mindset, your journey, or a quick update.</p>
             <button
               onClick={() => setShowCreatePost(true)}
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-success text-sm font-bold text-primary-foreground"
@@ -262,11 +279,11 @@ const Feed = () => {
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="px-4 pb-4 pt-3 space-y-3">
             {posts.map((post) => (
-              <div key={post.id} className="px-5 py-4">
+              <div key={post.id} className="overflow-hidden rounded-2xl border border-border bg-card">
                 {/* Post Header */}
-                <div className="flex items-center gap-2.5 mb-3">
+                <div className="flex items-center gap-2.5 px-4 pb-3 pt-4">
                   <button onClick={() => navigate(`/profile/${post.user_id}`)}>
                     {post.avatar_url ? (
                       <img src={post.avatar_url} className="w-10 h-10 rounded-full object-cover" />
@@ -344,28 +361,30 @@ const Feed = () => {
 
                 {/* Post Content */}
                 {(post.content || post.caption) && (
-                  <p className="text-[13px] text-foreground leading-relaxed mb-3">{post.content || post.caption}</p>
+                  <div className="px-4 pb-3">
+                    <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">{post.content || post.caption}</p>
+                  </div>
                 )}
 
                 {/* Post Media - image */}
                 {(post.image_url || (post.media_url && post.media_type === "image")) && (
                   <button
                     onClick={() => setSelectedPost(post)}
-                    className="rounded-xl overflow-hidden mb-3 w-full block"
+                    className="mb-3 block w-full overflow-hidden border-y border-border bg-muted"
                   >
-                    <img src={post.media_url || post.image_url!} alt="" className="w-full max-h-[500px] object-cover rounded-xl" />
+                    <img src={post.media_url || post.image_url!} alt="" className="w-full max-h-[500px] object-cover" />
                   </button>
                 )}
 
                 {/* Post Media - video */}
                 {post.media_url && post.media_type === "video" && (
-                  <div className="rounded-xl overflow-hidden mb-3">
-                    <video src={post.media_url} controls className="w-full max-h-[500px] rounded-xl" />
+                  <div className="mb-3 overflow-hidden border-y border-border bg-muted">
+                    <video src={post.media_url} controls className="w-full max-h-[500px]" />
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-5 border-t border-border px-4 py-3">
                   <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
                     <Heart className={cn("w-5 h-5 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
                     {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
