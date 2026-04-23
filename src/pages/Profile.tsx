@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Grid3x3, MapPin, LogOut, Sun, Moon, Flame, TrendingUp, Users } from "lucide-react";
+import { Bell, Settings, Edit, Share2, ImageIcon, Plus, Camera, ArrowLeft, Grid3x3, MapPin, LogOut, Sun, Moon, Flame, TrendingUp, Users, ChevronDown, Search, Menu, Repeat2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -370,95 +370,106 @@ const Profile = () => {
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="flex items-center justify-end gap-2 px-5 pt-4">
-          <button onClick={() => setShowCreatePost(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-            <Plus className="w-4 h-4" strokeWidth={2.5} />
+        <div className="flex items-center justify-between px-5 pt-4">
+          <button onClick={() => navigate("/feed")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+            <ArrowLeft className="w-4 h-4" strokeWidth={2.2} />
           </button>
-          <button onClick={() => navigate("/notifications")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-            <Bell className="w-4 h-4" strokeWidth={2} />
-          </button>
-          <button onClick={() => setEditing(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-            <Settings className="w-4 h-4" strokeWidth={2} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowCreatePost(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+              <Plus className="w-4 h-4" strokeWidth={2.5} />
+            </button>
+            <button onClick={() => navigate("/notifications")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+              <Bell className="w-4 h-4" strokeWidth={2} />
+            </button>
+            <button onClick={() => setEditing(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+              <Menu className="w-4 h-4" strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
-        <div className="relative px-5 pt-3">
-          <button onClick={() => avatarInputRef.current?.click()} className="relative group">
-            <div className="w-[88px] h-[88px] rounded-full p-[3px] bg-background shadow-lg">
+        <div className="px-5 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <button onClick={() => avatarInputRef.current?.click()} className="relative group mb-4 block">
+                <div className="h-[84px] w-[84px] rounded-full border border-border bg-background p-[3px] shadow-lg">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="h-full w-full rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-2xl font-black text-primary-foreground">
+                      {getInitials()}
+                    </div>
+                  )}
+                </div>
+                <div className="absolute bottom-1 right-1 h-5 w-5 rounded-full border-[3px] border-background bg-success" />
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Camera className="w-4 h-4 text-white" />
+                </div>
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-[2.2rem] font-extrabold leading-none text-foreground tracking-tight">{profile?.full_name || displayUsername}</h1>
+                <ChevronDown className="mt-1 h-5 w-5 text-foreground" />
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+              </div>
+              <p className="mt-1 text-lg text-foreground">{displayUsername}</p>
+
+              {profile?.bio && (
+                <p className="mt-4 max-w-[320px] whitespace-pre-line text-[15px] leading-7 text-foreground">{profile.bio}</p>
+              )}
+
+              {displayLocation && (
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {displayLocation}
+                </div>
+              )}
+
+              {!!tradingProfile?.markets?.length && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {tradingProfile.markets.slice(0, 3).map((market) => (
+                    <span key={market} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+                      {market}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-1">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                <img src={profile.avatar_url} alt="Avatar" className="h-[84px] w-[84px] rounded-full object-cover" />
               ) : (
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl font-black text-primary-foreground">
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-2xl font-black text-primary-foreground">
                   {getInitials()}
                 </div>
               )}
             </div>
-            <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-success border-[3px] border-background" />
-            <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="w-4 h-4 text-white" />
-            </div>
-          </button>
+          </div>
           <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
 
-        {/* Name + Bio Section */}
-        <div className="px-5 mt-3">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-extrabold text-foreground tracking-tight">{displayUsername}</h1>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" fill="url(#vpg)" />
-              <path d="M6.5 10l2.5 2.5 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <defs><linearGradient id="vpg" x1="0" y1="0" x2="20" y2="20"><stop stopColor="hsl(var(--primary))" /><stop offset="1" stopColor="hsl(var(--success))" /></linearGradient></defs>
-            </svg>
-          </div>
-
-          {tradingProfile?.experience_level && (
-            <span className="text-xs text-muted-foreground">{tradingProfile.experience_level} Trader</span>
-          )}
-
-          {profile?.bio && (
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed whitespace-pre-line">{profile.bio}</p>
-          )}
-
-          {displayLocation && (
-            <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" />
-              {displayLocation}
-            </div>
-          )}
-
-          {/* Market pills */}
-          {tradingProfile?.markets && tradingProfile.markets.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {tradingProfile.markets.map(m => (
-                <span key={m} className="px-3 py-1 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 text-xs font-semibold text-primary">{m}</span>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3 px-5 mt-5">
-          <div className="bg-card border border-border rounded-2xl p-3 text-center">
+        <div className="grid grid-cols-3 gap-3 px-5 mt-6">
+          <div className="rounded-2xl border border-border bg-card p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <Users className="w-3.5 h-3.5 text-primary" />
               <span className="text-lg font-black text-foreground">{partnerCount}</span>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Partners</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Partners</span>
           </div>
-          <div className="bg-card border border-border rounded-2xl p-3 text-center">
+          <div className="rounded-2xl border border-border bg-card p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <Flame className="w-3.5 h-3.5 text-destructive" />
               <span className="text-lg font-black text-foreground">{streak}</span>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Day Streak</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Streak</span>
           </div>
-          <div className="bg-card border border-border rounded-2xl p-3 text-center">
+          <div className="rounded-2xl border border-border bg-card p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <TrendingUp className="w-3.5 h-3.5 text-success" />
               <span className="text-lg font-black text-foreground">{winRate}%</span>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Win Rate</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Win rate</span>
           </div>
         </div>
 
@@ -489,29 +500,31 @@ const Profile = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2.5 px-5 mt-4">
+        <div className="flex gap-2.5 px-5 mt-5">
           <button
             onClick={() => setEditing(true)}
-            className="flex-1 py-2.5 rounded-xl bg-secondary border border-border text-sm font-bold text-foreground hover:bg-muted transition-colors"
+            className="flex-1 rounded-2xl border border-border bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted"
           >
             Edit profile
           </button>
-          <button className="flex-1 py-2.5 rounded-xl bg-secondary border border-border text-sm font-bold text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5">
+          <button className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted">
             <Share2 className="w-3.5 h-3.5" /> Share
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex mt-5 border-b border-border">
+        <div className="mt-6 flex border-b border-border px-5">
           {[
-            { label: "Posts", icon: <Grid3x3 className="w-4 h-4" /> },
-            { label: "Details", icon: <Settings className="w-4 h-4" /> },
+            { label: "Threads", icon: <Edit className="w-4 h-4" /> },
+            { label: "Replies", icon: <MessageCircle className="w-4 h-4" /> },
+            { label: "Media", icon: <ImageIcon className="w-4 h-4" /> },
+            { label: "Reposts", icon: <Repeat2 className="w-4 h-4" /> },
           ].map((tab, i) => (
             <button
               key={tab.label}
               onClick={() => setActiveTab(i)}
               className={cn(
-                "flex-1 py-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider relative transition-colors",
+                "relative flex-1 py-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors",
                 activeTab === i ? "text-foreground" : "text-muted-foreground"
               )}
             >
@@ -575,6 +588,32 @@ const Profile = () => {
               <button onClick={() => setShowCreatePost(true)} className="text-sm font-bold text-primary hover:text-primary/80">
                 Share your first photo
               </button>
+            </div>
+          )
+        ) : activeTab === 1 || activeTab === 3 ? (
+          <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-muted-foreground/30">
+              {activeTab === 1 ? <MessageCircle className="h-7 w-7 text-muted-foreground/50" /> : <Repeat2 className="h-7 w-7 text-muted-foreground/50" />}
+            </div>
+            <p className="mb-1 text-base font-extrabold text-foreground">Nothing here yet</p>
+            <p className="max-w-[240px] text-xs text-muted-foreground">This section will fill out as activity grows.</p>
+          </div>
+        ) : activeTab === 2 ? (
+          posts.filter((post: any) => post.media_urls?.length || post.media_url || post.image_url).length > 0 ? (
+            <div className="grid grid-cols-3 gap-[2px] mt-[2px]">
+              {posts.filter((post: any) => post.media_urls?.length || post.media_url || post.image_url).map((post: any) => (
+                <button key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square overflow-hidden bg-muted">
+                  <img src={post.media_urls?.[0] || post.media_url || post.image_url} alt="Post media" className="h-full w-full object-cover transition-opacity hover:opacity-80" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-muted-foreground/30">
+                <ImageIcon className="h-7 w-7 text-muted-foreground/50" />
+              </div>
+              <p className="mb-1 text-base font-extrabold text-foreground">No media yet</p>
+              <p className="max-w-[240px] text-xs text-muted-foreground">Photos you post will show up here.</p>
             </div>
           )
         ) : (
