@@ -513,7 +513,7 @@ const Feed = () => {
                         <button onClick={() => toggleRepost(post.id)} className="group">
                           <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                         </button>
-                        <button onClick={() => sharePost(post)} className="group">
+                        <button onClick={() => setPostToShare(post)} className="group">
                           <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                         </button>
                         <button onClick={() => toggleSave(post.id)} className="group ml-auto">
@@ -590,6 +590,55 @@ const Feed = () => {
           setPosts(prev => prev.map(p => p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p));
         }}
       />
+      <Dialog open={!!postToShare} onOpenChange={(open) => { if (!open) { setPostToShare(null); setShareSearch(""); } }}>
+        <DialogContent className="border-border bg-card p-0 sm:max-w-md">
+          <DialogHeader className="border-b border-border px-4 py-3 text-left">
+            <DialogTitle className="text-sm font-bold text-foreground">Send post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 px-4 py-4">
+            <Input
+              value={shareSearch}
+              onChange={(event) => setShareSearch(event.target.value)}
+              placeholder="Search partners or chats"
+              className="h-9 rounded-xl border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground"
+            />
+
+            {filteredShareTargets.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">No partners or DM chats yet.</p>
+            ) : (
+              <div className="max-h-[420px] space-y-1 overflow-y-auto">
+                {filteredShareTargets.map((target) => (
+                  <button
+                    key={target.userId}
+                    onClick={() => sendPostToTarget(target)}
+                    disabled={sendingToId === target.userId}
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary disabled:opacity-60"
+                  >
+                    <div className="h-10 w-10 overflow-hidden rounded-full bg-secondary">
+                      {target.avatarUrl ? (
+                        <img src={target.avatarUrl} alt={target.fullName} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">
+                          {getInitials(target.fullName || target.username)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">{target.username}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {target.type === "partner" ? "Partner" : "Direct message"}
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {sendingToId === target.userId ? "Sending..." : "Send"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };
