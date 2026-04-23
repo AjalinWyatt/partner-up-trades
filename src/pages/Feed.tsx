@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu, Repeat2, Send, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -8,6 +8,8 @@ import PostDetailModal from "@/components/PostDetailModal";
 import FeedTopicsSheet from "@/components/FeedTopicsSheet";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -39,6 +41,15 @@ interface FeedPost {
   commentCount: number;
 }
 
+interface ShareTarget {
+  connectionId: string | null;
+  userId: string;
+  username: string;
+  fullName: string;
+  avatarUrl: string | null;
+  type: "partner" | "dm";
+}
+
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
@@ -52,6 +63,10 @@ const Feed = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [showTopics, setShowTopics] = useState(false);
+  const [sharePost, setSharePost] = useState<FeedPost | null>(null);
+  const [shareTargets, setShareTargets] = useState<ShareTarget[]>([]);
+  const [shareSearch, setShareSearch] = useState("");
+  const [sendingToId, setSendingToId] = useState<string | null>(null);
 
   const loadFeed = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -164,6 +179,88 @@ const Feed = () => {
     return () => { supabase.removeChannel(channel); };
   }, [loadFeed]);
 
+  const loadShareTargets = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) return;
+
+    const [{ data: partnerRows }, { data: dmRows }] = await Promise.all([
+      supabase
+        .from("partner_connections")
+        .select("id, requester_id, receiver_id")
+        .eq("status", "accepted")
+        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
+      supabase
+        .from("messages")
+        .select("connection_id, sender_id, receiver_id")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
+
+    const targetMap = new Map<string, ShareTarget>();
+
+    (partnerRows || []).forEach((row: any) => {
+      const partnerId = row.requester_id === user.id ? row.receiver_id : row.requester_id;
+      targetMap.set(partnerId, {
+        connectionId: row.id,
+        userId: partnerId,
+        username: "",
+        fullName: "",
+        avatarUrl: null,
+        type: "partner",
+      });
+    });
+
+    (dmRows || []).forEach((row: any) => {
+      const otherId = row.sender_id === user.id ? row.receiver_id : row.sender_id;
+      if (!otherId || otherId === user.id) return;
+      const current = targetMap.get(otherId);
+      targetMap.set(otherId, {
+        connectionId: current?.connectionId || row.connection_id || null,
+        userId: otherId,
+        username: current?.username || "",
+        fullName: current?.fullName || "",
+        avatarUrl: current?.avatarUrl || null,
+        type: current?.type || "dm",
+      });
+    });
+
+    const ids = [...targetMap.keys()];
+    if (ids.length === 0) {
+      setShareTargets([]);
+      return;
+    }
+
+    const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", ids);
+    const profileMap = new Map((profiles || []).map((entry: any) => [entry.id, entry]));
+
+    setShareTargets(
+      ids.map((id) => {
+        const base = targetMap.get(id)!;
+        const profile = profileMap.get(id);
+        return {
+          ...base,
+          username: profile?.username ? `@${profile.username}` : "@trader",
+          fullName: profile?.full_name || "Trader",
+          avatarUrl: profile?.avatar_url || null,
+        };
+      })
+    );
+  }, []);
+
+  useEffect(() => {
+    if (sharePost) loadShareTargets();
+  }, [sharePost, loadShareTargets]);
+
+  const filteredShareTargets = useMemo(() => {
+    const query = shareSearch.trim().toLowerCase();
+    if (!query) return shareTargets;
+    return shareTargets.filter((target) =>
+      target.username.toLowerCase().includes(query) || target.fullName.toLowerCase().includes(query)
+    );
+  }, [shareSearch, shareTargets]);
+
   const toggleLike = async (postId: string) => {
     if (!myId) return;
     const post = posts.find(p => p.id === postId);
@@ -237,24 +334,32 @@ const Feed = () => {
     toast.success("Reposted");
   };
 
-  const sharePost = async (post: FeedPost) => {
-    const shareUrl = `${window.location.origin}/profile/${post.user_id}`;
-    const shareData = {
-      title: `${post.username} on TradersWorld`,
-      text: post.content || "Check out this post",
-      url: shareUrl,
-    };
+  const sendPostToTarget = async (target: ShareTarget) => {
+    if (!myId || !sharePost) return;
+    setSendingToId(target.userId);
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied");
-      }
-    } catch {
+    const preview = [sharePost.content || sharePost.caption, sharePost.market ? `[${sharePost.market}]` : null].filter(Boolean).join(" ").slice(0, 140);
+    const messageText = `Shared a post from ${sharePost.username}${preview ? `\n${preview}` : ""}`;
+
+    const { error } = await supabase.from("messages").insert({
+      sender_id: myId,
+      receiver_id: target.userId,
+      connection_id: target.connectionId,
+      content: messageText,
+      media_url: sharePost.media_urls?.[0] || sharePost.media_url || sharePost.image_url || null,
+      media_type: sharePost.media_type || (sharePost.media_urls?.length || sharePost.media_url || sharePost.image_url ? "image" : null),
+    } as any);
+
+    if (error) {
+      toast.error("Could not send post");
+      setSendingToId(null);
       return;
     }
+
+    setSendingToId(null);
+    setSharePost(null);
+    setShareSearch("");
+    toast.success(`Sent to ${target.username}`);
   };
 
   const primaryMarket = myMarkets[0] || "Forex";
