@@ -769,6 +769,11 @@ const Feed = () => {
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
         myId={myId}
+        onEdit={(post) => {
+          setSelectedPost(null);
+          setEditingPost(post as FeedPost);
+          setShowCreatePost(true);
+        }}
       />
       <FeedCommentSheet
         post={posts.find((entry) => entry.id === commentPostId) || null}
