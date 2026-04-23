@@ -796,59 +796,60 @@ const Feed = () => {
                       </button>
                       {menuOpen === post.id && (
                         <div className="absolute right-0 top-7 z-50 w-48 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-xl">
-                        <button
-                          onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
-                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                        >
-                          <Eye className="w-4 h-4" /> View Profile
-                        </button>
-                        {post.user_id !== myId && (
-                          <>
-                            <button
-                              onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                            >
-                              <Link2 className="w-4 h-4" /> Request Match
-                            </button>
-                            <button
-                              onClick={() => setMenuOpen(null)}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
-                            >
-                              <UserPlus className="w-4 h-4" /> Follow
-                            </button>
-                          </>
-                        )}
-                        {(isAdmin || post.user_id === myId) && (
                           <button
-                            onClick={() => {
-                              setEditingPost(post);
-                              setShowCreatePost(true);
-                              setMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-foreground hover:bg-muted transition-colors"
+                            onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
                           >
-                            <PenSquare className="w-4 h-4" /> Edit Post
+                            <Eye className="h-4 w-4" /> View Profile
                           </button>
-                        )}
-                        {(isAdmin || post.user_id === myId) && (
-                          <button
-                            onClick={async () => {
-                              if (!confirm("Delete this post?")) return;
-                              await supabase.from("posts").delete().eq("id", post.id);
-                              setPosts(prev => prev.filter(p => p.id !== post.id));
-                              setMenuOpen(null);
-                              toast.success("Post deleted");
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" /> Delete Post
-                          </button>
-                        )}
-                      </div>
-                    )}
+                          {post.user_id !== myId && (
+                            <>
+                              <button
+                                onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
+                                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                              >
+                                <Link2 className="h-4 w-4" /> Request Match
+                              </button>
+                              <button
+                                onClick={() => setMenuOpen(null)}
+                                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                              >
+                                <UserPlus className="h-4 w-4" /> Follow
+                              </button>
+                            </>
+                          )}
+                          {(isAdmin || post.user_id === myId) && (
+                            <button
+                              onClick={() => {
+                                setEditingPost(post);
+                                setShowCreatePost(true);
+                                setMenuOpen(null);
+                              }}
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                            >
+                              <PenSquare className="h-4 w-4" /> Edit Post
+                            </button>
+                          )}
+                          {(isAdmin || post.user_id === myId) && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm("Delete this post?")) return;
+                                await supabase.from("posts").delete().eq("id", post.id);
+                                setPosts((prev) => prev.filter((p) => p.id !== post.id));
+                                setMenuOpen(null);
+                                toast.success("Post deleted");
+                              }}
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" /> Delete Post
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
