@@ -7,6 +7,7 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useSwipeDismiss } from "@/hooks/use-swipe-dismiss";
 
 interface PostDetailModalProps {
   open: boolean;
@@ -31,6 +32,7 @@ interface PostDetailModalProps {
 
 const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostDetailModalProps) => {
   const navigate = useNavigate();
+  const swipeDismiss = useSwipeDismiss({ onDismiss: onClose });
   const [profile, setProfile] = useState<{ username: string; full_name: string; avatar_url: string | null } | null>(null);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -93,12 +95,12 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] max-w-3xl overflow-hidden rounded-none border-border bg-card p-0 sm:rounded-xl">
         <DialogTitle className="sr-only">Post Detail</DialogTitle>
-        <div className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] flex-col md:flex-row">
+        <div {...swipeDismiss} className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] flex-col md:flex-row">
           {/* Media / Content */}
           <div className="relative flex min-h-[260px] max-h-[48dvh] items-center justify-center bg-black/30 md:max-h-none md:w-[60%]">
             <button
               onClick={onClose}
-              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-background/60 text-foreground backdrop-blur-sm"
+              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background/80 text-foreground backdrop-blur-sm"
             >
               <X className="h-4 w-4" />
             </button>
