@@ -5,6 +5,7 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useSwipeDismiss } from "@/hooks/use-swipe-dismiss";
 
 interface Comment {
   id: string;
@@ -52,6 +53,7 @@ interface FeedCommentSheetProps {
 
 export default function FeedCommentSheet({ post, myId, onClose, onCountChange, onToggleLike, onToggleSave, onToggleRepost, onShare }: FeedCommentSheetProps) {
   const navigate = useNavigate();
+  const swipeDismiss = useSwipeDismiss({ onDismiss: onClose });
   const [comments, setComments] = useState<Comment[]>([]);
   const [viewerProfile, setViewerProfile] = useState<{ username: string; full_name: string; avatar_url: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -269,6 +271,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
+        {...swipeDismiss}
         className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         onClick={e => e.stopPropagation()}
       >
@@ -280,7 +283,9 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-border">
           <span className="text-sm font-bold text-foreground">Comments</span>
-          <button onClick={onClose}><X className="w-5 h-5 text-muted-foreground" /></button>
+          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary text-foreground">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {post && (
