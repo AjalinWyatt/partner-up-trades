@@ -550,6 +550,27 @@ export type Database = {
           },
         ]
       }
+      post_reposts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           caption: string | null
@@ -652,6 +673,27 @@ export type Database = {
           state?: string | null
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      saved_posts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
         }
         Relationships: []
       }

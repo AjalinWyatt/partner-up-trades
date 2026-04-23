@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu, Repeat2, Send, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
@@ -33,6 +33,8 @@ interface FeedPost {
   avatar_url: string | null;
   markets: string[];
   liked: boolean;
+  saved: boolean;
+  reposted: boolean;
   likeCount: number;
   commentCount: number;
 }
@@ -82,12 +84,14 @@ const Feed = () => {
     const postIds = postsData.map((p: any) => p.id);
     const authorIds = [...new Set(postsData.map((p: any) => p.user_id))];
 
-    const [profilesRes, likesRes, myLikesRes, commentsRes, tradingRes] = await Promise.all([
+    const [profilesRes, likesRes, myLikesRes, commentsRes, tradingRes, savedRes, repostedRes] = await Promise.all([
       supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", authorIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds).eq("user_id", user.id),
       supabase.from("comments").select("post_id").in("post_id", postIds),
       supabase.from("trading_profiles").select("user_id, markets").in("user_id", authorIds),
+      supabase.from("saved_posts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
+      supabase.from("post_reposts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
     ]);
 
     const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.id, p]));
@@ -98,6 +102,8 @@ const Feed = () => {
       likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1;
     });
     const myLikedSet = new Set((myLikesRes.data || []).map((l: any) => l.post_id));
+    const mySavedSet = new Set((savedRes.data || []).map((s: any) => s.post_id));
+    const myRepostedSet = new Set((repostedRes.data || []).map((r: any) => r.post_id));
     const commentCounts: Record<string, number> = {};
     (commentsRes.data || []).forEach((c: any) => {
       commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1;
@@ -123,6 +129,8 @@ const Feed = () => {
         avatar_url: prof?.avatar_url || null,
         markets: tp?.markets || [],
         liked: myLikedSet.has(p.id),
+        saved: mySavedSet.has(p.id),
+        reposted: myRepostedSet.has(p.id),
         likeCount: likeCounts[p.id] || 0,
         commentCount: commentCounts[p.id] || 0,
       };
@@ -178,6 +186,74 @@ const Feed = () => {
           entryId: postId,
         });
       }
+    }
+  };
+
+  const toggleSave = async (postId: string) => {
+    if (!myId) return;
+    const post = posts.find((entry) => entry.id === postId);
+    if (!post) return;
+
+    if (post.saved) {
+      const { error } = await supabase.from("saved_posts" as any).delete().eq("user_id", myId).eq("post_id", postId);
+      if (error) {
+        toast.error("Could not remove saved post");
+        return;
+      }
+      setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, saved: false } : entry)));
+      return;
+    }
+
+    const { error } = await supabase.from("saved_posts" as any).insert({ user_id: myId, post_id: postId });
+    if (error) {
+      toast.error("Could not save post");
+      return;
+    }
+    setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, saved: true } : entry)));
+    toast.success("Post saved");
+  };
+
+  const toggleRepost = async (postId: string) => {
+    if (!myId) return;
+    const post = posts.find((entry) => entry.id === postId);
+    if (!post) return;
+
+    if (post.reposted) {
+      const { error } = await supabase.from("post_reposts" as any).delete().eq("user_id", myId).eq("post_id", postId);
+      if (error) {
+        toast.error("Could not remove repost");
+        return;
+      }
+      setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, reposted: false } : entry)));
+      return;
+    }
+
+    const { error } = await supabase.from("post_reposts" as any).insert({ user_id: myId, post_id: postId });
+    if (error) {
+      toast.error("Could not repost");
+      return;
+    }
+    setPosts((prev) => prev.map((entry) => (entry.id === postId ? { ...entry, reposted: true } : entry)));
+    toast.success("Reposted");
+  };
+
+  const sharePost = async (post: FeedPost) => {
+    const shareUrl = `${window.location.origin}/profile/${post.user_id}`;
+    const shareData = {
+      title: `${post.username} on TradersWorld`,
+      text: post.content || "Check out this post",
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copied");
+      }
+    } catch {
+      return;
     }
   };
 
@@ -305,13 +381,13 @@ const Feed = () => {
                     {!!post.media_urls?.length && (
                         <button onClick={() => setSelectedPost(post)} className="mt-2.5 block w-full overflow-hidden rounded-xl border border-border bg-muted">
                         {post.media_urls.length === 1 ? (
-                          <img src={post.media_urls[0]} alt="" className="w-full max-h-[500px] object-cover" />
+                          <img src={post.media_urls[0]} alt="" className="aspect-[4/5] w-full object-cover" />
                         ) : (
                           <Carousel opts={{ loop: true }} className="w-full">
                             <CarouselContent className="ml-0">
                               {post.media_urls.map((url) => (
                                 <CarouselItem key={url} className="pl-0">
-                                  <img src={url} alt="" className="w-full max-h-[500px] object-cover" />
+                                  <img src={url} alt="" className="aspect-[4/5] w-full object-cover" />
                                 </CarouselItem>
                               ))}
                             </CarouselContent>
@@ -320,7 +396,7 @@ const Feed = () => {
                       </button>
                     )}
 
-                      <div className="flex items-center gap-5 pt-2.5">
+                      <div className="flex items-center gap-4 pt-2.5">
                       <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 group">
                           <Heart className={cn("h-4 w-4 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
                         {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
@@ -329,6 +405,15 @@ const Feed = () => {
                           <MessageCircle className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
                       </button>
+                        <button onClick={() => toggleRepost(post.id)} className="group">
+                          <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                        </button>
+                        <button onClick={() => sharePost(post)} className="group">
+                          <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+                        </button>
+                        <button onClick={() => toggleSave(post.id)} className="group ml-auto">
+                          <Bookmark className={cn("h-4 w-4 transition-colors", post.saved ? "fill-primary text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                        </button>
                     </div>
                   </div>
 
