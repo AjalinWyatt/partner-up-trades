@@ -71,6 +71,7 @@ const Feed = () => {
   const [myMarkets, setMyMarkets] = useState<string[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [showTopics, setShowTopics] = useState(false);
@@ -737,7 +738,19 @@ const Feed = () => {
         )}
       </div>
 
-      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={() => loadFeed()} />
+      <CreatePostModal
+        open={showCreatePost}
+        onClose={() => {
+          setShowCreatePost(false);
+          setEditingPost(null);
+        }}
+        onCreated={() => {
+          setShowCreatePost(false);
+          setEditingPost(null);
+          loadFeed();
+        }}
+        initialPost={editingPost}
+      />
       <FeedTopicsSheet open={showTopics} onClose={() => setShowTopics(false)} currentMarket={primaryMarket} />
       <PostDetailModal
         open={!!selectedPost}
