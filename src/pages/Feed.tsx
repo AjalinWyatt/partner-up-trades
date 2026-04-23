@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, Repeat2, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
