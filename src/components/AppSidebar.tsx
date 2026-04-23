@@ -4,6 +4,7 @@ import FeedNavIcon from "@/components/icons/FeedNavIcon";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import lockup from "@/assets/tradersworld-lockup.png";
 
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home" },
@@ -46,11 +47,7 @@ export default function AppSidebar() {
   return (
     <aside className="hidden lg:flex flex-col w-[220px] xl:w-[245px] h-screen sticky top-0 border-r border-border bg-background px-3 py-6">
       <button onClick={() => navigate("/feed")} className="flex items-center gap-2 px-3 mb-8">
-        <Globe className="w-6 h-6 text-[hsl(var(--success))]" />
-        <span className="text-xl font-bold tracking-tight text-foreground">
-          traders<span className="text-[hsl(var(--success))]">world</span>
-          <span className="text-[8px] text-muted-foreground align-super ml-0.5">™</span>
-        </span>
+        <img src={lockup} alt="TradersWorld" className="h-7 w-auto" loading="eager" />
       </button>
 
       <nav className="flex-1 space-y-0.5">
