@@ -63,7 +63,7 @@ const Feed = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [showTopics, setShowTopics] = useState(false);
-  const [sharePost, setSharePost] = useState<FeedPost | null>(null);
+  const [postToShare, setPostToShare] = useState<FeedPost | null>(null);
   const [shareTargets, setShareTargets] = useState<ShareTarget[]>([]);
   const [shareSearch, setShareSearch] = useState("");
   const [sendingToId, setSendingToId] = useState<string | null>(null);
@@ -250,8 +250,8 @@ const Feed = () => {
   }, []);
 
   useEffect(() => {
-    if (sharePost) loadShareTargets();
-  }, [sharePost, loadShareTargets]);
+    if (postToShare) loadShareTargets();
+  }, [postToShare, loadShareTargets]);
 
   const filteredShareTargets = useMemo(() => {
     const query = shareSearch.trim().toLowerCase();
@@ -335,19 +335,19 @@ const Feed = () => {
   };
 
   const sendPostToTarget = async (target: ShareTarget) => {
-    if (!myId || !sharePost) return;
+    if (!myId || !postToShare) return;
     setSendingToId(target.userId);
 
-    const preview = [sharePost.content || sharePost.caption, sharePost.market ? `[${sharePost.market}]` : null].filter(Boolean).join(" ").slice(0, 140);
-    const messageText = `Shared a post from ${sharePost.username}${preview ? `\n${preview}` : ""}`;
+    const preview = [postToShare.content || postToShare.caption, postToShare.market ? `[${postToShare.market}]` : null].filter(Boolean).join(" ").slice(0, 140);
+    const messageText = `Shared a post from ${postToShare.username}${preview ? `\n${preview}` : ""}`;
 
     const { error } = await supabase.from("messages").insert({
       sender_id: myId,
       receiver_id: target.userId,
       connection_id: target.connectionId,
       content: messageText,
-      media_url: sharePost.media_urls?.[0] || sharePost.media_url || sharePost.image_url || null,
-      media_type: sharePost.media_type || (sharePost.media_urls?.length || sharePost.media_url || sharePost.image_url ? "image" : null),
+      media_url: postToShare.media_urls?.[0] || postToShare.media_url || postToShare.image_url || null,
+      media_type: postToShare.media_type || (postToShare.media_urls?.length || postToShare.media_url || postToShare.image_url ? "image" : null),
     } as any);
 
     if (error) {
@@ -357,7 +357,7 @@ const Feed = () => {
     }
 
     setSendingToId(null);
-    setSharePost(null);
+    setPostToShare(null);
     setShareSearch("");
     toast.success(`Sent to ${target.username}`);
   };
