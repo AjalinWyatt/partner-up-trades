@@ -7,6 +7,20 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 
+interface ViewPostItem {
+  id: string;
+  user_id: string;
+  content?: string | null;
+  caption?: string | null;
+  media_url?: string | null;
+  media_urls?: string[] | null;
+  image_url?: string | null;
+  tags?: string[] | null;
+  created_at: string;
+  kind: "post" | "repost";
+  originalUsername?: string;
+}
+
 const ViewProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -14,7 +28,7 @@ const ViewProfile = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [tradingProfile, setTradingProfile] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<ViewPostItem[]>([]);
   const [journalEntries, setJournalEntries] = useState<any[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string | null>(null);
@@ -31,16 +45,38 @@ const ViewProfile = () => {
       const user = session?.user;
       if (user) setMyId(user.id);
 
-      const [{ data: prof }, { data: tp }, { data: postsData }, journalResponse] = await Promise.all([
+      const [{ data: prof }, { data: tp }, journalResponse, { data: repostRows }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", id).maybeSingle(),
-        supabase.from("posts").select("*").eq("user_id", id).order("created_at", { ascending: false }),
         supabase.from("journal_entries").select("*").eq("user_id", id).order("created_at", { ascending: false }).limit(20),
+        supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", id).order("created_at", { ascending: false }),
       ]);
+
+      const { data: ownPosts } = await supabase.from("posts").select("*").eq("user_id", id).order("created_at", { ascending: false });
+      const repostIds = [...new Set((repostRows || []).map((row: any) => row.post_id))];
+      const { data: repostPosts } = repostIds.length > 0 ? await supabase.from("posts").select("*").in("id", repostIds) : { data: [] as any[] };
+      const repostAuthorIds = [...new Set((repostPosts || []).map((post: any) => post.user_id))];
+      const { data: repostAuthors } = repostAuthorIds.length > 0 ? await supabase.from("profiles").select("id, username").in("id", repostAuthorIds) : { data: [] as any[] };
+      const authorMap = new Map((repostAuthors || []).map((row: any) => [row.id, row]));
+      const repostPostMap = new Map((repostPosts || []).map((row: any) => [row.id, row]));
+
+      const mergedPosts: ViewPostItem[] = [
+        ...((ownPosts || []).map((post: any) => ({ ...post, kind: "post" as const }))),
+        ...((repostRows || []).map((row: any) => {
+          const original = repostPostMap.get(row.post_id);
+          const author = original ? authorMap.get(original.user_id) : null;
+          return original ? {
+            ...original,
+            created_at: row.created_at,
+            kind: "repost" as const,
+            originalUsername: author?.username ? `@${author.username}` : "@trader",
+          } : null;
+        }).filter(Boolean) as ViewPostItem[]),
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       setProfile(prof);
       setTradingProfile(tp);
-      setPosts(postsData || []);
+      setPosts(mergedPosts);
       setJournalEntries(journalResponse.data || []);
 
       if (user) {
@@ -297,6 +333,9 @@ const ViewProfile = () => {
                           <span className="text-sm font-bold text-foreground">{displayUsername}</span>
                           <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                         </div>
+                        {post.kind === "repost" && (
+                          <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
+                        )}
                         {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
                         {!!post.tags?.length && (
                           <div className="mt-3 flex flex-wrap gap-1.5">

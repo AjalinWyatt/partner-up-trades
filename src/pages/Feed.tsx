@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu, Repeat2, Send, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -8,6 +8,8 @@ import PostDetailModal from "@/components/PostDetailModal";
 import FeedTopicsSheet from "@/components/FeedTopicsSheet";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -39,6 +41,15 @@ interface FeedPost {
   commentCount: number;
 }
 
+interface ShareTarget {
+  connectionId: string | null;
+  userId: string;
+  username: string;
+  fullName: string;
+  avatarUrl: string | null;
+  type: "partner" | "dm";
+}
+
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
@@ -52,6 +63,10 @@ const Feed = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [showTopics, setShowTopics] = useState(false);
+  const [postToShare, setPostToShare] = useState<FeedPost | null>(null);
+  const [shareTargets, setShareTargets] = useState<ShareTarget[]>([]);
+  const [shareSearch, setShareSearch] = useState("");
+  const [sendingToId, setSendingToId] = useState<string | null>(null);
 
   const loadFeed = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -164,6 +179,88 @@ const Feed = () => {
     return () => { supabase.removeChannel(channel); };
   }, [loadFeed]);
 
+  const loadShareTargets = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) return;
+
+    const [{ data: partnerRows }, { data: dmRows }] = await Promise.all([
+      supabase
+        .from("partner_connections")
+        .select("id, requester_id, receiver_id")
+        .eq("status", "accepted")
+        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
+      supabase
+        .from("messages")
+        .select("connection_id, sender_id, receiver_id")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
+
+    const targetMap = new Map<string, ShareTarget>();
+
+    (partnerRows || []).forEach((row: any) => {
+      const partnerId = row.requester_id === user.id ? row.receiver_id : row.requester_id;
+      targetMap.set(partnerId, {
+        connectionId: row.id,
+        userId: partnerId,
+        username: "",
+        fullName: "",
+        avatarUrl: null,
+        type: "partner",
+      });
+    });
+
+    (dmRows || []).forEach((row: any) => {
+      const otherId = row.sender_id === user.id ? row.receiver_id : row.sender_id;
+      if (!otherId || otherId === user.id) return;
+      const current = targetMap.get(otherId);
+      targetMap.set(otherId, {
+        connectionId: current?.connectionId || row.connection_id || null,
+        userId: otherId,
+        username: current?.username || "",
+        fullName: current?.fullName || "",
+        avatarUrl: current?.avatarUrl || null,
+        type: current?.type || "dm",
+      });
+    });
+
+    const ids = [...targetMap.keys()];
+    if (ids.length === 0) {
+      setShareTargets([]);
+      return;
+    }
+
+    const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", ids);
+    const profileMap = new Map((profiles || []).map((entry: any) => [entry.id, entry]));
+
+    setShareTargets(
+      ids.map((id) => {
+        const base = targetMap.get(id)!;
+        const profile = profileMap.get(id);
+        return {
+          ...base,
+          username: profile?.username ? `@${profile.username}` : "@trader",
+          fullName: profile?.full_name || "Trader",
+          avatarUrl: profile?.avatar_url || null,
+        };
+      })
+    );
+  }, []);
+
+  useEffect(() => {
+    if (postToShare) loadShareTargets();
+  }, [postToShare, loadShareTargets]);
+
+  const filteredShareTargets = useMemo(() => {
+    const query = shareSearch.trim().toLowerCase();
+    if (!query) return shareTargets;
+    return shareTargets.filter((target) =>
+      target.username.toLowerCase().includes(query) || target.fullName.toLowerCase().includes(query)
+    );
+  }, [shareSearch, shareTargets]);
+
   const toggleLike = async (postId: string) => {
     if (!myId) return;
     const post = posts.find(p => p.id === postId);
@@ -237,24 +334,32 @@ const Feed = () => {
     toast.success("Reposted");
   };
 
-  const sharePost = async (post: FeedPost) => {
-    const shareUrl = `${window.location.origin}/profile/${post.user_id}`;
-    const shareData = {
-      title: `${post.username} on TradersWorld`,
-      text: post.content || "Check out this post",
-      url: shareUrl,
-    };
+  const sendPostToTarget = async (target: ShareTarget) => {
+    if (!myId || !postToShare) return;
+    setSendingToId(target.userId);
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied");
-      }
-    } catch {
+    const preview = [postToShare.content || postToShare.caption, postToShare.market ? `[${postToShare.market}]` : null].filter(Boolean).join(" ").slice(0, 140);
+    const messageText = `Shared a post from ${postToShare.username}${preview ? `\n${preview}` : ""}`;
+
+    const { error } = await supabase.from("messages").insert({
+      sender_id: myId,
+      receiver_id: target.userId,
+      connection_id: target.connectionId,
+      content: messageText,
+      media_url: postToShare.media_urls?.[0] || postToShare.media_url || postToShare.image_url || null,
+      media_type: postToShare.media_type || (postToShare.media_urls?.length || postToShare.media_url || postToShare.image_url ? "image" : null),
+    } as any);
+
+    if (error) {
+      toast.error("Could not send post");
+      setSendingToId(null);
       return;
     }
+
+    setSendingToId(null);
+    setPostToShare(null);
+    setShareSearch("");
+    toast.success(`Sent to ${target.username}`);
   };
 
   const primaryMarket = myMarkets[0] || "Forex";
@@ -408,7 +513,7 @@ const Feed = () => {
                         <button onClick={() => toggleRepost(post.id)} className="group">
                           <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                         </button>
-                        <button onClick={() => sharePost(post)} className="group">
+                        <button onClick={() => setPostToShare(post)} className="group">
                           <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                         </button>
                         <button onClick={() => toggleSave(post.id)} className="group ml-auto">
@@ -485,6 +590,55 @@ const Feed = () => {
           setPosts(prev => prev.map(p => p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p));
         }}
       />
+      <Dialog open={!!postToShare} onOpenChange={(open) => { if (!open) { setPostToShare(null); setShareSearch(""); } }}>
+        <DialogContent className="border-border bg-card p-0 sm:max-w-md">
+          <DialogHeader className="border-b border-border px-4 py-3 text-left">
+            <DialogTitle className="text-sm font-bold text-foreground">Send post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 px-4 py-4">
+            <Input
+              value={shareSearch}
+              onChange={(event) => setShareSearch(event.target.value)}
+              placeholder="Search partners or chats"
+              className="h-9 rounded-xl border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground"
+            />
+
+            {filteredShareTargets.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">No partners or DM chats yet.</p>
+            ) : (
+              <div className="max-h-[420px] space-y-1 overflow-y-auto">
+                {filteredShareTargets.map((target) => (
+                  <button
+                    key={target.userId}
+                    onClick={() => sendPostToTarget(target)}
+                    disabled={sendingToId === target.userId}
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary disabled:opacity-60"
+                  >
+                    <div className="h-10 w-10 overflow-hidden rounded-full bg-secondary">
+                      {target.avatarUrl ? (
+                        <img src={target.avatarUrl} alt={target.fullName} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">
+                          {getInitials(target.fullName || target.username)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">{target.username}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {target.type === "partner" ? "Partner" : "Direct message"}
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {sendingToId === target.userId ? "Sending..." : "Send"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

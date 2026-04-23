@@ -63,6 +63,24 @@ interface JournalEntry {
   account_type: string | null;
 }
 
+interface ProfilePostItem {
+  id: string;
+  user_id: string;
+  content?: string | null;
+  caption?: string | null;
+  media_url?: string | null;
+  media_urls?: string[] | null;
+  image_url?: string | null;
+  tags?: string[] | null;
+  created_at: string;
+  username: string;
+  avatar_url: string | null;
+  kind: "post" | "repost" | "saved";
+  originalUsername?: string;
+  originalAvatarUrl?: string | null;
+  originalCreatedAt?: string;
+}
+
 const Profile = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
@@ -86,10 +104,74 @@ const Profile = () => {
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
 
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<ProfilePostItem[]>([]);
+  const [savedPosts, setSavedPosts] = useState<ProfilePostItem[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  const loadProfileCollections = async (uid: string, ownUsername?: string | null) => {
+    const [{ data: ownPosts }, { data: repostRows }, { data: savedRows }, { data: ownProfile }] = await Promise.all([
+      supabase.from("posts").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+      supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
+      supabase.from("saved_posts" as any).select("post_id, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
+      supabase.from("profiles").select("username, avatar_url").eq("id", uid).maybeSingle(),
+    ]);
+
+    const referencedIds = [...new Set([...(repostRows || []).map((row: any) => row.post_id), ...(savedRows || []).map((row: any) => row.post_id)])];
+    const { data: referencedPosts } = referencedIds.length > 0
+      ? await supabase.from("posts").select("*").in("id", referencedIds)
+      : { data: [] as any[] };
+
+    const authorIds = [...new Set([...(ownPosts || []).map((post: any) => post.user_id), ...(referencedPosts || []).map((post: any) => post.user_id)])];
+    const { data: authorProfiles } = authorIds.length > 0
+      ? await supabase.from("profiles").select("id, username, avatar_url").in("id", authorIds)
+      : { data: [] as any[] };
+
+    const authorMap = new Map((authorProfiles || []).map((entry: any) => [entry.id, entry]));
+    const referencedMap = new Map((referencedPosts || []).map((entry: any) => [entry.id, entry]));
+    const myUsername = ownUsername || ownProfile?.username || profile?.username || "username";
+
+    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => ({
+      ...post,
+      username: `@${myUsername}`,
+      avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
+      kind: "post",
+    }));
+
+    const repostItems: ProfilePostItem[] = (repostRows || []).map((row: any) => {
+      const original = referencedMap.get(row.post_id);
+      const author = original ? authorMap.get(original.user_id) : null;
+      return original ? {
+        ...original,
+        created_at: row.created_at,
+        username: `@${myUsername}`,
+        avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
+        kind: "repost",
+        originalUsername: author?.username ? `@${author.username}` : "@trader",
+        originalAvatarUrl: author?.avatar_url || null,
+        originalCreatedAt: original.created_at,
+      } : null;
+    }).filter(Boolean) as ProfilePostItem[];
+
+    const savedItems: ProfilePostItem[] = (savedRows || []).map((row: any) => {
+      const original = referencedMap.get(row.post_id);
+      const author = original ? authorMap.get(original.user_id) : null;
+      return original ? {
+        ...original,
+        created_at: row.created_at,
+        username: author?.username ? `@${author.username}` : "@trader",
+        avatar_url: author?.avatar_url || null,
+        kind: "saved",
+        originalUsername: author?.username ? `@${author.username}` : "@trader",
+        originalAvatarUrl: author?.avatar_url || null,
+        originalCreatedAt: original.created_at,
+      } : null;
+    }).filter(Boolean) as ProfilePostItem[];
+
+    setPosts([...ownItems, ...repostItems].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setSavedPosts(savedItems);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -102,10 +184,9 @@ const Profile = () => {
 
       setUserId(user.id);
 
-      const [{ data: pData }, { data: tData }, { data: postsData }, { data: entries }] = await Promise.all([
+      const [{ data: pData }, { data: tData }, { data: entries }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("posts" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("journal_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
       ]);
 
@@ -174,7 +255,7 @@ const Profile = () => {
         });
       }
 
-      setPosts(postsData || []);
+      await loadProfileCollections(user.id, pData?.username);
       setJournalEntries((entries as JournalEntry[]) || []);
       setLoading(false);
     };
@@ -208,8 +289,7 @@ const Profile = () => {
 
   const refreshPosts = async () => {
     if (!userId) return;
-    const { data } = await supabase.from("posts" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    setPosts(data || []);
+    await loadProfileCollections(userId, profile?.username);
   };
 
   const handleSaveProfile = async () => {
@@ -495,6 +575,7 @@ const Profile = () => {
         {activeTab === 0 ? (
           <PostList
             posts={posts}
+            savedPosts={savedPosts}
             avatarUrl={profile?.avatar_url}
             initials={getInitials()}
             username={displayUsername}
@@ -539,20 +620,22 @@ const Profile = () => {
 
 const PostList = ({
   posts,
+  savedPosts,
   avatarUrl,
   initials,
   username,
   onOpenPost,
   onCreate,
 }: {
-  posts: any[];
+  posts: ProfilePostItem[];
+  savedPosts: ProfilePostItem[];
   avatarUrl: string | null | undefined;
   initials: string;
   username: string;
   onOpenPost: (post: any) => void;
   onCreate: () => void;
 }) => {
-  if (posts.length === 0) {
+  if (posts.length === 0 && savedPosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
@@ -581,9 +664,12 @@ const PostList = ({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-foreground">{username}</span>
+                  <span className="text-sm font-bold text-foreground">{post.username || username}</span>
                   <span className="text-[11px] text-muted-foreground">{formatProfileDate(post.created_at)}</span>
                 </div>
+                {post.kind === "repost" && (
+                  <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
+                )}
                 {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
                 {!!post.tags?.length && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -602,6 +688,49 @@ const PostList = ({
           </button>
         );
       })}
+
+      {savedPosts.length > 0 && (
+        <div className="px-5 py-5">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Saved</p>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {savedPosts.map((post, index) => {
+              const media = post.media_urls?.[0] || post.media_url || post.image_url;
+              return (
+                <button
+                  key={`saved-${post.id}`}
+                  onClick={() => onOpenPost(post)}
+                  className={cn(
+                    "block w-full px-4 py-4 text-left transition-colors hover:bg-muted/20",
+                    index !== savedPosts.length - 1 && "border-b border-border"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-secondary">
+                      {post.avatar_url ? (
+                        <img src={post.avatar_url} alt="Saved post author" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{(post.originalUsername || post.username || "@").slice(1, 2).toUpperCase()}</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-foreground">{post.originalUsername || post.username}</span>
+                        <span className="text-[11px] text-muted-foreground">Saved {formatProfileDate(post.created_at)}</span>
+                      </div>
+                      {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
+                      {media && (
+                        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-secondary">
+                          <img src={media} alt="Saved post media" className="max-h-[280px] w-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
