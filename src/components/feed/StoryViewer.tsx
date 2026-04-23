@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { cn } from "@/lib/utils";
 import type { StoryGroup } from "./StoriesBar";
+import { useSwipeDismiss } from "@/hooks/use-swipe-dismiss";
 
 interface StoryViewerProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface StoryViewerProps {
 
 const StoryViewer = ({ open, group, storyIndex, onClose, onNext, onPrev }: StoryViewerProps) => {
   const story = useMemo(() => (group ? group.stories[storyIndex] : null), [group, storyIndex]);
+  const swipeDismiss = useSwipeDismiss({ onDismiss: onClose });
 
   useEffect(() => {
     if (!open || !group || !story) return;
@@ -30,7 +32,7 @@ const StoryViewer = ({ open, group, storyIndex, onClose, onNext, onPrev }: Story
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="max-w-none border-0 bg-transparent p-0 shadow-none sm:max-w-sm">
-        <div className="relative mx-auto flex h-[100dvh] w-full max-w-sm overflow-hidden bg-card sm:h-[88vh] sm:rounded-[28px] sm:border sm:border-border">
+        <div {...swipeDismiss} className="relative mx-auto flex h-[100dvh] w-full max-w-sm overflow-hidden bg-card sm:h-[88vh] sm:rounded-[28px] sm:border sm:border-border">
           <button onClick={onPrev} className="absolute inset-y-0 left-0 z-10 w-1/3" aria-label="Previous story" />
           <button onClick={onNext} className="absolute inset-y-0 right-0 z-10 w-1/3" aria-label="Next story" />
 
@@ -60,7 +62,7 @@ const StoryViewer = ({ open, group, storyIndex, onClose, onNext, onPrev }: Story
                 <p className="truncate text-sm font-bold text-primary-foreground">{group.username}</p>
                 <p className="text-[11px] text-primary-foreground/80">{timeAgo(story.createdAt)}</p>
               </div>
-              <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-background/20 text-primary-foreground backdrop-blur-sm">
+              <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full border border-background/20 bg-background/35 text-primary-foreground backdrop-blur-sm">
                 <X className="h-4 w-4" />
               </button>
             </div>
