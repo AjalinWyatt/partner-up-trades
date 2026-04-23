@@ -16,6 +16,7 @@ export default function MessageBubble({ msg, isMine }: MessageBubbleProps) {
   const hasMedia = !!msg.media_url;
   const isAudio = msg.media_type?.startsWith("audio/") || msg.media_type === "audio";
   const isImage = isImageType(msg.media_type);
+  const isSharedPost = (msg.content || "").startsWith("Shared a post from ");
 
   return (
     <div className={cn("flex", isMine ? "justify-end" : "justify-start")}>
@@ -34,8 +35,8 @@ export default function MessageBubble({ msg, isMine }: MessageBubbleProps) {
           <a href={msg.media_url!} target="_blank" rel="noopener noreferrer">
             <img
               src={msg.media_url!}
-              alt="Shared image"
-              className="rounded-lg max-h-48 w-auto mb-1 cursor-pointer"
+              alt={isSharedPost ? "Shared post" : "Shared image"}
+              className={cn("rounded-lg w-auto mb-1 cursor-pointer", isSharedPost ? "max-h-64" : "max-h-48")}
             />
           </a>
         )}
@@ -53,7 +54,7 @@ export default function MessageBubble({ msg, isMine }: MessageBubbleProps) {
             <span className="text-xs truncate">{msg.content || "File"}</span>
           </a>
         )}
-        {msg.content && (!hasMedia || isAudio || isImage) && <p>{msg.content}</p>}
+        {msg.content && (!hasMedia || isAudio || isImage) && <p className={cn(isSharedPost && "whitespace-pre-wrap text-[12px] leading-5 font-medium")}>{msg.content}</p>}
         <p className={cn("text-[9px] mt-1 text-right", isMine ? "text-primary-foreground/50" : "text-muted-foreground")}>
           {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </p>
