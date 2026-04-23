@@ -286,6 +286,7 @@ export default function CreatePostModal({ open, onClose, onCreated, initialPost 
                 <span>{content.length}/1000</span>
               </div>
             </div>
+          )}
 
           {step === 2 && (
             <div className="space-y-5">
