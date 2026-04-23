@@ -561,6 +561,8 @@ export type Database = {
           market: string | null
           media_type: string | null
           media_url: string | null
+          media_urls: string[]
+          tags: string[]
           user_id: string
         }
         Insert: {
@@ -573,6 +575,8 @@ export type Database = {
           market?: string | null
           media_type?: string | null
           media_url?: string | null
+          media_urls?: string[]
+          tags?: string[]
           user_id: string
         }
         Update: {
@@ -585,6 +589,8 @@ export type Database = {
           market?: string | null
           media_type?: string | null
           media_url?: string | null
+          media_urls?: string[]
+          tags?: string[]
           user_id?: string
         }
         Relationships: []
