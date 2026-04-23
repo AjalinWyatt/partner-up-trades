@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { X, ImageIcon, Video, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Camera, Hash, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -10,18 +11,30 @@ interface CreatePostModalProps {
   onCreated: () => void;
 }
 
+const TAGS_BY_MARKET: Record<string, string[]> = {
+  Forex: ["chartwork", "indices", "london open", "new york session", "macro", "risk setup"],
+  Futures: ["chartwork", "indices", "nq", "es", "order flow", "trading plan"],
+  Options: ["chartwork", "gamma", "swing idea", "risk setup", "trading plan", "volatility"],
+};
+
+const COMMON_TAGS = ["crypto", "trading plan", "recap", "mindset", "breakout", "discipline"];
+
 export default function CreatePostModal({ open, onClose, onCreated }: CreatePostModalProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [content, setContent] = useState("");
   const [posting, setPosting] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [userName, setUserName] = useState("");
   const [userMarkets, setUserMarkets] = useState<string[]>([]);
   const [selectedMarket, setSelectedMarket] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showTagPicker, setShowTagPicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+
+  const availableTags = useMemo(() => {
+    const marketTags = selectedMarket ? TAGS_BY_MARKET[selectedMarket] || [] : [];
+    return [...new Set([...marketTags, ...COMMON_TAGS])];
+  }, [selectedMarket]);
 
   useEffect(() => {
     if (!open) return;
@@ -29,74 +42,89 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) return;
-      const [{ data: prof }, { data: tp }] = await Promise.all([
-        supabase.from("profiles").select("full_name, username").eq("id", user.id).single(),
-        supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle(),
-      ]);
-      setUserName(prof?.username || "trader");
+      const { data: tp } = await supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle();
       const markets = tp?.markets || [];
       setUserMarkets(markets);
-      setSelectedMarket(markets[0] || "");
+      setSelectedMarket(current => current || markets[0] || "");
     };
     load();
-    setTimeout(() => textRef.current?.focus(), 100);
+    setTimeout(() => textRef.current?.focus(), 60);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [open, previews]);
 
   if (!open) return null;
 
-  const handleFile = (f: File) => {
-    if (f.type.startsWith("image/")) {
-      if (f.size > 10 * 1024 * 1024) { toast.error("Max image size is 10MB"); return; }
-      setMediaType("image");
-    } else if (f.type.startsWith("video/")) {
-      if (f.size > 50 * 1024 * 1024) { toast.error("Max video size is 50MB"); return; }
-      setMediaType("video");
-    } else {
-      toast.error("Only images and videos are supported");
-      return;
-    }
-    if (preview) URL.revokeObjectURL(preview);
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
+  const reset = () => {
+    previews.forEach((url) => URL.revokeObjectURL(url));
+    setFiles([]);
+    setPreviews([]);
+    setContent("");
+    setSelectedTags([]);
+    setShowTagPicker(false);
+    onClose();
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files[0];
-    if (f) handleFile(f);
+  const handleFiles = (incoming: FileList | null) => {
+    if (!incoming?.length) return;
+    const nextFiles = Array.from(incoming).slice(0, 4);
+    if (nextFiles.some((file) => !file.type.startsWith("image/"))) {
+      toast.error("Only images are supported here");
+      return;
+    }
+    if (nextFiles.some((file) => file.size > 10 * 1024 * 1024)) {
+      toast.error("Each image must be under 10MB");
+      return;
+    }
+    previews.forEach((url) => URL.revokeObjectURL(url));
+    setFiles(nextFiles);
+    setPreviews(nextFiles.map((file) => URL.createObjectURL(file)));
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags((current) => current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]);
   };
 
   const handlePost = async () => {
     const trimmedContent = content.trim();
-    if (!trimmedContent && !file) { toast.error("Write something or add media to post"); return; }
+    if (!trimmedContent && files.length === 0) {
+      toast.error("Write something or add up to 4 images");
+      return;
+    }
+
     setPosting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) throw new Error("Not authenticated");
 
-      let mediaUrl: string | null = null;
-
-      if (file) {
-        const ext = file.name.split(".").pop() || (mediaType === "video" ? "mp4" : "jpg");
-        const filePath = `${user.id}/${Date.now()}.${ext}`;
+      const mediaUrls: string[] = [];
+      for (const [index, file] of files.entries()) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const filePath = `${user.id}/${Date.now()}-${index}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("post-images")
-          .upload(filePath, file, { upsert: true });
+          .upload(filePath, file, { upsert: true, contentType: file.type });
         if (uploadErr) throw uploadErr;
         const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(filePath);
-        mediaUrl = urlData.publicUrl;
+        mediaUrls.push(urlData.publicUrl);
       }
 
       const insertData: any = {
         user_id: user.id,
         content: trimmedContent || null,
-        image_url: mediaType === "image" ? mediaUrl : null,
-        media_url: mediaUrl,
-        media_type: mediaType,
         caption: trimmedContent || null,
+        image_url: mediaUrls[0] || null,
+        media_url: mediaUrls[0] || null,
+        media_type: mediaUrls.length > 0 ? "image" : null,
+        media_urls: mediaUrls,
         market: selectedMarket || null,
+        tags: selectedTags,
       };
 
       const { error: insertErr } = await supabase.from("posts").insert(insertData);
@@ -105,150 +133,134 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
       toast.success("Posted!");
       reset();
       onCreated();
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to post");
     } finally {
       setPosting(false);
     }
   };
 
-  const reset = () => {
-    if (preview) URL.revokeObjectURL(preview);
-    setFile(null);
-    setPreview(null);
-    setMediaType(null);
-    setContent("");
-    setSelectedMarket("");
-    onClose();
-  };
-
-  const canPost = !!content.trim() || !!file;
+  const canPost = !!content.trim() || files.length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm pt-[env(safe-area-inset-top)]" onClick={reset}>
-      <div
-        className="bg-card border border-border rounded-2xl w-full max-w-lg mx-4 mt-16 overflow-hidden"
-        onClick={e => e.stopPropagation()}
-        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <button onClick={reset} className="text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
+      <div className="mx-4 mt-16 w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <button onClick={reset} className="text-muted-foreground transition-colors hover:text-foreground">
+            <X className="h-5 w-5" />
           </button>
           <span className="text-sm font-extrabold text-foreground">Create post</span>
           <button
             onClick={handlePost}
             disabled={posting || !canPost}
-            className="px-4 py-1.5 rounded-full bg-gradient-to-r from-primary to-success text-xs font-bold text-primary-foreground disabled:opacity-40"
+            className="rounded-full bg-gradient-to-r from-primary to-success px-4 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
           >
-            {posting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Post"}
+            {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Post"}
           </button>
         </div>
 
-        <div className="px-4 pt-4 pb-3">
+        <div className="px-4 pt-4">
           <textarea
             ref={textRef}
             value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder={`What's on your mind, @${userName}?`}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Share your idea, recap, or setup..."
+            rows={5}
             maxLength={1000}
-            rows={4}
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
+            className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
           />
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="text-[10px] text-muted-foreground">Text posts work, and media is optional.</span>
-            <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
-          </div>
+          <div className="mt-2 text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
         </div>
 
-        {/* Market tag selector */}
-        <div className="px-4 pb-3 flex items-center gap-1.5 flex-wrap border-t border-border/60 pt-3">
-          {userMarkets.map(m => (
+        <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <div className="flex items-center gap-2">
             <button
-              key={m}
-              onClick={() => setSelectedMarket(m)}
+              onClick={() => inputRef.current?.click()}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+              title="Add photos"
+            >
+              <Camera className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setShowTagPicker((current) => !current)}
               className={cn(
-                "text-[11px] px-2.5 py-1 rounded-full font-bold transition-colors",
-                selectedMarket === m
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-primary/10 text-primary hover:bg-primary/20"
+                "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+                showTagPicker || selectedTags.length > 0 ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+              title="Add tags"
+            >
+              <Hash className="h-5 w-5" />
+            </button>
+          </div>
+          <span className="text-[10px] text-muted-foreground">Up to 4 images</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3">
+          {userMarkets.map((market) => (
+            <button
+              key={market}
+              onClick={() => setSelectedMarket(market)}
+              className={cn(
+                "rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors",
+                selectedMarket === market ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
               )}
             >
-              {m}
+              {market}
             </button>
           ))}
-          {userMarkets.length === 0 && (
-            <span className="text-[10px] text-muted-foreground">No market selected in your profile</span>
-          )}
         </div>
 
-        {/* Media preview / picker */}
-        {!preview && (
-          <div className={`flex flex-col items-center justify-center py-8 mx-4 mb-4 rounded-xl border-2 border-dashed ${dragOver ? "border-primary bg-primary/5" : "border-border"}`}>
-            <ImageIcon className="w-10 h-10 text-muted-foreground/40 mb-2" />
-            <p className="text-sm font-semibold text-foreground mb-1">Add a photo or video</p>
-            <p className="text-[11px] text-muted-foreground">Optional, like a Facebook or Threads post</p>
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-bold text-primary"
-              >
-                <ImageIcon className="w-4 h-4" /> Photo
-              </button>
-              <button
-                onClick={() => { if (inputRef.current) { inputRef.current.accept = "video/*"; inputRef.current.click(); } }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-bold text-primary"
-              >
-                <Video className="w-4 h-4" /> Video
+        {showTagPicker && (
+          <div className="border-t border-border px-4 py-3">
+            <div className="flex flex-wrap gap-1.5">
+              {availableTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
+                    selectedTags.includes(tag) ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {previews.length > 0 && (
+          <div className="border-t border-border px-4 py-4">
+            <Carousel opts={{ loop: previews.length > 1 }} className="w-full">
+              <CarouselContent className="ml-0">
+                {previews.map((preview, index) => (
+                  <CarouselItem key={preview} className="pl-0">
+                    <div className="overflow-hidden rounded-xl bg-muted">
+                      <img src={preview} alt={`Selected upload ${index + 1}`} className="h-[280px] w-full object-cover" />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">{files.length} image{files.length === 1 ? "" : "s"} selected</span>
+              <button onClick={() => inputRef.current?.click()} className="text-xs font-bold text-primary hover:text-primary/80">
+                Change photos
               </button>
             </div>
           </div>
         )}
 
-        {preview && (
-          <div className="relative mx-4 mb-4 rounded-xl overflow-hidden bg-muted">
-            {mediaType === "image" ? (
-              <img src={preview} alt="Preview" className="w-full max-h-[300px] object-cover" />
-            ) : (
-              <video src={preview} controls className="w-full max-h-[300px]" />
-            )}
-            <button
-              onClick={() => { setFile(null); setPreview(null); setMediaType(null); }}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Change media button when preview exists */}
-        {preview && (
-          <div className={`flex items-center gap-2 px-4 py-3 border-t border-border`}>
-            <button
-              onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
-            >
-              <ImageIcon className="w-4 h-4 text-primary" /> Change Photo
-            </button>
-            <button
-              onClick={() => { if (inputRef.current) { inputRef.current.accept = "video/*"; inputRef.current.click(); } }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition-colors text-xs font-semibold text-foreground"
-            >
-              <Video className="w-4 h-4 text-accent-foreground" /> Change Video
-            </button>
-          </div>
-        )}
         <input
           ref={inputRef}
           type="file"
+          accept="image/*"
+          multiple
+          capture="environment"
           className="hidden"
-          onChange={e => {
-            const f = e.target.files?.[0];
-            if (f) handleFile(f);
+          onChange={(e) => {
+            handleFiles(e.target.files);
             e.target.value = "";
           }}
         />

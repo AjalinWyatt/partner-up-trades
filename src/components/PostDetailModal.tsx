@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface PostDetailModalProps {
   open: boolean;
@@ -15,10 +16,12 @@ interface PostDetailModalProps {
     user_id: string;
     image_url?: string | null;
     media_url?: string | null;
+    media_urls?: string[] | null;
     media_type?: string | null;
     content?: string | null;
     caption?: string | null;
     market?: string | null;
+    tags?: string[] | null;
     created_at: string;
   } | null;
   myId: string | null;
@@ -92,10 +95,18 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
         <div className="flex flex-col md:flex-row max-h-[90vh]">
           {/* Media / Content */}
           <div className="md:w-[60%] bg-black/30 flex items-center justify-center min-h-[300px] max-h-[60vh] md:max-h-none">
-            {post.media_url && post.media_type === "video" ? (
-              <video src={post.media_url} controls className="w-full h-full object-contain" />
-            ) : post.image_url || (post.media_url && post.media_type === "image") ? (
-              <img src={post.media_url || post.image_url || ""} alt="" className="w-full h-full object-contain" />
+            {(post.media_urls?.length || 0) > 1 ? (
+              <Carousel opts={{ loop: true }} className="w-full">
+                <CarouselContent className="ml-0">
+                  {(post.media_urls || []).map((url) => (
+                    <CarouselItem key={url} className="pl-0">
+                      <img src={url} alt="" className="h-full w-full object-contain" />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            ) : post.image_url || (post.media_url && post.media_type === "image") || post.media_urls?.[0] ? (
+              <img src={post.media_urls?.[0] || post.media_url || post.image_url || ""} alt="" className="w-full h-full object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center p-8">
                 <p className="max-w-lg whitespace-pre-wrap text-center text-base leading-relaxed text-foreground">
@@ -139,6 +150,16 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
                 <p className="text-xs text-foreground leading-relaxed">
                   <span className="font-bold mr-1">{profile?.username}</span>{post.caption || post.content}
                 </p>
+              </div>
+            )}
+
+            {!!post.tags?.length && (
+              <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2.5">
+                {post.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+                    #{tag}
+                  </span>
+                ))}
               </div>
             )}
 
