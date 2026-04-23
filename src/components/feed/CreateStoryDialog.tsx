@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Clapperboard, Loader2, Scissors, Upload, Video } from "lucide-react";
+import { Camera, Clapperboard, Loader2, Scissors, Upload, Video, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -96,7 +96,7 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
       video.onerror = () => reject(new Error("Could not load video"));
     });
 
-    const stream = video.captureStream();
+    const stream = (video as HTMLVideoElement & { captureStream: () => MediaStream }).captureStream();
     const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
       ? "video/webm;codecs=vp9,opus"
       : MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
@@ -117,7 +117,7 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
 
     const segmentDuration = Math.min(maxDuration, Math.max(1, video.duration - startAt));
 
-    await new Promise<File>((resolve, reject) => {
+    const trimmedFile = await new Promise<File>((resolve, reject) => {
       recorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
         URL.revokeObjectURL(sourceUrl);
@@ -131,11 +131,11 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
         if (recorder.state !== "inactive") recorder.stop();
         video.pause();
       }, segmentDuration * 1000);
-    }).then((trimmed) => {
-      setFile(trimmed);
-      setVideoDuration(Math.min(45, segmentDuration));
-      setTrimStart(0);
     });
+
+    setFile(trimmedFile);
+    setVideoDuration(Math.min(45, segmentDuration));
+    setTrimStart(0);
   };
 
   const handleCreate = async () => {
