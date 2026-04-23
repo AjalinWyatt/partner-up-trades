@@ -5,6 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
 import PostDetailModal from "@/components/PostDetailModal";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
@@ -20,9 +21,11 @@ interface FeedPost {
   content?: string | null;
   image_url?: string | null;
   media_url?: string | null;
+  media_urls?: string[] | null;
   media_type?: string | null;
   caption?: string | null;
   market?: string | null;
+  tags?: string[] | null;
   created_at: string;
   username: string;
   full_name: string;
@@ -112,9 +115,11 @@ const Feed = () => {
         content: p.content || p.caption,
         image_url: p.image_url,
         media_url: p.media_url,
+        media_urls: p.media_urls || (p.media_url ? [p.media_url] : []),
         media_type: p.media_type,
         caption: p.caption,
         market: p.market,
+        tags: p.tags || [],
         created_at: p.created_at,
         username: prof?.username || "trader",
         full_name: prof?.full_name || "Trader",
@@ -366,21 +371,33 @@ const Feed = () => {
                   </div>
                 )}
 
-                {/* Post Media - image */}
-                {(post.image_url || (post.media_url && post.media_type === "image")) && (
-                  <button
-                    onClick={() => setSelectedPost(post)}
-                    className="mb-3 block w-full overflow-hidden border-y border-border bg-muted"
-                  >
-                    <img src={post.media_url || post.image_url!} alt="" className="w-full max-h-[500px] object-cover" />
-                  </button>
+                {!!post.tags?.length && (
+                  <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                    {post.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 )}
 
-                {/* Post Media - video */}
-                {post.media_url && post.media_type === "video" && (
-                  <div className="mb-3 overflow-hidden border-y border-border bg-muted">
-                    <video src={post.media_url} controls className="w-full max-h-[500px]" />
-                  </div>
+                {/* Post Media - image */}
+                {!!post.media_urls?.length && (
+                  <button onClick={() => setSelectedPost(post)} className="mb-3 block w-full overflow-hidden border-y border-border bg-muted">
+                    {post.media_urls.length === 1 ? (
+                      <img src={post.media_urls[0]} alt="" className="w-full max-h-[500px] object-cover" />
+                    ) : (
+                      <Carousel opts={{ loop: true }} className="w-full">
+                        <CarouselContent className="ml-0">
+                          {post.media_urls.map((url) => (
+                            <CarouselItem key={url} className="pl-0">
+                              <img src={url} alt="" className="w-full max-h-[500px] object-cover" />
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                      </Carousel>
+                    )}
+                  </button>
                 )}
 
                 {/* Actions */}
