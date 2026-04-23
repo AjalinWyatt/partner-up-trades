@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare } from "lucide-react";
+import { Plus, Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, PenSquare, Search, Menu } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import NotificationBell from "@/components/NotificationBell";
 import PostDetailModal from "@/components/PostDetailModal";
+import FeedTopicsSheet from "@/components/FeedTopicsSheet";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ const Feed = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [showTopics, setShowTopics] = useState(false);
 
   const loadFeed = useCallback(async (tab?: FeedTab) => {
     const activeTab = tab ?? feedTab;
@@ -206,8 +208,8 @@ const Feed = () => {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
-            <button onClick={() => setShowCreatePost(true)} className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-success flex items-center justify-center">
-              <Plus className="w-5 h-5 text-primary-foreground" />
+            <button onClick={() => setShowTopics(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+              <Menu className="h-4 w-4" />
             </button>
 
             <div className="flex items-center gap-1.5">
@@ -219,7 +221,12 @@ const Feed = () => {
               </span>
             </div>
 
-            <NotificationBell />
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowTopics(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
+                <Search className="h-4 w-4" />
+              </button>
+              <NotificationBell />
+            </div>
           </div>
 
           {/* Tabs */}
@@ -415,6 +422,7 @@ const Feed = () => {
       </div>
 
       <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} onCreated={() => loadFeed()} />
+      <FeedTopicsSheet open={showTopics} onClose={() => setShowTopics(false)} currentMarket={primaryMarket} />
       <PostDetailModal
         open={!!selectedPost}
         onClose={() => setSelectedPost(null)}
