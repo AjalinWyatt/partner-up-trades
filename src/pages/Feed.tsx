@@ -569,16 +569,19 @@ const Feed = () => {
 
   return (
     <AppLayout>
-      <div className="flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
+      <div className="flex-1 overflow-y-auto bg-background">
+        <div className="sticky top-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
           <div className="space-y-4 px-4 pb-4 pt-3">
             <div className="flex items-center justify-between gap-3">
-              <img src={wordmark} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
+              <div>
+                <img src={wordmark} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
+                <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Structured thought stream</p>
+              </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => activeMode === "Feed" ? setShowCreatePost(true) : setShowCreateStory(true)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
                   aria-label={activeMode === "Feed" ? "Create post" : "Create pulse"}
                 >
                   <Plus className="h-4 w-4" />
@@ -588,7 +591,7 @@ const Feed = () => {
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <div className="grid h-10 w-full max-w-[220px] grid-cols-2 rounded-full border border-border bg-secondary p-1">
+              <div className="grid h-10 w-full max-w-[220px] grid-cols-2 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
                 {FEED_MODES.map((mode) => {
                   const active = activeMode === mode;
                   const isPulse = mode === "Pulse";
@@ -598,7 +601,7 @@ const Feed = () => {
                       onClick={() => setActiveMode(mode)}
                       className={cn(
                         "relative rounded-full text-sm font-medium transition-all",
-                        active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                        active ? "bg-secondary text-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <span className="inline-flex items-center gap-1.5">
@@ -611,7 +614,7 @@ const Feed = () => {
               </div>
 
               {activeMode === "Feed" ? (
-                <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Trader social</span>
+                <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Feed terminal</span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-primary">
                   <Sparkles className="h-3.5 w-3.5" /> Live now
@@ -620,7 +623,7 @@ const Feed = () => {
             </div>
 
             {activeMode === "Feed" && (
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {FEED_FILTERS.map((filter) => {
                   const active = selectedFeedFilter === filter;
                   return (
@@ -630,7 +633,7 @@ const Feed = () => {
                       className={cn(
                         "shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all",
                         active
-                          ? "border-primary bg-primary/12 text-foreground shadow-[0_0_22px_hsl(var(--primary)/0.2)]"
+                          ? "border-primary bg-primary/10 text-foreground shadow-[0_0_18px_hsl(var(--primary)/0.16)]"
                           : "border-border bg-secondary text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -718,9 +721,9 @@ const Feed = () => {
             </button>
           </div>
         ) : (
-          <div className="space-y-4 px-4 py-4">
+          <div className="space-y-3 px-4 py-4">
             {visiblePosts.map((post) => (
-              <article key={post.id} className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_18px_48px_hsl(var(--background)/0.4)]">
+              <article key={post.id} className="overflow-hidden rounded-[22px] border border-border bg-card/90 shadow-[0_10px_30px_hsl(var(--background)/0.22)]">
                 <div className="p-4">
                   <div className="flex items-start gap-3">
                     <button onClick={() => navigate(`/profile/${post.user_id}`)} className="shrink-0">
@@ -740,8 +743,6 @@ const Feed = () => {
                         <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                       </div>
                       <div className="mt-3 space-y-3">
-                        {(post.content || post.caption) && <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
-
                         {!!post.tags?.length && (
                           <div className="flex flex-wrap gap-2">
                             {post.tags.slice(0, 3).map((tag) => (
@@ -751,6 +752,8 @@ const Feed = () => {
                             ))}
                           </div>
                         )}
+
+                        {(post.content || post.caption) && <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
 
                         {!!post.media_urls?.length && (
                           <button onClick={() => setSelectedPost(post)} className="block w-full overflow-hidden rounded-[20px] border border-border bg-muted">
@@ -771,20 +774,20 @@ const Feed = () => {
                         )}
                       </div>
 
-                      <div className="mt-4 flex items-center gap-5">
-                        <button onClick={() => toggleLike(post.id)} className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                      <div className="mt-4 grid grid-cols-4 items-center border-t border-border pt-3 text-muted-foreground">
+                        <button onClick={() => toggleLike(post.id)} className="flex items-center justify-start gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
                           <Heart className={cn("h-4 w-4", post.liked ? "fill-destructive text-destructive" : "")} />
                           <span className="text-[11px]">{post.likeCount || "Like"}</span>
                         </button>
-                        <button onClick={() => setCommentPostId(post.id)} className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                        <button onClick={() => setCommentPostId(post.id)} className="flex items-center justify-start gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
                           <MessageCircle className="h-4 w-4" />
                           <span className="text-[11px]">{post.commentCount || "Comment"}</span>
                         </button>
-                        <button onClick={() => setPostToShare(post)} className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                        <button onClick={() => setPostToShare(post)} className="flex items-center justify-start gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
                           <Send className="h-4 w-4" />
                           <span className="text-[11px]">Share</span>
                         </button>
-                        <button onClick={() => toggleSave(post.id)} className="ml-auto text-muted-foreground transition-colors hover:text-foreground">
+                        <button onClick={() => toggleSave(post.id)} className="ml-auto flex items-center justify-end text-muted-foreground transition-colors hover:text-foreground">
                           <Bookmark className={cn("h-4 w-4", post.saved ? "fill-primary text-primary" : "")} />
                         </button>
                       </div>
