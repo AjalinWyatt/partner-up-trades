@@ -23,7 +23,7 @@ interface ViewPostItem {
 
 const ViewProfile = () => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { userId } = useParams<{ userId: string }>();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -38,7 +38,7 @@ const ViewProfile = () => {
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!userId) return;
 
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -46,10 +46,10 @@ const ViewProfile = () => {
       if (user) setMyId(user.id);
 
       const [{ data: prof }, { data: tp }, journalResponse, { data: repostRows }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
-        supabase.from("trading_profiles").select("*").eq("user_id", id).maybeSingle(),
-        supabase.from("journal_entries").select("*").eq("user_id", id).order("created_at", { ascending: false }).limit(20),
-        supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", id).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("journal_entries").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
+        supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
       ]);
 
       const { data: ownPosts } = await supabase.from("posts").select("*").eq("user_id", id).order("created_at", { ascending: false });
@@ -84,19 +84,19 @@ const ViewProfile = () => {
           supabase
             .from("partner_connections")
             .select("id, status")
-            .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
+            .or(`and(requester_id.eq.${user.id},receiver_id.eq.${userId}),and(requester_id.eq.${userId},receiver_id.eq.${user.id})`)
             .maybeSingle(),
-          supabase.from("blocked_users").select("id").eq("blocker_id", user.id).eq("blocked_id", id).maybeSingle(),
+          supabase.from("blocked_users").select("id").eq("blocker_id", user.id).eq("blocked_id", userId).maybeSingle(),
         ]);
 
         setConnectionStatus(conn?.status || null);
         setConnectionId(conn?.id || null);
         setIsBlocked(!!blockData);
 
-        if (user.id !== id) {
+        if (user.id !== userId) {
           const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
           sendNotification({
-            userId: id,
+            userId,
             type: "profile_viewed",
             title: `@${myProf?.username || "someone"} viewed your profile`,
             body: "They might be interested in connecting",
@@ -109,15 +109,15 @@ const ViewProfile = () => {
     };
 
     load();
-  }, [id]);
+  }, [userId]);
 
   const handleConnect = async () => {
-    if (!myId || !id || sending || connectionStatus === "pending") return;
+    if (!myId || !userId || sending || connectionStatus === "pending") return;
     setSending(true);
 
     const { error } = await supabase.from("partner_connections").insert({
       requester_id: myId,
-      receiver_id: id,
+      receiver_id: userId,
       status: "pending",
       match_score: 0,
       match_breakdown: {},
@@ -130,7 +130,7 @@ const ViewProfile = () => {
       setConnectionStatus("pending");
       const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
       await sendNotification({
-        userId: id,
+        userId,
         type: "partner_request",
         title: "New connection request",
         body: `@${myProf?.username || "someone"} wants to connect with you`,
@@ -158,10 +158,10 @@ const ViewProfile = () => {
   };
 
   const handleBlock = async () => {
-    if (!myId || !id) return;
+    if (!myId || !userId) return;
     if (!confirm(`Block @${profile?.username || "this user"}?`)) return;
 
-    await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: id });
+    await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: userId });
     if (connectionId) {
       await supabase.from("partner_connections").delete().eq("id", connectionId);
       setConnectionStatus(null);
@@ -174,8 +174,8 @@ const ViewProfile = () => {
   };
 
   const handleUnblock = async () => {
-    if (!myId || !id) return;
-    await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", id);
+    if (!myId || !userId) return;
+    await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", userId);
     setIsBlocked(false);
     setShowMenu(false);
     toast.success(`Unblocked @${profile?.username || "user"}`);
@@ -221,7 +221,7 @@ const ViewProfile = () => {
         <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
           <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
         </button>
-        {myId && myId !== id ? (
+        {myId && myId !== userId ? (
           <div className="relative">
             <button onClick={() => setShowMenu((current) => !current)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
               <MoreVertical className="h-4 w-4" />
