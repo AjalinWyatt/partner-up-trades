@@ -10,6 +10,9 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import StoriesBar, { type StoryGroup, type StoryItem } from "@/components/feed/StoriesBar";
+import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
+import StoryViewer from "@/components/feed/StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -50,6 +53,13 @@ interface ShareTarget {
   type: "partner" | "dm";
 }
 
+interface StoryProfileRow {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
@@ -67,6 +77,80 @@ const Feed = () => {
   const [shareTargets, setShareTargets] = useState<ShareTarget[]>([]);
   const [shareSearch, setShareSearch] = useState("");
   const [sendingToId, setSendingToId] = useState<string | null>(null);
+  const [myProfile, setMyProfile] = useState<StoryProfileRow | null>(null);
+  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
+  const [showCreateStory, setShowCreateStory] = useState(false);
+  const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
+  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+
+  const loadStories = useCallback(async (userId: string) => {
+    const { data: storyRows, error: storiesError } = await supabase
+      .from("stories" as any)
+      .select("id, user_id, media_url, media_type, caption, created_at, expires_at")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
+
+    if (storiesError || !storyRows?.length) {
+      setStoryGroups([]);
+      return;
+    }
+
+    const profileIds = [...new Set((storyRows as any[]).map((row) => row.user_id))];
+    const storyIds = (storyRows as any[]).map((row) => row.id);
+    const [{ data: profileRows }, { data: viewRows }] = await Promise.all([
+      supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", profileIds),
+      supabase.from("story_views" as any).select("story_id").eq("viewer_id", userId).in("story_id", storyIds),
+    ]);
+
+    const viewedIds = new Set(((viewRows as any[]) || []).map((row) => row.story_id));
+    const profileMap = new Map((profileRows || []).map((row: any) => [row.id, row as StoryProfileRow]));
+    const groupsMap = new Map<string, StoryGroup>();
+
+    (storyRows as any[]).forEach((row) => {
+      const profile = profileMap.get(row.user_id);
+      const story: StoryItem = {
+        id: row.id,
+        userId: row.user_id,
+        mediaUrl: row.media_url,
+        mediaType: row.media_type,
+        caption: row.caption,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+      };
+
+      const existing = groupsMap.get(row.user_id);
+      if (existing) {
+        existing.stories.push(story);
+        existing.viewed = existing.viewed && viewedIds.has(row.id);
+        return;
+      }
+
+      groupsMap.set(row.user_id, {
+        userId: row.user_id,
+        username: profile?.username ? `@${profile.username}` : "@trader",
+        fullName: profile?.full_name || "Trader",
+        avatarUrl: profile?.avatar_url || null,
+        viewed: viewedIds.has(row.id),
+        isOwn: row.user_id === userId,
+        latestCreatedAt: row.created_at,
+        stories: [story],
+      });
+    });
+
+    const groups = [...groupsMap.values()]
+      .map((group) => ({
+        ...group,
+        stories: group.stories.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+      }))
+      .sort((a, b) => {
+        if (a.isOwn && !b.isOwn) return -1;
+        if (!a.isOwn && b.isOwn) return 1;
+        if (a.viewed !== b.viewed) return a.viewed ? 1 : -1;
+        return new Date(b.latestCreatedAt).getTime() - new Date(a.latestCreatedAt).getTime();
+      });
+
+    setStoryGroups(groups);
+  }, []);
 
   const loadFeed = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -74,9 +158,14 @@ const Feed = () => {
     if (!user) { setLoading(false); return; }
     setMyId(user.id);
 
-    const { data: myTp } = await supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle();
+    const [{ data: myTp }, { data: myProfileRow }] = await Promise.all([
+      supabase.from("trading_profiles").select("markets").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("id, username, full_name, avatar_url").eq("id", user.id).maybeSingle(),
+    ]);
     const userMarkets = myTp?.markets || [];
     setMyMarkets(userMarkets);
+    setMyProfile(myProfileRow || null);
+    await loadStories(user.id);
 
     let query = supabase
       .from("posts")
@@ -153,7 +242,7 @@ const Feed = () => {
 
     setPosts(feedItems);
     setLoading(false);
-  }, []);
+  }, [loadStories]);
 
   useEffect(() => {
     setLoading(true);
@@ -174,10 +263,74 @@ const Feed = () => {
         const p = payload.new as any;
         setPosts(prev => prev.map(e => e.id === p.post_id ? { ...e, commentCount: e.commentCount + 1 } : e));
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, () => {
+        if (user?.id) loadStories(user.id);
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [loadFeed]);
+  }, [loadFeed, loadStories]);
+
+  const allStoryGroups = useMemo(() => storyGroups, [storyGroups]);
+  const ownStoryGroup = useMemo(() => allStoryGroups.find((group) => group.isOwn) || null, [allStoryGroups]);
+  const otherStoryGroups = useMemo(() => allStoryGroups.filter((group) => !group.isOwn), [allStoryGroups]);
+  const activeStoryGroup = activeStoryGroupIndex !== null ? allStoryGroups[activeStoryGroupIndex] || null : null;
+
+  const markStorySeen = useCallback(async (story: StoryItem) => {
+    if (!myId || story.userId === myId) return;
+    await supabase.from("story_views" as any).upsert({ story_id: story.id, viewer_id: myId }, { onConflict: "story_id,viewer_id" });
+    setStoryGroups((current) =>
+      current.map((group) => {
+        if (group.userId !== story.userId) return group;
+        return {
+          ...group,
+          viewed: group.stories.every((item) => item.id === story.id || item.userId === myId || true),
+        };
+      })
+    );
+  }, [myId]);
+
+  useEffect(() => {
+    if (!activeStoryGroup) return;
+    const story = activeStoryGroup.stories[activeStoryIndex];
+    if (!story) return;
+    markStorySeen(story);
+  }, [activeStoryGroup, activeStoryIndex, markStorySeen]);
+
+  const openStoryGroup = (groupIndex: number) => {
+    setActiveStoryGroupIndex(groupIndex);
+    setActiveStoryIndex(0);
+  };
+
+  const closeStoryViewer = () => {
+    setActiveStoryGroupIndex(null);
+    setActiveStoryIndex(0);
+  };
+
+  const handleNextStory = () => {
+    if (!activeStoryGroup) return;
+    if (activeStoryIndex < activeStoryGroup.stories.length - 1) {
+      setActiveStoryIndex((current) => current + 1);
+      return;
+    }
+    if (activeStoryGroupIndex === null || activeStoryGroupIndex >= allStoryGroups.length - 1) {
+      closeStoryViewer();
+      return;
+    }
+    setActiveStoryGroupIndex((current) => (current === null ? current : current + 1));
+    setActiveStoryIndex(0);
+  };
+
+  const handlePrevStory = () => {
+    if (activeStoryIndex > 0) {
+      setActiveStoryIndex((current) => current - 1);
+      return;
+    }
+    if (activeStoryGroupIndex === null || activeStoryGroupIndex === 0) return;
+    const previousGroup = allStoryGroups[activeStoryGroupIndex - 1];
+    setActiveStoryGroupIndex(activeStoryGroupIndex - 1);
+    setActiveStoryIndex(Math.max(0, previousGroup.stories.length - 1));
+  };
 
   const loadShareTargets = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -402,6 +555,15 @@ const Feed = () => {
           </div>
         </div>
 
+        <StoriesBar
+          groups={otherStoryGroups}
+          ownGroup={ownStoryGroup}
+          myAvatarUrl={myProfile?.avatar_url || null}
+          myName={myProfile?.full_name || myProfile?.username || "You"}
+          onAddStory={() => setShowCreateStory(true)}
+          onOpenStory={openStoryGroup}
+        />
+
         <div className="border-b border-border px-4 py-2.5">
           <button
             onClick={() => setShowCreatePost(true)}
@@ -589,6 +751,15 @@ const Feed = () => {
         onCountChange={(postId, delta) => {
           setPosts(prev => prev.map(p => p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p));
         }}
+      />
+      <CreateStoryDialog open={showCreateStory} onClose={() => setShowCreateStory(false)} onCreated={() => loadFeed()} />
+      <StoryViewer
+        open={activeStoryGroupIndex !== null}
+        group={activeStoryGroup}
+        storyIndex={activeStoryIndex}
+        onClose={closeStoryViewer}
+        onNext={handleNextStory}
+        onPrev={handlePrevStory}
       />
       <Dialog open={!!postToShare} onOpenChange={(open) => { if (!open) { setPostToShare(null); setShareSearch(""); } }}>
         <DialogContent className="border-border bg-card p-0 sm:max-w-md">
