@@ -333,6 +333,9 @@ const ViewProfile = () => {
                           <span className="text-sm font-bold text-foreground">{displayUsername}</span>
                           <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                         </div>
+                        {post.kind === "repost" && (
+                          <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
+                        )}
                         {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
                         {!!post.tags?.length && (
                           <div className="mt-3 flex flex-wrap gap-1.5">
