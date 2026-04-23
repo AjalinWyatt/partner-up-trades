@@ -13,8 +13,12 @@ interface PostDetailModalProps {
   post: {
     id: string;
     user_id: string;
-    image_url: string;
+    image_url?: string | null;
+    media_url?: string | null;
+    media_type?: string | null;
+    content?: string | null;
     caption?: string | null;
+    market?: string | null;
     created_at: string;
   } | null;
   myId: string | null;
@@ -86,9 +90,19 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
       <DialogContent className="max-w-3xl p-0 overflow-hidden bg-card border-border rounded-xl max-h-[90vh]">
         <DialogTitle className="sr-only">Post Detail</DialogTitle>
         <div className="flex flex-col md:flex-row max-h-[90vh]">
-          {/* Image */}
-          <div className="md:w-[60%] bg-black flex items-center justify-center min-h-[300px] max-h-[60vh] md:max-h-none">
-            <img src={post.image_url} alt="" className="w-full h-full object-contain" />
+          {/* Media / Content */}
+          <div className="md:w-[60%] bg-black/30 flex items-center justify-center min-h-[300px] max-h-[60vh] md:max-h-none">
+            {post.media_url && post.media_type === "video" ? (
+              <video src={post.media_url} controls className="w-full h-full object-contain" />
+            ) : post.image_url || (post.media_url && post.media_type === "image") ? (
+              <img src={post.media_url || post.image_url || ""} alt="" className="w-full h-full object-contain" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center p-8">
+                <p className="max-w-lg whitespace-pre-wrap text-center text-base leading-relaxed text-foreground">
+                  {post.content || post.caption}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Details */}
@@ -120,10 +134,10 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted }: PostDetailMod
             </div>
 
             {/* Caption */}
-            {post.caption && (
+            {(post.caption || post.content) && (
               <div className="px-3 py-2.5 border-b border-border">
                 <p className="text-xs text-foreground leading-relaxed">
-                  <span className="font-bold mr-1">{profile?.username}</span>{post.caption}
+                  <span className="font-bold mr-1">{profile?.username}</span>{post.caption || post.content}
                 </p>
               </div>
             )}

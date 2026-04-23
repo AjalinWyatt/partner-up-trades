@@ -55,6 +55,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
       toast.error("Only images and videos are supported");
       return;
     }
+    if (preview) URL.revokeObjectURL(preview);
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -67,8 +68,8 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   };
 
   const handlePost = async () => {
-    if (!file) { toast.error("Add a photo or video to post"); return; }
-    if (!selectedMarket) { toast.error("Select a market tag"); return; }
+    const trimmedContent = content.trim();
+    if (!trimmedContent && !file) { toast.error("Write something or add media to post"); return; }
     setPosting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -90,12 +91,12 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
 
       const insertData: any = {
         user_id: user.id,
-        content: content.trim() || null,
+        content: trimmedContent || null,
         image_url: mediaType === "image" ? mediaUrl : null,
         media_url: mediaUrl,
         media_type: mediaType,
-        caption: content.trim() || null,
-        market: selectedMarket,
+        caption: trimmedContent || null,
+        market: selectedMarket || null,
       };
 
       const { error: insertErr } = await supabase.from("posts").insert(insertData);
@@ -113,6 +114,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
   };
 
   const reset = () => {
+    if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
     setMediaType(null);
@@ -121,7 +123,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
     onClose();
   };
 
-  const canPost = !!file && !!selectedMarket;
+  const canPost = !!content.trim() || !!file;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm pt-[env(safe-area-inset-top)]" onClick={reset}>
@@ -147,8 +149,24 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
           </button>
         </div>
 
+        <div className="px-4 pt-4 pb-3">
+          <textarea
+            ref={textRef}
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder={`What's on your mind, @${userName}?`}
+            maxLength={1000}
+            rows={4}
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
+          />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-[10px] text-muted-foreground">Text posts work, and media is optional.</span>
+            <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
+          </div>
+        </div>
+
         {/* Market tag selector */}
-        <div className="px-4 pt-3 flex items-center gap-1.5 flex-wrap">
+        <div className="px-4 pb-3 flex items-center gap-1.5 flex-wrap border-t border-border/60 pt-3">
           {userMarkets.map(m => (
             <button
               key={m}
@@ -164,16 +182,16 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
             </button>
           ))}
           {userMarkets.length === 0 && (
-            <span className="text-[10px] text-muted-foreground">No markets selected in your profile</span>
+            <span className="text-[10px] text-muted-foreground">No market selected in your profile</span>
           )}
         </div>
 
-        {/* Media preview - shown prominently first */}
+        {/* Media preview / picker */}
         {!preview && (
-          <div className={`flex flex-col items-center justify-center py-10 mx-4 mt-3 rounded-xl border-2 border-dashed ${dragOver ? "border-primary bg-primary/5" : "border-border"}`}>
+          <div className={`flex flex-col items-center justify-center py-8 mx-4 mb-4 rounded-xl border-2 border-dashed ${dragOver ? "border-primary bg-primary/5" : "border-border"}`}>
             <ImageIcon className="w-10 h-10 text-muted-foreground/40 mb-2" />
             <p className="text-sm font-semibold text-foreground mb-1">Add a photo or video</p>
-            <p className="text-[11px] text-muted-foreground">Required to post</p>
+            <p className="text-[11px] text-muted-foreground">Optional, like a Facebook or Threads post</p>
             <div className="flex gap-2 mt-3">
               <button
                 onClick={() => { if (inputRef.current) { inputRef.current.accept = "image/*"; inputRef.current.click(); } }}
@@ -192,7 +210,7 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
         )}
 
         {preview && (
-          <div className="relative mx-4 mt-3 rounded-xl overflow-hidden bg-muted">
+          <div className="relative mx-4 mb-4 rounded-xl overflow-hidden bg-muted">
             {mediaType === "image" ? (
               <img src={preview} alt="Preview" className="w-full max-h-[300px] object-cover" />
             ) : (
@@ -204,22 +222,6 @@ export default function CreatePostModal({ open, onClose, onCreated }: CreatePost
             >
               <X className="w-4 h-4" />
             </button>
-          </div>
-        )}
-
-        {/* Caption input - only shown after media is added */}
-        {preview && (
-          <div className="px-4 py-3">
-            <textarea
-              ref={textRef}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder="Add a caption..."
-              maxLength={1000}
-              rows={2}
-              className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
-            />
-            <div className="text-right text-[10px] text-muted-foreground">{content.length}/1000</div>
           </div>
         )}
 
