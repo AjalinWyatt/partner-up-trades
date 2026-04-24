@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Smile, Tag as TagIcon } from "lucide-react";
+import { Globe, ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import type { Connection, Message } from "@/components/messages/types";
-import { formatTime, groupMessagesByDate } from "@/components/messages/utils";
+import { groupMessagesByDate } from "@/components/messages/utils";
 import AvatarIcon from "@/components/messages/AvatarIcon";
 import MessageBubble from "@/components/messages/MessageBubble";
 import VoiceRecorder from "@/components/messages/VoiceRecorder";
@@ -31,6 +31,18 @@ export default function Messages() {
   const [allTags, setAllTags] = useState<{ id: string; name: string }[]>([]);
   const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => setMyAvatarUrl((data as any)?.avatar_url || null));
+  }, [userId]);
 
   const loadTagData = async (uid: string) => {
     const { data: t } = await supabase
@@ -210,51 +222,70 @@ export default function Messages() {
 
   const conversationListContent = (
     <div className="flex flex-col h-full">
-      <div className="px-5 pt-5 pb-3">
-        <h1 className="text-xl font-bold text-foreground">Messages</h1>
-      </div>
-      <div className="px-4 pb-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations"
-            className="pl-9 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl h-9 text-sm"
-          />
-        </div>
-      </div>
-      {allTags.length > 0 && (
-        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setActiveTagId(null)}
-            className={cn(
-              "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
-              activeTagId === null
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-transparent text-muted-foreground border-border"
-            )}
-          >
-            All
-          </button>
-          {allTags.map((t) => (
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        {showSearch ? (
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onBlur={() => !search && setShowSearch(false)}
+              placeholder="Search"
+              className="pl-9 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl h-9 text-sm"
+            />
+          </div>
+        ) : (
+          <>
             <button
-              key={t.id}
+              onClick={() => setShowSearch(true)}
+              className="p-1 text-foreground"
+              aria-label="Search"
+            >
+              <Search className="w-6 h-6" strokeWidth={2} />
+            </button>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
+              Traders<span className="font-bold">World</span>
+            </h1>
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0"
+              aria-label="My profile"
+            >
+              {myAvatarUrl ? (
+                <img src={myAvatarUrl} alt="Me" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-brand" />
+              )}
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-none">
+        {[
+          { id: null as string | null, name: "Partners" },
+          ...allTags.map((t) => ({ id: t.id, name: t.name })),
+        ].map((t) => {
+          const active = activeTagId === t.id;
+          return (
+            <button
+              key={t.id ?? "all"}
               onClick={() => setActiveTagId(t.id)}
               className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1",
-                activeTagId === t.id
+                "shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-colors border",
+                active
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border"
+                  : "bg-transparent text-foreground border-foreground/70"
               )}
             >
-              <TagIcon className="w-3 h-3" />
               {t.name}
             </button>
-          ))}
-        </div>
-      )}
-      <div className="flex-1 overflow-y-auto px-2">
+          );
+        })}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -275,32 +306,36 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); }}
-              className={cn(
-                "w-full flex items-center gap-3 py-3 px-3 rounded-xl transition-colors",
-                activeChat?.id === conn.id ? "bg-secondary" : "hover:bg-secondary/50"
-              )}
+              className="w-full flex items-center gap-4 py-4 text-left border-b border-border/40"
             >
-              <AvatarIcon conn={conn} />
-              <div className="flex-1 min-w-0 text-left">
-                <div className="flex items-center justify-between">
-                  <p className={cn("text-sm truncate", conn.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground")}>
-                    {conn.partnerName}
-                  </p>
-                  {conn.lastMessageTime && (
-                    <span className={cn("text-[10px] shrink-0 ml-2", conn.unreadCount > 0 ? "text-primary font-semibold" : "text-muted-foreground")}>
-                      {formatTime(conn.lastMessageTime)}
-                    </span>
-                  )}
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-secondary">
+                  <AvatarIcon conn={conn} size="lg" />
                 </div>
-                <p className={cn("text-xs truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>
+                {conn.unreadCount > 0 && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold text-foreground truncate">
+                  {conn.partnerName.replace(/^@/, "")}
+                </p>
+                <p className={cn("text-sm truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
               </div>
-              {conn.unreadCount > 0 && (
-                <span className="min-w-[20px] h-5 bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground shrink-0 px-1.5">
-                  {conn.unreadCount}
-                </span>
-              )}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {conn.lastMessageTime && (
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+                  </span>
+                )}
+                {conn.unreadCount > 0 && (
+                  <span className="min-w-[26px] h-[26px] bg-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground px-1.5">
+                    {conn.unreadCount}
+                  </span>
+                )}
+              </div>
             </button>
           ))
         )}
@@ -320,33 +355,45 @@ export default function Messages() {
     </div>
   ) : (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-primary/20 bg-card/80 backdrop-blur-sm">
-        <button onClick={() => setActiveChat(null)} className="lg:hidden">
-          <ArrowLeft className="w-5 h-5 text-foreground" />
+      <div className="relative px-5 pt-4 pb-5">
+        <button
+          onClick={() => setActiveChat(null)}
+          className="absolute left-4 top-5 p-2 text-foreground"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />
         </button>
-        <AvatarIcon conn={activeChat} size="sm" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">{activeChat.partnerName}</p>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[10px] text-muted-foreground">@{activeChat.partnerUsername || "trader"} · Partner</p>
-            {(assignmentsByPartner[activeChat.partnerId] || [])
-              .map((tid) => allTags.find((t) => t.id === tid))
-              .filter(Boolean)
-              .map((t) => (
-                <span key={t!.id} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
-                  {t!.name}
-                </span>
-              ))}
-          </div>
-        </div>
         <button
           onClick={() => setTagsOpen(true)}
-          className="p-2 rounded-full hover:bg-secondary text-foreground"
+          className="absolute right-4 top-5 p-2 text-primary"
           aria-label="Tag conversation"
           title="Tag conversation"
         >
-          <TagIcon className="w-5 h-5" />
+          <TagIcon className="w-6 h-6" strokeWidth={2} />
         </button>
+        <div className="flex flex-col items-center text-center">
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-secondary">
+            <AvatarIcon conn={activeChat} size="lg" />
+          </div>
+          <p className="mt-3 text-lg font-semibold text-primary">
+            {activeChat.partnerName.replace(/^@/, "")}
+          </p>
+          <p className="mt-1 text-sm text-foreground">
+            @{activeChat.partnerUsername || "trader"}
+          </p>
+          {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center">
+              {(assignmentsByPartner[activeChat.partnerId] || [])
+                .map((tid) => allTags.find((t) => t.id === tid))
+                .filter(Boolean)
+                .map((t) => (
+                  <span key={t!.id} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
+                    {t!.name}
+                  </span>
+                ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -375,39 +422,40 @@ export default function Messages() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="px-4 py-3 border-t border-primary/20 bg-card/80 backdrop-blur-sm">
-        <div className="flex items-center gap-2 bg-secondary rounded-2xl px-3 py-1.5">
+      <div className="px-4 pb-4 pt-2">
+        <div className="flex items-center gap-2 bg-secondary/70 rounded-full pl-3 pr-1.5 py-1.5">
           <AttachmentButton
             userId={userId!}
             connectionId={activeChat.id}
             partnerId={activeChat.partnerId}
             onSent={() => {}}
           />
-          <VoiceRecorder
-            userId={userId!}
-            connectionId={activeChat.id}
-            partnerId={activeChat.partnerId}
-            onSent={() => {}}
-          />
+          <span className="w-px h-5 bg-foreground/30" />
           <input
             ref={inputRef}
             value={msgInput}
             onChange={(e) => setMsgInput(e.target.value)}
-            placeholder="Message..."
+            placeholder="Type here"
             className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground py-1.5"
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
-          <button className="p-1.5 rounded-full hover:bg-background/50 transition-colors text-muted-foreground hover:text-foreground" title="Emoji">
-            <Smile className="w-5 h-5" />
-          </button>
-          {msgInput.trim() && (
+          {msgInput.trim() ? (
             <button
               onClick={sendMessage}
               disabled={sendingMsg}
-              className="p-1.5 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
             >
-              <Send className="w-4 h-4 text-primary-foreground" />
+              <Send className="w-5 h-5 text-primary-foreground" />
             </button>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+              <VoiceRecorder
+                userId={userId!}
+                connectionId={activeChat.id}
+                partnerId={activeChat.partnerId}
+                onSent={() => {}}
+              />
+            </div>
           )}
         </div>
       </div>
