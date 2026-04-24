@@ -6,6 +6,8 @@ export interface Connection {
   avatarUrl?: string | null;
   lastMessage?: string;
   lastMessageTime?: string;
+  lastMessageFromMe?: boolean;
+  lastMessageRead?: boolean;
   unreadCount: number;
 }
 
