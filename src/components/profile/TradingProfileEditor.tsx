@@ -103,12 +103,6 @@ const TradingProfileEditor = ({ profileDraft, setProfileDraft, tradingDraft, set
               <EditorField label="State / Region" value={profileDraft.state} onChange={(value) => setProfileValue("state", value)} placeholder="State / Region" />
             </div>
             <EditorField label="Country" value={profileDraft.country} onChange={(value) => setProfileValue("country", value)} placeholder="Country" />
-            <MultiSelectSection
-              label="Interests outside trading"
-              options={["Gym", "Football", "Basketball", "Music", "Travel", "Cars", "Gaming", "Family time", "Cooking", "Reading", "Content creation", "Fitness", "Golf", "Business", "Meditation"]}
-              selected={profileDraft.hobbies}
-              onToggle={(value) => toggleProfileArray("hobbies", value)}
-            />
           </AccordionContent>
         </AccordionItem>
 
