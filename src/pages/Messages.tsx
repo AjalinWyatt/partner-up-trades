@@ -33,6 +33,7 @@ export default function Messages() {
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [partnerTrading, setPartnerTrading] = useState<{ markets?: string[] | null; experience_level?: string | null; trading_style?: string[] | null } | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -43,6 +44,16 @@ export default function Messages() {
       .maybeSingle()
       .then(({ data }) => setMyAvatarUrl((data as any)?.avatar_url || null));
   }, [userId]);
+
+  useEffect(() => {
+    if (!activeChat?.partnerId) { setPartnerTrading(null); return; }
+    supabase
+      .from("trading_profiles")
+      .select("markets, experience_level, trading_style")
+      .eq("user_id", activeChat.partnerId)
+      .maybeSingle()
+      .then(({ data }) => setPartnerTrading((data as any) || null));
+  }, [activeChat?.partnerId]);
 
   const loadTagData = async (uid: string) => {
     const { data: t } = await supabase
@@ -390,9 +401,18 @@ export default function Messages() {
           <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
             {activeChat.partnerName.replace(/^@/, "")}
           </p>
-          <p className="text-[12px] text-muted-foreground truncate leading-tight">
+          <p className="text-[11px] text-muted-foreground truncate leading-tight">
             @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
           </p>
+          {partnerTrading && (partnerTrading.markets?.length || partnerTrading.experience_level || partnerTrading.trading_style?.length) ? (
+            <p className="text-[10px] text-primary/80 truncate leading-tight mt-0.5 font-medium">
+              {[
+                partnerTrading.markets?.[0],
+                partnerTrading.experience_level,
+                partnerTrading.trading_style?.[0],
+              ].filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
         </div>
         <button
           onClick={() => setTagsOpen(true)}
@@ -503,9 +523,9 @@ export default function Messages() {
         </AppLayout>
       </div>
       <div className="lg:hidden">
-        <AppLayout>
+        <AppLayout hideBottomNav={!!activeChat}>
           {activeChat ? (
-            <div className="flex flex-col h-[calc(100dvh-60px)]">
+            <div className="flex flex-col h-[100dvh]">
               {chatPanelContent}
             </div>
           ) : (
