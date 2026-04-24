@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Tag as TagIcon, Pencil } from "lucide-react";
+import { Globe, ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,6 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [tagsOpen, setTagsOpen] = useState(false);
-  const [manageTagsOpen, setManageTagsOpen] = useState(false);
   const [allTags, setAllTags] = useState<{ id: string; name: string }[]>([]);
   const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
@@ -263,7 +262,7 @@ export default function Messages() {
         )}
       </div>
 
-      <div className="px-4 pb-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+      <div className="px-4 pb-4 flex items-center gap-2 overflow-x-auto scrollbar-none">
         {allTags.map((t) => {
           const active = activeTagId === t.id;
           return (
@@ -274,7 +273,7 @@ export default function Messages() {
                 "shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors border",
                 active
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-foreground border-border"
+                  : "bg-transparent text-foreground border-foreground/70"
               )}
             >
               {t.name}
@@ -282,11 +281,11 @@ export default function Messages() {
           );
         })}
         <button
-          onClick={() => setManageTagsOpen(true)}
-          className="shrink-0 h-7 w-7 rounded-full border border-border flex items-center justify-center text-foreground hover:bg-muted"
-          aria-label="Edit tags"
+          onClick={() => setTagsOpen(true)}
+          className="shrink-0 ml-auto h-7 w-7 rounded-full border border-border flex items-center justify-center text-primary hover:bg-muted"
+          aria-label="Manage tags"
         >
-          <Pencil className="w-3 h-3" />
+          <TagIcon className="w-3.5 h-3.5" />
         </button>
       </div>
 
@@ -311,32 +310,32 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); }}
-              className="w-full flex items-center gap-3 py-3 text-left border-b border-border/40"
+              className="w-full flex items-center gap-4 py-4 text-left border-b border-border/40"
             >
               <div className="relative shrink-0">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-secondary">
                   <AvatarIcon conn={conn} size="lg" />
                 </div>
                 {conn.unreadCount > 0 && (
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success border-2 border-background" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
+                <p className="text-base font-semibold text-foreground truncate">
                   {conn.partnerName.replace(/^@/, "")}
                 </p>
-                <p className={cn("text-xs truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
+                <p className={cn("text-sm truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {conn.lastMessageTime && (
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
                   </span>
                 )}
                 {conn.unreadCount > 0 && (
-                  <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground px-1.5">
+                  <span className="min-w-[26px] h-[26px] bg-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground px-1.5">
                     {conn.unreadCount}
                   </span>
                 )}
@@ -377,14 +376,19 @@ export default function Messages() {
           <TagIcon className="w-6 h-6" strokeWidth={2} />
         </button>
         <div className="flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-secondary">
-            <AvatarIcon conn={activeChat} size="lg" />
-          </div>
+          {activeChat.avatarUrl ? (
+            <img
+              src={activeChat.avatarUrl}
+              alt={activeChat.partnerName}
+              className="w-20 h-20 rounded-full object-cover bg-secondary"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full overflow-hidden">
+              <AvatarIcon conn={activeChat} size="lg" />
+            </div>
+          )}
           <p className="mt-3 text-lg font-semibold text-primary">
-            {activeChat.partnerName.replace(/^@/, "")}
-          </p>
-          <p className="mt-1 text-sm text-foreground">
-            @{activeChat.partnerUsername || "trader"}
+            @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
           </p>
           {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
             <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center">
@@ -492,22 +496,13 @@ export default function Messages() {
           )}
         </AppLayout>
       </div>
-      {activeChat && userId && (
+      {userId && (
         <ConversationTagsSheet
           open={tagsOpen}
           onOpenChange={setTagsOpen}
           userId={userId}
-          partnerId={activeChat.partnerId}
-          partnerName={activeChat.partnerName}
-          onChanged={() => loadTagData(userId)}
-        />
-      )}
-      {userId && (
-        <ConversationTagsSheet
-          open={manageTagsOpen}
-          onOpenChange={setManageTagsOpen}
-          userId={userId}
-          partnerId={null}
+          partnerId={activeChat?.partnerId}
+          partnerName={activeChat?.partnerName}
           onChanged={() => loadTagData(userId)}
         />
       )}

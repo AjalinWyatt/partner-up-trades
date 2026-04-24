@@ -15,7 +15,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
-  partnerId?: string | null;
+  partnerId?: string;
   partnerName?: string;
   onChanged?: () => void;
 }
@@ -28,7 +28,6 @@ export default function ConversationTagsSheet({
   partnerName,
   onChanged,
 }: Props) {
-  const manageMode = !partnerId;
   const [tags, setTags] = useState<ConvTag[]>([]);
   const [assigned, setAssigned] = useState<Set<string>>(new Set());
   const [newName, setNewName] = useState("");
@@ -70,9 +69,8 @@ export default function ConversationTagsSheet({
     if (!error && data) {
       setTags((prev) => [...prev, data as any]);
       setNewName("");
-      // auto-assign only when in a chat context
+      // auto-assign only when scoped to a partner
       if (partnerId) await toggleAssign((data as any).id, false);
-      onChanged?.();
     }
   }
 
@@ -116,7 +114,7 @@ export default function ConversationTagsSheet({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-foreground">
             <TagIcon className="w-4 h-4 text-primary" />
-            {manageMode ? "Manage tags" : `Tag ${partnerName}`}
+            {partnerId ? `Tag ${partnerName}` : "Manage tags"}
           </SheetTitle>
         </SheetHeader>
 
@@ -159,11 +157,9 @@ export default function ConversationTagsSheet({
                     )}
                   >
                     <button
-                      onClick={() => !manageMode && toggleAssign(tag.id, isOn)}
-                      disabled={manageMode}
-                      className="flex-1 flex items-center gap-2 text-left disabled:cursor-default"
+                      onClick={() => toggleAssign(tag.id, isOn)}
+                      className="flex-1 flex items-center gap-2 text-left"
                     >
-                      {!manageMode && (
                       <div
                         className={cn(
                           "w-5 h-5 rounded-md border flex items-center justify-center shrink-0",
@@ -172,7 +168,6 @@ export default function ConversationTagsSheet({
                       >
                         {isOn && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
                       </div>
-                      )}
                       <span className="text-sm font-medium text-foreground truncate">
                         {tag.name}
                       </span>
