@@ -143,7 +143,12 @@ const MatchProfile = () => {
     if (sharedConnTypes.length) reasons.push(`Both want: ${sharedConnTypes.join(", ")}`);
     if (sharedStruggles.length) reasons.push(`Relate on: ${sharedStruggles.slice(0, 2).join(", ")}`);
     if (sharedHobbies.length) reasons.push(`Shared interests: ${sharedHobbies.slice(0, 3).join(", ")}`);
-    if (profile?.country && myProfile?.country && profile.country.toLowerCase() === myProfile.country.toLowerCase()) {
+    const sameCity = profile?.city && myProfile?.city && profile.city.toLowerCase() === myProfile.city.toLowerCase();
+    const sameCountry = profile?.country && myProfile?.country && profile.country.toLowerCase() === myProfile.country.toLowerCase();
+    if (sameCity) {
+      const stateOrCountry = profile?.state || profile?.country;
+      reasons.push(`Both based in ${profile.city}${stateOrCountry ? `, ${stateOrCountry}` : ""}`);
+    } else if (sameCountry) {
       reasons.push(`Both based in ${profile.country}`);
     }
   }
@@ -315,7 +320,7 @@ const MatchProfile = () => {
             </div>
 
             {/* Action labels */}
-            <div className="mt-10 grid grid-cols-3 place-items-center">
+            <div className="mt-10 grid grid-cols-3 place-items-center px-5">
               <ActionLabel label="Pass" />
               <ActionLabel label="Save" />
               <ActionLabel label="Send Request" />
