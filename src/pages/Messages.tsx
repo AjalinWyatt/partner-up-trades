@@ -523,9 +523,9 @@ export default function Messages() {
         </AppLayout>
       </div>
       <div className="lg:hidden">
-        <AppLayout>
+        <AppLayout hideBottomNav={!!activeChat}>
           {activeChat ? (
-            <div className="flex flex-col h-[calc(100dvh-60px)]">
+            <div className="flex flex-col h-[100dvh]">
               {chatPanelContent}
             </div>
           ) : (
