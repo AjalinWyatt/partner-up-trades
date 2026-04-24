@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, Camera, Flame, Globe, LogOut, Menu, Moon, Pencil, Plus, SlidersHorizontal, Sun } from "lucide-react";
+import { Camera, Flame, Globe, LogOut, Moon, Pencil, SlidersHorizontal, Sun } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
