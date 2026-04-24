@@ -361,7 +361,7 @@ export default function Messages() {
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {conn.lastMessage && conn.lastMessageFromMe && (
+                {conn.lastMessage && conn.lastMessageFromMe === true && (
                   <span
                     className={cn(
                       "text-[11px] font-medium",
@@ -372,7 +372,7 @@ export default function Messages() {
                     {conn.lastMessageRead ? "Seen" : "Sent"}
                   </span>
                 )}
-                {conn.unreadCount > 0 && !conn.lastMessageFromMe && (
+                {conn.unreadCount > 0 && conn.lastMessageFromMe !== true && (
                   <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[11px] font-bold text-primary-foreground px-1.5">
                     {conn.unreadCount}
                   </span>
