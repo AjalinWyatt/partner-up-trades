@@ -850,6 +850,13 @@ const DetailCard = ({ title, items }: { title: string; items: string[] }) => (
   </div>
 );
 
+const StatCard = ({ value, label }: { value: string; label: string }) => (
+  <div className="rounded-2xl border border-border bg-card py-4 text-center">
+    <p className="text-[26px] font-extrabold leading-none text-primary">{value}</p>
+    <p className="mt-1.5 text-xs text-muted-foreground">{label}</p>
+  </div>
+);
+
 const EditField = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) => (
   <div>
     <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
