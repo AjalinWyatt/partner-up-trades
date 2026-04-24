@@ -262,18 +262,15 @@ export default function Messages() {
         )}
       </div>
 
-      <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-none">
-        {[
-          { id: null as string | null, name: "Partners" },
-          ...allTags.map((t) => ({ id: t.id, name: t.name })),
-        ].map((t) => {
+      <div className="px-4 pb-4 flex items-center gap-2 overflow-x-auto scrollbar-none">
+        {allTags.map((t) => {
           const active = activeTagId === t.id;
           return (
             <button
-              key={t.id ?? "all"}
-              onClick={() => setActiveTagId(t.id)}
+              key={t.id}
+              onClick={() => setActiveTagId(active ? null : t.id)}
               className={cn(
-                "shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-colors border",
+                "shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors border",
                 active
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-transparent text-foreground border-foreground/70"
@@ -283,6 +280,13 @@ export default function Messages() {
             </button>
           );
         })}
+        <button
+          onClick={() => { setActiveChat(null); setTagsOpen(true); }}
+          className="shrink-0 ml-auto h-7 w-7 rounded-full border border-border flex items-center justify-center text-primary hover:bg-muted"
+          aria-label="Manage tags"
+        >
+          <TagIcon className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5">
