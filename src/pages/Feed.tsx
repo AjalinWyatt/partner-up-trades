@@ -582,7 +582,17 @@ const Feed = () => {
                 >
                   <Plus className="h-4 w-4" />
                 </button>
-                <NotificationBell />
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+                  aria-label="Open my profile"
+                >
+                  {myProfile?.avatar_url ? (
+                    <img src={myProfile.avatar_url} alt="My profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-bold">{getInitials(myProfile?.full_name || myProfile?.username || "Me")}</span>
+                  )}
+                </button>
               </div>
             </div>
 
