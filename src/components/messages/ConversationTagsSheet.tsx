@@ -15,8 +15,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
-  partnerId: string;
-  partnerName: string;
+  partnerId?: string;
+  partnerName?: string;
   onChanged?: () => void;
 }
 
@@ -40,18 +40,22 @@ export default function ConversationTagsSheet({
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: true });
-    const { data: a } = await supabase
-      .from("conversation_tag_assignments" as any)
-      .select("tag_id")
-      .eq("user_id", userId)
-      .eq("partner_id", partnerId);
     setTags((t as any) || []);
-    setAssigned(new Set(((a as any) || []).map((r: any) => r.tag_id)));
+    if (partnerId) {
+      const { data: a } = await supabase
+        .from("conversation_tag_assignments" as any)
+        .select("tag_id")
+        .eq("user_id", userId)
+        .eq("partner_id", partnerId);
+      setAssigned(new Set(((a as any) || []).map((r: any) => r.tag_id)));
+    } else {
+      setAssigned(new Set());
+    }
     setLoading(false);
   }
 
   useEffect(() => {
-    if (open && userId && partnerId) load();
+    if (open && userId) load();
   }, [open, userId, partnerId]);
 
   async function createTag() {
@@ -71,6 +75,7 @@ export default function ConversationTagsSheet({
   }
 
   async function toggleAssign(tagId: string, isAssigned: boolean) {
+    if (!partnerId) return;
     if (isAssigned) {
       await supabase
         .from("conversation_tag_assignments" as any)
@@ -109,7 +114,7 @@ export default function ConversationTagsSheet({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-foreground">
             <TagIcon className="w-4 h-4 text-primary" />
-            Tag {partnerName}
+            {partnerId ? `Tag ${partnerName}` : "Manage tags"}
           </SheetTitle>
         </SheetHeader>
 
