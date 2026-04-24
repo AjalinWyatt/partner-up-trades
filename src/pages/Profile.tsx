@@ -203,9 +203,14 @@ const Profile = () => {
           setEditState((pData as any).state || "");
           setEditCountry((pData as any).country || "");
           setEditGender(pData.gender || "");
-          formInitialized.current = true;
         }
-        setProfileDraft({
+
+        if (!formInitialized.current || true) {
+          // (profileDraft is also seeded; guarded below by initial-only flag for safety)
+        }
+        setProfileDraft((current) => formInitialized.current && (current.gender || current.city || current.country || current.hobbies.length || current.chart_prompts.length || current.off_chart_prompts.length)
+          ? current
+          : ({
           gender: pData.gender || "",
           city: (pData as any).city || "",
           state: (pData as any).state || "",
@@ -213,7 +218,8 @@ const Profile = () => {
           hobbies: pData.hobbies || [],
           chart_prompts: pData.chart_prompts || [],
           off_chart_prompts: pData.off_chart_prompts || [],
-        });
+        }));
+        formInitialized.current = true;
       }
 
       if (tData) {
