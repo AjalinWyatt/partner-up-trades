@@ -85,7 +85,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited }: Mess
         )}
         <div
         className={cn(
-          "max-w-[78%] px-4 py-2.5 text-[13px] leading-relaxed",
+          "max-w-[78%] px-3 py-1.5 text-[12px] leading-snug",
           isMine
             ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
             : "bg-secondary text-foreground rounded-2xl rounded-bl-md"
@@ -124,22 +124,21 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited }: Mess
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(false); }}
-              className="flex-1 bg-white/10 rounded px-2 py-1 text-[13px] outline-none placeholder:text-primary-foreground/60"
+              className="flex-1 bg-white/10 rounded px-2 py-1 text-[12px] outline-none placeholder:text-primary-foreground/60"
             />
             <button onClick={saveEdit} aria-label="Save"><Check className="w-4 h-4" /></button>
             <button onClick={() => setEditing(false)} aria-label="Cancel"><X className="w-4 h-4" /></button>
           </div>
         ) : (
           msg.content && (!hasMedia || isAudio || isImage) && (
-            <p className={cn(isSharedPost && "whitespace-pre-wrap text-[12px] leading-5 font-medium")}>{msg.content}</p>
+            <p className={cn(isSharedPost && "whitespace-pre-wrap text-[11px] leading-5 font-medium")}>{msg.content}</p>
           )
         )}
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-1 px-1">
-        {isMine ? "Client" : "Partner"} <span className="opacity-60">|</span> {time}
-        {(msg as any).edited_at && <span className="opacity-60"> · edited</span>}
-      </p>
+      {(msg as any).edited_at && (
+        <p className="text-[9px] text-muted-foreground mt-0.5 px-1 opacity-70">edited · {time}</p>
+      )}
     </div>
   );
 }
