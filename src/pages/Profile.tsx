@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, Camera, LogOut, Menu, Moon, Plus, Sun } from "lucide-react";
+import { Camera, Flame, Globe, LogOut, Moon, Pencil, SlidersHorizontal, Sun } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -509,69 +509,100 @@ const Profile = () => {
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="flex items-center justify-between px-5 pt-4">
-          <button onClick={() => navigate("/feed")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+        {/* Top bar: wordmark + settings */}
+        <div className="relative flex items-center justify-center px-5 pt-5">
+          <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
+            Traders<span className="text-foreground">World</span>
+          </h1>
+          <button
+            onClick={() => setEditing(true)}
+            className="absolute right-5 flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+            aria-label="Settings"
+          >
+            <SlidersHorizontal className="h-5 w-5" strokeWidth={2} />
           </button>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowCreatePost(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-              <Plus className="h-4 w-4" strokeWidth={2.4} />
-            </button>
-            <button onClick={() => navigate("/notifications")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-              <Bell className="h-4 w-4" strokeWidth={2} />
-            </button>
-            <button onClick={() => setEditing(true)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-              <Menu className="h-4 w-4" strokeWidth={2} />
-            </button>
-          </div>
         </div>
 
-        <div className="px-5 pt-6">
-          <div className="flex items-start gap-4">
-            <button onClick={() => avatarInputRef.current?.click()} className="relative shrink-0">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile photo" className="h-24 w-24 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground">{getInitials()}</div>
-              )}
-            </button>
-            <div className="min-w-0 flex-1 pt-1">
-              <h1 className="text-[1.8rem] font-extrabold leading-none text-foreground">{displayName}</h1>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">{displayUsername}</p>
-              {profile?.bio ? (
-                <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-foreground">{profile.bio}</p>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">Add a bio so traders know how you move.</p>
-              )}
+        {/* Hero: streak | avatar | location */}
+        <div className="grid grid-cols-3 items-center gap-3 px-5 pt-6">
+          {/* Streak */}
+          <div className="flex flex-col items-center">
+            <Flame className="h-7 w-7 fill-destructive text-destructive" />
+            <p className="mt-1.5 text-[22px] font-extrabold leading-none text-foreground">{journalEntries.length || 0}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Streak</p>
+          </div>
+
+          {/* Avatar */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <button onClick={() => avatarInputRef.current?.click()} className="block">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Profile photo" className="h-[110px] w-[110px] rounded-full object-cover ring-2 ring-primary/60" />
+                ) : (
+                  <div className="flex h-[110px] w-[110px] items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
+                )}
+              </button>
+              <button
+                onClick={() => setEditing(true)}
+                className="absolute -bottom-1 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
+                aria-label="Edit profile"
+              >
+                <Pencil className="h-4 w-4" strokeWidth={2.2} />
+              </button>
             </div>
           </div>
-          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+
+          {/* Location */}
+          <div className="flex flex-col items-center">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15">
+              <Globe className="h-5 w-5 text-primary" strokeWidth={2} />
+            </div>
+            <p className="mt-1.5 text-[15px] font-extrabold leading-none text-foreground text-center">
+              {profile?.city || profile?.country
+                ? `${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")
+                : "—"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Location</p>
+          </div>
+        </div>
+        <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+
+        {/* Name + bio */}
+        <div className="mt-6 px-5 text-center">
+          <h2 className="text-[22px] font-extrabold leading-tight text-foreground">{displayName}</h2>
+          {profile?.bio ? (
+            <p className="mx-auto mt-2 max-w-[320px] whitespace-pre-line text-[14px] leading-6 text-muted-foreground">{profile.bio}</p>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">Add a bio so traders know how you move.</p>
+          )}
         </div>
 
-        <div className="mt-5 flex gap-2 px-5">
-          <button onClick={() => setEditing(true)} className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-secondary px-3 text-xs font-bold text-foreground transition-colors hover:bg-muted">
-            Edit profile
-          </button>
-          <button onClick={() => setShowCreatePost(true)} className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90">
-            New post
-          </button>
+        {/* Stat cards */}
+        <div className="mt-5 grid grid-cols-3 gap-2.5 px-5">
+          <StatCard value={String(posts.filter(p => p.kind === "post").length).padStart(2, "0")} label="Attended" />
+          <StatCard value={String(posts.length).padStart(2, "0")} label="Matches" />
+          <StatCard value={String(journalEntries.length).padStart(2, "0")} label="Logs" />
         </div>
 
-        <div className="mt-6 flex border-b border-border px-5">
-          {["Posts", "Journal", "Details"].map((tab, index) => (
+        {/* Posts / Details pill tabs */}
+        <div className="mt-6 flex justify-center gap-3 px-5">
+          {["Posts", "Details"].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(index)}
               className={cn(
-                "relative flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider transition-colors",
-                activeTab === index ? "text-foreground" : "text-muted-foreground"
+                "min-w-[140px] rounded-full px-7 py-2.5 text-sm font-bold transition-all",
+                activeTab === index
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-transparent text-foreground hover:bg-muted"
               )}
             >
               {tab}
-              {activeTab === index && <div className="absolute bottom-0 left-[18%] right-[18%] h-0.5 rounded-full bg-primary" />}
             </button>
           ))}
         </div>
+
+        <div className="mt-2" />
 
         {activeTab === 0 ? (
           <PostList
@@ -583,8 +614,6 @@ const Profile = () => {
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
           />
-        ) : activeTab === 1 ? (
-          <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
         ) : (
           <div className="space-y-3 px-5 py-4 pb-8">
             {profileFacts.length > 0 && (
@@ -818,6 +847,13 @@ const DetailCard = ({ title, items }: { title: string; items: string[] }) => (
         <span key={item} className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground">{item}</span>
       ))}
     </div>
+  </div>
+);
+
+const StatCard = ({ value, label }: { value: string; label: string }) => (
+  <div className="rounded-2xl border border-border bg-card py-4 text-center">
+    <p className="text-[26px] font-extrabold leading-none text-primary">{value}</p>
+    <p className="mt-1.5 text-xs text-muted-foreground">{label}</p>
   </div>
 );
 
