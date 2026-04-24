@@ -723,7 +723,7 @@ const Feed = () => {
               <article key={post.id} className="overflow-hidden rounded-[22px] border border-border bg-card/90 shadow-[0_10px_30px_hsl(var(--background)/0.22)]">
                 <div className="p-4">
                   <div className="flex items-start gap-3">
-                    <button onClick={() => navigate(`/profile/${post.user_id}`)} className="shrink-0">
+                     <button onClick={() => navigate(post.user_id === myId ? "/profile" : `/profile/${post.user_id}`)} className="shrink-0">
                       {post.avatar_url ? (
                         <img src={post.avatar_url} alt={post.full_name} className="h-10 w-10 rounded-xl object-cover" />
                       ) : (
@@ -734,7 +734,7 @@ const Feed = () => {
                     </button>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => navigate(`/profile/${post.user_id}`)} className="truncate text-sm font-semibold text-foreground hover:underline">
+                        <button onClick={() => navigate(post.user_id === myId ? "/profile" : `/profile/${post.user_id}`)} className="truncate text-sm font-semibold text-foreground hover:opacity-80">
                           @{post.username.replace(/^@+/, "")}
                         </button>
                         <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
