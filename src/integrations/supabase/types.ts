@@ -444,6 +444,7 @@ export type Database = {
           connection_id: string | null
           content: string
           created_at: string
+          edited_at: string | null
           id: string
           media_type: string | null
           media_url: string | null
@@ -455,6 +456,7 @@ export type Database = {
           connection_id?: string | null
           content: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           media_type?: string | null
           media_url?: string | null
@@ -466,6 +468,7 @@ export type Database = {
           connection_id?: string | null
           content?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           media_type?: string | null
           media_url?: string | null
