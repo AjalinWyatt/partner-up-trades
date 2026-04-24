@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Smile } from "lucide-react";
+import { Globe, ArrowLeft, Send, Search, Smile, Tag as TagIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import AvatarIcon from "@/components/messages/AvatarIcon";
 import MessageBubble from "@/components/messages/MessageBubble";
 import VoiceRecorder from "@/components/messages/VoiceRecorder";
 import AttachmentButton from "@/components/messages/AttachmentButton";
+import ConversationTagsSheet from "@/components/messages/ConversationTagsSheet";
 
 export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
@@ -26,6 +27,31 @@ export default function Messages() {
   const [sendingMsg, setSendingMsg] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const [allTags, setAllTags] = useState<{ id: string; name: string }[]>([]);
+  const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
+  const [activeTagId, setActiveTagId] = useState<string | null>(null);
+
+  const loadTagData = async (uid: string) => {
+    const { data: t } = await supabase
+      .from("conversation_tags" as any)
+      .select("id, name")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true });
+    const { data: a } = await supabase
+      .from("conversation_tag_assignments" as any)
+      .select("tag_id, partner_id")
+      .eq("user_id", uid);
+    setAllTags(((t as any) || []) as any);
+    const map: Record<string, string[]> = {};
+    ((a as any) || []).forEach((row: any) => {
+      if (!map[row.partner_id]) map[row.partner_id] = [];
+      map[row.partner_id].push(row.tag_id);
+    });
+    setAssignmentsByPartner(map);
+  };
+
+  useEffect(() => { if (userId) loadTagData(userId); }, [userId]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
