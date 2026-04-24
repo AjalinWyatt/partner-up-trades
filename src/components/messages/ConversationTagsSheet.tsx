@@ -15,8 +15,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
-  partnerId: string;
-  partnerName: string;
+  partnerId?: string | null;
+  partnerName?: string;
   onChanged?: () => void;
 }
 
@@ -28,6 +28,7 @@ export default function ConversationTagsSheet({
   partnerName,
   onChanged,
 }: Props) {
+  const manageMode = !partnerId;
   const [tags, setTags] = useState<ConvTag[]>([]);
   const [assigned, setAssigned] = useState<Set<string>>(new Set());
   const [newName, setNewName] = useState("");
@@ -40,18 +41,22 @@ export default function ConversationTagsSheet({
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: true });
-    const { data: a } = await supabase
-      .from("conversation_tag_assignments" as any)
-      .select("tag_id")
-      .eq("user_id", userId)
-      .eq("partner_id", partnerId);
     setTags((t as any) || []);
-    setAssigned(new Set(((a as any) || []).map((r: any) => r.tag_id)));
+    if (partnerId) {
+      const { data: a } = await supabase
+        .from("conversation_tag_assignments" as any)
+        .select("tag_id")
+        .eq("user_id", userId)
+        .eq("partner_id", partnerId);
+      setAssigned(new Set(((a as any) || []).map((r: any) => r.tag_id)));
+    } else {
+      setAssigned(new Set());
+    }
     setLoading(false);
   }
 
   useEffect(() => {
-    if (open && userId && partnerId) load();
+    if (open && userId) load();
   }, [open, userId, partnerId]);
 
   async function createTag() {
@@ -65,12 +70,14 @@ export default function ConversationTagsSheet({
     if (!error && data) {
       setTags((prev) => [...prev, data as any]);
       setNewName("");
-      // auto-assign
-      await toggleAssign((data as any).id, false);
+      // auto-assign only when in a chat context
+      if (partnerId) await toggleAssign((data as any).id, false);
+      onChanged?.();
     }
   }
 
   async function toggleAssign(tagId: string, isAssigned: boolean) {
+    if (!partnerId) return;
     if (isAssigned) {
       await supabase
         .from("conversation_tag_assignments" as any)
@@ -109,7 +116,7 @@ export default function ConversationTagsSheet({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-foreground">
             <TagIcon className="w-4 h-4 text-primary" />
-            Tag {partnerName}
+            {manageMode ? "Manage tags" : `Tag ${partnerName}`}
           </SheetTitle>
         </SheetHeader>
 
@@ -152,9 +159,11 @@ export default function ConversationTagsSheet({
                     )}
                   >
                     <button
-                      onClick={() => toggleAssign(tag.id, isOn)}
-                      className="flex-1 flex items-center gap-2 text-left"
+                      onClick={() => !manageMode && toggleAssign(tag.id, isOn)}
+                      disabled={manageMode}
+                      className="flex-1 flex items-center gap-2 text-left disabled:cursor-default"
                     >
+                      {!manageMode && (
                       <div
                         className={cn(
                           "w-5 h-5 rounded-md border flex items-center justify-center shrink-0",
@@ -163,6 +172,7 @@ export default function ConversationTagsSheet({
                       >
                         {isOn && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
                       </div>
+                      )}
                       <span className="text-sm font-medium text-foreground truncate">
                         {tag.name}
                       </span>
