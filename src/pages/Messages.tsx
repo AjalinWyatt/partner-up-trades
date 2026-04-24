@@ -147,12 +147,14 @@ export default function Messages() {
       });
     }
 
-    connectionList.sort((a, b) => {
-      if (!a.lastMessageTime && !b.lastMessageTime) return 0;
-      if (!a.lastMessageTime) return 1;
-      if (!b.lastMessageTime) return -1;
-      return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
-    });
+    // Always sort newest-first by lastMessageTime, with a safe fallback of 0
+    // when created_at is missing (those bubble to the bottom).
+    const tsOf = (t?: string | null) => {
+      if (!t) return 0;
+      const n = new Date(t).getTime();
+      return Number.isFinite(n) ? n : 0;
+    };
+    connectionList.sort((a, b) => tsOf(b.lastMessageTime) - tsOf(a.lastMessageTime));
 
     setConnections(connectionList);
     setLoading(false);
@@ -168,17 +170,27 @@ export default function Messages() {
 
   useEffect(() => {
     if (!userId) return;
+    // Refresh inbox previews/badges/ticks on any message change involving me.
+    const refreshIfMine = (msg: Partial<Message> | undefined) => {
+      if (!msg) return;
+      if (msg.sender_id === userId || msg.receiver_id === userId) {
+        loadConnections(userId);
+      }
+    };
     const channel = supabase
       .channel("inbox-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
-        const msg = payload.new as Message;
-        if (msg.sender_id === userId || msg.receiver_id === userId) {
-          if (!activeChat) loadConnections(userId);
-        }
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (p) =>
+        refreshIfMine(p.new as Message)
+      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (p) =>
+        refreshIfMine(p.new as Message)
+      )
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, (p) =>
+        refreshIfMine(p.old as Message)
+      )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [userId, activeChat]);
+  }, [userId]);
 
   useEffect(() => {
     if (!activeChat || !userId) return;
@@ -228,6 +240,21 @@ export default function Messages() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Mark all unread messages from a partner as read, and clear the badge
+  // optimistically so the UI updates immediately.
+  async function markConversationRead(conn: Connection) {
+    if (!userId) return;
+    setConnections((prev) =>
+      prev.map((c) => (c.id === conn.id ? { ...c, unreadCount: 0 } : c))
+    );
+    await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq("sender_id", conn.partnerId)
+      .eq("receiver_id", userId)
+      .eq("read", false);
+  }
 
   async function sendMessage() {
     if (!msgInput.trim() || !activeChat || !userId) return;
@@ -341,7 +368,7 @@ export default function Messages() {
           filtered.map((conn) => (
             <button
               key={conn.id}
-              onClick={() => { setActiveChat(conn); setMsgInput(""); }}
+              onClick={() => { setActiveChat(conn); setMsgInput(""); markConversationRead(conn); }}
               className="w-full flex items-center gap-3 py-2.5 text-left"
             >
               <div className="relative shrink-0">
