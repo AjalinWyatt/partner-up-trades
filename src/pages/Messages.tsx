@@ -318,32 +318,32 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); }}
-              className="w-full flex items-center gap-4 py-4 text-left border-b border-border/40"
+              className="w-full flex items-center gap-3 py-2.5 text-left"
             >
               <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-secondary">
-                  <AvatarIcon conn={conn} size="lg" />
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-secondary">
+                  <AvatarIcon conn={conn} size="md" />
                 </div>
                 {conn.unreadCount > 0 && (
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success border-2 border-background" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-base font-semibold text-foreground truncate">
+                <p className="text-[14px] font-semibold text-foreground truncate leading-tight">
                   {conn.partnerName.replace(/^@/, "")}
                 </p>
-                <p className={cn("text-sm truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
+                <p className={cn("text-[13px] truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {conn.lastMessageTime && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground">
                     {new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
                   </span>
                 )}
                 {conn.unreadCount > 0 && (
-                  <span className="min-w-[26px] h-[26px] bg-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground px-1.5">
+                  <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[11px] font-bold text-primary-foreground px-1.5">
                     {conn.unreadCount}
                   </span>
                 )}
@@ -367,51 +367,54 @@ export default function Messages() {
     </div>
   ) : (
     <div className="flex flex-col h-full">
-      <div className="relative px-5 pt-4 pb-5">
+      <div className="flex items-center gap-3 px-3 py-2 border-b border-border/40">
         <button
           onClick={() => setActiveChat(null)}
-          className="absolute left-4 top-5 p-2 text-foreground"
+          className="p-1.5 text-foreground -ml-1"
           aria-label="Back"
         >
           <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />
         </button>
+        {activeChat.avatarUrl ? (
+          <img
+            src={activeChat.avatarUrl}
+            alt={activeChat.partnerName}
+            className="w-9 h-9 rounded-full object-cover bg-secondary shrink-0"
+          />
+        ) : (
+          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
+            <AvatarIcon conn={activeChat} size="sm" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
+            {activeChat.partnerName.replace(/^@/, "")}
+          </p>
+          <p className="text-[12px] text-muted-foreground truncate leading-tight">
+            @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
+          </p>
+        </div>
         <button
           onClick={() => setTagsOpen(true)}
-          className="absolute right-4 top-5 p-2 text-primary"
+          className="p-2 text-primary shrink-0"
           aria-label="Tag conversation"
           title="Tag conversation"
         >
-          <TagIcon className="w-6 h-6" strokeWidth={2} />
+          <TagIcon className="w-5 h-5" strokeWidth={2} />
         </button>
-        <div className="flex flex-col items-center text-center">
-          {activeChat.avatarUrl ? (
-            <img
-              src={activeChat.avatarUrl}
-              alt={activeChat.partnerName}
-              className="w-20 h-20 rounded-full object-cover bg-secondary"
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full overflow-hidden">
-              <AvatarIcon conn={activeChat} size="lg" />
-            </div>
-          )}
-          <p className="mt-3 text-lg font-semibold text-primary">
-            @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
-          </p>
-          {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
-            <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center">
-              {(assignmentsByPartner[activeChat.partnerId] || [])
-                .map((tid) => allTags.find((t) => t.id === tid))
-                .filter(Boolean)
-                .map((t) => (
-                  <span key={t!.id} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
-                    {t!.name}
-                  </span>
-                ))}
-            </div>
-          )}
-        </div>
       </div>
+      {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap px-4 pt-2">
+          {(assignmentsByPartner[activeChat.partnerId] || [])
+            .map((tid) => allTags.find((t) => t.id === tid))
+            .filter(Boolean)
+            .map((t) => (
+              <span key={t!.id} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
+                {t!.name}
+              </span>
+            ))}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {messages.length === 0 ? (
