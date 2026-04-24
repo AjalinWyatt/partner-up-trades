@@ -284,13 +284,6 @@ export default function Messages() {
             </button>
           );
         })}
-        <button
-          onClick={() => setManageTagsOpen(true)}
-          className="shrink-0 px-3 py-2 rounded-full text-sm font-medium border border-dashed border-foreground/40 text-muted-foreground hover:text-foreground"
-          aria-label="Manage tags"
-        >
-          <TagIcon className="w-4 h-4" />
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5">
