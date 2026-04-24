@@ -321,7 +321,7 @@ const CreateStoryDialog = ({ open, onClose, onCreated }: CreateStoryDialogProps)
           <input
             ref={captureInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept="video/*"
             capture="environment"
             className="hidden"
             onChange={(event) => {
