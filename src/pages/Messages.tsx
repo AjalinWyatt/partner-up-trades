@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
+import { Globe, ArrowLeft, Send, Search, Tag as TagIcon, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [manageTagsOpen, setManageTagsOpen] = useState(false);
   const [allTags, setAllTags] = useState<{ id: string; name: string }[]>([]);
   const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
