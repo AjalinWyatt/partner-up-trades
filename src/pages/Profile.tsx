@@ -479,10 +479,6 @@ const Profile = () => {
               <Textarea value={editBio} onChange={(event) => setEditBio(event.target.value)} className="min-h-[88px] resize-none rounded-xl border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground focus:border-primary" placeholder="Tell traders about yourself..." maxLength={150} />
               <div className="mt-1 text-right text-[10px] text-muted-foreground">{editBio.length}/150</div>
             </div>
-            <EditField label="City" value={editCity} onChange={setEditCity} placeholder="City" />
-            <EditField label="State / Region / Province" value={editState} onChange={setEditState} placeholder="State / Region" />
-            <EditField label="Country" value={editCountry} onChange={setEditCountry} placeholder="Country" />
-            <EditField label="Gender" value={editGender} onChange={setEditGender} placeholder="Gender" />
             <TradingProfileEditor profileDraft={profileDraft} setProfileDraft={setProfileDraft} tradingDraft={tradingDraft} setTradingDraft={setTradingDraft} />
 
             <div className="pt-2">
