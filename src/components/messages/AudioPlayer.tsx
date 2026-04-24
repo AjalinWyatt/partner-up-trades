@@ -30,7 +30,7 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
   };
 
   return (
-    <div className="flex items-center gap-2.5 min-w-[200px] py-0.5">
+    <div className="flex items-center gap-2.5 min-w-[210px] py-0.5 pr-1">
       <audio
         ref={audioRef}
         src={url}
@@ -54,14 +54,14 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
           <Play className={cn("w-4 h-4 ml-0.5 fill-current", isMine ? "text-primary-foreground" : "text-primary")} />
         )}
       </button>
-      <div className="flex-1 flex items-center gap-2 min-w-0">
-        <div className={cn("relative h-[3px] flex-1 rounded-full overflow-hidden", isMine ? "bg-primary-foreground/25" : "bg-foreground/15")}>
+      <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+        <div className={cn("relative h-[3px] w-full rounded-full overflow-hidden", isMine ? "bg-primary-foreground/25" : "bg-foreground/15")}>
           <div
             className={cn("absolute inset-y-0 left-0 rounded-full transition-all", isMine ? "bg-primary-foreground" : "bg-primary")}
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className={cn("text-[10px] tabular-nums shrink-0", isMine ? "text-primary-foreground/80" : "text-muted-foreground")}>
+        <span className={cn("text-[10px] tabular-nums leading-none", isMine ? "text-primary-foreground/80" : "text-muted-foreground")}>
           {formatDur(playing ? (audioRef.current?.currentTime || 0) : duration || 0)}
         </span>
       </div>

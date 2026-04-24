@@ -471,15 +471,24 @@ export default function Messages() {
                 </span>
               </div>
               <div className="space-y-1.5">
-                {group.messages.map((msg) => (
-                  <MessageBubble
-                    key={msg.id}
-                    msg={msg}
-                    isMine={msg.sender_id === userId}
-                    onDeleted={(id) => setMessages((prev) => prev.filter((m) => m.id !== id))}
-                    onEdited={(id, content) => setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content } : m))}
-                  />
-                ))}
+                {group.messages.map((msg, idx) => {
+                  const isMine = msg.sender_id === userId;
+                  const next = group.messages[idx + 1];
+                  // Show avatar only on the last incoming message in a streak
+                  const showAvatar = !isMine && (!next || next.sender_id !== msg.sender_id);
+                  return (
+                    <MessageBubble
+                      key={msg.id}
+                      msg={msg}
+                      isMine={isMine}
+                      partnerAvatarUrl={activeChat.avatarUrl}
+                      partnerName={activeChat.partnerName}
+                      showAvatar={showAvatar}
+                      onDeleted={(id) => setMessages((prev) => prev.filter((m) => m.id !== id))}
+                      onEdited={(id, content) => setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content } : m))}
+                    />
+                  );
+                })}
               </div>
             </div>
           ))
