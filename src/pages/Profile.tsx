@@ -618,30 +618,10 @@ const Profile = () => {
             onCreate={() => setShowCreatePost(true)}
           />
         ) : activeTab === 1 ? (
-          <div className="space-y-3 px-5 py-4 pb-8">
-            {profileFacts.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Overview</p>
-                <div className="space-y-3">
-                  {profileFacts.map((item) => (
-                    <div key={item.label} className="flex items-start justify-between gap-4 border-b border-border/60 pb-3 last:border-b-0 last:pb-0">
-                      <span className="text-xs text-muted-foreground">{item.label}</span>
-                      <span className="text-right text-xs font-semibold text-foreground">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {detailSections.length > 0 ? detailSections.map((section) => (
-              <DetailCard key={section.title} title={section.title} items={section.items} />
-            )) : (
-              <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
-                <p className="text-base font-bold text-foreground">No details yet</p>
-                <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Complete your onboarding info to fill this section out.</p>
-              </div>
-            )}
-          </div>
+          <DetailsGrid
+            profile={profile}
+            tradingProfile={tradingProfile}
+          />
         ) : (
           <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
         )}
