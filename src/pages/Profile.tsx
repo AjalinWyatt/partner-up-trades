@@ -835,6 +835,91 @@ const DetailCard = ({ title, items }: { title: string; items: string[] }) => (
   </div>
 );
 
+const DetailsGrid = ({
+  profile,
+  tradingProfile,
+}: {
+  profile: ProfileData | null;
+  tradingProfile: TradingProfileData | null;
+}) => {
+  const first = (arr?: string[] | null) => (arr && arr.length > 0 ? arr[0] : null);
+
+  const items: { value: string; label: string }[] = [
+    { value: first(tradingProfile?.sessions) || "", label: "Session" },
+    { value: first(tradingProfile?.trading_style) || "", label: "Trading Style" },
+    { value: first(tradingProfile?.strategies) || "", label: "Strategy" },
+    { value: first(profile?.chart_prompts) || "", label: "Charts" },
+    { value: first(profile?.hobbies) || "", label: "Interests" },
+    { value: first(profile?.off_chart_prompts) || "", label: "Off Chart" },
+    { value: first(tradingProfile?.timeframes) || "", label: "Timeframe" },
+    { value: tradingProfile?.experience_level || "", label: "Experience level" },
+    { value: first(tradingProfile?.frequency) || "", label: "How Often" },
+    { value: first(tradingProfile?.markets) || "", label: "Markets" },
+    { value: first(tradingProfile?.instruments) || "", label: "Instruments" },
+    { value: first(tradingProfile?.trade_times) || "", label: "Trade Times" },
+    { value: first(tradingProfile?.primary_goal) || "", label: "Primary Goal" },
+    { value: first(tradingProfile?.struggles) || "", label: "Struggles" },
+    { value: first(tradingProfile?.journaling) || "", label: "Journaling" },
+    { value: first(tradingProfile?.trading_plan) || "", label: "Trading Plan" },
+    { value: first(tradingProfile?.loss_response as any) || "", label: "Loss Response" },
+    { value: first(tradingProfile?.match_priorities) || "", label: "Match Priority" },
+    { value: tradingProfile?.looking_for_gender || "", label: "Looking For" },
+    { value: profile?.gender || "", label: "Gender" },
+  ].filter((i) => !!i.value);
+
+  const reach = (tradingProfile?.connection_reach || "").toLowerCase();
+  const reachIndex = reach === "local" ? 0 : reach === "global" ? 1 : reach === "both" ? 2 : -1;
+
+  if (items.length === 0 && reachIndex < 0) {
+    return (
+      <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+        <p className="text-base font-bold text-foreground">No details yet</p>
+        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Complete your onboarding info to fill this section out.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 pt-6 pb-10 space-y-8">
+      <div className="grid grid-cols-3 gap-y-7 gap-x-4">
+        {items.map((it, i) => (
+          <div key={`${it.label}-${i}`} className="text-left">
+            <p className="text-[15px] font-extrabold leading-tight text-primary">{it.value}</p>
+            <p className="mt-1 text-[12px] text-foreground">{it.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {reachIndex >= 0 && (
+        <div>
+          <p className="text-[15px] font-semibold text-foreground">Connection Reach</p>
+          <div className="mt-5 mb-3 h-[6px] w-full rounded-full bg-muted relative">
+            <div
+              className="absolute top-0 left-0 h-[6px] rounded-full bg-primary"
+              style={{ width: reachIndex === 0 ? "0%" : reachIndex === 1 ? "50%" : "100%" }}
+            />
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={cn(
+                  "absolute -top-[5px] h-4 w-4 rounded-full border-2",
+                  i <= reachIndex ? "bg-primary border-primary" : "bg-background border-foreground/40"
+                )}
+                style={{ left: i === 0 ? "0%" : i === 1 ? "calc(50% - 8px)" : "calc(100% - 16px)" }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-[12px]">
+            <span className={cn("font-semibold", reachIndex === 0 ? "text-primary" : "text-muted-foreground")}>Local</span>
+            <span className={cn("font-semibold", reachIndex === 1 ? "text-primary" : "text-muted-foreground")}>Global</span>
+            <span className={cn("font-semibold", reachIndex === 2 ? "text-primary" : "text-muted-foreground")}>Both</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StatCard = ({ value, label }: { value: string; label: string }) => (
   <div className="rounded-2xl border border-border bg-card py-4 text-center">
     <p className="text-[26px] font-extrabold leading-none text-primary">{value}</p>
