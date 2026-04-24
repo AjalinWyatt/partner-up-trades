@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import authGlobe from "@/assets/auth-globe.png";
-import wordmark from "@/assets/tradersworld-wordmark.png";
+import Wordmark from "@/components/Wordmark";
 import StepperGlobe from "@/components/onboarding/StepperGlobe";
 import AvatarPicker from "@/components/onboarding/AvatarPicker";
 import PillSelect from "@/components/onboarding/PillSelect";
@@ -143,7 +143,7 @@ const Onboarding = () => {
       case 0:
         return (
           <div className="flex-1 flex flex-col items-center text-center px-7 pb-32 pt-10">
-            <img src={wordmark} alt="TradersWorld" className="h-8 w-auto" loading="eager" />
+            <Wordmark size="text-2xl" />
             <div className="flex-1 flex items-center justify-center w-full my-8">
               <img
                 src={authGlobe}
