@@ -569,13 +569,10 @@ const Feed = () => {
       <div className="flex-1 overflow-y-auto bg-background">
         <div className="sticky top-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
           <div className="space-y-4 px-4 pb-4 pt-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <Wordmark size="text-lg" />
-                <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Structured thought stream</p>
-              </div>
-
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <div />
+              <Wordmark size="text-lg" />
+              <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={() => activeMode === "Feed" ? setShowCreatePost(true) : setShowCreateStory(true)}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
@@ -587,8 +584,8 @@ const Feed = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="grid h-10 w-full max-w-[220px] grid-cols-2 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
+            <div className="flex justify-center">
+              <div className="grid h-10 w-full max-w-[260px] grid-cols-2 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
                 {FEED_MODES.map((mode) => {
                   const active = activeMode === mode;
                   const isPulse = mode === "Pulse";
@@ -609,14 +606,6 @@ const Feed = () => {
                   );
                 })}
               </div>
-
-              {activeMode === "Feed" ? (
-                <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Feed terminal</span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-primary">
-                  <Sparkles className="h-3.5 w-3.5" /> Live now
-                </span>
-              )}
             </div>
 
             {activeMode === "Feed" && (
