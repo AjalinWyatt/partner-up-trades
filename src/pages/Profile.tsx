@@ -661,6 +661,12 @@ const Profile = () => {
           setShowCreatePost(true);
         }}
       />
+      <AvatarCropDialog
+        open={!!cropSrc}
+        imageSrc={cropSrc}
+        onCancel={() => setCropSrc(null)}
+        onConfirm={uploadCroppedAvatar}
+      />
     </AppLayout>
   );
 };
