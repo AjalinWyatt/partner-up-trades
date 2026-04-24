@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
+import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 
 interface ProfileData {
   username: string | null;
@@ -93,6 +94,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
@@ -282,10 +284,20 @@ const Profile = () => {
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !userId) return;
+    // Open the crop dialog with the chosen file before uploading
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(typeof reader.result === "string" ? reader.result : null);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so the same file can be picked again later
+    event.target.value = "";
+  };
 
-    const ext = file.name.split(".").pop() || "jpg";
-    const filePath = `${userId}/avatar.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, file, { upsert: true });
+  const uploadCroppedAvatar = async (blob: Blob) => {
+    if (!userId) return;
+    const filePath = `${userId}/avatar.jpg`;
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
     if (uploadError) {
       toast.error("Upload failed");
       return;
@@ -295,6 +307,7 @@ const Profile = () => {
     const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", userId);
     setProfile((current) => (current ? { ...current, avatar_url: avatarUrl } : current));
+    setCropSrc(null);
     toast.success("Photo updated");
   };
 
@@ -647,6 +660,12 @@ const Profile = () => {
           setEditingPost(post as ProfilePostItem);
           setShowCreatePost(true);
         }}
+      />
+      <AvatarCropDialog
+        open={!!cropSrc}
+        imageSrc={cropSrc}
+        onCancel={() => setCropSrc(null)}
+        onConfirm={uploadCroppedAvatar}
       />
     </AppLayout>
   );
