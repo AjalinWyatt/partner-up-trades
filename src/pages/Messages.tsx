@@ -263,7 +263,7 @@ export default function Messages() {
         )}
       </div>
 
-      <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-none">
+      <div className="px-4 pb-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
         {[
           { id: null as string | null, name: "Partners" },
           ...allTags.map((t) => ({ id: t.id, name: t.name })),
@@ -274,16 +274,23 @@ export default function Messages() {
               key={t.id ?? "all"}
               onClick={() => setActiveTagId(t.id)}
               className={cn(
-                "shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-colors border",
+                "shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors border",
                 active
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-foreground border-foreground/70"
+                  : "bg-transparent text-foreground border-border"
               )}
             >
               {t.name}
             </button>
           );
         })}
+        <button
+          onClick={() => setManageTagsOpen(true)}
+          className="shrink-0 ml-1 h-7 w-7 rounded-full border border-border flex items-center justify-center text-foreground hover:bg-muted"
+          aria-label="Edit tags"
+        >
+          <Pencil className="w-3 h-3" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5">
@@ -307,32 +314,32 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); }}
-              className="w-full flex items-center gap-4 py-4 text-left border-b border-border/40"
+              className="w-full flex items-center gap-3 py-3 text-left border-b border-border/40"
             >
               <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-secondary">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary">
                   <AvatarIcon conn={conn} size="lg" />
                 </div>
                 {conn.unreadCount > 0 && (
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success border-2 border-background" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-base font-semibold text-foreground truncate">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {conn.partnerName.replace(/^@/, "")}
                 </p>
-                <p className={cn("text-sm truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
+                <p className={cn("text-xs truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {conn.lastMessageTime && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground">
                     {new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
                   </span>
                 )}
                 {conn.unreadCount > 0 && (
-                  <span className="min-w-[26px] h-[26px] bg-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground px-1.5">
+                  <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground px-1.5">
                     {conn.unreadCount}
                   </span>
                 )}
