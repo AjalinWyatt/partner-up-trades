@@ -614,8 +614,6 @@ const Profile = () => {
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
           />
-        ) : activeTab === 1 ? (
-          <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
         ) : (
           <div className="space-y-3 px-5 py-4 pb-8">
             {profileFacts.length > 0 && (
