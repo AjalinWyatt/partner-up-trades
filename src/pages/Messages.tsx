@@ -241,6 +241,21 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Mark all unread messages from a partner as read, and clear the badge
+  // optimistically so the UI updates immediately.
+  async function markConversationRead(conn: Connection) {
+    if (!userId) return;
+    setConnections((prev) =>
+      prev.map((c) => (c.id === conn.id ? { ...c, unreadCount: 0 } : c))
+    );
+    await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq("sender_id", conn.partnerId)
+      .eq("receiver_id", userId)
+      .eq("read", false);
+  }
+
   async function sendMessage() {
     if (!msgInput.trim() || !activeChat || !userId) return;
     setSendingMsg(true);
@@ -353,7 +368,7 @@ export default function Messages() {
           filtered.map((conn) => (
             <button
               key={conn.id}
-              onClick={() => { setActiveChat(conn); setMsgInput(""); }}
+              onClick={() => { setActiveChat(conn); setMsgInput(""); markConversationRead(conn); }}
               className="w-full flex items-center gap-3 py-2.5 text-left"
             >
               <div className="relative shrink-0">
