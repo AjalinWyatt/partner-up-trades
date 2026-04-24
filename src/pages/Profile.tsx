@@ -607,7 +607,7 @@ const Profile = () => {
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
           />
-        ) : (
+        ) : activeTab === 1 ? (
           <div className="space-y-3 px-5 py-4 pb-8">
             {profileFacts.length > 0 && (
               <div className="rounded-2xl border border-border bg-card p-4">
@@ -632,6 +632,8 @@ const Profile = () => {
               </div>
             )}
           </div>
+        ) : (
+          <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
         )}
       </div>
 
