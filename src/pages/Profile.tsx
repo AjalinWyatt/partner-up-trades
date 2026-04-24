@@ -239,7 +239,9 @@ const Profile = () => {
           match_priorities: (tData as any).match_priorities || [],
         });
 
-        setTradingDraft({
+        // Seed editable draft only the first time so we don't clobber user input.
+        if (!tradingDraftInitialized.current) {
+          setTradingDraft({
           markets: tData.markets || [],
           instruments: (tData as any).instruments || [],
           sessions: tData.sessions || [],
@@ -258,7 +260,9 @@ const Profile = () => {
           connection_reach: tData.connection_reach || "",
           connect_frequency: (tData as any).connect_frequency || [],
           match_priorities: (tData as any).match_priorities || [],
-        });
+          });
+          tradingDraftInitialized.current = true;
+        }
       }
 
       await loadProfileCollections(user.id, pData?.username);
