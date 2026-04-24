@@ -577,21 +577,14 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Stat cards */}
-        <div className="mt-5 grid grid-cols-3 gap-2.5 px-5">
-          <StatCard value={String(posts.filter(p => p.kind === "post").length).padStart(2, "0")} label="Attended" />
-          <StatCard value={String(posts.length).padStart(2, "0")} label="Matches" />
-          <StatCard value={String(journalEntries.length).padStart(2, "0")} label="Logs" />
-        </div>
-
-        {/* Posts / Details pill tabs */}
-        <div className="mt-6 flex justify-center gap-3 px-5">
-          {["Posts", "Details"].map((tab, index) => (
+        {/* Posts / Details / Journal pill tabs */}
+        <div className="mt-6 flex justify-center gap-2.5 px-5">
+          {["Posts", "Details", "Journal"].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(index)}
               className={cn(
-                "min-w-[140px] rounded-full px-7 py-2.5 text-sm font-bold transition-all",
+                "flex-1 max-w-[120px] rounded-full px-5 py-2.5 text-sm font-bold transition-all",
                 activeTab === index
                   ? "bg-primary text-primary-foreground"
                   : "border border-border bg-transparent text-foreground hover:bg-muted"
@@ -614,7 +607,7 @@ const Profile = () => {
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
           />
-        ) : (
+        ) : activeTab === 1 ? (
           <div className="space-y-3 px-5 py-4 pb-8">
             {profileFacts.length > 0 && (
               <div className="rounded-2xl border border-border bg-card p-4">
@@ -639,6 +632,8 @@ const Profile = () => {
               </div>
             )}
           </div>
+        ) : (
+          <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
         )}
       </div>
 
