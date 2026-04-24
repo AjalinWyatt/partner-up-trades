@@ -185,9 +185,17 @@ export default function Messages() {
           (msg.sender_id === userId && msg.receiver_id === activeChat.partnerId) ||
           (msg.sender_id === activeChat.partnerId && msg.receiver_id === userId)
         ) {
-          setMessages((prev) => [...prev, msg]);
+          setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
           if (msg.receiver_id === userId) supabase.from("messages").update({ read: true }).eq("id", msg.id);
         }
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
+        const updated = payload.new as Message;
+        setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, (payload) => {
+        const oldMsg = payload.old as { id: string };
+        setMessages((prev) => prev.filter((m) => m.id !== oldMsg.id));
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -422,7 +430,13 @@ export default function Messages() {
               </div>
               <div className="space-y-1.5">
                 {group.messages.map((msg) => (
-                  <MessageBubble key={msg.id} msg={msg} isMine={msg.sender_id === userId} />
+                  <MessageBubble
+                    key={msg.id}
+                    msg={msg}
+                    isMine={msg.sender_id === userId}
+                    onDeleted={(id) => setMessages((prev) => prev.filter((m) => m.id !== id))}
+                    onEdited={(id, content) => setMessages((prev) => prev.map((m) => m.id === id ? { ...m, content } : m))}
+                  />
                 ))}
               </div>
             </div>
