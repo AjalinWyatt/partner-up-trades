@@ -414,7 +414,6 @@ export default function Messages() {
             </p>
           ) : null}
         </div>
-        </div>
         <button
           onClick={() => setTagsOpen(true)}
           className="p-2 text-primary shrink-0"
