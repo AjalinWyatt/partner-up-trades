@@ -32,6 +32,8 @@ export default function Messages() {
   const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [manageTagsOpen, setManageTagsOpen] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
