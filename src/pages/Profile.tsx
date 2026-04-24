@@ -101,6 +101,8 @@ const Profile = () => {
   const [editState, setEditState] = useState("");
   const [editCountry, setEditCountry] = useState("");
   const [editGender, setEditGender] = useState("");
+  const formInitialized = useRef(false);
+  const tradingDraftInitialized = useRef(false);
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
 
@@ -193,22 +195,26 @@ const Profile = () => {
 
       if (pData) {
         setProfile(pData as ProfileData);
-        setEditName(pData.full_name || "");
-        setEditUsername(pData.username || "");
-        setEditBio((pData as any).bio || "");
-        setEditCity((pData as any).city || "");
-        setEditState((pData as any).state || "");
-        setEditCountry((pData as any).country || "");
-        setEditGender(pData.gender || "");
-        setProfileDraft({
-          gender: pData.gender || "",
-          city: (pData as any).city || "",
-          state: (pData as any).state || "",
-          country: (pData as any).country || "",
-          hobbies: pData.hobbies || [],
-          chart_prompts: pData.chart_prompts || [],
-          off_chart_prompts: pData.off_chart_prompts || [],
-        });
+        // Only seed form fields from DB once. Never clobber what the user is typing.
+        if (!formInitialized.current) {
+          setEditName(pData.full_name || "");
+          setEditUsername(pData.username || "");
+          setEditBio((pData as any).bio || "");
+          setEditCity((pData as any).city || "");
+          setEditState((pData as any).state || "");
+          setEditCountry((pData as any).country || "");
+          setEditGender(pData.gender || "");
+          setProfileDraft({
+            gender: pData.gender || "",
+            city: (pData as any).city || "",
+            state: (pData as any).state || "",
+            country: (pData as any).country || "",
+            hobbies: pData.hobbies || [],
+            chart_prompts: pData.chart_prompts || [],
+            off_chart_prompts: pData.off_chart_prompts || [],
+          });
+          formInitialized.current = true;
+        }
       }
 
       if (tData) {
@@ -234,7 +240,9 @@ const Profile = () => {
           match_priorities: (tData as any).match_priorities || [],
         });
 
-        setTradingDraft({
+        // Seed editable draft only the first time so we don't clobber user input.
+        if (!tradingDraftInitialized.current) {
+          setTradingDraft({
           markets: tData.markets || [],
           instruments: (tData as any).instruments || [],
           sessions: tData.sessions || [],
@@ -253,7 +261,9 @@ const Profile = () => {
           connection_reach: tData.connection_reach || "",
           connect_frequency: (tData as any).connect_frequency || [],
           match_priorities: (tData as any).match_priorities || [],
-        });
+          });
+          tradingDraftInitialized.current = true;
+        }
       }
 
       await loadProfileCollections(user.id, pData?.username);
