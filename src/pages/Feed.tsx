@@ -200,7 +200,7 @@ const Feed = () => {
       supabase.from("post_likes").select("post_id").in("post_id", postIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds).eq("user_id", user.id),
       supabase.from("comments").select("post_id").in("post_id", postIds),
-      supabase.from("trading_profiles").select("user_id, markets").in("user_id", authorIds),
+      supabase.from("trading_profiles").select("user_id, markets, experience_level").in("user_id", authorIds),
       supabase.from("saved_posts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
       supabase.from("post_reposts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
     ]);
