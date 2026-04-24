@@ -17,14 +17,15 @@ export default function MessageBubble({ msg, isMine }: MessageBubbleProps) {
   const isAudio = msg.media_type?.startsWith("audio/") || msg.media_type === "audio";
   const isImage = isImageType(msg.media_type);
   const isSharedPost = (msg.content || "").startsWith("Shared a post from ");
+  const time = new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toLowerCase();
 
   return (
-    <div className={cn("flex", isMine ? "justify-end" : "justify-start")}>
+    <div className={cn("flex flex-col", isMine ? "items-end" : "items-start")}>
       <div
         className={cn(
-          "max-w-[70%] px-3.5 py-2 text-[13px] leading-relaxed",
+          "max-w-[78%] px-4 py-2.5 text-[13px] leading-relaxed",
           isMine
-            ? "bg-gradient-brand text-white rounded-2xl rounded-br-md"
+            ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
             : "bg-secondary text-foreground rounded-2xl rounded-bl-md"
         )}
       >
@@ -55,10 +56,10 @@ export default function MessageBubble({ msg, isMine }: MessageBubbleProps) {
           </a>
         )}
         {msg.content && (!hasMedia || isAudio || isImage) && <p className={cn(isSharedPost && "whitespace-pre-wrap text-[12px] leading-5 font-medium")}>{msg.content}</p>}
-        <p className={cn("text-[9px] mt-1 text-right", isMine ? "text-primary-foreground/50" : "text-muted-foreground")}>
-          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
       </div>
+      <p className="text-[10px] text-muted-foreground mt-1 px-1">
+        {isMine ? "Client" : "Partner"} <span className="opacity-60">|</span> {time}
+      </p>
     </div>
   );
 }
