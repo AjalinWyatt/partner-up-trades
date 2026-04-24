@@ -350,12 +350,18 @@ export default function Messages() {
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {conn.lastMessageTime && (
-                  <span className="text-[11px] text-muted-foreground">
-                    {new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+                {conn.lastMessage && conn.lastMessageFromMe && (
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium",
+                      conn.lastMessageRead ? "text-primary" : "text-muted-foreground"
+                    )}
+                    title={conn.lastMessageRead ? "Seen" : "Sent"}
+                  >
+                    {conn.lastMessageRead ? "Seen" : "Sent"}
                   </span>
                 )}
-                {conn.unreadCount > 0 && (
+                {conn.unreadCount > 0 && !conn.lastMessageFromMe && (
                   <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[11px] font-bold text-primary-foreground px-1.5">
                     {conn.unreadCount}
                   </span>
