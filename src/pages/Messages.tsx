@@ -111,7 +111,7 @@ export default function Messages() {
       const profile = profileMap.get(partnerId);
       const { data: lastMsgs } = await supabase
         .from("messages")
-        .select("content, created_at")
+        .select("content, created_at, sender_id, read")
         .or(`and(sender_id.eq.${uid},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${uid})`)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -130,6 +130,8 @@ export default function Messages() {
         avatarUrl: profile?.avatar_url,
         lastMessage: lastMsgs?.[0]?.content,
         lastMessageTime: lastMsgs?.[0]?.created_at,
+        lastMessageFromMe: lastMsgs?.[0]?.sender_id === uid,
+        lastMessageRead: lastMsgs?.[0]?.read,
         unreadCount: count || 0,
       });
     }
