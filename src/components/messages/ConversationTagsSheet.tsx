@@ -69,8 +69,8 @@ export default function ConversationTagsSheet({
     if (!error && data) {
       setTags((prev) => [...prev, data as any]);
       setNewName("");
-      // auto-assign
-      await toggleAssign((data as any).id, false);
+      // auto-assign only when scoped to a partner
+      if (partnerId) await toggleAssign((data as any).id, false);
     }
   }
 
