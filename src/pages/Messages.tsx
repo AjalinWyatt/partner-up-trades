@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Smile } from "lucide-react";
+import { Globe, ArrowLeft, Send, Search, Smile, Tag as TagIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import AvatarIcon from "@/components/messages/AvatarIcon";
 import MessageBubble from "@/components/messages/MessageBubble";
 import VoiceRecorder from "@/components/messages/VoiceRecorder";
 import AttachmentButton from "@/components/messages/AttachmentButton";
+import ConversationTagsSheet from "@/components/messages/ConversationTagsSheet";
 
 export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
@@ -26,6 +27,31 @@ export default function Messages() {
   const [sendingMsg, setSendingMsg] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const [allTags, setAllTags] = useState<{ id: string; name: string }[]>([]);
+  const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
+  const [activeTagId, setActiveTagId] = useState<string | null>(null);
+
+  const loadTagData = async (uid: string) => {
+    const { data: t } = await supabase
+      .from("conversation_tags" as any)
+      .select("id, name")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true });
+    const { data: a } = await supabase
+      .from("conversation_tag_assignments" as any)
+      .select("tag_id, partner_id")
+      .eq("user_id", uid);
+    setAllTags(((t as any) || []) as any);
+    const map: Record<string, string[]> = {};
+    ((a as any) || []).forEach((row: any) => {
+      if (!map[row.partner_id]) map[row.partner_id] = [];
+      map[row.partner_id].push(row.tag_id);
+    });
+    setAssignmentsByPartner(map);
+  };
+
+  useEffect(() => { if (userId) loadTagData(userId); }, [userId]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -175,8 +201,9 @@ export default function Messages() {
 
   const filtered = connections.filter(
     (c) =>
-      c.partnerName.toLowerCase().includes(search.toLowerCase()) ||
-      c.partnerUsername.toLowerCase().includes(search.toLowerCase())
+      (c.partnerName.toLowerCase().includes(search.toLowerCase()) ||
+        c.partnerUsername.toLowerCase().includes(search.toLowerCase())) &&
+      (!activeTagId || (assignmentsByPartner[c.partnerId] || []).includes(activeTagId))
   );
 
   const grouped = activeChat ? groupMessagesByDate(messages) : [];
@@ -197,6 +224,36 @@ export default function Messages() {
           />
         </div>
       </div>
+      {allTags.length > 0 && (
+        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => setActiveTagId(null)}
+            className={cn(
+              "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+              activeTagId === null
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-transparent text-muted-foreground border-border"
+            )}
+          >
+            All
+          </button>
+          {allTags.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTagId(t.id)}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1",
+                activeTagId === t.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-transparent text-muted-foreground border-border"
+              )}
+            >
+              <TagIcon className="w-3 h-3" />
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-2">
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -270,8 +327,26 @@ export default function Messages() {
         <AvatarIcon conn={activeChat} size="sm" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{activeChat.partnerName}</p>
-          <p className="text-[10px] text-muted-foreground">@{activeChat.partnerUsername || "trader"} · Partner</p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-[10px] text-muted-foreground">@{activeChat.partnerUsername || "trader"} · Partner</p>
+            {(assignmentsByPartner[activeChat.partnerId] || [])
+              .map((tid) => allTags.find((t) => t.id === tid))
+              .filter(Boolean)
+              .map((t) => (
+                <span key={t!.id} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
+                  {t!.name}
+                </span>
+              ))}
+          </div>
         </div>
+        <button
+          onClick={() => setTagsOpen(true)}
+          className="p-2 rounded-full hover:bg-secondary text-foreground"
+          aria-label="Tag conversation"
+          title="Tag conversation"
+        >
+          <TagIcon className="w-5 h-5" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -364,6 +439,16 @@ export default function Messages() {
           )}
         </AppLayout>
       </div>
+      {activeChat && userId && (
+        <ConversationTagsSheet
+          open={tagsOpen}
+          onOpenChange={setTagsOpen}
+          userId={userId}
+          partnerId={activeChat.partnerId}
+          partnerName={activeChat.partnerName}
+          onChanged={() => loadTagData(userId)}
+        />
+      )}
     </>
   );
 }
