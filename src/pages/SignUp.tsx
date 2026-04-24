@@ -8,7 +8,7 @@ import AuthGlobeBackground from "@/components/AuthGlobeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import wordmark from "@/assets/tradersworld-wordmark.png";
+import Wordmark from "@/components/Wordmark";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -172,7 +172,7 @@ const SignUp = () => {
 
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col px-7 pb-8 pt-[200px] max-w-md mx-auto w-full">
-        <img src={wordmark} alt="TradersWorld" className="mx-auto h-9 w-auto" loading="eager" />
+        <div className="flex justify-center"><Wordmark size="text-3xl" /></div>
         <p className="text-[18px] text-foreground text-center mt-4">Create an account</p>
 
         {/* Form */}

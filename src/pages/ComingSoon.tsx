@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import lockup from "@/assets/tradersworld-lockup.png";
+import Wordmark from "@/components/Wordmark";
 import { supabase } from "@/integrations/supabase/client";
 import { Globe, Shield, CheckCircle, XCircle, Zap, Users, User, Search, TrendingUp, MessageSquare, BarChart3, Calendar, Bell, Heart, ArrowRight, Instagram, Youtube, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -116,7 +116,7 @@ const ComingSoon = () => {
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#0D1410] border-b border-white/[0.06] transition-all" style={{ boxShadow: navShadow ? "0 4px 24px rgba(0,0,0,0.3)" : "none" }}>
         <div className="max-w-[1140px] mx-auto px-8 h-[68px] flex items-center justify-between">
           <a href="#" className="flex items-center no-underline">
-            <img src={lockup} alt="TradersWorld" className="h-7 w-auto" loading="eager" />
+            <Wordmark size="text-lg" />
           </a>
           <div className="hidden md:flex items-center gap-9">
             <button onClick={() => scrollTo("how")} className="text-sm font-medium text-white/60 hover:text-white transition-colors bg-transparent border-none cursor-pointer">How it works</button>
@@ -470,7 +470,7 @@ const ComingSoon = () => {
         <div className="max-w-[1140px] mx-auto px-8">
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr] max-md:grid-cols-2 gap-12 mb-12">
             <div>
-              <img src={lockup} alt="TradersWorld" className="mb-2.5 h-7 w-auto" loading="lazy" />
+              <div className="mb-2.5"><Wordmark size="text-lg" /></div>
               <p className="text-[13px] text-white/35 leading-relaxed">The accountability platform for serious traders. Find your partner and build the consistency your trading demands.</p>
             </div>
             <div>

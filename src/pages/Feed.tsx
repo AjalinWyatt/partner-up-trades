@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
-import wordmark from "@/assets/tradersworld-wordmark.png";
+import Wordmark from "@/components/Wordmark";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -574,7 +574,7 @@ const Feed = () => {
           <div className="space-y-4 px-4 pb-4 pt-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <img src={wordmark} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
+                <Wordmark size="text-lg" />
                 <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Structured thought stream</p>
               </div>
 

@@ -4,7 +4,7 @@ import { ChevronDown, ChevronsDown, ChevronsUp, Bookmark, Gem, Zap, ChevronLeft 
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import lockup from "@/assets/tradersworld-lockup.png";
+import Wordmark from "@/components/Wordmark";
 
 interface ProfileFull {
   id: string;
@@ -165,7 +165,7 @@ const MatchProfile = () => {
           >
             <ChevronLeft className="w-7 h-7 text-foreground" strokeWidth={2.5} />
           </button>
-          <img src={lockup} alt="TradersWorld" className="h-6 w-auto" loading="eager" />
+          <Wordmark size="text-base" />
           <button
             onClick={() => navigate("/profile")}
             className="w-12 h-12 rounded-full overflow-hidden border-2 border-border shrink-0"
