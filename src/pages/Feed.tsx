@@ -37,6 +37,7 @@ interface FeedPost {
   full_name: string;
   avatar_url: string | null;
   markets: string[];
+  experienceLevel: string | null;
   liked: boolean;
   saved: boolean;
   reposted: boolean;
@@ -239,6 +240,7 @@ const Feed = () => {
         full_name: prof?.full_name || "Trader",
         avatar_url: prof?.avatar_url || null,
         markets: tp?.markets || [],
+        experienceLevel: tp?.experience_level || null,
         liked: myLikedSet.has(p.id),
         saved: mySavedSet.has(p.id),
         reposted: myRepostedSet.has(p.id),
