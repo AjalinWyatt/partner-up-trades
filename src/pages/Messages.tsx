@@ -31,6 +31,17 @@ export default function Messages() {
   const [allTags, setAllTags] = useState<{ id: string; name: string }[]>([]);
   const [assignmentsByPartner, setAssignmentsByPartner] = useState<Record<string, string[]>>({});
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => setMyAvatarUrl((data as any)?.avatar_url || null));
+  }, [userId]);
 
   const loadTagData = async (uid: string) => {
     const { data: t } = await supabase
