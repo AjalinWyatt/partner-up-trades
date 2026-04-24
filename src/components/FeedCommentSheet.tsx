@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Send, Heart, MessageCircle, Repeat2, Bookmark, Camera, Pencil, Trash2 } from "lucide-react";
+import { X, Send, Heart, MessageCircle, Bookmark, Camera, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
