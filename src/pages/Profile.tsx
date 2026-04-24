@@ -537,9 +537,9 @@ const Profile = () => {
         <div className="grid grid-cols-3 items-center gap-3 px-5 pt-6">
           {/* Streak */}
           <div className="flex flex-col items-center">
-            <Flame className="h-7 w-7 fill-destructive text-destructive" />
-            <p className="mt-1.5 text-[22px] font-extrabold leading-none text-foreground">{journalEntries.length || 0}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Streak</p>
+            <Flame className="h-5 w-5 fill-destructive text-destructive" />
+            <p className="mt-1 text-[16px] font-extrabold leading-none text-foreground">{journalEntries.length || 0}</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Streak</p>
           </div>
 
           {/* Avatar */}
@@ -553,11 +553,11 @@ const Profile = () => {
                 )}
               </button>
               <button
-                onClick={() => setEditing(true)}
+                onClick={() => avatarInputRef.current?.click()}
                 className="absolute -bottom-1 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
-                aria-label="Edit profile"
+                aria-label="Change profile photo"
               >
-                <Pencil className="h-4 w-4" strokeWidth={2.2} />
+                <Camera className="h-4 w-4" strokeWidth={2.2} />
               </button>
             </div>
           </div>
@@ -578,10 +578,10 @@ const Profile = () => {
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
         {/* Name + bio */}
-        <div className="mt-6 px-5 text-center">
+        <div className="mt-6 px-5 text-left">
           <h2 className="text-[22px] font-extrabold leading-tight text-foreground">{displayName}</h2>
           {profile?.bio ? (
-            <p className="mx-auto mt-2 max-w-[320px] whitespace-pre-line text-[14px] leading-6 text-muted-foreground">{profile.bio}</p>
+            <p className="mt-2 whitespace-pre-line text-[14px] leading-6 text-muted-foreground">{profile.bio}</p>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">Add a bio so traders know how you move.</p>
           )}
