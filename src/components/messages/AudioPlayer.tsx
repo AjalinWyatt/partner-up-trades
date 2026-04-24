@@ -30,7 +30,7 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 min-w-[160px]">
+    <div className="flex items-center gap-2.5 min-w-[200px] py-0.5">
       <audio
         ref={audioRef}
         src={url}
@@ -44,25 +44,25 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
       <button
         onClick={toggle}
         className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-          isMine ? "bg-white/20 hover:bg-white/30" : "bg-primary/10 hover:bg-primary/20"
+          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors",
+          isMine ? "bg-primary-foreground/20 hover:bg-primary-foreground/30" : "bg-primary/15 hover:bg-primary/25"
         )}
       >
         {playing ? (
-          <Pause className={cn("w-3.5 h-3.5", isMine ? "text-white" : "text-foreground")} />
+          <Pause className={cn("w-4 h-4 fill-current", isMine ? "text-primary-foreground" : "text-primary")} />
         ) : (
-          <Play className={cn("w-3.5 h-3.5 ml-0.5", isMine ? "text-white" : "text-foreground")} />
+          <Play className={cn("w-4 h-4 ml-0.5 fill-current", isMine ? "text-primary-foreground" : "text-primary")} />
         )}
       </button>
-      <div className="flex-1 flex flex-col gap-1">
-        <div className={cn("h-1 rounded-full w-full", isMine ? "bg-white/20" : "bg-muted")}>
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        <div className={cn("relative h-[3px] flex-1 rounded-full overflow-hidden", isMine ? "bg-primary-foreground/25" : "bg-foreground/15")}>
           <div
-            className={cn("h-full rounded-full transition-all", isMine ? "bg-white/70" : "bg-primary")}
+            className={cn("absolute inset-y-0 left-0 rounded-full transition-all", isMine ? "bg-primary-foreground" : "bg-primary")}
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className={cn("text-[9px]", isMine ? "text-white/60" : "text-muted-foreground")}>
-          {duration > 0 ? formatDur(playing ? (audioRef.current?.currentTime || 0) : duration) : "0:00"}
+        <span className={cn("text-[10px] tabular-nums shrink-0", isMine ? "text-primary-foreground/80" : "text-muted-foreground")}>
+          {formatDur(playing ? (audioRef.current?.currentTime || 0) : duration || 0)}
         </span>
       </div>
     </div>
