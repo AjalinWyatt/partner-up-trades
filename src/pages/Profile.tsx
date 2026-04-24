@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
+import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 
 interface ProfileData {
   username: string | null;
