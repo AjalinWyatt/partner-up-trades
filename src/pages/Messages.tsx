@@ -170,17 +170,27 @@ export default function Messages() {
 
   useEffect(() => {
     if (!userId) return;
+    // Refresh inbox previews/badges/ticks on any message change involving me.
+    const refreshIfMine = (msg: Partial<Message> | undefined) => {
+      if (!msg) return;
+      if (msg.sender_id === userId || msg.receiver_id === userId) {
+        loadConnections(userId);
+      }
+    };
     const channel = supabase
       .channel("inbox-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
-        const msg = payload.new as Message;
-        if (msg.sender_id === userId || msg.receiver_id === userId) {
-          if (!activeChat) loadConnections(userId);
-        }
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (p) =>
+        refreshIfMine(p.new as Message)
+      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (p) =>
+        refreshIfMine(p.new as Message)
+      )
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, (p) =>
+        refreshIfMine(p.old as Message)
+      )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [userId, activeChat]);
+  }, [userId]);
 
   useEffect(() => {
     if (!activeChat || !userId) return;
