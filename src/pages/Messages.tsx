@@ -264,15 +264,12 @@ export default function Messages() {
       </div>
 
       <div className="px-4 pb-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-        {[
-          { id: null as string | null, name: "Partners" },
-          ...allTags.map((t) => ({ id: t.id, name: t.name })),
-        ].map((t) => {
+        {allTags.map((t) => {
           const active = activeTagId === t.id;
           return (
             <button
-              key={t.id ?? "all"}
-              onClick={() => setActiveTagId(t.id)}
+              key={t.id}
+              onClick={() => setActiveTagId(active ? null : t.id)}
               className={cn(
                 "shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors border",
                 active
@@ -286,7 +283,7 @@ export default function Messages() {
         })}
         <button
           onClick={() => setManageTagsOpen(true)}
-          className="shrink-0 ml-1 h-7 w-7 rounded-full border border-border flex items-center justify-center text-foreground hover:bg-muted"
+          className="shrink-0 h-7 w-7 rounded-full border border-border flex items-center justify-center text-foreground hover:bg-muted"
           aria-label="Edit tags"
         >
           <Pencil className="w-3 h-3" />
