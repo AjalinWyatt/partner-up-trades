@@ -730,17 +730,21 @@ const Feed = () => {
                         </button>
                         <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                       </div>
+                      {(post.market || post.experienceLevel) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {post.market && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                              {post.market}
+                            </span>
+                          )}
+                          {post.experienceLevel && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                              {post.experienceLevel}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <div className="mt-3 space-y-3">
-                        {!!post.tags?.length && (
-                          <div className="flex flex-wrap gap-2">
-                            {post.tags.slice(0, 3).map((tag) => (
-                              <span key={tag} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
                         {(post.content || post.caption) && <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
 
                         {!!post.media_urls?.length && (
@@ -759,6 +763,16 @@ const Feed = () => {
                               </Carousel>
                             )}
                           </button>
+                        )}
+
+                        {!!post.tags?.length && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {post.tags.slice(0, 4).map((tag) => (
+                              <span key={tag} className="rounded-full border border-border/60 bg-secondary/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                #{tag.replace(/^#/, "")}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
 
