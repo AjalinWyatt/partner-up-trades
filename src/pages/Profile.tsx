@@ -194,13 +194,17 @@ const Profile = () => {
 
       if (pData) {
         setProfile(pData as ProfileData);
-        setEditName(pData.full_name || "");
-        setEditUsername(pData.username || "");
-        setEditBio((pData as any).bio || "");
-        setEditCity((pData as any).city || "");
-        setEditState((pData as any).state || "");
-        setEditCountry((pData as any).country || "");
-        setEditGender(pData.gender || "");
+        // Only seed form fields from DB once. Never clobber what the user is typing.
+        if (!formInitialized.current) {
+          setEditName(pData.full_name || "");
+          setEditUsername(pData.username || "");
+          setEditBio((pData as any).bio || "");
+          setEditCity((pData as any).city || "");
+          setEditState((pData as any).state || "");
+          setEditCountry((pData as any).country || "");
+          setEditGender(pData.gender || "");
+          formInitialized.current = true;
+        }
         setProfileDraft({
           gender: pData.gender || "",
           city: (pData as any).city || "",
