@@ -102,6 +102,7 @@ const Profile = () => {
   const [editCountry, setEditCountry] = useState("");
   const [editGender, setEditGender] = useState("");
   const formInitialized = useRef(false);
+  const tradingDraftInitialized = useRef(false);
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
 
