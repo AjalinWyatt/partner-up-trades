@@ -439,6 +439,16 @@ export default function Messages() {
           )}
         </AppLayout>
       </div>
+      {activeChat && userId && (
+        <ConversationTagsSheet
+          open={tagsOpen}
+          onOpenChange={setTagsOpen}
+          userId={userId}
+          partnerId={activeChat.partnerId}
+          partnerName={activeChat.partnerName}
+          onChanged={() => loadTagData(userId)}
+        />
+      )}
     </>
   );
 }
