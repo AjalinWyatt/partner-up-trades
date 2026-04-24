@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
-import NotificationBell from "@/components/NotificationBell";
 import PostDetailModal from "@/components/PostDetailModal";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
@@ -37,6 +36,7 @@ interface FeedPost {
   full_name: string;
   avatar_url: string | null;
   markets: string[];
+  experienceLevel: string | null;
   liked: boolean;
   saved: boolean;
   reposted: boolean;
@@ -200,7 +200,7 @@ const Feed = () => {
       supabase.from("post_likes").select("post_id").in("post_id", postIds),
       supabase.from("post_likes").select("post_id").in("post_id", postIds).eq("user_id", user.id),
       supabase.from("comments").select("post_id").in("post_id", postIds),
-      supabase.from("trading_profiles").select("user_id, markets").in("user_id", authorIds),
+      supabase.from("trading_profiles").select("user_id, markets, experience_level").in("user_id", authorIds),
       supabase.from("saved_posts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
       supabase.from("post_reposts" as any).select("post_id").in("post_id", postIds).eq("user_id", user.id),
     ]);
@@ -239,6 +239,7 @@ const Feed = () => {
         full_name: prof?.full_name || "Trader",
         avatar_url: prof?.avatar_url || null,
         markets: tp?.markets || [],
+        experienceLevel: tp?.experience_level || null,
         liked: myLikedSet.has(p.id),
         saved: mySavedSet.has(p.id),
         reposted: myRepostedSet.has(p.id),
@@ -580,7 +581,17 @@ const Feed = () => {
                 >
                   <Plus className="h-4 w-4" />
                 </button>
-                <NotificationBell />
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+                  aria-label="Open my profile"
+                >
+                  {myProfile?.avatar_url ? (
+                    <img src={myProfile.avatar_url} alt="My profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-bold">{getInitials(myProfile?.full_name || myProfile?.username || "Me")}</span>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -728,17 +739,21 @@ const Feed = () => {
                         </button>
                         <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                       </div>
+                      {(post.market || post.experienceLevel) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {post.market && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                              {post.market}
+                            </span>
+                          )}
+                          {post.experienceLevel && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                              {post.experienceLevel}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <div className="mt-3 space-y-3">
-                        {!!post.tags?.length && (
-                          <div className="flex flex-wrap gap-2">
-                            {post.tags.slice(0, 3).map((tag) => (
-                              <span key={tag} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
                         {(post.content || post.caption) && <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
 
                         {!!post.media_urls?.length && (
@@ -757,6 +772,16 @@ const Feed = () => {
                               </Carousel>
                             )}
                           </button>
+                        )}
+
+                        {!!post.tags?.length && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {post.tags.slice(0, 4).map((tag) => (
+                              <span key={tag} className="rounded-full border border-border/60 bg-secondary/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                #{tag.replace(/^#/, "")}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
 
