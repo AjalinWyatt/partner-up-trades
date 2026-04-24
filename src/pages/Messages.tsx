@@ -505,6 +505,15 @@ export default function Messages() {
           onChanged={() => loadTagData(userId)}
         />
       )}
+      {userId && (
+        <ConversationTagsSheet
+          open={manageTagsOpen}
+          onOpenChange={setManageTagsOpen}
+          userId={userId}
+          partnerId={null}
+          onChanged={() => loadTagData(userId)}
+        />
+      )}
     </>
   );
 }
