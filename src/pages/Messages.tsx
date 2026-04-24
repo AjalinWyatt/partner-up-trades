@@ -281,7 +281,7 @@ export default function Messages() {
           );
         })}
         <button
-          onClick={() => { setActiveChat(null); setTagsOpen(true); }}
+          onClick={() => setTagsOpen(true)}
           className="shrink-0 ml-auto h-7 w-7 rounded-full border border-border flex items-center justify-center text-primary hover:bg-muted"
           aria-label="Manage tags"
         >
@@ -376,14 +376,19 @@ export default function Messages() {
           <TagIcon className="w-6 h-6" strokeWidth={2} />
         </button>
         <div className="flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-secondary">
-            <AvatarIcon conn={activeChat} size="lg" />
-          </div>
+          {activeChat.avatarUrl ? (
+            <img
+              src={activeChat.avatarUrl}
+              alt={activeChat.partnerName}
+              className="w-20 h-20 rounded-full object-cover bg-secondary"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full overflow-hidden">
+              <AvatarIcon conn={activeChat} size="lg" />
+            </div>
+          )}
           <p className="mt-3 text-lg font-semibold text-primary">
-            {activeChat.partnerName.replace(/^@/, "")}
-          </p>
-          <p className="mt-1 text-sm text-foreground">
-            @{activeChat.partnerUsername || "trader"}
+            @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
           </p>
           {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
             <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center">
@@ -491,13 +496,13 @@ export default function Messages() {
           )}
         </AppLayout>
       </div>
-      {activeChat && userId && (
+      {userId && (
         <ConversationTagsSheet
           open={tagsOpen}
           onOpenChange={setTagsOpen}
           userId={userId}
-          partnerId={activeChat.partnerId}
-          partnerName={activeChat.partnerName}
+          partnerId={activeChat?.partnerId}
+          partnerName={activeChat?.partnerName}
           onChanged={() => loadTagData(userId)}
         />
       )}
