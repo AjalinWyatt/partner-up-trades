@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Globe, Shield, CheckCircle, XCircle, Zap, Users, User, Search, TrendingUp, MessageSquare, BarChart3, Calendar, Bell, Heart, ArrowRight, Instagram, Youtube, Star } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import lockup from "@/assets/tradersworld-lockup.png";
+import Wordmark from "@/components/Wordmark";
 
 /* ─── Waitlist Modal ─── */
 const WaitlistModal = ({ open, onClose, market }: { open: boolean; onClose: () => void; market: string }) => {
