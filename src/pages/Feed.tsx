@@ -552,10 +552,7 @@ const Feed = () => {
     [allStoryGroups]
   );
 
-  useEffect(() => {
-    if (myMarkets.includes(selectedFeedFilter)) return;
-    setSelectedFeedFilter("All");
-  }, [myMarkets, selectedFeedFilter]);
+  // Filter chips drive the visible feed directly — no auto-reset based on user markets.
 
   if (loading) {
     return (
