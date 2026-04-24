@@ -321,7 +321,7 @@ export default function Messages() {
                   <AvatarIcon conn={conn} size="lg" />
                 </div>
                 {conn.unreadCount > 0 && (
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-background" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-background" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
