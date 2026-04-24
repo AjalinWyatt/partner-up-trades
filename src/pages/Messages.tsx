@@ -115,6 +115,9 @@ export default function Messages() {
         .or(`and(sender_id.eq.${uid},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${uid})`)
         .order("created_at", { ascending: false })
         .limit(1);
+      // Only count messages the partner sent to me that I haven't read.
+      // This naturally excludes any message I sent (so my last sent message
+      // never inflates the unread badge).
       const { count } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
@@ -122,17 +125,25 @@ export default function Messages() {
         .eq("receiver_id", uid)
         .eq("read", false);
 
+      const last = lastMsgs?.[0];
+      // Graceful fallbacks: if sender_id is missing we can't tell direction,
+      // so default to "not from me"; if read is missing default to true so
+      // we don't incorrectly show "Sent" forever.
+      const lastSenderId = last?.sender_id ?? null;
+      const lastFromMe = lastSenderId ? lastSenderId === uid : false;
+      const lastRead = typeof last?.read === "boolean" ? last.read : true;
+
       connectionList.push({
         id: c.id,
         partnerId,
         partnerName: profile?.username ? `@${profile.username}` : "trader",
         partnerUsername: profile?.username || "",
         avatarUrl: profile?.avatar_url,
-        lastMessage: lastMsgs?.[0]?.content,
-        lastMessageTime: lastMsgs?.[0]?.created_at,
-        lastMessageFromMe: lastMsgs?.[0]?.sender_id === uid,
-        lastMessageRead: lastMsgs?.[0]?.read,
-        unreadCount: count || 0,
+        lastMessage: last?.content,
+        lastMessageTime: last?.created_at,
+        lastMessageFromMe: lastFromMe,
+        lastMessageRead: lastRead,
+        unreadCount: count ?? 0,
       });
     }
 
@@ -350,7 +361,7 @@ export default function Messages() {
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {conn.lastMessage && conn.lastMessageFromMe && (
+                {conn.lastMessage && conn.lastMessageFromMe === true && (
                   <span
                     className={cn(
                       "text-[11px] font-medium",
@@ -361,7 +372,7 @@ export default function Messages() {
                     {conn.lastMessageRead ? "Seen" : "Sent"}
                   </span>
                 )}
-                {conn.unreadCount > 0 && !conn.lastMessageFromMe && (
+                {conn.unreadCount > 0 && conn.lastMessageFromMe !== true && (
                   <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[11px] font-bold text-primary-foreground px-1.5">
                     {conn.unreadCount}
                   </span>
