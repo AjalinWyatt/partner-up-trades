@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
-import NotificationBell from "@/components/NotificationBell";
 import PostDetailModal from "@/components/PostDetailModal";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
