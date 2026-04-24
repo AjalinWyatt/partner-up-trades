@@ -130,7 +130,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited }: Mess
             <button onClick={() => setEditing(false)} aria-label="Cancel"><X className="w-4 h-4" /></button>
           </div>
         ) : (
-          msg.content && (!hasMedia || isAudio || isImage) && (
+          msg.content && (!hasMedia || isImage) && !isAudio && (
             <p className={cn(isSharedPost && "whitespace-pre-wrap text-[11px] leading-5 font-medium")}>{msg.content}</p>
           )
         )}
