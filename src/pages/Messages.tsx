@@ -327,8 +327,26 @@ export default function Messages() {
         <AvatarIcon conn={activeChat} size="sm" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{activeChat.partnerName}</p>
-          <p className="text-[10px] text-muted-foreground">@{activeChat.partnerUsername || "trader"} · Partner</p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-[10px] text-muted-foreground">@{activeChat.partnerUsername || "trader"} · Partner</p>
+            {(assignmentsByPartner[activeChat.partnerId] || [])
+              .map((tid) => allTags.find((t) => t.id === tid))
+              .filter(Boolean)
+              .map((t) => (
+                <span key={t!.id} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
+                  {t!.name}
+                </span>
+              ))}
+          </div>
         </div>
+        <button
+          onClick={() => setTagsOpen(true)}
+          className="p-2 rounded-full hover:bg-secondary text-foreground"
+          aria-label="Tag conversation"
+          title="Tag conversation"
+        >
+          <TagIcon className="w-5 h-5" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
