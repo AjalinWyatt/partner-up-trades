@@ -147,12 +147,14 @@ export default function Messages() {
       });
     }
 
-    connectionList.sort((a, b) => {
-      if (!a.lastMessageTime && !b.lastMessageTime) return 0;
-      if (!a.lastMessageTime) return 1;
-      if (!b.lastMessageTime) return -1;
-      return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
-    });
+    // Always sort newest-first by lastMessageTime, with a safe fallback of 0
+    // when created_at is missing (those bubble to the bottom).
+    const tsOf = (t?: string | null) => {
+      if (!t) return 0;
+      const n = new Date(t).getTime();
+      return Number.isFinite(n) ? n : 0;
+    };
+    connectionList.sort((a, b) => tsOf(b.lastMessageTime) - tsOf(a.lastMessageTime));
 
     setConnections(connectionList);
     setLoading(false);
