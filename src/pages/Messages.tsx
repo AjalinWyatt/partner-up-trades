@@ -221,51 +221,77 @@ export default function Messages() {
 
   const conversationListContent = (
     <div className="flex flex-col h-full">
-      <div className="px-5 pt-5 pb-3">
-        <h1 className="text-xl font-bold text-foreground">Messages</h1>
-      </div>
-      <div className="px-4 pb-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations"
-            className="pl-9 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl h-9 text-sm"
-          />
-        </div>
-      </div>
-      {allTags.length > 0 && (
-        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setActiveTagId(null)}
-            className={cn(
-              "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
-              activeTagId === null
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-transparent text-muted-foreground border-border"
-            )}
-          >
-            All
-          </button>
-          {allTags.map((t) => (
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        {showSearch ? (
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onBlur={() => !search && setShowSearch(false)}
+              placeholder="Search"
+              className="pl-9 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl h-9 text-sm"
+            />
+          </div>
+        ) : (
+          <>
             <button
-              key={t.id}
+              onClick={() => setShowSearch(true)}
+              className="p-1 text-foreground"
+              aria-label="Search"
+            >
+              <Search className="w-6 h-6" strokeWidth={2} />
+            </button>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
+              Traders<span className="font-bold">World</span>
+            </h1>
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0"
+              aria-label="My profile"
+            >
+              {myAvatarUrl ? (
+                <img src={myAvatarUrl} alt="Me" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-brand" />
+              )}
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-none">
+        {[
+          { id: null as string | null, name: "Partners" },
+          ...allTags.map((t) => ({ id: t.id, name: t.name })),
+        ].map((t) => {
+          const active = activeTagId === t.id;
+          return (
+            <button
+              key={t.id ?? "all"}
               onClick={() => setActiveTagId(t.id)}
               className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1",
-                activeTagId === t.id
+                "shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-colors border",
+                active
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border"
+                  : "bg-transparent text-foreground border-foreground/70"
               )}
             >
-              <TagIcon className="w-3 h-3" />
               {t.name}
             </button>
-          ))}
-        </div>
-      )}
-      <div className="flex-1 overflow-y-auto px-2">
+          );
+        })}
+        <button
+          onClick={() => setManageTagsOpen(true)}
+          className="shrink-0 px-3 py-2 rounded-full text-sm font-medium border border-dashed border-foreground/40 text-muted-foreground hover:text-foreground"
+          aria-label="Manage tags"
+        >
+          <TagIcon className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -286,32 +312,36 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); }}
-              className={cn(
-                "w-full flex items-center gap-3 py-3 px-3 rounded-xl transition-colors",
-                activeChat?.id === conn.id ? "bg-secondary" : "hover:bg-secondary/50"
-              )}
+              className="w-full flex items-center gap-4 py-4 text-left border-b border-border/40"
             >
-              <AvatarIcon conn={conn} />
-              <div className="flex-1 min-w-0 text-left">
-                <div className="flex items-center justify-between">
-                  <p className={cn("text-sm truncate", conn.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground")}>
-                    {conn.partnerName}
-                  </p>
-                  {conn.lastMessageTime && (
-                    <span className={cn("text-[10px] shrink-0 ml-2", conn.unreadCount > 0 ? "text-primary font-semibold" : "text-muted-foreground")}>
-                      {formatTime(conn.lastMessageTime)}
-                    </span>
-                  )}
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-secondary">
+                  <AvatarIcon conn={conn} size="lg" />
                 </div>
-                <p className={cn("text-xs truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>
+                {conn.unreadCount > 0 && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-background" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold text-foreground truncate">
+                  {conn.partnerName.replace(/^@/, "")}
+                </p>
+                <p className={cn("text-sm truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
               </div>
-              {conn.unreadCount > 0 && (
-                <span className="min-w-[20px] h-5 bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground shrink-0 px-1.5">
-                  {conn.unreadCount}
-                </span>
-              )}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {conn.lastMessageTime && (
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+                  </span>
+                )}
+                {conn.unreadCount > 0 && (
+                  <span className="min-w-[26px] h-[26px] bg-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground px-1.5">
+                    {conn.unreadCount}
+                  </span>
+                )}
+              </div>
             </button>
           ))
         )}
