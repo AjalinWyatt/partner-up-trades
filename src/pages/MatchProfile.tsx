@@ -278,7 +278,7 @@ const MatchProfile = () => {
                   </div>
 
                   {/* Stats row */}
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="mt-3 grid grid-cols-3 gap-2 place-items-center text-center">
                     <Stat label="Trading Style" value={trading?.trading_style?.[0] || "—"} />
                     <Stat label="Strategy" value={trading?.strategies?.[0] || "—"} />
                     <Stat label="Session" value={trading?.sessions?.[0] || "—"} />
@@ -333,9 +333,9 @@ const MatchProfile = () => {
 };
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <div className="text-[15px] font-black text-accent truncate">{value}</div>
-    <div className="text-[12px] text-foreground/70">{label}</div>
+  <div className="w-full text-center">
+    <div className="text-[13px] font-black text-accent leading-tight break-words">{value}</div>
+    <div className="mt-0.5 text-[11px] text-foreground/70">{label}</div>
   </div>
 );
 
