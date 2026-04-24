@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Send, Heart, MessageCircle, Repeat2, Bookmark, Camera, Pencil, Trash2 } from "lucide-react";
+import { X, Send, Heart, MessageCircle, Bookmark, Camera, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -289,13 +289,15 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         </div>
 
         {post && (
-          <div className="border-b border-border px-4 py-3">
+          <div className="border-b border-border px-4 py-2.5">
             <div className="flex items-start gap-2.5">
               <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="shrink-0">
-                {post.avatar_url ? (
-                  <img src={post.avatar_url} alt="Profile photo" className="h-8.5 w-8.5 rounded-full object-cover" />
+                {media ? (
+                  <img src={media} alt="Post media" className="h-11 w-11 rounded-lg object-cover" />
+                ) : post.avatar_url ? (
+                  <img src={post.avatar_url} alt="Profile photo" className="h-9 w-9 rounded-full object-cover" />
                 ) : (
-                  <div className="flex h-8.5 w-8.5 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-foreground">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-[10px] font-black text-foreground">
                     {getInitials(post.full_name)}
                   </div>
                 )}
@@ -303,57 +305,31 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="text-xs font-bold text-foreground hover:underline">
-                    {post.username}
+                  <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="truncate text-xs font-bold text-foreground hover:underline">
+                    @{post.username}
                   </button>
-                  {post.market && (
-                    <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-bold text-primary">
-                      {post.market}
-                    </span>
-                  )}
-                  <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo(post.created_at)}</span>
                 </div>
-
                 {(post.content || post.caption) && (
-                  <p className="pt-1 whitespace-pre-wrap text-[13px] leading-6 text-foreground">{post.content || post.caption}</p>
+                  <p className="mt-0.5 line-clamp-2 whitespace-pre-wrap text-[12px] leading-snug text-muted-foreground">{post.content || post.caption}</p>
                 )}
 
-                {!!post.tags?.length && (
-                  <div className="flex flex-wrap gap-1.5 pt-2">
-                    {post.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
-                        #{tag}
-                      </span>
-                    ))}
+                <div className="mt-1.5 flex items-center gap-4 text-muted-foreground">
+                  <button onClick={() => onToggleLike(post.id)} aria-label="Like" className="flex items-center gap-1 transition-colors hover:text-foreground">
+                    <Heart className={cn("h-4 w-4", post.liked ? "fill-destructive text-destructive" : "")} />
+                    {post.likeCount > 0 && <span className="text-[10px] tabular-nums">{post.likeCount}</span>}
+                  </button>
+                  <div className="flex items-center gap-1 text-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    {post.commentCount > 0 && <span className="text-[10px] tabular-nums">{post.commentCount}</span>}
                   </div>
-                )}
-
-                {media && (
-                  <button className="mt-2.5 block w-full overflow-hidden rounded-xl border border-border bg-muted">
-                    <img src={media} alt="Post media" className="aspect-[4/5] w-full object-cover" />
+                  <button onClick={onShare} aria-label="Share" className="transition-colors hover:text-foreground">
+                    <Send className="h-4 w-4" />
                   </button>
-                )}
-
-                <div className="flex items-center gap-4 pt-2.5">
-                  <button onClick={() => onToggleLike(post.id)} className="flex items-center gap-1.5 group">
-                    <Heart className={cn("h-4 w-4 transition-colors", post.liked ? "fill-destructive text-destructive" : "text-muted-foreground group-hover:text-foreground")} />
-                    {post.likeCount > 0 && <span className="text-[11px] text-muted-foreground">{post.likeCount}</span>}
-                  </button>
-                  <div className="flex items-center gap-1.5">
-                    <MessageCircle className="h-4 w-4 text-foreground" />
-                    {post.commentCount > 0 && <span className="text-[11px] text-muted-foreground">{post.commentCount}</span>}
-                  </div>
-                  <button onClick={() => onToggleRepost(post.id)} className="group">
-                    <Repeat2 className={cn("h-4 w-4 transition-colors", post.reposted ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                  </button>
-                  <button onClick={onShare} className="group">
-                    <Send className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-                  </button>
-                  <button onClick={() => onToggleSave(post.id)} className="group ml-auto">
-                    <Bookmark className={cn("h-4 w-4 transition-colors", post.saved ? "fill-primary text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                  <button onClick={() => onToggleSave(post.id)} aria-label="Save" className="ml-auto transition-colors hover:text-foreground">
+                    <Bookmark className={cn("h-4 w-4", post.saved ? "fill-primary text-primary" : "")} />
                   </button>
                 </div>
-
               </div>
             </div>
           </div>

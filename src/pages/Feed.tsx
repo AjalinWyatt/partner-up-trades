@@ -774,21 +774,20 @@ const Feed = () => {
                         )}
                       </div>
 
-                      <div className="mt-4 grid grid-cols-4 items-center border-t border-border pt-3 text-muted-foreground">
-                        <button onClick={() => toggleLike(post.id)} className="flex items-center justify-start gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-                          <Heart className={cn("h-4 w-4", post.liked ? "fill-destructive text-destructive" : "")} />
-                          <span className="text-[11px]">{post.likeCount || "Like"}</span>
+                      <div className="mt-4 flex items-center gap-5 border-t border-border pt-3 text-muted-foreground">
+                        <button onClick={() => toggleLike(post.id)} aria-label="Like" className="flex items-center gap-1 transition-colors hover:text-foreground">
+                          <Heart className={cn("h-[18px] w-[18px]", post.liked ? "fill-destructive text-destructive" : "")} />
+                          {post.likeCount > 0 && <span className="text-[11px] tabular-nums">{post.likeCount}</span>}
                         </button>
-                        <button onClick={() => setCommentPostId(post.id)} className="flex items-center justify-start gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-                          <MessageCircle className="h-4 w-4" />
-                          <span className="text-[11px]">{post.commentCount || "Comment"}</span>
+                        <button onClick={() => setCommentPostId(post.id)} aria-label="Comment" className="flex items-center gap-1 transition-colors hover:text-foreground">
+                          <MessageCircle className="h-[18px] w-[18px]" />
+                          {post.commentCount > 0 && <span className="text-[11px] tabular-nums">{post.commentCount}</span>}
                         </button>
-                        <button onClick={() => setPostToShare(post)} className="flex items-center justify-start gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-                          <Send className="h-4 w-4" />
-                          <span className="text-[11px]">Share</span>
+                        <button onClick={() => setPostToShare(post)} aria-label="Share" className="transition-colors hover:text-foreground">
+                          <Send className="h-[18px] w-[18px]" />
                         </button>
-                        <button onClick={() => toggleSave(post.id)} className="ml-auto flex items-center justify-end text-muted-foreground transition-colors hover:text-foreground">
-                          <Bookmark className={cn("h-4 w-4", post.saved ? "fill-primary text-primary" : "")} />
+                        <button onClick={() => toggleSave(post.id)} aria-label="Save" className="ml-auto transition-colors hover:text-foreground">
+                          <Bookmark className={cn("h-[18px] w-[18px]", post.saved ? "fill-primary text-primary" : "")} />
                         </button>
                       </div>
                     </div>
