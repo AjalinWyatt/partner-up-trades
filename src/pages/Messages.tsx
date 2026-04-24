@@ -201,8 +201,9 @@ export default function Messages() {
 
   const filtered = connections.filter(
     (c) =>
-      c.partnerName.toLowerCase().includes(search.toLowerCase()) ||
-      c.partnerUsername.toLowerCase().includes(search.toLowerCase())
+      (c.partnerName.toLowerCase().includes(search.toLowerCase()) ||
+        c.partnerUsername.toLowerCase().includes(search.toLowerCase())) &&
+      (!activeTagId || (assignmentsByPartner[c.partnerId] || []).includes(activeTagId))
   );
 
   const grouped = activeChat ? groupMessagesByDate(messages) : [];
@@ -223,6 +224,36 @@ export default function Messages() {
           />
         </div>
       </div>
+      {allTags.length > 0 && (
+        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => setActiveTagId(null)}
+            className={cn(
+              "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+              activeTagId === null
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-transparent text-muted-foreground border-border"
+            )}
+          >
+            All
+          </button>
+          {allTags.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTagId(t.id)}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1",
+                activeTagId === t.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-transparent text-muted-foreground border-border"
+              )}
+            >
+              <TagIcon className="w-3 h-3" />
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-2">
         {loading ? (
           <div className="flex items-center justify-center py-12">
