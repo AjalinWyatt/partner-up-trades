@@ -17,13 +17,19 @@ interface MessageBubbleProps {
   isMine: boolean;
   onDeleted?: (id: string) => void;
   onEdited?: (id: string, content: string) => void;
+  /** Partner's avatar URL — shown next to incoming (not-mine) bubbles */
+  partnerAvatarUrl?: string | null;
+  /** Partner's display name for the avatar fallback initial */
+  partnerName?: string;
+  /** Whether to render the avatar (e.g. only on the last message in a streak) */
+  showAvatar?: boolean;
 }
 
 function isImageType(type?: string | null) {
   return type?.startsWith("image/") || type === "image";
 }
 
-export default function MessageBubble({ msg, isMine, onDeleted, onEdited }: MessageBubbleProps) {
+export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partnerAvatarUrl, partnerName, showAvatar = true }: MessageBubbleProps) {
   const hasMedia = !!msg.media_url;
   const isAudio = msg.media_type?.startsWith("audio/") || msg.media_type === "audio";
   const isImage = isImageType(msg.media_type);
@@ -60,7 +66,24 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited }: Mess
 
   return (
     <div className={cn("group flex flex-col", isMine ? "items-end" : "items-start")}>
-      <div className={cn("flex items-center gap-1", isMine ? "flex-row" : "flex-row-reverse")}>
+      <div className={cn("flex items-end gap-1.5 w-full", isMine ? "flex-row justify-end" : "flex-row")}>
+        {!isMine && (
+          showAvatar ? (
+            partnerAvatarUrl ? (
+              <img
+                src={partnerAvatarUrl}
+                alt={partnerName || "partner"}
+                className="w-6 h-6 rounded-full object-cover shrink-0 mb-0.5"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center shrink-0 mb-0.5 text-[10px] font-bold text-foreground/70">
+                {(partnerName || "?").replace(/^@/, "").charAt(0).toUpperCase()}
+              </div>
+            )
+          ) : (
+            <div className="w-6 shrink-0" aria-hidden />
+          )
+        )}
         {isMine && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
