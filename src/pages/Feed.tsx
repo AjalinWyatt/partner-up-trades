@@ -699,19 +699,91 @@ const Feed = () => {
               </div>
             </div>
 
+            {/* REQUESTER card — for traders who need someone right now */}
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
-              {/* Available to Connect toggle */}
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/60 px-3 py-2.5">
+              {/* Centered pulse icon */}
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_28px_hsl(var(--primary)/0.35)]">
+                <Activity className="h-5 w-5 animate-pulse-dot" />
+              </div>
+              <h2 className="mt-3 text-center text-base font-semibold text-foreground">Want to connect right now?</h2>
+              <p className="mx-auto mt-1 max-w-[300px] text-center text-[12px] leading-5 text-muted-foreground">
+                Send a Pulse to traders online. First one to answer connects with you privately.
+              </p>
+
+              {/* Context chips — what's going on, so helpers know before accepting */}
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">What's going on? <span className="font-normal normal-case tracking-normal text-muted-foreground/70">(optional)</span></p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[
+                  "Bad Loss",
+                  "Revenge Trading",
+                  "Anxiety",
+                  "Need Perspective",
+                  "Lonely Journey",
+                  "Pre-Trade Check",
+                  "Just Need to Talk",
+                ].map((chip) => {
+                  const on = supportContext.includes(chip);
+                  return (
+                    <button
+                      key={chip}
+                      onClick={() =>
+                        setSupportContext((prev) =>
+                          prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
+                        )
+                      }
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all",
+                        on
+                          ? "border-primary bg-primary/15 text-foreground shadow-[0_0_14px_hsl(var(--primary)/0.25)]"
+                          : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {chip}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action buttons — Chat or Voice */}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    toast.success("Pulse sent — waiting for a trader to answer…");
+                    setSupportContext([]);
+                  }}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
+                >
+                  <MessageSquare className="h-4 w-4" /> Chat
+                </button>
+                <button
+                  onClick={() => {
+                    toast.success("Pulse sent — waiting for a trader to answer…");
+                    setSupportContext([]);
+                  }}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-primary/10"
+                >
+                  <Mic className="h-4 w-4 text-primary" /> Voice
+                </button>
+              </div>
+
+              <p className="mt-3 text-center text-[11px] leading-4 text-muted-foreground">
+                First trader to accept gets you. Others see "This Pulse has already been answered."
+              </p>
+            </div>
+
+            {/* HELPER card — for traders willing to be there for someone */}
+            <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+              <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={cn(
                       "h-2 w-2 rounded-full",
                       availableToConnect ? "bg-primary shadow-[0_0_10px_hsl(var(--primary))] animate-pulse-dot" : "bg-muted-foreground/40"
                     )} />
-                    <p className="text-[13px] font-semibold text-foreground">Available to Connect</p>
+                    <p className="text-[13px] font-semibold text-foreground">Available to Help</p>
                   </div>
                   <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
-                    {availableToConnect ? "You'll see Pulses from traders online now." : "Turn on to receive live Pulse requests."}
+                    {availableToConnect ? "You'll see Pulses from traders who need someone." : "Turn on to receive live Pulse requests."}
                   </p>
                 </div>
                 <button
@@ -720,7 +792,7 @@ const Feed = () => {
                   onClick={() => {
                     const next = !availableToConnect;
                     setAvailableToConnect(next);
-                    toast.success(next ? "You're online for Pulse." : "You're offline from Pulse.");
+                    toast.success(next ? "You're online to help." : "You're offline.");
                   }}
                   className={cn(
                     "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
@@ -734,102 +806,105 @@ const Feed = () => {
                 </button>
               </div>
 
-              {/* Centered pulse icon */}
-              <div className="mx-auto mt-5 flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_28px_hsl(var(--primary)/0.35)]">
-                <Activity className="h-5 w-5 animate-pulse-dot" />
-              </div>
-              <h2 className="mt-3 text-center text-base font-semibold text-foreground">Want to connect right now?</h2>
-              <p className="mx-auto mt-1 max-w-[300px] text-center text-[12px] leading-5 text-muted-foreground">
-                Send a Pulse to traders online. First one to answer connects with you privately.
-              </p>
-
-              {/* Action buttons */}
-              <div className="mt-4 grid gap-2">
-                <button
-                  onClick={() => toast.success("Pulse sent — waiting for a trader to answer…")}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
-                >
-                  <MessageSquare className="h-4 w-4" /> Chat
-                </button>
-                <button
-                  onClick={() => toast.success("Pulse sent — waiting for a trader to answer…")}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-primary/10"
-                >
-                  <Mic className="h-4 w-4 text-primary" /> Voice
-                </button>
-                <button
-                  onClick={() => toast.success("Pulse sent — waiting for a trader to answer…")}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-secondary px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
-                >
-                  <Coffee className="h-4 w-4 text-primary" /> Quick Reset
-                </button>
-              </div>
-
-              {/* How it works */}
-              <p className="mt-4 text-center text-[11px] leading-4 text-muted-foreground">
-                First trader to accept gets you. Others see "This Pulse has already been answered."
-              </p>
-            </div>
-
-            {/* Incoming requests — only visible when Available to Connect is on */}
-            {availableToConnect && (
-              <div className="rounded-2xl border border-primary/30 bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--primary)/0.12)]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))] animate-pulse-dot" />
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Incoming Pulses</p>
+              {availableToConnect && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Incoming Pulses</p>
+                    <span className="text-[11px] font-medium text-muted-foreground">{incomingRequests.length} waiting</span>
                   </div>
-                  <span className="text-[11px] font-medium text-muted-foreground">{incomingRequests.length} waiting</span>
-                </div>
 
-                {incomingRequests.length === 0 ? (
-                  <p className="mt-3 text-center text-[12px] leading-5 text-muted-foreground">
-                    All quiet for now. You'll see Pulses here as traders reach out.
+                  {incomingRequests.length === 0 ? (
+                    <p className="mt-3 text-center text-[12px] leading-5 text-muted-foreground">
+                      All quiet for now. You'll see Pulses here as traders reach out.
+                    </p>
+                  ) : (
+                    <ul className="mt-3 space-y-2">
+                      {incomingRequests.map((req) => {
+                        const Icon = req.type === "Chat" ? MessageSquare : Mic;
+                        return (
+                          <li
+                            key={req.id}
+                            className="rounded-xl border border-border bg-secondary/60 px-3 py-3"
+                          >
+                            <div className="flex items-start gap-3">
+                              <button
+                                onClick={() => navigate(`/profile/${req.userId}`)}
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-[11px] font-semibold text-foreground"
+                                aria-label={`View ${req.name}'s profile`}
+                              >
+                                {req.avatarUrl ? (
+                                  <img src={req.avatarUrl} alt={req.name} className="h-full w-full rounded-full object-cover" />
+                                ) : (
+                                  getInitials(req.name)
+                                )}
+                              </button>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => navigate(`/profile/${req.userId}`)}
+                                    className="truncate text-[13px] font-semibold text-foreground hover:opacity-80"
+                                  >
+                                    {req.name}
+                                  </button>
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                    <Icon className="h-3 w-3" /> {req.type}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">· {req.ago}</span>
+                                </div>
+                                {req.context.length > 0 && (
+                                  <div className="mt-1.5 flex flex-wrap gap-1">
+                                    {req.context.map((c) => (
+                                      <span
+                                        key={c}
+                                        className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-foreground"
+                                      >
+                                        {c}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                {req.note && (
+                                  <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">"{req.note}"</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 flex items-center gap-1.5">
+                              <button
+                                onClick={() => navigate(`/profile/${req.userId}`)}
+                                className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                              >
+                                View profile
+                              </button>
+                              <div className="ml-auto flex items-center gap-1.5">
+                                <button
+                                  onClick={() => setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id))}
+                                  className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                                >
+                                  Pass
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                    toast.success(`Connected — say hi to ${req.name}.`);
+                                  }}
+                                  className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.35)]"
+                                >
+                                  Accept
+                                </button>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  <p className="mt-3 text-center text-[10px] leading-4 text-muted-foreground">
+                    First to accept connects. Others see "This Pulse has already been answered."
                   </p>
-                ) : (
-                  <ul className="mt-3 space-y-2">
-                    {incomingRequests.map((req) => {
-                      const Icon = req.type === "Chat" ? MessageSquare : req.type === "Voice" ? Mic : Coffee;
-                      return (
-                        <li
-                          key={req.id}
-                          className="flex items-center gap-3 rounded-xl border border-border bg-secondary/60 px-3 py-2.5"
-                        >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-semibold text-foreground">A trader would like to connect right now.</p>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">{req.type} · {req.ago} ago</p>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            <button
-                              onClick={() => {
-                                setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
-                                toast.success(`Connected — say hi to ${req.name}.`);
-                              }}
-                              className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.35)]"
-                            >
-                              Accept
-                            </button>
-                            <button
-                              onClick={() => setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id))}
-                              className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
-                            >
-                              Pass
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-
-                <p className="mt-3 text-center text-[10px] leading-4 text-muted-foreground">
-                  First to accept connects. Others see "This Pulse has already been answered."
-                </p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         ) : visiblePosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
