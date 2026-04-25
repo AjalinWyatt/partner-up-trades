@@ -94,8 +94,8 @@ const Feed = () => {
   const [supportContext, setSupportContext] = useState<string[]>([]);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
   const [insightFor, setInsightFor] = useState<string | null>(null);
-  // Mock data for the Pulse peer-to-peer demo (online count + incoming requests).
-  const onlineCount = 247;
+  // Live count of registered traders. No mock data.
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [incomingRequests, setIncomingRequests] = useState<
     {
       id: string;
@@ -109,42 +109,7 @@ const Feed = () => {
       ago: string;
       insight: { experience: string; markets: string[]; style: string; bio: string };
     }[]
-  >([
-    {
-      id: "r1",
-      userId: "demo-maya",
-      name: "Maya R.",
-      username: "@mayatrades",
-      avatarUrl: null,
-      type: "Chat",
-      context: ["Bad Loss", "Need Perspective"],
-      note: "Took a -2R hit on EURUSD, want a sanity check.",
-      ago: "12s",
-      insight: {
-        experience: "2 yrs · Intermediate",
-        markets: ["Forex", "Indices"],
-        style: "Day trader · London session",
-        bio: "Discretionary price action. Working on impulse control after losses.",
-      },
-    },
-    {
-      id: "r2",
-      userId: "demo-devon",
-      name: "Devon K.",
-      username: "@devonfx",
-      avatarUrl: null,
-      type: "Voice",
-      context: ["Pre-Trade Check"],
-      note: "About to size up — 5 min gut check?",
-      ago: "47s",
-      insight: {
-        experience: "4 yrs · Advanced",
-        markets: ["Futures"],
-        style: "Scalper · NY open",
-        bio: "ES/NQ. Strict daily loss limit. Looking for a reality check before sizing up.",
-      },
-    },
-  ]);
+  >([]);
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
@@ -476,6 +441,18 @@ const Feed = () => {
     if (postToShare) loadShareTargets();
   }, [postToShare, loadShareTargets]);
 
+  // Fetch real trader count for the Pulse globe (no mock data).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
+      if (!cancelled) setOnlineCount(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const filteredShareTargets = useMemo(() => {
     const query = shareSearch.trim().toLowerCase();
     if (!query) return shareTargets;
@@ -708,22 +685,28 @@ const Feed = () => {
               <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
             </div>
 
-            {/* Centered globe with live online count */}
+            {/* Centered globe with live trader count below it */}
             <div className="flex flex-col items-center justify-center py-2">
               <div className="relative">
+                {/* soft pulsing glow ring */}
+                <span
+                  aria-hidden
+                  className="absolute inset-0 rounded-full bg-primary/20 blur-2xl animate-pulse-dot"
+                />
                 <img
                   src={pulseGlobe}
-                  alt="Traders online globe"
-                  className="h-28 w-28 opacity-90 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
+                  alt="Live trader globe"
+                  className="relative h-24 w-24 opacity-95 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)] animate-globe-float"
                 />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[20px] font-bold leading-none text-foreground drop-shadow-[0_0_8px_hsl(var(--background))]">
-                    {onlineCount.toLocaleString()}
-                  </span>
-                  <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-primary">
-                    Online
-                  </span>
-                </div>
+              </div>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse-dot" />
+                <span className="text-[15px] font-bold leading-none text-foreground tabular-nums">
+                  {onlineCount === null ? "—" : onlineCount.toLocaleString()}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                  {onlineCount === 1 ? "Trader" : "Traders"}
+                </span>
               </div>
             </div>
 

@@ -131,3 +131,12 @@
 .animate-pulse-dot {
   animation: pulse-dot 2s ease-in-out infinite;
 }
+
+@keyframes globe-float {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 18px hsl(var(--primary) / 0.45)); }
+  50%      { transform: translateY(-3px) scale(1.03); filter: drop-shadow(0 0 28px hsl(var(--primary) / 0.7)); }
+}
+
+.animate-globe-float {
+  animation: globe-float 3.4s ease-in-out infinite;
+}
