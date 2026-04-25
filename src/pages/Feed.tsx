@@ -91,6 +91,8 @@ const Feed = () => {
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
   const [availableToConnect, setAvailableToConnect] = useState(false);
   const [supportContext, setSupportContext] = useState<string[]>([]);
+  const [needHelpOpen, setNeedHelpOpen] = useState(false);
+  const [insightFor, setInsightFor] = useState<string | null>(null);
   // Mock data for the Pulse peer-to-peer demo (online count + incoming requests).
   const onlineCount = 247;
   const [incomingRequests, setIncomingRequests] = useState<
@@ -104,6 +106,7 @@ const Feed = () => {
       context: string[];
       note?: string;
       ago: string;
+      insight: { experience: string; markets: string[]; style: string; bio: string };
     }[]
   >([
     {
@@ -116,6 +119,12 @@ const Feed = () => {
       context: ["Bad Loss", "Need Perspective"],
       note: "Took a -2R hit on EURUSD, want a sanity check.",
       ago: "12s",
+      insight: {
+        experience: "2 yrs · Intermediate",
+        markets: ["Forex", "Indices"],
+        style: "Day trader · London session",
+        bio: "Discretionary price action. Working on impulse control after losses.",
+      },
     },
     {
       id: "r2",
@@ -127,6 +136,12 @@ const Feed = () => {
       context: ["Pre-Trade Check"],
       note: "About to size up — 5 min gut check?",
       ago: "47s",
+      insight: {
+        experience: "4 yrs · Advanced",
+        markets: ["Futures"],
+        style: "Scalper · NY open",
+        bio: "ES/NQ. Strict daily loss limit. Looking for a reality check before sizing up.",
+      },
     },
   ]);
 
@@ -701,24 +716,41 @@ const Feed = () => {
 
             {/* REQUESTER card — for traders who need someone right now */}
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
-              <div className="mb-3 flex items-center justify-center gap-2">
-                <span className="h-px flex-1 bg-border" />
-                <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Need Help
-                </span>
-                <span className="h-px flex-1 bg-border" />
+              {/* Header row with toggle */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.3)]">
+                    <Activity className="h-4 w-4 animate-pulse-dot" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Need Help</p>
+                    <p className="text-[13px] font-semibold text-foreground">I need someone right now</p>
+                  </div>
+                </div>
+                <button
+                  role="switch"
+                  aria-checked={needHelpOpen}
+                  onClick={() => setNeedHelpOpen((v) => !v)}
+                  className={cn(
+                    "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
+                    needHelpOpen ? "border-primary bg-primary/30" : "border-border bg-secondary"
+                  )}
+                >
+                  <span className={cn(
+                    "absolute top-1/2 left-0.5 h-4 w-4 -translate-y-1/2 rounded-full transition-transform",
+                    needHelpOpen ? "translate-x-[22px] bg-primary shadow-[0_0_10px_hsl(var(--primary))]" : "translate-x-0 bg-foreground"
+                  )} />
+                </button>
               </div>
-              {/* Centered pulse icon */}
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_28px_hsl(var(--primary)/0.35)]">
-                <Activity className="h-5 w-5 animate-pulse-dot" />
-              </div>
-              <h2 className="mt-3 text-center text-base font-semibold text-foreground">Want to connect right now?</h2>
-              <p className="mx-auto mt-1 max-w-[300px] text-center text-[12px] leading-5 text-muted-foreground">
-                Send a Pulse to traders online. First one to answer connects with you privately.
-              </p>
 
-              {/* Context chips — what's going on, so helpers know before accepting */}
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {needHelpOpen && (
+                <>
+                  <p className="mt-3 text-[12px] leading-5 text-muted-foreground">
+                    Send a Pulse to traders online. First one to answer connects with you privately.
+                  </p>
+
+                  {/* Context chips — what's going on, so helpers know before accepting */}
+                  <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 What's going on? <span className="font-normal normal-case tracking-normal text-destructive/80">(required)</span>
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -753,8 +785,8 @@ const Feed = () => {
                 })}
               </div>
 
-              {/* Action buttons — Chat or Voice */}
-              <div className="mt-4 grid grid-cols-2 gap-2">
+                  {/* Action buttons — Chat or Voice */}
+                  <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => {
                     if (supportContext.length === 0) {
@@ -763,6 +795,7 @@ const Feed = () => {
                     }
                     toast.success("Pulse sent — waiting for a trader to answer…");
                     setSupportContext([]);
+                        setNeedHelpOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
                 >
@@ -776,6 +809,7 @@ const Feed = () => {
                     }
                     toast.success("Pulse sent — waiting for a trader to answer…");
                     setSupportContext([]);
+                        setNeedHelpOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-primary/10"
                 >
@@ -783,9 +817,11 @@ const Feed = () => {
                 </button>
               </div>
 
-              <p className="mt-3 text-center text-[11px] leading-4 text-muted-foreground">
-                First trader to accept gets you. Others see "This Pulse has already been answered."
-              </p>
+                  <p className="mt-3 text-center text-[11px] leading-4 text-muted-foreground">
+                    First trader to accept gets you. Others see "This Pulse has already been answered."
+                  </p>
+                </>
+              )}
             </div>
 
             {/* HELPER card — for traders willing to be there for someone */}
@@ -852,9 +888,9 @@ const Feed = () => {
                           >
                             <div className="flex items-start gap-3">
                               <button
-                                onClick={() => navigate(`/profile/${req.userId}`)}
+                                onClick={() => setInsightFor(insightFor === req.id ? null : req.id)}
                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-[11px] font-semibold text-foreground"
-                                aria-label={`View ${req.name}'s profile`}
+                                aria-label={`See ${req.name}'s insight`}
                               >
                                 {req.avatarUrl ? (
                                   <img src={req.avatarUrl} alt={req.name} className="h-full w-full rounded-full object-cover" />
@@ -865,7 +901,7 @@ const Feed = () => {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
                                   <button
-                                    onClick={() => navigate(`/profile/${req.userId}`)}
+                                    onClick={() => setInsightFor(insightFor === req.id ? null : req.id)}
                                     className="truncate text-[13px] font-semibold text-foreground hover:opacity-80"
                                   >
                                     {req.name}
@@ -892,16 +928,54 @@ const Feed = () => {
                                 )}
                               </div>
                             </div>
+
+                            {/* Inline insight panel — stays inside Pulse */}
+                            {insightFor === req.id && (
+                              <div className="mt-3 rounded-xl border border-primary/30 bg-card px-3 py-3 shadow-[0_0_18px_hsl(var(--primary)/0.12)]">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Trader insight</p>
+                                  <button
+                                    onClick={() => setInsightFor(null)}
+                                    aria-label="Close insight"
+                                    className="-mt-1 -mr-1 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <dl className="mt-2 space-y-1.5 text-[11px] leading-4">
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">Experience</dt>
+                                    <dd className="text-foreground">{req.insight.experience}</dd>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">Markets</dt>
+                                    <dd className="text-foreground">{req.insight.markets.join(", ")}</dd>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">Style</dt>
+                                    <dd className="text-foreground">{req.insight.style}</dd>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">About</dt>
+                                    <dd className="text-muted-foreground">{req.insight.bio}</dd>
+                                  </div>
+                                </dl>
+                              </div>
+                            )}
+
                             <div className="mt-3 flex items-center gap-1.5">
                               <button
-                                onClick={() => navigate(`/profile/${req.userId}`)}
+                                onClick={() => setInsightFor(insightFor === req.id ? null : req.id)}
                                 className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                               >
-                                View profile
+                                {insightFor === req.id ? "Hide insight" : "Insight"}
                               </button>
                               <div className="ml-auto flex items-center gap-1.5">
                                 <button
-                                  onClick={() => setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id))}
+                                  onClick={() => {
+                                    setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                    if (insightFor === req.id) setInsightFor(null);
+                                  }}
                                   className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                                 >
                                   Pass
@@ -909,7 +983,9 @@ const Feed = () => {
                                 <button
                                   onClick={() => {
                                     setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                    if (insightFor === req.id) setInsightFor(null);
                                     toast.success(`Connected — say hi to ${req.name}.`);
+                                    navigate("/messages");
                                   }}
                                   className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.35)]"
                                 >
