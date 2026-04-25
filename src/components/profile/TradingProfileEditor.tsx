@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import PillSelect from "@/components/onboarding/PillSelect";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 
 export interface ProfileEditorDraft {
   gender: string;
@@ -99,10 +100,31 @@ const TradingProfileEditor = ({ profileDraft, setProfileDraft, tradingDraft, set
               onChange={(value) => setProfileValue("gender", value)}
             />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <EditorField label="City" value={profileDraft.city} onChange={(value) => setProfileValue("city", value)} placeholder="City" />
-              <EditorField label="State / Region" value={profileDraft.state} onChange={(value) => setProfileValue("state", value)} placeholder="State / Region" />
+              <EditorLocationField
+                label="City"
+                kind="city"
+                value={profileDraft.city}
+                country={profileDraft.country}
+                state={profileDraft.state}
+                onChange={(value) => setProfileValue("city", value)}
+                placeholder="City"
+              />
+              <EditorLocationField
+                label="State / Region"
+                kind="state"
+                value={profileDraft.state}
+                country={profileDraft.country}
+                onChange={(value) => setProfileValue("state", value)}
+                placeholder="State / Region"
+              />
             </div>
-            <EditorField label="Country" value={profileDraft.country} onChange={(value) => setProfileValue("country", value)} placeholder="Country" />
+            <EditorLocationField
+              label="Country"
+              kind="country"
+              value={profileDraft.country}
+              onChange={(value) => setProfileValue("country", value)}
+              placeholder="Country"
+            />
           </AccordionContent>
         </AccordionItem>
 
