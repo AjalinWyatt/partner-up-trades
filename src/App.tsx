@@ -21,6 +21,8 @@ import ViewProfile from "./pages/ViewProfile";
 import TradingLog from "./pages/TradingLog";
 import Saved from "./pages/Saved";
 import MatchProfile from "./pages/MatchProfile";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,8 @@ const App = () => (
           <Route path="/trading-log" element={<TradingLog />} />
           <Route path="/saved" element={<Saved />} />
           <Route path="/match/:userId" element={<MatchProfile />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
