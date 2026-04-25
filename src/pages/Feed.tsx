@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight, Activity, MessageSquare, Mic, Coffee } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight, Activity, MessageSquare, Mic, Coffee } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
@@ -1004,9 +1004,7 @@ const Feed = () => {
           </div>
         ) : visiblePosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-border bg-secondary text-primary">
-              <Globe className="h-6 w-6" />
-            </div>
+            <img src={pulseGlobe} alt="" aria-hidden="true" className="h-16 w-16 opacity-90 drop-shadow-[0_0_18px_hsl(var(--primary)/0.45)]" />
             <p className="mt-4 text-sm font-semibold text-foreground">No {selectedFeedFilter === "All" ? "posts" : `${selectedFeedFilter} posts`} yet</p>
             <p className="mt-1 max-w-[280px] text-xs leading-5 text-muted-foreground">Post a chart, idea, meme, question, or recap to start shaping the conversation.</p>
             <button
