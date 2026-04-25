@@ -38,6 +38,30 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_access_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          key_hash: string
+          label: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key_hash: string
+          label?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key_hash?: string
+          label?: string | null
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_id: string
@@ -998,18 +1022,27 @@ export type Database = {
           email: string
           id: string
           market: string
+          markets: string[]
+          phone: string | null
+          wants_beta: boolean
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
           market: string
+          markets?: string[]
+          phone?: string | null
+          wants_beta?: boolean
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
           market?: string
+          markets?: string[]
+          phone?: string | null
+          wants_beta?: boolean
         }
         Relationships: []
       }
@@ -1050,6 +1083,11 @@ export type Database = {
           read_ct: number
         }[]
       }
+      set_beta_key: {
+        Args: { new_key: string; new_label?: string }
+        Returns: undefined
+      }
+      verify_beta_key: { Args: { submitted_key: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
