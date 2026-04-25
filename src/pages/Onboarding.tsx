@@ -86,10 +86,33 @@ const Onboarding = () => {
   const [country, setCountry] = useState("");
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [locating, setLocating] = useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [locationDenied, setLocationDenied] = useState(false);
 
-  const detectLocation = useCallback(() => {
+  // Best-effort IP-based fallback when the user denies geolocation
+  const fillFromIP = useCallback(async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      if (!res.ok) throw new Error("ip lookup failed");
+      const data = await res.json();
+      let filled = false;
+      if (data?.city && !city) { setCity(data.city); filled = true; }
+      if (data?.region && !state) { setState(data.region); filled = true; }
+      if (data?.country_name && !country) { setCountry(data.country_name); filled = true; }
+      if (filled) {
+        toast.success("We pre-filled your location from your network — please double-check it");
+      } else {
+        toast.info("Please enter your city, state, and country manually");
+      }
+    } catch {
+      toast.info("Please enter your city, state, and country manually");
+    }
+  }, [city, state, country]);
+
+  const runGeolocation = useCallback(() => {
     if (!("geolocation" in navigator)) {
-      toast.error("Geolocation not supported on this device");
+      toast.error("Geolocation isn't supported on this device — please fill in manually");
+      fillFromIP();
       return;
     }
     setLocating(true);
@@ -105,20 +128,55 @@ const Onboarding = () => {
           setCity(a.city || a.town || a.village || a.hamlet || a.suburb || "");
           setState(a.state || a.region || "");
           setCountry(a.country || "");
+          setLocationDenied(false);
           toast.success("Location detected - feel free to edit");
         } catch {
-          toast.error("Couldn't fetch your location");
+          toast.error("Couldn't fetch your location — pre-filling from your network instead");
+          fillFromIP();
         } finally {
           setLocating(false);
         }
       },
       (err) => {
         setLocating(false);
-        toast.error(err.code === 1 ? "Location permission denied" : "Couldn't get your location");
+        if (err.code === 1) {
+          setLocationDenied(true);
+          toast.error("Location permission denied — we'll help you fill it in instead", {
+            description: "You can enable it later in your browser settings.",
+          });
+          fillFromIP();
+        } else {
+          toast.error("Couldn't get your location — pre-filling from your network instead");
+          fillFromIP();
+        }
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
     );
-  }, []);
+  }, [fillFromIP]);
+
+  // Friendly explainer first; on confirm, trigger the browser permission prompt.
+  const detectLocation = useCallback(async () => {
+    try {
+      // If permission already granted, skip the explainer and go straight in.
+      // @ts-expect-error - permissions API not in all TS lib versions
+      const status = await navigator.permissions?.query?.({ name: "geolocation" });
+      if (status?.state === "granted") {
+        runGeolocation();
+        return;
+      }
+      if (status?.state === "denied") {
+        setLocationDenied(true);
+        toast.error("Location is blocked in your browser — we'll help you fill it in", {
+          description: "Enable location in your browser site settings to auto-detect.",
+        });
+        fillFromIP();
+        return;
+      }
+    } catch {
+      // permissions API unsupported — fall through to explainer
+    }
+    setShowLocationPrompt(true);
+  }, [runGeolocation, fillFromIP]);
 
   const toggle = useCallback((arr: string[], setArr: React.Dispatch<React.SetStateAction<string[]>>) => {
     return (val: string) => {
