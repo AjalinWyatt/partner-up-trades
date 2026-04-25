@@ -697,8 +697,8 @@ const Feed = () => {
                   )}
                 >
                   <span className={cn(
-                    "absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full transition-transform",
-                    availableToConnect ? "translate-x-[22px] bg-primary shadow-[0_0_10px_hsl(var(--primary))]" : "translate-x-1 bg-foreground"
+                    "absolute top-1/2 left-0.5 h-4 w-4 -translate-y-1/2 rounded-full transition-transform",
+                    availableToConnect ? "translate-x-[22px] bg-primary shadow-[0_0_10px_hsl(var(--primary))]" : "translate-x-0 bg-foreground"
                   )} />
                 </button>
               </div>
