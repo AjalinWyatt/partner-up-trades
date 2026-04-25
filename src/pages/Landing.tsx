@@ -364,11 +364,15 @@ const MatchProfileMock = () => {
   const pct = 94;
   const dasharray = `${(pct / 100) * 100.53} 100.53`;
   const reasons = [
-    "Both trade Futures & Options",
-    "Overlap on London + New York sessions",
-    "Same trading style: Day + Swing",
-    "Both at 'Consistent & growing' level",
-    "Goal alignment: discipline + accountability",
+    "Both trade Futures",
+    "Shared strategy: Smart Money/ICT, Order Flow",
+    "Active in the same Asian session",
+    "Common timeframe: 4H-Daily, 1-30m, 1H-2H",
+    "Trade the same instruments: ES, NQ",
+    "Same experience level: Advanced",
+    "Same goal: Go full-time",
+    "Relate on: Revenge trading, Moving stop loss",
+    "Shared interests: Reading",
   ];
   return (
     <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
@@ -383,15 +387,18 @@ const MatchProfileMock = () => {
             <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="2" />
             <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeDasharray={dasharray} />
           </svg>
-          <div className="absolute inset-[6px] rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-            <span className="text-2xl font-black text-foreground">MC</span>
-          </div>
+          <img src={mockMarcus} alt="Marcus Chen" className="absolute inset-[6px] rounded-full object-cover" />
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[18px] font-black text-foreground">Marcus Chen</span>
           <Gem className="w-4 h-4 text-accent" />
         </div>
         <div className="text-[12px] text-muted-foreground">28 · Singapore</div>
+        <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center px-4">
+          <span className="px-2.5 py-0.5 rounded-full bg-accent/15 border border-accent/40 text-[10px] font-bold text-accent">Singapore</span>
+          <span className="px-2.5 py-0.5 rounded-full border border-border bg-secondary text-[10px] font-semibold text-foreground">Male</span>
+          <span className="px-2.5 py-0.5 rounded-full border border-border bg-secondary text-[10px] font-semibold text-foreground">Futures Trader</span>
+        </div>
         <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 border border-accent/40">
           <Zap className="w-3 h-3 text-accent" fill="currentColor" />
           <span className="text-[12px] font-black text-accent">{pct}% Match</span>
@@ -399,11 +406,11 @@ const MatchProfileMock = () => {
       </div>
 
       <div className="px-5 pb-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent mb-2">Why you match</div>
+        <div className="text-[13px] font-black text-foreground mb-2">Why We Match</div>
         <div className="space-y-1.5">
           {reasons.map((r, i) => (
-            <div key={i} className="flex items-start gap-2 text-[12px] text-foreground/90">
-              <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+            <div key={i} className="flex items-start gap-2 text-[11px] text-foreground/90">
+              <span className="w-1 h-1 rounded-full bg-accent shrink-0 mt-1.5" />
               <span>{r}</span>
             </div>
           ))}
@@ -416,12 +423,12 @@ const MatchProfileMock = () => {
           <span className="text-[9px] text-muted-foreground">Pass</span>
         </div>
         <div className="flex flex-col items-center gap-1">
-          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center"><Zap className="w-5 h-5 text-accent-foreground" fill="currentColor" /></div>
-          <span className="text-[9px] text-foreground font-bold">Connect</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
           <div className="w-10 h-10 rounded-full border border-border bg-secondary flex items-center justify-center"><Bookmark className="w-4 h-4 text-muted-foreground" /></div>
           <span className="text-[9px] text-muted-foreground">Save</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center"><ChevronsUp className="w-5 h-5 text-accent-foreground" /></div>
+          <span className="text-[9px] text-foreground font-bold">Send Request</span>
         </div>
       </div>
     </div>
