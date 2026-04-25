@@ -140,3 +140,13 @@
 .animate-globe-float {
   animation: globe-float 3.4s ease-in-out infinite;
 }
+
+@keyframes globe-drift {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 30px hsl(var(--primary) / 0.35)); }
+  50%      { transform: translateY(-8px) scale(1.012); filter: drop-shadow(0 0 50px hsl(var(--primary) / 0.55)); }
+}
+
+.animate-globe-drift {
+  animation: globe-drift 7s ease-in-out infinite;
+  will-change: transform, filter;
+}

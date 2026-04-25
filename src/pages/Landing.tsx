@@ -299,7 +299,7 @@ const PulseMock = () => {
       </div>
       {/* Globe + online count */}
       <div className="flex flex-col items-center pt-4 pb-2">
-        <img src={authGlobe} alt="" className="w-[120px] h-[120px] object-contain" />
+        <img src={authGlobe} alt="" className="w-[120px] h-[120px] object-contain animate-globe-float motion-reduce:animate-none" />
         <div className="mt-1 flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           <span className="text-[14px] font-black text-foreground">16</span>
@@ -355,7 +355,7 @@ const DiscoverMock = () => {
         <img src={mockNilaja} alt="" className="w-9 h-9 rounded-full object-cover" />
       </div>
       <div className="py-3 flex items-center justify-center">
-        <img src={authGlobe} alt="" className="w-[140px] h-[140px] object-contain" />
+        <img src={authGlobe} alt="" className="w-[140px] h-[140px] object-contain animate-globe-float motion-reduce:animate-none" />
       </div>
       <h2 className="px-5 text-[16px] font-black text-foreground">Some curated matches for you</h2>
       <div className="px-5 pt-3 pb-5 space-y-3">
@@ -618,7 +618,7 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative flex items-center justify-center">
-              <img src={authGlobe} alt="TradersWorld globe" className="relative w-full max-w-[480px] object-contain" />
+              <img src={authGlobe} alt="TradersWorld globe" className="relative w-full max-w-[480px] object-contain animate-globe-drift motion-reduce:animate-none" />
             </div>
           </div>
         </div>
