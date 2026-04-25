@@ -1023,6 +1023,7 @@ export type Database = {
           id: string
           market: string
           markets: string[]
+          name: string | null
           phone: string | null
           wants_beta: boolean
         }
@@ -1032,6 +1033,7 @@ export type Database = {
           id?: string
           market: string
           markets?: string[]
+          name?: string | null
           phone?: string | null
           wants_beta?: boolean
         }
@@ -1041,6 +1043,7 @@ export type Database = {
           id?: string
           market?: string
           markets?: string[]
+          name?: string | null
           phone?: string | null
           wants_beta?: boolean
         }
