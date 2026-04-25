@@ -888,9 +888,9 @@ const Feed = () => {
                           >
                             <div className="flex items-start gap-3">
                               <button
-                                onClick={() => navigate(`/profile/${req.userId}`)}
+                                onClick={() => setInsightFor(insightFor === req.id ? null : req.id)}
                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-[11px] font-semibold text-foreground"
-                                aria-label={`View ${req.name}'s profile`}
+                                aria-label={`See ${req.name}'s insight`}
                               >
                                 {req.avatarUrl ? (
                                   <img src={req.avatarUrl} alt={req.name} className="h-full w-full rounded-full object-cover" />
@@ -901,7 +901,7 @@ const Feed = () => {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
                                   <button
-                                    onClick={() => navigate(`/profile/${req.userId}`)}
+                                    onClick={() => setInsightFor(insightFor === req.id ? null : req.id)}
                                     className="truncate text-[13px] font-semibold text-foreground hover:opacity-80"
                                   >
                                     {req.name}
@@ -928,16 +928,54 @@ const Feed = () => {
                                 )}
                               </div>
                             </div>
+
+                            {/* Inline insight panel — stays inside Pulse */}
+                            {insightFor === req.id && (
+                              <div className="mt-3 rounded-xl border border-primary/30 bg-card px-3 py-3 shadow-[0_0_18px_hsl(var(--primary)/0.12)]">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Trader insight</p>
+                                  <button
+                                    onClick={() => setInsightFor(null)}
+                                    aria-label="Close insight"
+                                    className="-mt-1 -mr-1 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <dl className="mt-2 space-y-1.5 text-[11px] leading-4">
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">Experience</dt>
+                                    <dd className="text-foreground">{req.insight.experience}</dd>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">Markets</dt>
+                                    <dd className="text-foreground">{req.insight.markets.join(", ")}</dd>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">Style</dt>
+                                    <dd className="text-foreground">{req.insight.style}</dd>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <dt className="w-20 shrink-0 text-muted-foreground">About</dt>
+                                    <dd className="text-muted-foreground">{req.insight.bio}</dd>
+                                  </div>
+                                </dl>
+                              </div>
+                            )}
+
                             <div className="mt-3 flex items-center gap-1.5">
                               <button
-                                onClick={() => navigate(`/profile/${req.userId}`)}
+                                onClick={() => setInsightFor(insightFor === req.id ? null : req.id)}
                                 className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                               >
-                                View profile
+                                {insightFor === req.id ? "Hide insight" : "Insight"}
                               </button>
                               <div className="ml-auto flex items-center gap-1.5">
                                 <button
-                                  onClick={() => setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id))}
+                                  onClick={() => {
+                                    setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                    if (insightFor === req.id) setInsightFor(null);
+                                  }}
                                   className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                                 >
                                   Pass
@@ -945,7 +983,9 @@ const Feed = () => {
                                 <button
                                   onClick={() => {
                                     setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                    if (insightFor === req.id) setInsightFor(null);
                                     toast.success(`Connected — say hi to ${req.name}.`);
+                                    navigate("/messages");
                                   }}
                                   className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.35)]"
                                 >
