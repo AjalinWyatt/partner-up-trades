@@ -10,9 +10,9 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
-// Use the lightweight, preloaded PNG (≈270KB) instead of the 3MB SVG
+// Use the lightweight, preloaded PNG instead of the 3MB SVG
 // so the hero globe is already in cache before React mounts.
-const authGlobe = "/auth-globe.png";
+const authGlobe = "/auth-globe.png?v=3";
 import mockMarcus from "@/assets/mock-marcus.jpg";
 import mockAaliyah from "@/assets/mock-aaliyah.jpg";
 import mockDiego from "@/assets/mock-diego.jpg";
