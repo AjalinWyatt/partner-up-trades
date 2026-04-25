@@ -787,7 +787,7 @@ const Landing = () => {
           <div className="space-y-24">
             {/* FEED */}
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="order-2 lg:order-1">
+              <div className="order-1 lg:order-1">
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Feed</div>
                 <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">A community feed without the noise.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
@@ -799,16 +799,16 @@ const Landing = () => {
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Win 🟢 / Loss 🔴 / Break ⚪ tags built in</li>
                 </ul>
               </div>
-              <div className="order-1 lg:order-2"><FeedMock /></div>
+              <div className="order-2 lg:order-2"><FeedMock /></div>
             </div>
 
             {/* PULSE */}
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 items-start">
+              <div className="order-2 lg:order-1 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 items-start">
                 <PulseMock />
                 <PulseHelperMock />
               </div>
-              <div>
+              <div className="order-1 lg:order-2">
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Pulse</div>
                 <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Async chat + voice notes with your partner.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
