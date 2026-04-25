@@ -103,7 +103,6 @@ const Feed = () => {
       name: string;
       username: string;
       avatarUrl: string | null;
-      type: "Chat" | "Voice";
       context: string[];
       note?: string;
       ago: string;
