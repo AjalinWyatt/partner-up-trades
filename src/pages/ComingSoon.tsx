@@ -493,8 +493,12 @@ const ComingSoon = () => {
           <div className="border-t border-white/[0.06] pt-6 flex items-center justify-between">
             <span className="text-xs text-white/25">© {new Date().getFullYear()} Traders World. All rights reserved.</span>
             <div className="flex gap-3">
-              {[Instagram, Youtube, XIcon].map((Icon, i) => (
-                <a key={i} href="#" className="w-[34px] h-[34px] rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+              {[
+                { Icon: Instagram, href: "https://www.instagram.com/tradersworldapp/", label: "Instagram" },
+                { Icon: Youtube, href: "https://www.youtube.com/@womentradetoo", label: "YouTube" },
+                { Icon: XIcon, href: "https://x.com/TradersWorldApp", label: "X (Twitter)" },
+              ].map(({ Icon, href, label }) => (
+                <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label} className="w-[34px] h-[34px] rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
                   <Icon className="w-3.5 h-3.5 text-white/50" />
                 </a>
               ))}
