@@ -12,6 +12,7 @@ import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
 import Wordmark from "@/components/Wordmark";
+import pulseGlobe from "@/assets/pulse-globe.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -711,7 +712,7 @@ const Feed = () => {
             <div className="flex flex-col items-center justify-center py-2">
               <div className="relative">
                 <img
-                  src="/src/assets/pulse-globe.svg"
+                  src={pulseGlobe}
                   alt="Traders online globe"
                   className="h-28 w-28 opacity-90 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
                 />
