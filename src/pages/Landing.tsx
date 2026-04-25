@@ -618,10 +618,10 @@ const Landing = () => {
                 <UserCheck className="w-3 h-3" /> What we are
               </div>
               <h3 className="text-[26px] sm:text-[32px] font-black text-foreground mb-3 tracking-tight leading-tight">
-                One real human. One real partnership. <br/><span className="text-accent">That's it.</span>
+                Real Human. Real Partnership. Real Accountability. <br/><span className="text-accent">= Real Change.</span>
               </h3>
               <p className="text-muted-foreground text-[15px] max-w-[640px] mx-auto leading-relaxed">
-                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. You hold each other accountable. You journal together. You show up. No gurus. No bots. No bullshit.
+                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. Build one real partnership — or a few — with people who actually show up. You hold each other accountable. You journal together. No gurus. No bots. No bullshit.
               </p>
             </div>
           </div>
