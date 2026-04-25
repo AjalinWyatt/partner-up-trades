@@ -229,4 +229,34 @@ const EditorField = ({ label, value, onChange, placeholder }: { label: string; v
   </div>
 );
 
+const EditorLocationField = ({
+  label,
+  kind,
+  value,
+  onChange,
+  placeholder,
+  country,
+  state,
+}: {
+  label: string;
+  kind: "country" | "state" | "city";
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  country?: string;
+  state?: string;
+}) => (
+  <div>
+    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+    <LocationAutocomplete
+      kind={kind}
+      value={value}
+      onChange={onChange}
+      country={country}
+      state={state}
+      placeholder={placeholder}
+    />
+  </div>
+);
+
 export default TradingProfileEditor;
