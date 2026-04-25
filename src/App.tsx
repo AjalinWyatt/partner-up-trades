@@ -13,7 +13,6 @@ import Discover from "./pages/Discover";
 import Partners from "./pages/Partners";
 import WaitingList from "./pages/WaitingList";
 import Feed from "./pages/Feed";
-import Forums from "./pages/Forums";
 import Messages from "./pages/Messages";
 import PulseSession from "./pages/PulseSession";
 import Notifications from "./pages/Notifications";
@@ -43,7 +42,6 @@ const App = () => (
           <Route path="/partners" element={<Partners />} />
           <Route path="/waiting-list" element={<WaitingList />} />
           <Route path="/feed" element={<Feed />} />
-          <Route path="/forums" element={<Forums />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/pulse/session/:id" element={<PulseSession />} />
           <Route path="/notifications" element={<Notifications />} />
