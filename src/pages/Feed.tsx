@@ -90,6 +90,14 @@ const Feed = () => {
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
   const [availableToConnect, setAvailableToConnect] = useState(false);
+  // Mock data for the Pulse peer-to-peer demo (online count + incoming requests).
+  const onlineCount = 247;
+  const [incomingRequests, setIncomingRequests] = useState<
+    { id: string; name: string; type: "Chat" | "Voice" | "Quick Reset"; ago: string }[]
+  >([
+    { id: "r1", name: "Maya R.", type: "Chat", ago: "12s" },
+    { id: "r2", name: "Devon K.", type: "Voice", ago: "47s" },
+  ]);
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
