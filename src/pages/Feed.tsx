@@ -586,7 +586,7 @@ const Feed = () => {
     [allStoryGroups]
   );
 
-  // Filter chips drive the visible feed directly — no auto-reset based on user markets.
+  // Filter chips drive the visible feed directly - no auto-reset based on user markets.
 
   if (loading) {
     return (
@@ -701,7 +701,7 @@ const Feed = () => {
               <div className="mt-2 flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse-dot" />
                 <span className="text-[15px] font-bold leading-none text-foreground tabular-nums">
-                  {onlineCount === null ? "—" : onlineCount.toLocaleString()}
+                  {onlineCount === null ? "-" : onlineCount.toLocaleString()}
                 </span>
                 <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
                   {onlineCount === 1 ? "Trader" : "Traders"}
@@ -709,7 +709,7 @@ const Feed = () => {
               </div>
             </div>
 
-            {/* REQUESTER card — for traders who need someone right now */}
+            {/* REQUESTER card - for traders who need someone right now */}
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
               {/* Header row with toggle */}
               <div className="flex items-center justify-between gap-3">
@@ -744,7 +744,7 @@ const Feed = () => {
                     Send a Pulse to traders online. First one to answer connects with you privately.
                   </p>
 
-                  {/* Context chips — what's going on, so helpers know before accepting */}
+                  {/* Context chips - what's going on, so helpers know before accepting */}
                   <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 What's going on? <span className="font-normal normal-case tracking-normal text-destructive/80">(required)</span>
               </p>
@@ -780,8 +780,8 @@ const Feed = () => {
                 })}
               </div>
 
-                  {/* Action buttons — Chat or Voice */}
-                  {/* Single Send Pulse — sessions support both chat + voice notes */}
+                  {/* Action buttons - Chat or Voice */}
+                  {/* Single Send Pulse - sessions support both chat + voice notes */}
                   <div className="mt-4">
                     <button
                       onClick={() => {
@@ -789,7 +789,7 @@ const Feed = () => {
                           toast.error("Tap what you need help with first so a trader knows how to show up for you.");
                           return;
                         }
-                        toast.success("Pulse sent — waiting for a trader to answer…");
+                        toast.success("Pulse sent - waiting for a trader to answer…");
                       import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_sent", { context: supportContext }));
                         setSupportContext([]);
                         setNeedHelpOpen(false);
@@ -810,7 +810,7 @@ const Feed = () => {
               )}
             </div>
 
-            {/* HELPER card — for traders willing to be there for someone */}
+            {/* HELPER card - for traders willing to be there for someone */}
             <div className="rounded-2xl border border-primary/30 bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--primary)/0.12)] ring-1 ring-primary/10 [background-image:linear-gradient(180deg,hsl(var(--primary)/0.06),transparent_60%)]">
               <div className="mb-3 flex items-center justify-center gap-2">
                 <span className="h-px flex-1 bg-primary/20" />
@@ -911,7 +911,7 @@ const Feed = () => {
                               </div>
                             </div>
 
-                            {/* Inline insight panel — stays inside Pulse */}
+                            {/* Inline insight panel - stays inside Pulse */}
                             {insightFor === req.id && (
                               <div className="mt-3 rounded-xl border border-primary/30 bg-card px-3 py-3 shadow-[0_0_18px_hsl(var(--primary)/0.12)]">
                                 <div className="flex items-start justify-between gap-2">
@@ -968,7 +968,7 @@ const Feed = () => {
                                     if (insightFor === req.id) setInsightFor(null);
                                     // Per spec: helper's availability auto-turns OFF after accepting.
                                     setAvailableToConnect(false);
-                                    toast.success(`Connected with ${req.name} — opening Pulse session.`);
+                                    toast.success(`Connected with ${req.name} - opening Pulse session.`);
                                     import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_accepted", { request_id: req.id }));
                                     navigate(`/pulse/session/${req.id}`);
                                   }}

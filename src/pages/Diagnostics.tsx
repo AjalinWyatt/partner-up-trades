@@ -73,7 +73,7 @@ const Diagnostics = () => {
         const { data, error } = await supabase.from("profiles").select("id, username").eq("id", userId).maybeSingle();
         if (error) throw error;
         if (!data) throw new Error("Own profile row missing");
-        return { detail: `username: ${data.username ?? "—"}` };
+        return { detail: `username: ${data.username ?? "-"}` };
       },
     },
     {
@@ -338,7 +338,7 @@ const Diagnostics = () => {
           </p>
           <div className="rounded-lg border border-border bg-card max-h-[420px] overflow-y-auto divide-y divide-border">
             {logs.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No calls captured yet — re-run the checks above or interact with the app.</p>
+              <p className="p-4 text-sm text-muted-foreground">No calls captured yet - re-run the checks above or interact with the app.</p>
             ) : logs.map((l, i) => (
               <div key={i} className={`px-3 py-2 text-xs font-mono ${l.ok ? "" : "bg-destructive/5"}`}>
                 <div className="flex items-center gap-2 flex-wrap">

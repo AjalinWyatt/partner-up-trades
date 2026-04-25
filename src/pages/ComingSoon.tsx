@@ -157,7 +157,7 @@ const ComingSoon = () => {
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-[7px] bg-white/[0.07] border border-white/[0.12] rounded-full px-3.5 py-1.5 mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f5a623] animate-pulse" />
-              <span className="text-xs font-semibold text-white/70 tracking-wider">Coming Soon — Join the waitlist</span>
+              <span className="text-xs font-semibold text-white/70 tracking-wider">Coming Soon - Join the waitlist</span>
             </div>
 
             <h1 className="font-['Gabarito'] text-[clamp(44px,6vw,72px)] font-black text-white leading-[1.02] tracking-[-0.04em] mb-5">
@@ -292,7 +292,7 @@ const ComingSoon = () => {
               { icon: User, title: "Build your profile", text: "Markets, strategy, experience level, trading schedule, and what you need to fix. The algorithm needs the truth." },
               { icon: Search, title: "Get matched", text: "Paired with traders who complement your goals, trade the same sessions, and hold the same standards." },
               { icon: Users, title: "Connect & commit", text: "Set accountability goals together. Daily check-ins, session reviews, and real consequences for going off-plan." },
-              { icon: TrendingUp, title: "Grow together", text: "Log every session. Track your edge. Your partner sees your progress — and your slips. That's the point." },
+              { icon: TrendingUp, title: "Grow together", text: "Log every session. Track your edge. Your partner sees your progress - and your slips. That's the point." },
             ].map((step, i) => (
               <div key={i} className="bg-white p-9 max-md:p-7 relative">
                 <div className="font-['Gabarito'] text-5xl font-black leading-none mb-4 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">0{i + 1}</div>
@@ -358,7 +358,7 @@ const ComingSoon = () => {
                       <div className="w-5 h-5 rounded-md bg-gradient-to-r from-[#1e70e0] to-[#12b87a] flex items-center justify-center"><Globe className="w-[11px] h-[11px] text-white" /></div>
                       <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Traders World</span>
                     </div>
-                    <div className="text-xs font-bold text-white mb-[3px]">Session ended — how did it go?</div>
+                    <div className="text-xs font-bold text-white mb-[3px]">Session ended - how did it go?</div>
                     <div className="text-[10px] text-white/40 leading-[1.4]">Log your session. Your partner will see it instantly.</div>
                     <div className="flex gap-1.5 mt-2.5">
                       <button className="flex-1 py-[7px] rounded-full text-[10px] font-bold bg-white/[0.08] text-white/50 border-none">Later</button>
@@ -397,14 +397,14 @@ const ComingSoon = () => {
             <div className="landing-reveal">
               <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">Session logging & accountability</div>
               <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-[#0D1410] tracking-[-0.03em] leading-[1.08] mb-4">Log it. Share it.<br />Hold each other accountable.</h2>
-              <p className="text-base text-[#6B7A72] leading-[1.7] mb-5">After every trading session, we send you a push notification. Log how it went — your P&L, what you did right, what you did wrong, and how you're feeling. It takes seconds.</p>
-              <p className="text-base text-[#6B7A72] leading-[1.7] mb-7">Your log is instantly shared with your accountability partner. They see everything — and you see theirs. That's how real accountability works.</p>
+              <p className="text-base text-[#6B7A72] leading-[1.7] mb-5">After every trading session, we send you a push notification. Log how it went - your P&L, what you did right, what you did wrong, and how you're feeling. It takes seconds.</p>
+              <p className="text-base text-[#6B7A72] leading-[1.7] mb-7">Your log is instantly shared with your accountability partner. They see everything - and you see theirs. That's how real accountability works.</p>
               <div className="flex flex-col gap-3">
                 {[
-                  [Bell, "Push notification after your session window closes — never forget to log"],
-                  [BarChart3, "Log your P&L, mood, what went right, what went wrong — with color-coded tags"],
-                  [Users, "Shared instantly with your partner — view theirs, check in, stay accountable"],
-                  [TrendingUp, "Track your own log over time — spot patterns, measure your edge, see growth"],
+                  [Bell, "Push notification after your session window closes - never forget to log"],
+                  [BarChart3, "Log your P&L, mood, what went right, what went wrong - with color-coded tags"],
+                  [Users, "Shared instantly with your partner - view theirs, check in, stay accountable"],
+                  [TrendingUp, "Track your own log over time - spot patterns, measure your edge, see growth"],
                 ].map(([Icon, text], i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-[10px] bg-[#F3F7F4] border border-[#DDE8E2] flex items-center justify-center shrink-0">
@@ -425,7 +425,7 @@ const ComingSoon = () => {
           <div className="text-center mb-[52px] landing-reveal">
             <div className="text-[11px] font-bold tracking-[0.12em] uppercase mb-3 bg-gradient-to-r from-[#1e70e0] to-[#12b87a] bg-clip-text text-transparent">Trader testimonials</div>
             <h2 className="font-['Gabarito'] text-[clamp(32px,4vw,52px)] font-black text-[#0D1410] tracking-[-0.03em] leading-[1.08] mb-4">They found their people.</h2>
-            <p className="text-[17px] text-[#6B7A72] leading-relaxed max-w-[520px] mx-auto">From accountability breakthroughs to funded accounts — this is what happens when traders stop going it alone.</p>
+            <p className="text-[17px] text-[#6B7A72] leading-relaxed max-w-[520px] mx-auto">From accountability breakthroughs to funded accounts - this is what happens when traders stop going it alone.</p>
           </div>
           <div className="grid grid-cols-3 max-md:grid-cols-1 gap-5">
             {[
@@ -451,7 +451,7 @@ const ComingSoon = () => {
         </div>
       </section>
 
-      {/* ── FINAL CTA — Waitlist ── */}
+      {/* ── FINAL CTA - Waitlist ── */}
       <section className="py-[100px] bg-white">
         <div className="max-w-[600px] mx-auto px-8 text-center landing-reveal">
           <div className="w-16 h-16 mx-auto mb-5 flex items-center justify-center animate-[globe-spin_10s_linear_infinite]">

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Lightweight in-app event tracker.
  *
- * Writes to the public.analytics_events table. Fire-and-forget — errors
+ * Writes to the public.analytics_events table. Fire-and-forget - errors
  * are swallowed so analytics never breaks user flows. Admins can read the
  * table to build funnel reports.
  *
@@ -24,6 +24,6 @@ export async function trackEvent(
       properties: properties as never,
     } as never);
   } catch {
-    // Silently ignore — analytics must never break the app.
+    // Silently ignore - analytics must never break the app.
   }
 }

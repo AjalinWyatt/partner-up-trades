@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * Circular stepper used in onboarding header — segments around a globe icon.
+ * Circular stepper used in onboarding header - segments around a globe icon.
  */
 const StepperGlobe = ({ step, total }: Props) => {
   const size = 64;

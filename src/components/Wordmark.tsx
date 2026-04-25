@@ -7,7 +7,7 @@ interface WordmarkProps {
 }
 
 /**
- * Brand wordmark — always renders "TradersWorld" as bold white text.
+ * Brand wordmark - always renders "TradersWorld" as bold white text.
  * Replaces the legacy logo PNGs so the branding is consistent everywhere.
  */
 export default function Wordmark({ className, size = "text-xl" }: WordmarkProps) {

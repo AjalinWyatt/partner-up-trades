@@ -94,7 +94,7 @@ const WaitingList = () => {
 
   const upgrade = () => {
     if (!me) return;
-    // Demo upgrade — no real payment provider wired yet.
+    // Demo upgrade - no real payment provider wired yet.
     setProMember(me, true);
     setPro(true);
     toast.success("You're Pro! Cap raised to 12 partners.");
@@ -154,7 +154,7 @@ const WaitingList = () => {
                 onClick={upgrade}
                 className="w-full rounded-xl bg-accent text-accent-foreground font-bold py-3 text-[14px] hover:opacity-90 transition-opacity"
               >
-                Upgrade to Pro — ${PRO_PRICE_USD}/mo
+                Upgrade to Pro - ${PRO_PRICE_USD}/mo
               </button>
             </div>
           )}
@@ -187,7 +187,7 @@ const WaitingList = () => {
               {lockedRows.length > 0 && (
                 <div>
                   <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-bold mb-2 px-1 flex items-center gap-1">
-                    <Lock className="w-3 h-3" /> Locked — Pro only ({lockedRows.length})
+                    <Lock className="w-3 h-3" /> Locked - Pro only ({lockedRows.length})
                   </p>
                   <div className="space-y-2">
                     {lockedRows.map(r => (

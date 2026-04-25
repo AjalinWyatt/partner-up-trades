@@ -13,7 +13,7 @@ interface CardSelectProps {
 }
 
 /**
- * Vertical stepper-style selector matching the "Experience level" mockup —
+ * Vertical stepper-style selector matching the "Experience level" mockup -
  * connected dots on the left with labels on the right.
  */
 const CardSelect = ({ options, selected, onSelect }: CardSelectProps) => (

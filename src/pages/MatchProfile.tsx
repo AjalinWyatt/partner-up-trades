@@ -189,7 +189,7 @@ const MatchProfile = () => {
             {/* Two-toned card */}
             <div className="relative">
               <div className="bg-card rounded-3xl overflow-hidden border border-border">
-                {/* Photo — compact */}
+                {/* Photo - compact */}
                 <div className="relative aspect-[16/10] bg-secondary">
                   {profile.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -224,7 +224,7 @@ const MatchProfile = () => {
                   </div>
                 </div>
 
-                {/* Card body — tight */}
+                {/* Card body - tight */}
                 <div className="px-4 pt-3 pb-10">
                   {/* Name + age */}
                   <div className="flex items-center gap-2 min-w-0">
@@ -239,7 +239,7 @@ const MatchProfile = () => {
                     )}
                   </div>
 
-                  {/* Pills — single row */}
+                  {/* Pills - single row */}
                   <div className="mt-2 flex items-center gap-1.5 flex-nowrap overflow-hidden">
                     {loc && (
                       <span className="px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold whitespace-nowrap">
@@ -279,9 +279,9 @@ const MatchProfile = () => {
 
                   {/* Stats row */}
                   <div className="mt-3 grid grid-cols-3 gap-2 place-items-center text-center">
-                    <Stat label="Trading Style" value={trading?.trading_style?.[0] || "—"} />
-                    <Stat label="Strategy" value={trading?.strategies?.[0] || "—"} />
-                    <Stat label="Session" value={trading?.sessions?.[0] || "—"} />
+                    <Stat label="Trading Style" value={trading?.trading_style?.[0] || "-"} />
+                    <Stat label="Strategy" value={trading?.strategies?.[0] || "-"} />
+                    <Stat label="Session" value={trading?.sessions?.[0] || "-"} />
                   </div>
                 </div>
               </div>

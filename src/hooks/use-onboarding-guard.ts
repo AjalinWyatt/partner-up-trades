@@ -29,7 +29,7 @@ export function useOnboardingGuard() {
         .maybeSingle();
 
       if (!profile?.onboarding_completed) {
-        toast("Looks like you skipped onboarding — let's get you set up!", {
+        toast("Looks like you skipped onboarding - let's get you set up!", {
           icon: "👋",
         });
         navigate("/onboarding");

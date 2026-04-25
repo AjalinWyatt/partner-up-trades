@@ -209,7 +209,7 @@ const Discover = () => {
 
         {/* Search/filter removed to match design */}
 
-        {/* Results — large card style matching mockup */}
+        {/* Results - large card style matching mockup */}
         <div className="px-5 mt-2">
           {filtered.length === 0 ? null : (
             <div className="space-y-3">

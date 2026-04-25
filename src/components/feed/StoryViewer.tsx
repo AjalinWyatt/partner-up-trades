@@ -33,7 +33,7 @@ const StoryViewer = ({ open, group, storyIndex, onClose, onNext, onPrev }: Story
 
   const displayCaption = useMemo(() => {
     if (!story?.caption) return "";
-    return marketTag ? story.caption.replace(new RegExp(marketTag, "i"), "").replace(/^\s*[·\-–—:]\s*/, "").trim() : story.caption;
+    return marketTag ? story.caption.replace(new RegExp(marketTag, "i"), "").replace(/^\s*[·\-–-:]\s*/, "").trim() : story.caption;
   }, [marketTag, story?.caption]);
 
   useEffect(() => {

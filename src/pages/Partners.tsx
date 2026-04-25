@@ -317,7 +317,7 @@ const Partners = () => {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Users className="w-7 h-7 text-muted-foreground" />
             </div>
-            <p className="text-sm font-semibold text-foreground mb-1">No partners yet — find your match</p>
+            <p className="text-sm font-semibold text-foreground mb-1">No partners yet - find your match</p>
             <p className="text-xs text-muted-foreground max-w-[240px] mb-4">Find your accountability partner and start building streaks together.</p>
             <button
               onClick={() => navigate("/discover")}

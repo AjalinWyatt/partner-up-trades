@@ -614,7 +614,7 @@ const Profile = () => {
             <p className="mt-1.5 text-[15px] font-extrabold leading-none text-foreground text-center">
               {profile?.city || profile?.country
                 ? `${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")
-                : "—"}
+                : "-"}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">Location</p>
           </div>
