@@ -18,7 +18,7 @@ const AuthGlobeBackground = ({ height = 480 }: { height?: number }) => {
         decoding="async"
         // @ts-expect-error - valid HTML attr, React types lag behind
         fetchpriority="high"
-        className="absolute left-1/2 -translate-x-1/2 select-none"
+        className="absolute left-1/2 -translate-x-1/2 select-none auth-globe-float motion-reduce:animate-none"
         style={{
           top: -40,
           width: 620,
@@ -39,6 +39,25 @@ const AuthGlobeBackground = ({ height = 480 }: { height?: number }) => {
             "linear-gradient(to bottom, transparent, hsl(var(--background)))",
         }}
       />
+      <style>{`
+        @keyframes auth-globe-float {
+          0%, 100% {
+            transform: translate(-50%, 0) scale(1);
+            opacity: 0.95;
+          }
+          50% {
+            transform: translate(-50%, -6px) scale(1.015);
+            opacity: 1;
+          }
+        }
+        .auth-globe-float {
+          animation: auth-globe-float 7s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .auth-globe-float { animation: none; }
+        }
+      `}</style>
     </div>
   );
 };
