@@ -86,10 +86,33 @@ const Onboarding = () => {
   const [country, setCountry] = useState("");
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [locating, setLocating] = useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [locationDenied, setLocationDenied] = useState(false);
 
-  const detectLocation = useCallback(() => {
+  // Best-effort IP-based fallback when the user denies geolocation
+  const fillFromIP = useCallback(async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      if (!res.ok) throw new Error("ip lookup failed");
+      const data = await res.json();
+      let filled = false;
+      if (data?.city && !city) { setCity(data.city); filled = true; }
+      if (data?.region && !state) { setState(data.region); filled = true; }
+      if (data?.country_name && !country) { setCountry(data.country_name); filled = true; }
+      if (filled) {
+        toast.success("We pre-filled your location from your network — please double-check it");
+      } else {
+        toast.info("Please enter your city, state, and country manually");
+      }
+    } catch {
+      toast.info("Please enter your city, state, and country manually");
+    }
+  }, [city, state, country]);
+
+  const runGeolocation = useCallback(() => {
     if (!("geolocation" in navigator)) {
-      toast.error("Geolocation not supported on this device");
+      toast.error("Geolocation isn't supported on this device — please fill in manually");
+      fillFromIP();
       return;
     }
     setLocating(true);
@@ -105,20 +128,54 @@ const Onboarding = () => {
           setCity(a.city || a.town || a.village || a.hamlet || a.suburb || "");
           setState(a.state || a.region || "");
           setCountry(a.country || "");
+          setLocationDenied(false);
           toast.success("Location detected - feel free to edit");
         } catch {
-          toast.error("Couldn't fetch your location");
+          toast.error("Couldn't fetch your location — pre-filling from your network instead");
+          fillFromIP();
         } finally {
           setLocating(false);
         }
       },
       (err) => {
         setLocating(false);
-        toast.error(err.code === 1 ? "Location permission denied" : "Couldn't get your location");
+        if (err.code === 1) {
+          setLocationDenied(true);
+          toast.error("Location permission denied — we'll help you fill it in instead", {
+            description: "You can enable it later in your browser settings.",
+          });
+          fillFromIP();
+        } else {
+          toast.error("Couldn't get your location — pre-filling from your network instead");
+          fillFromIP();
+        }
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
     );
-  }, []);
+  }, [fillFromIP]);
+
+  // Friendly explainer first; on confirm, trigger the browser permission prompt.
+  const detectLocation = useCallback(async () => {
+    try {
+      // If permission already granted, skip the explainer and go straight in.
+      const status = await (navigator as any).permissions?.query?.({ name: "geolocation" });
+      if (status?.state === "granted") {
+        runGeolocation();
+        return;
+      }
+      if (status?.state === "denied") {
+        setLocationDenied(true);
+        toast.error("Location is blocked in your browser — we'll help you fill it in", {
+          description: "Enable location in your browser site settings to auto-detect.",
+        });
+        fillFromIP();
+        return;
+      }
+    } catch {
+      // permissions API unsupported — fall through to explainer
+    }
+    setShowLocationPrompt(true);
+  }, [runGeolocation, fillFromIP]);
 
   const toggle = useCallback((arr: string[], setArr: React.Dispatch<React.SetStateAction<string[]>>) => {
     return (val: string) => {
@@ -621,6 +678,76 @@ const Onboarding = () => {
             {ctaLabels[step]}
           </button>
         </div>
+      )}
+
+      {/* Friendly geolocation permission explainer */}
+      <AnimatePresence>
+        {showLocationPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-background/80 backdrop-blur-sm px-4 pb-6"
+            onClick={() => setShowLocationPrompt(false)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="loc-prompt-title"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 rounded-full bg-accent/15 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z" />
+                    <circle cx="12" cy="9" r="2.5" />
+                  </svg>
+                </div>
+              </div>
+              <h3 id="loc-prompt-title" className="text-[18px] font-bold text-foreground text-center mb-2">
+                Share your location?
+              </h3>
+              <p className="text-[13.5px] text-muted-foreground text-center leading-snug mb-5">
+                We use your location to match you with traders in your region and time zone. Your exact coordinates are never stored — only city, state, and country.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLocationPrompt(false);
+                    runGeolocation();
+                  }}
+                  className="w-full py-3 rounded-xl bg-accent text-[15px] font-bold text-accent-foreground hover:bg-accent/90 transition-colors"
+                >
+                  Allow location
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLocationPrompt(false);
+                    setLocationDenied(true);
+                    toast.info("No problem — we'll help you fill it in", {
+                      description: "Pre-filling from your network. Edit anything that's off.",
+                    });
+                    fillFromIP();
+                  }}
+                  className="w-full py-3 rounded-xl border border-border bg-background text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Not now — I'll enter it manually
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {locationDenied && step === 6 && (
+        <div className="sr-only" aria-live="polite">Location access denied — please enter manually.</div>
       )}
     </div>
   );
