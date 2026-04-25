@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
+import { trackEvent } from "@/lib/analytics";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ const SignUp = () => {
       setOtp("");
     } else {
       toast.success("Email verified! Welcome to TradersWorld.");
+      trackEvent("signup_verified", { method: "email" });
       navigate("/onboarding");
     }
   };
@@ -269,8 +271,8 @@ const SignUp = () => {
 
         <p className="text-xs text-muted-foreground text-center mt-4">
           By creating an account you agree to our{" "}
-          <span className="text-accent cursor-pointer">Terms of Service</span> and{" "}
-          <span className="text-accent cursor-pointer">Privacy Policy</span>.
+          <a href="/terms" className="text-accent hover:underline">Terms of Service</a> and{" "}
+          <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a>.
         </p>
 
         <p className="text-sm text-muted-foreground text-center mt-4">
