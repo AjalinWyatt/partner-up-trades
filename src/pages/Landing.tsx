@@ -5,12 +5,18 @@ import {
   ArrowRight, KeyRound, Sparkles, Zap, Users, MessageSquare,
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
-  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem,
+  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
 import authGlobe from "@/assets/auth-globe.png";
+import mockMarcus from "@/assets/mock-marcus.jpg";
+import mockAaliyah from "@/assets/mock-aaliyah.jpg";
+import mockDiego from "@/assets/mock-diego.jpg";
+import mockNilaja from "@/assets/mock-nilaja.jpg";
+import mockJt from "@/assets/mock-jt.jpg";
+import mockKw from "@/assets/mock-kw.jpg";
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
