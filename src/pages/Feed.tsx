@@ -781,36 +781,26 @@ const Feed = () => {
               </div>
 
                   {/* Action buttons — Chat or Voice */}
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    if (supportContext.length === 0) {
-                      toast.error("Tap what you need help with first so a trader knows how to show up for you.");
-                      return;
-                    }
-                    toast.success("Pulse sent — waiting for a trader to answer…");
-                    setSupportContext([]);
+                  {/* Single Send Pulse — sessions support both chat + voice notes */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => {
+                        if (supportContext.length === 0) {
+                          toast.error("Tap what you need help with first so a trader knows how to show up for you.");
+                          return;
+                        }
+                        toast.success("Pulse sent — waiting for a trader to answer…");
+                        setSupportContext([]);
                         setNeedHelpOpen(false);
-                  }}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
-                >
-                  <MessageSquare className="h-4 w-4" /> Chat
-                </button>
-                <button
-                  onClick={() => {
-                    if (supportContext.length === 0) {
-                      toast.error("Tap what you need help with first so a trader knows how to show up for you.");
-                      return;
-                    }
-                    toast.success("Pulse sent — waiting for a trader to answer…");
-                    setSupportContext([]);
-                        setNeedHelpOpen(false);
-                  }}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-primary/10"
-                >
-                  <Mic className="h-4 w-4 text-primary" /> Voice
-                </button>
-              </div>
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
+                    >
+                      <Activity className="h-4 w-4" /> Send Pulse
+                    </button>
+                    <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground">
+                      Sessions include chat + voice notes. No live calls.
+                    </p>
+                  </div>
 
                   <p className="mt-3 text-center text-[11px] leading-4 text-muted-foreground">
                     First trader to accept gets you. Others see "This Pulse has already been answered."
@@ -875,7 +865,6 @@ const Feed = () => {
                   ) : (
                     <ul className="mt-3 space-y-2">
                       {incomingRequests.map((req) => {
-                        const Icon = req.type === "Chat" ? MessageSquare : Mic;
                         return (
                           <li
                             key={req.id}
@@ -901,9 +890,6 @@ const Feed = () => {
                                   >
                                     {req.name}
                                   </button>
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                                    <Icon className="h-3 w-3" /> {req.type}
-                                  </span>
                                   <span className="text-[10px] text-muted-foreground">· {req.ago}</span>
                                 </div>
                                 {req.context.length > 0 && (
