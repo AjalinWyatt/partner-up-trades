@@ -271,6 +271,28 @@ const Onboarding = () => {
               </button>
             </div>
 
+            {/* Use my location button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!locationEnabled) setLocationEnabled(true);
+                detectLocation();
+              }}
+              disabled={locating}
+              className={cn(
+                "w-full mb-3 rounded-xl border border-border bg-card hover:bg-card/80 transition-colors",
+                "px-4 py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-foreground",
+                locating && "opacity-60 cursor-not-allowed"
+              )}
+              aria-label="Use my current location"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+              </svg>
+              {locating ? "Detecting your location…" : "Use my current location"}
+            </button>
+
             {/* Editable location fields (always visible so users can adjust) */}
             <div className="grid grid-cols-1 gap-2 mb-8">
               <LocationAutocomplete
