@@ -5,7 +5,7 @@ import {
   ArrowRight, KeyRound, Sparkles, Zap, Users, MessageSquare,
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
-  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send,
+  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -473,6 +473,7 @@ const Landing = () => {
   const [betaOpen, setBetaOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -532,8 +533,43 @@ const Landing = () => {
             >
               Join waitlist
             </button>
+            <button
+              type="button"
+              aria-label="Open menu"
+              aria-expanded={mobileNavOpen}
+              onClick={() => setMobileNavOpen(v => !v)}
+              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full border border-border text-foreground hover:border-accent hover:text-accent transition-all"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
         </div>
+        {mobileNavOpen && (
+          <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
+            <div className="max-w-[1180px] mx-auto px-6 sm:px-8 py-3 flex flex-col">
+              {[
+                { id: "preview", label: "Inside the app" },
+                { id: "manifesto", label: "Why us" },
+                { id: "features", label: "Features" },
+                { id: "waitlist", label: "Waitlist" },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setMobileNavOpen(false); scrollTo(item.id); }}
+                  className="text-left text-sm font-medium text-foreground/90 hover:text-accent py-3 border-b border-border/50 last:border-b-0 transition-colors"
+                >
+                  {item.label}
+                </button>
+              ))}
+              <button
+                onClick={() => { setMobileNavOpen(false); setBetaOpen(true); }}
+                className="mt-3 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-border text-[13px] font-semibold text-foreground hover:border-accent hover:text-accent transition-all"
+              >
+                <KeyRound className="w-3.5 h-3.5" /> I have a beta key
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ─── HERO ─── */}
@@ -565,6 +601,12 @@ const Landing = () => {
                   className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
                 >
                   <KeyRound className="w-4 h-4" /> I have a beta key
+                </button>
+                <button
+                  onClick={() => scrollTo("preview")}
+                  className="px-6 py-3.5 rounded-full text-foreground font-bold text-sm inline-flex items-center gap-2 hover:text-accent transition-colors"
+                >
+                  See how it works <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-muted-foreground">
