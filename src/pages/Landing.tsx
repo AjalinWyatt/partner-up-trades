@@ -10,7 +10,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
-import authGlobe from "@/assets/auth-globe.png";
+import authGlobe from "@/assets/tradersworld-globe.svg";
 import mockMarcus from "@/assets/mock-marcus.jpg";
 import mockAaliyah from "@/assets/mock-aaliyah.jpg";
 import mockDiego from "@/assets/mock-diego.jpg";
@@ -574,7 +574,6 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative flex items-center justify-center">
-              <div className="absolute inset-0 bg-accent/20 blur-[100px] rounded-full" />
               <img src={authGlobe} alt="TradersWorld globe" className="relative w-full max-w-[480px] object-contain" />
             </div>
           </div>
