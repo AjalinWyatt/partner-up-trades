@@ -12,6 +12,7 @@ import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
 import Wordmark from "@/components/Wordmark";
+import pulseGlobe from "@/assets/pulse-globe.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -702,15 +703,27 @@ const Feed = () => {
         {activeMode === "Pulse" ? (
           <div className="space-y-3 px-4 py-3">
             {/* Pulse hero header */}
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">PULSE</p>
-                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 shadow-[0_0_18px_hsl(var(--primary)/0.2)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse-dot" />
-                <span className="text-[11px] font-semibold text-foreground">{onlineCount.toLocaleString()}</span>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">online</span>
+            <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">PULSE</p>
+              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
+            </div>
+
+            {/* Centered globe with live online count */}
+            <div className="flex flex-col items-center justify-center py-2">
+              <div className="relative">
+                <img
+                  src={pulseGlobe}
+                  alt="Traders online globe"
+                  className="h-28 w-28 opacity-90 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[20px] font-bold leading-none text-foreground drop-shadow-[0_0_8px_hsl(var(--background))]">
+                    {onlineCount.toLocaleString()}
+                  </span>
+                  <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-primary">
+                    Online
+                  </span>
+                </div>
               </div>
             </div>
 
