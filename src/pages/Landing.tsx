@@ -618,7 +618,7 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative flex items-center justify-center">
-              <img src={authGlobe} alt="TradersWorld globe" className="relative w-full max-w-[480px] object-contain animate-globe-float motion-reduce:animate-none" />
+              <img src={authGlobe} alt="TradersWorld globe" className="relative w-full max-w-[480px] object-contain animate-globe-drift motion-reduce:animate-none" />
             </div>
           </div>
         </div>
