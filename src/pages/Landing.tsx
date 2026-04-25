@@ -10,7 +10,9 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
-import authGlobe from "@/assets/tradersworld-globe.svg";
+// Use the lightweight, preloaded PNG (≈270KB) instead of the 3MB SVG
+// so the hero globe is already in cache before React mounts.
+const authGlobe = "/auth-globe.png";
 import mockMarcus from "@/assets/mock-marcus.jpg";
 import mockAaliyah from "@/assets/mock-aaliyah.jpg";
 import mockDiego from "@/assets/mock-diego.jpg";
@@ -618,7 +620,15 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative flex items-center justify-center">
-              <img src={authGlobe} alt="TradersWorld globe" className="relative w-full max-w-[480px] object-contain animate-globe-drift motion-reduce:animate-none" />
+              <img
+                src={authGlobe}
+                alt="TradersWorld globe"
+                fetchPriority="high"
+                decoding="async"
+                width={480}
+                height={480}
+                className="relative w-full max-w-[480px] object-contain animate-globe-drift motion-reduce:animate-none"
+              />
             </div>
           </div>
         </div>
