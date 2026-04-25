@@ -309,16 +309,16 @@ const PulseMock = () => {
 // DISCOVER — list of curated matches
 const DiscoverMock = () => {
   const matches = [
-    { name: "Marcus Chen", age: 28, loc: "Singapore", pct: 94, initials: "MC" },
-    { name: "Aaliyah Reed", age: 31, loc: "London, UK", pct: 87, initials: "AR" },
-    { name: "Diego Alvarez", age: 26, loc: "Madrid, Spain", pct: 82, initials: "DA" },
+    { name: "Marcus Chen", age: 28, loc: "Singapore", pct: 94, photo: mockMarcus },
+    { name: "Aaliyah Reed", age: 31, loc: "London, UK", pct: 87, photo: mockAaliyah },
+    { name: "Diego Alvarez", age: 26, loc: "Madrid, Spain", pct: 82, photo: mockDiego },
   ];
   return (
     <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
       <div className="px-5 pt-5 flex items-center justify-between">
         <div className="w-9" />
         <span className="text-[18px] font-black tracking-tight text-foreground">TradersWorld</span>
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent" />
+        <img src={mockNilaja} alt="" className="w-9 h-9 rounded-full object-cover" />
       </div>
       <div className="py-3 flex items-center justify-center">
         <img src={authGlobe} alt="" className="w-[140px] h-[140px] object-contain" />
@@ -327,9 +327,7 @@ const DiscoverMock = () => {
       <div className="px-5 pt-3 pb-5 space-y-3">
         {matches.map((m, i) => (
           <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden flex items-stretch h-[88px]">
-            <div className="w-[88px] h-full shrink-0 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              <span className="text-xl font-bold text-foreground">{m.initials}</span>
-            </div>
+            <img src={m.photo} alt={m.name} className="w-[88px] h-full shrink-0 object-cover" />
             <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
