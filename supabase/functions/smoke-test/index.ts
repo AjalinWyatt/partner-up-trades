@@ -139,17 +139,17 @@ Deno.serve(async (req) => {
       return { ok: true };
     });
 
-    // ── 5. DISCOVER (read profiles + trading_profiles of others) ──
+    // ── 5. DISCOVER (separate profile + trading_profile queries) ──
     await run("discover_query", async () => {
-      const { data, error } = await anonA
-        .from("profiles")
-        .select("id, username, trading_profiles(markets, experience_level)")
-        .neq("id", aId)
-        .limit(20);
-      if (error) throw new Error(error.message);
-      const found = (data ?? []).some((p: { id: string }) => p.id === bId);
-      if (!found) throw new Error("user B not visible in discover");
-      return { count: data?.length ?? 0 };
+      const { data: profiles, error: pErr } = await anonA
+        .from("profiles").select("id, username").neq("id", aId).limit(50);
+      if (pErr) throw new Error(pErr.message);
+      if (!profiles?.some((p) => p.id === bId)) throw new Error("user B not in profiles list");
+      const { data: tps, error: tErr } = await anonA
+        .from("trading_profiles").select("user_id, markets, experience_level").eq("user_id", bId);
+      if (tErr) throw new Error(tErr.message);
+      if (!tps?.length) throw new Error("user B trading_profile not visible");
+      return { profiles: profiles.length, b_markets: tps[0].markets };
     });
 
     // ── 6. WAITLIST (anonymous insert) ──
