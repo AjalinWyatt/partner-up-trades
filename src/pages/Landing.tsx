@@ -713,12 +713,6 @@ const Landing = () => {
               ))}
             </div>
 
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-[12px] text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Lifecycle loops back
-              </span>
-              <span>Every Pulse, every log, every share deepens the partnership.</span>
-            </div>
           </div>
         </div>
       </section>
