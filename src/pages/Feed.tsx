@@ -656,9 +656,16 @@ const Feed = () => {
         {activeMode === "Pulse" ? (
           <div className="space-y-3 px-4 py-3">
             {/* Pulse hero header */}
-            <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">PULSE</p>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">PULSE</p>
+                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 shadow-[0_0_18px_hsl(var(--primary)/0.2)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse-dot" />
+                <span className="text-[11px] font-semibold text-foreground">{onlineCount.toLocaleString()}</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">online</span>
+              </div>
             </div>
 
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
@@ -732,6 +739,66 @@ const Feed = () => {
                 First trader to accept gets you. Others see "This Pulse has already been answered."
               </p>
             </div>
+
+            {/* Incoming requests — only visible when Available to Connect is on */}
+            {availableToConnect && (
+              <div className="rounded-2xl border border-primary/30 bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--primary)/0.12)]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))] animate-pulse-dot" />
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Incoming Pulses</p>
+                  </div>
+                  <span className="text-[11px] font-medium text-muted-foreground">{incomingRequests.length} waiting</span>
+                </div>
+
+                {incomingRequests.length === 0 ? (
+                  <p className="mt-3 text-center text-[12px] leading-5 text-muted-foreground">
+                    All quiet for now. You'll see Pulses here as traders reach out.
+                  </p>
+                ) : (
+                  <ul className="mt-3 space-y-2">
+                    {incomingRequests.map((req) => {
+                      const Icon = req.type === "Chat" ? MessageSquare : req.type === "Voice" ? Mic : Coffee;
+                      return (
+                        <li
+                          key={req.id}
+                          className="flex items-center gap-3 rounded-xl border border-border bg-secondary/60 px-3 py-2.5"
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-semibold text-foreground">A trader would like to connect right now.</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">{req.type} · {req.ago} ago</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                toast.success(`Connected — say hi to ${req.name}.`);
+                              }}
+                              className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.35)]"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id))}
+                              className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                            >
+                              Pass
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                <p className="mt-3 text-center text-[10px] leading-4 text-muted-foreground">
+                  First to accept connects. Others see "This Pulse has already been answered."
+                </p>
+              </div>
+            )}
           </div>
         ) : visiblePosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
