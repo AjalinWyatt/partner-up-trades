@@ -804,9 +804,13 @@ const Landing = () => {
 
             {/* PULSE */}
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="flex flex-col gap-6 items-center">
-                <PulseMock />
-                <PulseHelperMock />
+              <div className="relative mx-auto w-full max-w-[460px] h-[920px] sm:h-[940px]">
+                <div className="absolute top-0 left-0 w-[78%] z-10">
+                  <PulseMock />
+                </div>
+                <div className="absolute bottom-0 right-0 w-[78%] z-20">
+                  <PulseHelperMock />
+                </div>
               </div>
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Pulse</div>
