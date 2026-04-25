@@ -602,6 +602,12 @@ const Landing = () => {
                 >
                   <KeyRound className="w-4 h-4" /> I have a beta key
                 </button>
+                <button
+                  onClick={() => scrollTo("preview")}
+                  className="px-6 py-3.5 rounded-full text-foreground font-bold text-sm inline-flex items-center gap-2 hover:text-accent transition-colors"
+                >
+                  See how it works <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-muted-foreground">
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> 1-on-1 partnerships</div>
