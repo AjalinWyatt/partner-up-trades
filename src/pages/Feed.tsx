@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, Globe, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight, Activity, MessageSquare, Mic, Coffee } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
@@ -88,6 +88,8 @@ const Feed = () => {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
   const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Feed");
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
+  const [pulseTab, setPulseTab] = useState<"Market" | "Support">("Market");
+  const [supportChips, setSupportChips] = useState<string[]>([]);
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
@@ -645,14 +647,14 @@ const Feed = () => {
 
         {activeMode === "Pulse" ? (
           <div className="space-y-4 px-4 py-4">
-            <div className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
-              <div className="border-b border-border px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Pulse</p>
-                <div className="mt-2 flex items-start justify-between gap-3">
-                  <div>
-                    <h1 className="text-lg font-semibold text-foreground">Quick market snapshots</h1>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">Live reactions, wins, losses, and chart moments that disappear after 24 hours.</p>
-                  </div>
+            {/* Pulse hero header */}
+            <div className="rounded-[24px] border border-border bg-card px-5 py-5 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">PULSE</p>
+                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">Quick market snapshots and real-time trader support.</p>
+                </div>
+                {pulseTab === "Market" && (
                   <button
                     onClick={() => setShowCreateStory(true)}
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
@@ -660,10 +662,105 @@ const Feed = () => {
                   >
                     <Plus className="h-4 w-4" />
                   </button>
-                </div>
+                )}
               </div>
+              {/* Segmented sub-toggle */}
+              <div className="mt-4 grid grid-cols-2 gap-1 rounded-full border border-border bg-secondary p-1">
+                {(["Market", "Support"] as const).map((t) => {
+                  const active = pulseTab === t;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setPulseTab(t)}
+                      className={cn(
+                        "rounded-full py-2 text-[13px] font-semibold transition-all",
+                        active
+                          ? "bg-primary text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)]"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-              {pulseRows.length === 0 ? (
+            {pulseTab === "Support" ? (
+              <div className="rounded-[24px] border border-border bg-card px-5 py-8 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+                {/* Centered pulse icon */}
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_36px_hsl(var(--primary)/0.35)]">
+                  <Activity className="h-7 w-7 animate-pulse-dot" />
+                </div>
+                <h2 className="mt-5 text-center text-xl font-semibold text-foreground">Need Someone Right Now?</h2>
+                <p className="mx-auto mt-2 max-w-[320px] text-center text-sm leading-6 text-muted-foreground">
+                  Trading can get heavy. Connect privately with another trader for support, perspective, or accountability.
+                </p>
+
+                {/* Action buttons */}
+                <div className="mt-6 grid gap-2.5">
+                  <button
+                    onClick={() => toast.success("Looking for an available trader to chat...")}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[0_0_28px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
+                  >
+                    <MessageSquare className="h-4 w-4" /> Request Chat
+                  </button>
+                  <button
+                    onClick={() => toast.success("Looking for an available trader for a voice call...")}
+                    className="flex items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-primary/5 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-primary/10"
+                  >
+                    <Mic className="h-4 w-4 text-primary" /> Request Voice
+                  </button>
+                  <button
+                    onClick={() => toast.success("Cooldown check-in queued.")}
+                    className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-secondary px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                  >
+                    <Coffee className="h-4 w-4 text-primary" /> Cooldown Check-In
+                  </button>
+                </div>
+
+                {/* Selectable chips */}
+                <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">What's going on?</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[
+                    "Bad Loss",
+                    "Revenge Trading",
+                    "Anxiety",
+                    "Need Perspective",
+                    "Lonely Journey",
+                    "Pre-Trade Check",
+                    "Just Need to Talk",
+                  ].map((chip) => {
+                    const on = supportChips.includes(chip);
+                    return (
+                      <button
+                        key={chip}
+                        onClick={() =>
+                          setSupportChips((prev) =>
+                            prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
+                          )
+                        }
+                        className={cn(
+                          "rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition-all",
+                          on
+                            ? "border-primary bg-primary/15 text-foreground shadow-[0_0_18px_hsl(var(--primary)/0.25)]"
+                            : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {chip}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Disclaimer */}
+                <p className="mt-7 text-center text-[11px] leading-5 text-muted-foreground">
+                  Peer support from fellow traders. Not professional counseling.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+                {pulseRows.length === 0 ? (
                 <div className="px-4 py-10 text-center">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-secondary text-primary">
                     <Sparkles className="h-5 w-5" />
@@ -700,8 +797,9 @@ const Feed = () => {
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         ) : visiblePosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
