@@ -703,24 +703,41 @@ const Feed = () => {
 
             {/* REQUESTER card — for traders who need someone right now */}
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
-              <div className="mb-3 flex items-center justify-center gap-2">
-                <span className="h-px flex-1 bg-border" />
-                <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Need Help
-                </span>
-                <span className="h-px flex-1 bg-border" />
+              {/* Header row with toggle */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.3)]">
+                    <Activity className="h-4 w-4 animate-pulse-dot" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Need Help</p>
+                    <p className="text-[13px] font-semibold text-foreground">I need someone right now</p>
+                  </div>
+                </div>
+                <button
+                  role="switch"
+                  aria-checked={needHelpOpen}
+                  onClick={() => setNeedHelpOpen((v) => !v)}
+                  className={cn(
+                    "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
+                    needHelpOpen ? "border-primary bg-primary/30" : "border-border bg-secondary"
+                  )}
+                >
+                  <span className={cn(
+                    "absolute top-1/2 left-0.5 h-4 w-4 -translate-y-1/2 rounded-full transition-transform",
+                    needHelpOpen ? "translate-x-[22px] bg-primary shadow-[0_0_10px_hsl(var(--primary))]" : "translate-x-0 bg-foreground"
+                  )} />
+                </button>
               </div>
-              {/* Centered pulse icon */}
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_28px_hsl(var(--primary)/0.35)]">
-                <Activity className="h-5 w-5 animate-pulse-dot" />
-              </div>
-              <h2 className="mt-3 text-center text-base font-semibold text-foreground">Want to connect right now?</h2>
-              <p className="mx-auto mt-1 max-w-[300px] text-center text-[12px] leading-5 text-muted-foreground">
-                Send a Pulse to traders online. First one to answer connects with you privately.
-              </p>
 
-              {/* Context chips — what's going on, so helpers know before accepting */}
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {needHelpOpen && (
+                <>
+                  <p className="mt-3 text-[12px] leading-5 text-muted-foreground">
+                    Send a Pulse to traders online. First one to answer connects with you privately.
+                  </p>
+
+                  {/* Context chips — what's going on, so helpers know before accepting */}
+                  <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 What's going on? <span className="font-normal normal-case tracking-normal text-destructive/80">(required)</span>
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -755,8 +772,8 @@ const Feed = () => {
                 })}
               </div>
 
-              {/* Action buttons — Chat or Voice */}
-              <div className="mt-4 grid grid-cols-2 gap-2">
+                  {/* Action buttons — Chat or Voice */}
+                  <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => {
                     if (supportContext.length === 0) {
@@ -765,6 +782,7 @@ const Feed = () => {
                     }
                     toast.success("Pulse sent — waiting for a trader to answer…");
                     setSupportContext([]);
+                        setNeedHelpOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
                 >
@@ -778,6 +796,7 @@ const Feed = () => {
                     }
                     toast.success("Pulse sent — waiting for a trader to answer…");
                     setSupportContext([]);
+                        setNeedHelpOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-primary/10"
                 >
@@ -785,9 +804,11 @@ const Feed = () => {
                 </button>
               </div>
 
-              <p className="mt-3 text-center text-[11px] leading-4 text-muted-foreground">
-                First trader to accept gets you. Others see "This Pulse has already been answered."
-              </p>
+                  <p className="mt-3 text-center text-[11px] leading-4 text-muted-foreground">
+                    First trader to accept gets you. Others see "This Pulse has already been answered."
+                  </p>
+                </>
+              )}
             </div>
 
             {/* HELPER card — for traders willing to be there for someone */}
