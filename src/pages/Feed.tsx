@@ -566,7 +566,7 @@ const Feed = () => {
   }
 
   return (
-    <AppLayout>
+    <AppLayout hideBottomNav={!!commentPostId}>
       <div className="flex-1 overflow-y-auto bg-background">
         <div className="sticky top-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
           <div className="space-y-4 px-4 pb-4 pt-3">
