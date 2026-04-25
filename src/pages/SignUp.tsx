@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
+import { trackEvent } from "@/lib/analytics";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ const SignUp = () => {
       setOtp("");
     } else {
       toast.success("Email verified! Welcome to TradersWorld.");
+      trackEvent("signup_verified", { method: "email" });
       navigate("/onboarding");
     }
   };
