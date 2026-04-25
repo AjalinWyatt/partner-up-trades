@@ -91,6 +91,8 @@ const Feed = () => {
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
   const [availableToConnect, setAvailableToConnect] = useState(false);
   const [supportContext, setSupportContext] = useState<string[]>([]);
+  const [needHelpOpen, setNeedHelpOpen] = useState(false);
+  const [insightFor, setInsightFor] = useState<string | null>(null);
   // Mock data for the Pulse peer-to-peer demo (online count + incoming requests).
   const onlineCount = 247;
   const [incomingRequests, setIncomingRequests] = useState<
