@@ -335,7 +335,7 @@ const PulseMock = () => {
           <button className="w-full py-2.5 rounded-full bg-accent text-accent-foreground font-bold text-[12px] inline-flex items-center justify-center gap-2">
             <Activity className="w-3.5 h-3.5" /> Send Pulse
           </button>
-          <div className="text-[9px] text-muted-foreground text-center mt-2">Sessions include chat + voice notes. No live calls.</div>
+          <div className="text-[9px] text-muted-foreground text-center mt-2">Sessions include chat + voice notes.</div>
         </div>
       </div>
     </div>
@@ -812,12 +812,12 @@ const Landing = () => {
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Pulse</div>
                 <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Async chat + voice notes with your partner.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
-                  Two sides of one moment. A trader sends a Pulse when they need someone right now - context tagged so you know what they're walking into. Available helpers see it instantly and the first to accept connects privately. No live calls, no scheduling - just async chat and voice notes when it actually matters.
+                  Two sides of one moment. A trader sends a Pulse when they need someone right now - context tagged so you know what they're walking into. Available helpers see it instantly and the first to accept connects privately. Async chat and voice notes when it actually matters.
                 </p>
                 <ul className="space-y-2 text-[13px] text-foreground/90">
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Send a Pulse with the context that matters - Bad Loss, Pre-Trade Check, Anxiety</li>
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Available traders see it live - first to accept connects 1-on-1</li>
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Async chat + voice notes - no live calls, no scheduling pressure</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Async chat + voice notes - no scheduling pressure</li>
                 </ul>
               </div>
             </div>
