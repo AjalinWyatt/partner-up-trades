@@ -441,6 +441,18 @@ const Feed = () => {
     if (postToShare) loadShareTargets();
   }, [postToShare, loadShareTargets]);
 
+  // Fetch real trader count for the Pulse globe (no mock data).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
+      if (!cancelled) setOnlineCount(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const filteredShareTargets = useMemo(() => {
     const query = shareSearch.trim().toLowerCase();
     if (!query) return shareTargets;
