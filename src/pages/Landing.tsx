@@ -670,50 +670,6 @@ const Landing = () => {
       </section>
 
       {/* ─── HOW IT WORKS - LIFECYCLE ─── */}
-      <section id="how" className="py-24 px-6 sm:px-8">
-        <div className="max-w-[1180px] mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">How it works</div>
-            <h2 className="text-[36px] sm:text-[44px] font-black tracking-tight text-foreground">
-              From signup to <span className="text-accent">a real partnership.</span>
-            </h2>
-            <p className="text-muted-foreground mt-3 max-w-[560px] mx-auto text-[15px]">
-              Eight steps. One lifecycle. No fluff between them.
-            </p>
-          </div>
-
-          <div className="relative">
-            {/* Vertical accent line on mobile / horizontal divider on desktop */}
-            <div className="hidden lg:block absolute top-[34px] left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none" />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { icon: ClipboardList, step: "01", title: "Onboarding questionnaire", body: "7 quick steps - markets, sessions, style, goals, struggles." },
-                { icon: UserPlus,      step: "02", title: "Build your profile",        body: "Bio, photo, trading identity. Be findable. Be real." },
-                { icon: Search,        step: "03", title: "Discover 70%+ matches",     body: "A 100-point algorithm surfaces only traders worth your time." },
-                { icon: Handshake,     step: "04", title: "Send & accept requests",    body: "Tap into a match. Once they accept, you're partners." },
-                { icon: NotebookPen,   step: "05", title: "Log trades & sessions",     body: "Tag every entry: win, loss, or break-even. Build your edge." },
-                { icon: Share2,        step: "06", title: "Share with your partner",   body: "Logs, voice notes, screenshots - keep each other honest." },
-                { icon: Users,         step: "07", title: "Network on the social feed", body: "Stories, posts, forums - community without the noise." },
-                { icon: Radio,         step: "08", title: "Live Pulse when it matters", body: "Bad loss? Anxious? Lonely? Send a Pulse - get a human, fast." },
-              ].map((s, i) => (
-                <div key={i} className="relative bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
-                  <div className="absolute -top-3 left-5 px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-black tracking-wider">
-                    {s.step}
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center mb-3 mt-1">
-                    <s.icon className="w-5 h-5 text-accent" />
-                  </div>
-                  <div className="text-[15px] font-bold text-foreground mb-1 leading-tight">{s.title}</div>
-                  <div className="text-[13px] text-muted-foreground leading-relaxed">{s.body}</div>
-                </div>
-              ))}
-            </div>
-
-          </div>
-        </div>
-      </section>
-
       {/* ─── INSIDE THE APP ─── */}
       <section id="preview" className="py-24 px-6 sm:px-8">
         <div className="max-w-[1180px] mx-auto">
