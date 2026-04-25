@@ -810,9 +810,9 @@ const Landing = () => {
           <div className="flex items-center gap-5">
             <a href="/privacy" className="text-[12px] text-muted-foreground hover:text-foreground">Privacy</a>
             <a href="/terms" className="text-[12px] text-muted-foreground hover:text-foreground">Terms</a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><Instagram className="w-4 h-4" /></a>
-            <a href="https://x.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><XIcon className="w-4 h-4" /></a>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><Youtube className="w-4 h-4" /></a>
+            <a href="https://www.instagram.com/tradersworldapp/" target="_blank" rel="noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-foreground"><Instagram className="w-4 h-4" /></a>
+            <a href="https://x.com/TradersWorldApp" target="_blank" rel="noreferrer" aria-label="X (Twitter)" className="text-muted-foreground hover:text-foreground"><XIcon className="w-4 h-4" /></a>
+            <a href="https://www.youtube.com/@womentradetoo" target="_blank" rel="noreferrer" aria-label="YouTube" className="text-muted-foreground hover:text-foreground"><Youtube className="w-4 h-4" /></a>
           </div>
         </div>
       </footer>
