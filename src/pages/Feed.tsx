@@ -965,8 +965,10 @@ const Feed = () => {
                                   onClick={() => {
                                     setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
                                     if (insightFor === req.id) setInsightFor(null);
-                                    toast.success(`Connected — say hi to ${req.name}.`);
-                                    navigate("/messages");
+                                    // Per spec: helper's availability auto-turns OFF after accepting.
+                                    setAvailableToConnect(false);
+                                    toast.success(`Connected with ${req.name} — opening Pulse session.`);
+                                    navigate(`/pulse/session/${req.id}`);
                                   }}
                                   className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.35)]"
                                 >
