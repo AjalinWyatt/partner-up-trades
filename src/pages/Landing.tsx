@@ -804,17 +804,20 @@ const Landing = () => {
 
             {/* PULSE */}
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div><PulseMock /></div>
+              <div className="flex flex-col gap-6 items-center">
+                <PulseMock />
+                <PulseHelperMock />
+              </div>
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Pulse</div>
                 <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Async chat + voice notes with your partner.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
-                  No live calls. No scheduling pressure. Talk through setups in real time when it works for you. Voice notes when you need to be heard. Text when you need to think.
+                  Two sides of one moment. A trader sends a Pulse when they need someone right now - context tagged so you know what they're walking into. Available helpers see it instantly and the first to accept connects privately. No live calls, no scheduling - just async chat and voice notes when it actually matters.
                 </p>
                 <ul className="space-y-2 text-[13px] text-foreground/90">
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Works across timezones - async by design</li>
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Voice notes for setups, sentiment, emotional check-ins</li>
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Sanity check a setup before you click the button</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Send a Pulse with the context that matters - Bad Loss, Pre-Trade Check, Anxiety</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Available traders see it live - first to accept connects 1-on-1</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Async chat + voice notes - no live calls, no scheduling pressure</li>
                 </ul>
               </div>
             </div>
