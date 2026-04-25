@@ -685,22 +685,28 @@ const Feed = () => {
               <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
             </div>
 
-            {/* Centered globe with live online count */}
+            {/* Centered globe with live trader count below it */}
             <div className="flex flex-col items-center justify-center py-2">
               <div className="relative">
+                {/* soft pulsing glow ring */}
+                <span
+                  aria-hidden
+                  className="absolute inset-0 rounded-full bg-primary/20 blur-2xl animate-pulse-dot"
+                />
                 <img
                   src={pulseGlobe}
-                  alt="Traders online globe"
-                  className="h-28 w-28 opacity-90 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
+                  alt="Live trader globe"
+                  className="relative h-24 w-24 opacity-95 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)] animate-globe-float"
                 />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[20px] font-bold leading-none text-foreground drop-shadow-[0_0_8px_hsl(var(--background))]">
-                    {onlineCount.toLocaleString()}
-                  </span>
-                  <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-primary">
-                    Online
-                  </span>
-                </div>
+              </div>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse-dot" />
+                <span className="text-[15px] font-bold leading-none text-foreground tabular-nums">
+                  {onlineCount === null ? "—" : onlineCount.toLocaleString()}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                  {onlineCount === 1 ? "Trader" : "Traders"}
+                </span>
               </div>
             </div>
 
