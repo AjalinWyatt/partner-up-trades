@@ -94,8 +94,8 @@ const Feed = () => {
   const [supportContext, setSupportContext] = useState<string[]>([]);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
   const [insightFor, setInsightFor] = useState<string | null>(null);
-  // Mock data for the Pulse peer-to-peer demo (online count + incoming requests).
-  const onlineCount = 247;
+  // Live count of registered traders. No mock data.
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [incomingRequests, setIncomingRequests] = useState<
     {
       id: string;
@@ -109,42 +109,7 @@ const Feed = () => {
       ago: string;
       insight: { experience: string; markets: string[]; style: string; bio: string };
     }[]
-  >([
-    {
-      id: "r1",
-      userId: "demo-maya",
-      name: "Maya R.",
-      username: "@mayatrades",
-      avatarUrl: null,
-      type: "Chat",
-      context: ["Bad Loss", "Need Perspective"],
-      note: "Took a -2R hit on EURUSD, want a sanity check.",
-      ago: "12s",
-      insight: {
-        experience: "2 yrs · Intermediate",
-        markets: ["Forex", "Indices"],
-        style: "Day trader · London session",
-        bio: "Discretionary price action. Working on impulse control after losses.",
-      },
-    },
-    {
-      id: "r2",
-      userId: "demo-devon",
-      name: "Devon K.",
-      username: "@devonfx",
-      avatarUrl: null,
-      type: "Voice",
-      context: ["Pre-Trade Check"],
-      note: "About to size up — 5 min gut check?",
-      ago: "47s",
-      insight: {
-        experience: "4 yrs · Advanced",
-        markets: ["Futures"],
-        style: "Scalper · NY open",
-        bio: "ES/NQ. Strict daily loss limit. Looking for a reality check before sizing up.",
-      },
-    },
-  ]);
+  >([]);
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
