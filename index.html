@@ -10,6 +10,9 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
 
+    <!-- Preload the auth/landing globe so it's already in cache by the time the screen mounts -->
+    <link rel="preload" as="image" href="/auth-globe.png" fetchpriority="high" />
+
     <meta property="og:title" content="TradersWorld" />
     <meta property="og:description" content="The accountability platform for serious traders." />
     <meta property="og:type" content="website" />

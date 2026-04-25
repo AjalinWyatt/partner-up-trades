@@ -1,8 +1,8 @@
-import globeImg from "@/assets/auth-globe.png";
-
 /**
  * Large globe background that bleeds from the top of auth screens.
  * Uses the design's globe image, faded into the page below.
+ * Sourced from /public so it can be preloaded in index.html and is in
+ * the browser cache before this component ever mounts.
  */
 const AuthGlobeBackground = ({ height = 480 }: { height?: number }) => {
   return (
@@ -11,9 +11,13 @@ const AuthGlobeBackground = ({ height = 480 }: { height?: number }) => {
       style={{ height }}
     >
       <img
-        src={globeImg}
+        src="/auth-globe.png"
         alt=""
         aria-hidden="true"
+        loading="eager"
+        decoding="async"
+        // @ts-expect-error - valid HTML attr, React types lag behind
+        fetchpriority="high"
         className="absolute left-1/2 -translate-x-1/2 select-none"
         style={{
           top: -40,
