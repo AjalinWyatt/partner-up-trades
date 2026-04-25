@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Flame, Globe, LogOut, Moon, Pencil, SlidersHorizontal, Sun } from "lucide-react";
+import { Camera, Flame, Globe, LogOut, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -417,6 +417,27 @@ const Profile = () => {
     navigate("/");
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Delete your account permanently?\n\nThis removes your profile, posts, messages, journal entries, and connections. This cannot be undone."
+    );
+    if (!confirmed) return;
+    const phrase = window.prompt('Type DELETE to confirm.');
+    if (phrase !== "DELETE") {
+      toast.error("Account deletion cancelled.");
+      return;
+    }
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast.success("Your account has been deleted.");
+      navigate("/");
+    } catch (e: any) {
+      toast.error(e?.message || "Couldn't delete account. Please email support@tradersworld.app.");
+    }
+  };
+
   const displayName = profile?.full_name || "Your profile";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
 
@@ -519,6 +540,20 @@ const Profile = () => {
               <LogOut className="h-4 w-4" />
               Log out
             </button>
+
+            <div className="pt-6">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Danger zone</p>
+              <button
+                onClick={handleDeleteAccount}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive bg-destructive/10 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete account
+              </button>
+              <p className="mt-2 text-center text-[11px] leading-4 text-muted-foreground">
+                Permanent and immediate. Removes your profile, posts, messages, and all data.
+              </p>
+            </div>
           </div>
         </div>
       </AppLayout>
