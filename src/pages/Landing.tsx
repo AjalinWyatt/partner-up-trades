@@ -535,9 +535,9 @@ const Landing = () => {
             </div>
             <div>
               <div className="text-[11px] font-bold text-white/50 uppercase tracking-wider mb-3.5">Company</div>
-              <a href="#" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Contact</a>
+              <a href="/privacy" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Privacy Policy</a>
+              <a href="/terms" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Terms of Service</a>
+              <a href="mailto:support@tradersworld.app" className="block text-[13px] text-white/40 no-underline mb-2 hover:text-white transition-colors">Contact</a>
             </div>
           </div>
           <div className="border-t border-white/[0.06] pt-6 flex items-center justify-between">
