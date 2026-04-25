@@ -90,13 +90,44 @@ const Feed = () => {
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
   const [availableToConnect, setAvailableToConnect] = useState(false);
+  const [supportContext, setSupportContext] = useState<string[]>([]);
   // Mock data for the Pulse peer-to-peer demo (online count + incoming requests).
   const onlineCount = 247;
   const [incomingRequests, setIncomingRequests] = useState<
-    { id: string; name: string; type: "Chat" | "Voice" | "Quick Reset"; ago: string }[]
+    {
+      id: string;
+      userId: string;
+      name: string;
+      username: string;
+      avatarUrl: string | null;
+      type: "Chat" | "Voice";
+      context: string[];
+      note?: string;
+      ago: string;
+    }[]
   >([
-    { id: "r1", name: "Maya R.", type: "Chat", ago: "12s" },
-    { id: "r2", name: "Devon K.", type: "Voice", ago: "47s" },
+    {
+      id: "r1",
+      userId: "demo-maya",
+      name: "Maya R.",
+      username: "@mayatrades",
+      avatarUrl: null,
+      type: "Chat",
+      context: ["Bad Loss", "Need Perspective"],
+      note: "Took a -2R hit on EURUSD, want a sanity check.",
+      ago: "12s",
+    },
+    {
+      id: "r2",
+      userId: "demo-devon",
+      name: "Devon K.",
+      username: "@devonfx",
+      avatarUrl: null,
+      type: "Voice",
+      context: ["Pre-Trade Check"],
+      note: "About to size up — 5 min gut check?",
+      ago: "47s",
+    },
   ]);
 
   const loadStories = useCallback(async (userId: string) => {
