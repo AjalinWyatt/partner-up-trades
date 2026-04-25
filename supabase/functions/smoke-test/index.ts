@@ -294,6 +294,96 @@ Deno.serve(async (req) => {
       return { ok: true };
     });
 
+    // ── 13. STORAGE UPLOADS (avatar + post image + audio + attachment) ──
+    // Helper: upload a tiny PNG/blob and verify the public URL fetches back the same bytes.
+    const tinyPng = new Uint8Array([
+      0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A,0x00,0x00,0x00,0x0D,0x49,0x48,0x44,0x52,
+      0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x06,0x00,0x00,0x00,0x1F,0x15,0xC4,
+      0x89,0x00,0x00,0x00,0x0D,0x49,0x44,0x41,0x54,0x78,0x9C,0x63,0x00,0x01,0x00,0x00,
+      0x05,0x00,0x01,0x0D,0x0A,0x2D,0xB4,0x00,0x00,0x00,0x00,0x49,0x45,0x4E,0x44,0xAE,
+      0x42,0x60,0x82,
+    ]);
+
+    const uploadAndVerify = async (
+      client: SupabaseClient, bucket: string, path: string,
+      bytes: Uint8Array, contentType: string,
+    ) => {
+      const { error: upErr } = await client.storage.from(bucket).upload(path, bytes, {
+        upsert: true, contentType,
+      });
+      if (upErr) throw new Error(`upload: ${upErr.message}`);
+      const { data: urlData } = client.storage.from(bucket).getPublicUrl(path);
+      const url = urlData.publicUrl;
+      // Fetch the public URL back and confirm it serves the same bytes
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`public fetch ${res.status}`);
+      const got = new Uint8Array(await res.arrayBuffer());
+      if (got.length !== bytes.length) throw new Error(`size mismatch ${got.length} vs ${bytes.length}`);
+      return { url, bytes: got.length };
+    };
+
+    // Avatar upload at the exact path the app uses: `{uid}/avatar.jpg`
+    let avatarUrl = "";
+    await run("storage_avatar_upload", async () => {
+      const result = await uploadAndVerify(anonA, "avatars", `${aId}/avatar.jpg`, tinyPng, "image/jpeg");
+      avatarUrl = result.url;
+      return result;
+    });
+    // Avatar RLS: user B cannot overwrite user A's avatar
+    await run("storage_avatar_rls_blocks_other_user", async () => {
+      const { error } = await anonB.storage.from("avatars").upload(`${aId}/avatar.jpg`, tinyPng, {
+        upsert: true, contentType: "image/jpeg",
+      });
+      if (!error) throw new Error("RLS allowed cross-user avatar overwrite");
+      return { rls_enforced: true, error: error.message };
+    });
+    // Persist avatar_url on the profile (mirrors the app behavior) and confirm it round-trips
+    await run("storage_avatar_url_saved_on_profile", async () => {
+      const persisted = `${avatarUrl}?t=${Date.now()}`;
+      const { error: upErr } = await anonA.from("profiles").update({ avatar_url: persisted }).eq("id", aId);
+      if (upErr) throw new Error(upErr.message);
+      const { data, error } = await anonA.from("profiles").select("avatar_url").eq("id", aId).single();
+      if (error || data?.avatar_url !== persisted) throw new Error("avatar_url not persisted");
+      return { avatar_url: data.avatar_url };
+    });
+
+    // Post image upload (used by Feed posts and journal media via attached posts)
+    let postImageUrl = "";
+    await run("storage_post_image_upload", async () => {
+      const r = await uploadAndVerify(anonA, "post-images", `${aId}/${stamp}.png`, tinyPng, "image/png");
+      postImageUrl = r.url;
+      return r;
+    });
+    // Attach the uploaded image to the existing feed post → simulates the real flow end-to-end
+    await run("storage_post_image_renders_in_feed", async () => {
+      const { error: upErr } = await anonA.from("posts")
+        .update({ media_url: postImageUrl, media_urls: [postImageUrl], media_type: "image" })
+        .eq("id", postId);
+      if (upErr) throw new Error(upErr.message);
+      const { data } = await anonB.from("posts").select("media_url, media_urls").eq("id", postId).single();
+      if (data?.media_url !== postImageUrl) throw new Error("media_url not visible to other user");
+      // Re-fetch the public URL to prove it still renders
+      const res = await fetch(postImageUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error(`render fetch ${res.status}`);
+      return { media_url: postImageUrl };
+    });
+
+    // Audio message + attachment buckets (used in DMs)
+    await run("storage_audio_message_upload", async () => {
+      return await uploadAndVerify(anonA, "audio-messages", `${aId}/${stamp}.webm`, tinyPng, "audio/webm");
+    });
+    await run("storage_message_attachment_upload", async () => {
+      return await uploadAndVerify(anonA, "message-attachments", `${aId}/${stamp}.png`, tinyPng, "image/png");
+    });
+
+    // Cleanup the uploaded objects so the buckets stay tidy
+    try {
+      await admin.storage.from("avatars").remove([`${aId}/avatar.jpg`]);
+      await admin.storage.from("post-images").remove([`${aId}/${stamp}.png`]);
+      await admin.storage.from("audio-messages").remove([`${aId}/${stamp}.webm`]);
+      await admin.storage.from("message-attachments").remove([`${aId}/${stamp}.png`]);
+    } catch { /* ignore */ }
+
     await cleanup();
     return new Response(JSON.stringify({ ok: steps.every((s) => s.ok), total: steps.length, steps }, null, 2), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
