@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type Step = { step: string; ok: boolean; detail?: unknown; error?: string };
+type Step = { step: string; ok: boolean; duration_ms: number; detail?: unknown; error?: string };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -17,12 +17,20 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE, { auth: { persistSession: false } });
   const steps: Step[] = [];
   const run = async (name: string, fn: () => Promise<unknown>) => {
+    const started = performance.now();
     try {
       const detail = await fn();
-      steps.push({ step: name, ok: true, detail });
+      const duration_ms = Math.round(performance.now() - started);
+      const entry = { step: name, ok: true, duration_ms, detail };
+      steps.push(entry);
+      // Structured server-side log so this shows up in edge function logs alongside the response.
+      console.log(JSON.stringify({ tag: "smoke", ...entry }));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      steps.push({ step: name, ok: false, error: msg });
+      const duration_ms = Math.round(performance.now() - started);
+      const entry = { step: name, ok: false, duration_ms, error: msg };
+      steps.push(entry);
+      console.error(JSON.stringify({ tag: "smoke", ...entry }));
       throw new Error(`Step "${name}" failed: ${msg}`);
     }
   };
