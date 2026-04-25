@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Loader2, RotateCw, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Loader2, RotateCw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { getRecentLogs, onSupabaseLog, type SbLogEntry } from "@/lib/sbLogger";
 
 type Status = "idle" | "running" | "pass" | "fail";
 
@@ -27,6 +28,13 @@ const Diagnostics = () => {
   const [authReady, setAuthReady] = useState(false);
   const [results, setResults] = useState<Record<string, Result>>({});
   const [running, setRunning] = useState(false);
+  const [logs, setLogs] = useState<SbLogEntry[]>(getRecentLogs());
+
+  useEffect(() => {
+    // Hydrate + subscribe to live structured logs from the global fetch interceptor.
+    setLogs(getRecentLogs());
+    return onSupabaseLog(() => setLogs(getRecentLogs().slice().reverse()));
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -312,6 +320,45 @@ const Diagnostics = () => {
           Need broader coverage? Re-run the <Link to="/feed" className="underline">smoke-test edge function</Link> for a
           full end-to-end suite (signup, onboarding, matches, DMs, journals, storage uploads).
         </p>
+
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Recent Supabase calls</h2>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(JSON.stringify(getRecentLogs(), null, 2))}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Copy className="w-3.5 h-3.5" /> Copy JSON
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Live tail of every auth/db/rpc/storage/realtime/edge-function request from this session. Errors are
+            highlighted so you can see exactly which call broke after a schema change.
+          </p>
+          <div className="rounded-lg border border-border bg-card max-h-[420px] overflow-y-auto divide-y divide-border">
+            {logs.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">No calls captured yet — re-run the checks above or interact with the app.</p>
+            ) : logs.map((l, i) => (
+              <div key={i} className={`px-3 py-2 text-xs font-mono ${l.ok ? "" : "bg-destructive/5"}`}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={l.ok ? "text-emerald-500" : "text-destructive"}>{l.ok ? "✓" : "✗"}</span>
+                  <span className="text-muted-foreground">{new Date(l.ts).toLocaleTimeString()}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-muted text-foreground/80">{l.source}</span>
+                  <span className="text-foreground">{l.op}</span>
+                  {l.table && <span className="text-muted-foreground">· {l.table}</span>}
+                  {l.bucket && <span className="text-muted-foreground">· bucket {l.bucket}</span>}
+                  {l.function_name && <span className="text-muted-foreground">· fn {l.function_name}</span>}
+                  {typeof l.status === "number" && <span className="text-muted-foreground">· {l.status}</span>}
+                  {typeof l.duration_ms === "number" && <span className="text-muted-foreground">· {l.duration_ms}ms</span>}
+                </div>
+                {l.error && (
+                  <p className="mt-1 text-destructive break-all">{l.error.code ? `[${l.error.code}] ` : ""}{l.error.message}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
