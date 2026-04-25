@@ -158,8 +158,7 @@ const Onboarding = () => {
   const detectLocation = useCallback(async () => {
     try {
       // If permission already granted, skip the explainer and go straight in.
-      // @ts-expect-error - permissions API not in all TS lib versions
-      const status = await navigator.permissions?.query?.({ name: "geolocation" });
+      const status = await (navigator as any).permissions?.query?.({ name: "geolocation" });
       if (status?.state === "granted") {
         runGeolocation();
         return;
