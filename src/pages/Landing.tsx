@@ -517,6 +517,7 @@ const Landing = () => {
           <a href="#" className="flex items-center"><Wordmark size="text-lg" /></a>
           <div className="hidden md:flex items-center gap-9">
             <button onClick={() => scrollTo("preview")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Inside the app</button>
+            <button onClick={() => scrollTo("how")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">How it works</button>
             <button onClick={() => scrollTo("manifesto")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Why us</button>
             <button onClick={() => scrollTo("features")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
             <button onClick={() => scrollTo("waitlist")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Waitlist</button>
@@ -550,6 +551,7 @@ const Landing = () => {
             <div className="max-w-[1180px] mx-auto px-6 sm:px-8 py-3 flex flex-col">
               {[
                 { id: "preview", label: "Inside the app" },
+                { id: "how", label: "How it works" },
                 { id: "manifesto", label: "Why us" },
                 { id: "features", label: "Features" },
                 { id: "waitlist", label: "Waitlist" },
