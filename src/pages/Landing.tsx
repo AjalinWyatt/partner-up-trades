@@ -1,17 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowRight, KeyRound, Sparkles, Zap, Users, MessageSquare,
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
-  Globe as GlobeIcon, Instagram, Youtube, CheckCircle2,
+  Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
+  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
 import authGlobe from "@/assets/auth-globe.png";
-
-const MARKETS = ["Forex", "Futures", "Options", "Stocks", "Crypto", "Indices", "Commodities"];
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -62,17 +61,13 @@ const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void })
             Beta testers were sent a private access key. Paste it below to unlock sign-up.
           </p>
           <input
-            type="text"
-            value={key}
-            onChange={e => setKey(e.target.value)}
+            type="text" value={key} onChange={e => setKey(e.target.value)}
             onKeyDown={e => e.key === "Enter" && submit()}
-            placeholder="xxxx-xxxx-xxxx"
-            autoFocus
+            placeholder="xxxx-xxxx-xxxx" autoFocus
             className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent mb-3 font-mono tracking-wider"
           />
           <button
-            onClick={submit}
-            disabled={loading || !key.trim()}
+            onClick={submit} disabled={loading || !key.trim()}
             className="w-full py-3 rounded-full bg-accent text-accent-foreground font-bold text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             {loading ? "Verifying…" : "Unlock sign-up"}
@@ -86,16 +81,12 @@ const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void })
   );
 };
 
-/* ───────────────── Waitlist form ───────────────── */
+/* ───────────────── Waitlist form (simplified) ───────────────── */
 const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [markets, setMarkets] = useState<string[]>([]);
   const [wantsBeta, setWantsBeta] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const toggleMarket = (m: string) =>
-    setMarkets(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,16 +96,12 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (!phone.trim() || phone.replace(/\D/g, "").length < 7) {
       toast.error("Please enter a valid phone number"); return;
     }
-    if (markets.length === 0) {
-      toast.error("Pick at least one market"); return;
-    }
     setLoading(true);
     const { error } = await supabase.from("waitlist" as any).insert({
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
-      markets,
-      market: markets[0],
       wants_beta: wantsBeta,
+      markets: [],
     } as any);
     setLoading(false);
     if (error) {
@@ -146,35 +133,14 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
         </div>
       </div>
 
-      <div>
-        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Markets you trade *</label>
-        <div className="flex flex-wrap gap-2">
-          {MARKETS.map(m => {
-            const active = markets.includes(m);
-            return (
-              <button
-                type="button" key={m} onClick={() => toggleMarket(m)}
-                className={`px-3.5 py-1.5 rounded-full border text-[12px] font-semibold transition-all ${
-                  active
-                    ? "bg-accent text-accent-foreground border-accent"
-                    : "bg-secondary text-muted-foreground border-border hover:border-accent/50 hover:text-foreground"
-                }`}
-              >
-                {m}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       <label className="flex items-start gap-3 cursor-pointer select-none rounded-xl border border-border bg-secondary hover:border-accent/40 px-4 py-3 transition-colors">
         <input
           type="checkbox" checked={wantsBeta} onChange={e => setWantsBeta(e.target.checked)}
           className="mt-0.5 w-4 h-4 rounded accent-[hsl(var(--accent))]"
         />
         <span className="flex-1">
-          <span className="block text-[13px] font-bold text-foreground">I want to be a beta tester</span>
-          <span className="block text-[11px] text-muted-foreground mt-0.5">Get early access before public launch + help shape the platform.</span>
+          <span className="block text-[13px] font-bold text-foreground">I want to be an early beta tester</span>
+          <span className="block text-[11px] text-muted-foreground mt-0.5">Get access before public launch + help shape the platform.</span>
         </span>
         <Sparkles className="w-4 h-4 text-accent" />
       </label>
@@ -192,9 +158,130 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
   );
 };
 
-/* ───────────────── In-app mock screens (mirror real UI) ───────────────── */
+/* ───────────────── In-app mock screens ───────────────── */
 
-// Mirrors Discover.tsx — 96px-tall card, cyan match ring with Zap, location text
+// FEED — stories row, filter pills, multiple posts
+const FeedMock = () => {
+  const posts = [
+    { user: "marcus.chen", time: "2h", market: "Futures", caption: "Clean breakout on ES. Took +2R. Stuck to plan today.", tag: "WIN", color: "accent" },
+    { user: "aaliyah.r", time: "5h", market: "Forex", caption: "GBPUSD chopped me out twice. Stepping away — bad attention day.", tag: "BREAK", color: "muted" },
+    { user: "diego.alv", time: "8h", market: "Crypto", caption: "BTC reclaim setup played out exactly as journaled. +1.5R.", tag: "WIN", color: "accent" },
+  ];
+  return (
+    <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+      <div className="px-5 pt-5 flex items-center justify-between">
+        <span className="text-[18px] font-black tracking-tight text-foreground">TradersWorld</span>
+        <Bell className="w-5 h-5 text-foreground" />
+      </div>
+      {/* Stories */}
+      <div className="px-4 pt-4 pb-2 flex gap-3 overflow-hidden">
+        {["You","MC","AR","DA","JT","KW"].map((s,i) => (
+          <div key={i} className="flex flex-col items-center gap-1 shrink-0">
+            <div className={`w-12 h-12 rounded-full p-[2px] ${i===0?"bg-border":"bg-gradient-to-tr from-accent to-primary"}`}>
+              <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[10px] font-bold text-foreground">{s}</div>
+            </div>
+            <span className="text-[9px] text-muted-foreground">{s}</span>
+          </div>
+        ))}
+      </div>
+      {/* Filters */}
+      <div className="px-4 pb-3 flex gap-1.5 overflow-hidden">
+        {["All","Forex","Futures","Crypto","Options"].map((f,i) => (
+          <span key={i} className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${i===0?"bg-accent text-accent-foreground border-accent":"bg-secondary text-muted-foreground border-border"}`}>{f}</span>
+        ))}
+      </div>
+      {/* Posts */}
+      <div className="px-4 pb-4 space-y-4 max-h-[360px] overflow-hidden">
+        {posts.map((p, i) => (
+          <div key={i} className="border-t border-border pt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${i===0?"from-primary to-accent":i===1?"from-accent to-primary":"from-primary/60 to-accent/60"}`} />
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-bold text-foreground truncate">{p.user}</div>
+                <div className="text-[10px] text-muted-foreground">{p.time} · {p.market}</div>
+              </div>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${p.color==="accent"?"border-accent/40 text-accent bg-accent/10":"border-border text-muted-foreground bg-secondary"}`}>
+                {p.tag === "WIN" ? "🟢 WIN" : "⚪ BREAK"}
+              </span>
+            </div>
+            <div className="text-[12px] text-foreground/90 mb-2 leading-snug">{p.caption}</div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Heart className="w-4 h-4" />
+              <MessageSquare className="w-4 h-4" />
+              <Bookmark className="w-4 h-4 ml-auto" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// PULSE — async chat + voice notes
+const PulseMock = () => (
+  <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+    <div className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3">
+      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center text-[11px] font-bold text-accent-foreground">MC</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Pulse Session</p>
+        <p className="truncate text-[13px] font-semibold text-foreground">Marcus Chen · Futures</p>
+      </div>
+      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Live</span>
+    </div>
+    <div className="px-4 py-5 space-y-2.5 min-h-[360px]">
+      <div className="flex justify-start">
+        <div className="max-w-[78%] rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-1.5 text-[12px]">
+          ES looking heavy at 5240 — might short the rejection.
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-1.5 text-[12px]">
+          Same view here. Waiting for VWAP reclaim fail.
+        </div>
+      </div>
+      <div className="flex justify-start">
+        <div className="rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-2 text-[12px] flex items-center gap-2">
+          <Mic className="w-3.5 h-3.5 text-accent" />
+          <div className="flex items-end gap-0.5">
+            {[3,5,8,4,6,9,5,3,7,5,4,7,8].map((h,i)=>(
+              <span key={i} className="w-0.5 bg-accent rounded-full" style={{height:`${h*2}px`}} />
+            ))}
+          </div>
+          <span className="text-[10px] text-muted-foreground">0:14</span>
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-1.5 text-[12px]">
+          In short. 5238. Stop above HOD.
+        </div>
+      </div>
+      <div className="flex justify-start">
+        <div className="max-w-[78%] rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-1.5 text-[12px]">
+          Nice. I'll wait for confirmation. Hold the line 🟢
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <div className="rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-2 text-[12px] flex items-center gap-2">
+          <Mic className="w-3.5 h-3.5" />
+          <div className="flex items-end gap-0.5">
+            {[4,6,9,5,7,8,4,6,7,5,3].map((h,i)=>(
+              <span key={i} className="w-0.5 bg-primary-foreground/80 rounded-full" style={{height:`${h*2}px`}} />
+            ))}
+          </div>
+          <span className="text-[10px] opacity-70">0:09</span>
+        </div>
+      </div>
+    </div>
+    <div className="border-t border-border bg-card/80 px-3 py-2 flex items-center gap-2">
+      <div className="flex-1 rounded-full border border-border bg-secondary px-3 py-2 text-[12px] text-muted-foreground">Message…</div>
+      <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center">
+        <Mic className="w-3.5 h-3.5 text-accent-foreground" />
+      </div>
+    </div>
+  </div>
+);
+
+// DISCOVER — list of curated matches
 const DiscoverMock = () => {
   const matches = [
     { name: "Marcus Chen", age: 28, loc: "Singapore", pct: 94, initials: "MC" },
@@ -209,9 +296,9 @@ const DiscoverMock = () => {
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent" />
       </div>
       <div className="py-3 flex items-center justify-center">
-        <img src={authGlobe} alt="" className="w-[160px] h-[160px] object-contain" />
+        <img src={authGlobe} alt="" className="w-[140px] h-[140px] object-contain" />
       </div>
-      <h2 className="px-5 text-[18px] font-black text-foreground">Some curated matches for you!</h2>
+      <h2 className="px-5 text-[16px] font-black text-foreground">Some curated matches for you</h2>
       <div className="px-5 pt-3 pb-5 space-y-3">
         {matches.map((m, i) => (
           <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden flex items-stretch h-[88px]">
@@ -249,132 +336,74 @@ const DiscoverMock = () => {
   );
 };
 
-// Mirrors PulseSession.tsx — "PULSE SESSION" eyebrow + Live pill + bubble messages
-const PulseMock = () => (
-  <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
-    <div className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3">
-      <div className="h-8 w-8 rounded-full bg-secondary" />
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Pulse Session</p>
-        <p className="truncate text-[13px] font-semibold text-foreground">Chat + voice notes · async</p>
+// MATCH PROFILE — full why-we-match card
+const MatchProfileMock = () => {
+  const pct = 94;
+  const dasharray = `${(pct / 100) * 100.53} 100.53`;
+  const reasons = [
+    "Both trade Futures & Options",
+    "Overlap on London + New York sessions",
+    "Same trading style: Day + Swing",
+    "Both at 'Consistent & growing' level",
+    "Goal alignment: discipline + accountability",
+  ];
+  return (
+    <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+      <div className="px-4 pt-4 flex items-center justify-between">
+        <ChevronLeft className="w-5 h-5 text-foreground" />
+        <span className="text-[16px] font-black tracking-tight text-foreground">TradersWorld</span>
+        <Bookmark className="w-5 h-5 text-foreground" />
       </div>
-      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Live</span>
-    </div>
-    <div className="px-4 py-5 space-y-2 min-h-[300px]">
-      <div className="flex justify-start">
-        <div className="max-w-[78%] rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-1.5 text-[12px]">
-          ES looking heavy at 5240 — might short the rejection.
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-1.5 text-[12px]">
-          Same view here. Waiting for VWAP reclaim fail.
-        </div>
-      </div>
-      <div className="flex justify-start">
-        <div className="rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-2 text-[12px] flex items-center gap-2">
-          <Mic className="w-3.5 h-3.5 text-accent" />
-          <div className="flex items-end gap-0.5">
-            {[3,5,8,4,6,9,5,3,7,5].map((h,i)=>(
-              <span key={i} className="w-0.5 bg-accent rounded-full" style={{height:`${h*2}px`}} />
-            ))}
+      <div className="flex flex-col items-center pt-4 pb-3">
+        <div className="relative w-[110px] h-[110px] mb-3">
+          <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+            <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="2" />
+            <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeDasharray={dasharray} />
+          </svg>
+          <div className="absolute inset-[6px] rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+            <span className="text-2xl font-black text-foreground">MC</span>
           </div>
-          <span className="text-[10px] text-muted-foreground">0:14</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[18px] font-black text-foreground">Marcus Chen</span>
+          <Gem className="w-4 h-4 text-accent" />
+        </div>
+        <div className="text-[12px] text-muted-foreground">28 · Singapore</div>
+        <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 border border-accent/40">
+          <Zap className="w-3 h-3 text-accent" fill="currentColor" />
+          <span className="text-[12px] font-black text-accent">{pct}% Match</span>
         </div>
       </div>
-      <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-1.5 text-[12px]">
-          In short. 5238. Stop above HOD.
-        </div>
-      </div>
-    </div>
-    <div className="border-t border-border bg-card/80 px-3 py-2 flex items-center gap-2">
-      <div className="flex-1 rounded-full border border-border bg-secondary px-3 py-2 text-[12px] text-muted-foreground">Message…</div>
-      <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center">
-        <Mic className="w-3.5 h-3.5 text-accent-foreground" />
-      </div>
-    </div>
-  </div>
-);
 
-// Mirrors Onboarding.tsx — big bold title with cyan accent word + globe stepper feel
-const OnboardingMock = () => (
-  <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl px-7 py-10 min-h-[520px]">
-    <div className="flex items-end justify-between mb-8">
-      <h2 className="text-[24px] font-bold text-foreground tracking-tight leading-tight max-w-[200px]">
-        Tell us your trading <span className="text-accent font-bold">style</span>
-      </h2>
-      <div className="relative w-[56px] h-[56px] shrink-0">
-        <img src={authGlobe} alt="" className="w-full h-full object-contain opacity-90" />
+      <div className="px-5 pb-3">
+        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent mb-2">Why you match</div>
+        <div className="space-y-1.5">
+          {reasons.map((r, i) => (
+            <div key={i} className="flex items-start gap-2 text-[12px] text-foreground/90">
+              <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+              <span>{r}</span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-    <div className="text-[13px] text-muted-foreground mb-3">Markets</div>
-    <div className="flex flex-wrap gap-2 mb-6">
-      {["Forex","Futures","Options","Crypto"].map((m,i) => (
-        <span key={i} className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold border ${i<2?"bg-accent text-accent-foreground border-accent":"bg-secondary text-muted-foreground border-border"}`}>{m}</span>
-      ))}
-    </div>
-    <div className="text-[13px] text-muted-foreground mb-3">Sessions</div>
-    <div className="flex flex-wrap gap-2 mb-6">
-      {["London","New York","Asian"].map((m,i) => (
-        <span key={i} className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold border ${i===1?"bg-accent text-accent-foreground border-accent":"bg-secondary text-muted-foreground border-border"}`}>{m}</span>
-      ))}
-    </div>
-    <div className="text-[13px] text-muted-foreground mb-3">Style</div>
-    <div className="flex flex-wrap gap-2">
-      {["Day","Swing","Scalp"].map((m,i) => (
-        <span key={i} className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold border ${i===0?"bg-accent text-accent-foreground border-accent":"bg-secondary text-muted-foreground border-border"}`}>{m}</span>
-      ))}
-    </div>
-  </div>
-);
 
-// Mirrors Feed.tsx — stories row + market filter pills + post card
-const FeedMock = () => (
-  <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
-    <div className="px-5 pt-5 flex items-center justify-between">
-      <span className="text-[18px] font-black tracking-tight text-foreground">TradersWorld</span>
-      <Bell className="w-5 h-5 text-foreground" />
-    </div>
-    {/* Stories */}
-    <div className="px-4 pt-4 pb-2 flex gap-3 overflow-hidden">
-      {["You","MC","AR","DA","JT"].map((s,i) => (
-        <div key={i} className="flex flex-col items-center gap-1 shrink-0">
-          <div className={`w-14 h-14 rounded-full p-[2px] ${i===0?"bg-border":"bg-gradient-to-tr from-accent to-primary"}`}>
-            <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[11px] font-bold text-foreground">{s}</div>
-          </div>
-          <span className="text-[10px] text-muted-foreground">{s}</span>
+      <div className="px-5 pb-5 flex items-center justify-around border-t border-border pt-3">
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-10 h-10 rounded-full border border-border bg-secondary flex items-center justify-center"><ChevronsDown className="w-4 h-4 text-muted-foreground" /></div>
+          <span className="text-[9px] text-muted-foreground">Pass</span>
         </div>
-      ))}
-    </div>
-    {/* Filters */}
-    <div className="px-4 pb-2 flex gap-2 overflow-hidden">
-      {["All","Forex","Futures","Crypto"].map((f,i) => (
-        <span key={i} className={`px-3 py-1 rounded-full text-[11px] font-semibold border ${i===0?"bg-accent text-accent-foreground border-accent":"bg-secondary text-muted-foreground border-border"}`}>{f}</span>
-      ))}
-    </div>
-    {/* Post */}
-    <div className="px-4 pb-4">
-      <div className="border-t border-border pt-4 flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
-        <div className="flex-1">
-          <div className="text-[12px] font-bold text-foreground">marcus.chen</div>
-          <div className="text-[10px] text-muted-foreground">2h · Futures</div>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center"><Zap className="w-5 h-5 text-accent-foreground" fill="currentColor" /></div>
+          <span className="text-[9px] text-foreground font-bold">Connect</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-10 h-10 rounded-full border border-border bg-secondary flex items-center justify-center"><Bookmark className="w-4 h-4 text-muted-foreground" /></div>
+          <span className="text-[9px] text-muted-foreground">Save</span>
         </div>
       </div>
-      <div className="aspect-square rounded-xl bg-gradient-to-br from-secondary via-card to-secondary flex items-center justify-center border border-border">
-        <Activity className="w-10 h-10 text-accent/40" />
-      </div>
-      <div className="flex items-center gap-4 mt-3">
-        <Heart className="w-5 h-5 text-foreground" />
-        <MessageSquare className="w-5 h-5 text-foreground" />
-      </div>
-      <div className="text-[12px] text-foreground mt-2">
-        <span className="font-bold">marcus.chen</span> Clean breakout on ES. Took +2R.
-      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ───────────────── Page ───────────────── */
 const Landing = () => {
@@ -424,6 +453,7 @@ const Landing = () => {
           <a href="#" className="flex items-center"><Wordmark size="text-lg" /></a>
           <div className="hidden md:flex items-center gap-9">
             <button onClick={() => scrollTo("preview")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Inside the app</button>
+            <button onClick={() => scrollTo("manifesto")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Why us</button>
             <button onClick={() => scrollTo("features")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
             <button onClick={() => scrollTo("waitlist")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Waitlist</button>
           </div>
@@ -459,7 +489,7 @@ const Landing = () => {
                 You're not <br/>trading <span className="text-accent">alone.</span>
               </h1>
               <p className="text-[17px] text-muted-foreground leading-relaxed max-w-[480px] mb-8">
-                TradersWorld is the accountability platform for serious traders. Get matched 1-on-1 with a partner who trades your markets, your sessions, your style — and grow together.
+                Real peer accountability. No mentors selling you their dream. No course funnels. No AI pretending to care. Just a human partner who trades like you and shows up when it counts.
               </p>
               <div className="flex flex-wrap gap-3">
                 <button
@@ -475,9 +505,10 @@ const Landing = () => {
                   <KeyRound className="w-4 h-4" /> I have a beta key
                 </button>
               </div>
-              <div className="mt-8 flex items-center gap-6 text-[12px] text-muted-foreground">
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-muted-foreground">
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> 1-on-1 partnerships</div>
-                <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> Built for accountability</div>
+                <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> Human, not AI</div>
+                <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent" /> Zero course pitches</div>
               </div>
             </div>
             <div className="relative flex items-center justify-center">
@@ -488,61 +519,124 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ─── INSIDE THE APP — real screen mocks ─── */}
-      <section id="preview" className="py-20 px-6 sm:px-8 bg-card/30 border-y border-border">
+      {/* ─── MANIFESTO — what we're NOT ─── */}
+      <section id="manifesto" className="py-20 px-6 sm:px-8 border-y border-border bg-card/30">
+        <div className="max-w-[1180px] mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">What TradersWorld is not</div>
+            <h2 className="text-[36px] sm:text-[44px] font-black tracking-tight text-foreground">
+              Trading help is broken. <br/><span className="text-accent">We're fixing it.</span>
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            {[
+              { icon: GraduationCap, title: "No mentors", body: "No one selling you their $5k course or DMing you to 'get on a call'." },
+              { icon: Megaphone, title: "No noisy community", body: "Not a Discord with 12,000 strangers spamming strategies that don't fit yours." },
+              { icon: Bot, title: "No AI 'coach'", body: "Real human accountability. A real person who actually cares about your week." },
+              { icon: TrendingUp, title: "No P&L flexing", body: "Wins, losses, break-evens — the work, not the highlight reel." },
+            ].map((f, i) => (
+              <div key={i} className="bg-background border border-border rounded-2xl p-5 relative overflow-hidden">
+                <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-destructive/15 border border-destructive/30 flex items-center justify-center">
+                  <XClose className="w-3.5 h-3.5 text-destructive" />
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center mb-3">
+                  <f.icon className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="text-[15px] font-bold text-foreground mb-1">{f.title}</div>
+                <div className="text-[13px] text-muted-foreground leading-relaxed">{f.body}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-background border border-accent/40 rounded-3xl p-8 sm:p-10 text-center relative overflow-hidden">
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-accent/15 blur-[100px] pointer-events-none" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-[11px] font-bold text-accent uppercase tracking-wider mb-4">
+                <UserCheck className="w-3 h-3" /> What we are
+              </div>
+              <h3 className="text-[26px] sm:text-[32px] font-black text-foreground mb-3 tracking-tight leading-tight">
+                One real human. One real partnership. <br/><span className="text-accent">That's it.</span>
+              </h3>
+              <p className="text-muted-foreground text-[15px] max-w-[640px] mx-auto leading-relaxed">
+                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. You hold each other accountable. You journal together. You show up. No gurus. No bots. No bullshit.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── INSIDE THE APP ─── */}
+      <section id="preview" className="py-24 px-6 sm:px-8">
         <div className="max-w-[1180px] mx-auto">
           <div className="text-center mb-14">
             <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Inside the app</div>
             <h2 className="text-[36px] sm:text-[44px] font-black tracking-tight text-foreground">
-              Built for <span className="text-accent">real traders.</span>
+              See it in <span className="text-accent">action.</span>
             </h2>
             <p className="text-muted-foreground mt-3 max-w-[560px] mx-auto text-[15px]">
-              Every screen is designed around one thing: helping you stay accountable, focused, and connected.
+              Three real screens from inside TradersWorld — no mockups, no marketing fluff.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-2">Discover</div>
-              <h3 className="text-[24px] font-bold text-foreground mb-2">Curated 1-on-1 matches</h3>
-              <p className="text-[14px] text-muted-foreground mb-6 max-w-[420px]">
-                A 100-point algorithm matches you on markets, sessions, style, experience and goals. No swiping. Quality over quantity.
-              </p>
-              <DiscoverMock />
+          <div className="space-y-24">
+            {/* FEED */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1">
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Feed</div>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">A community feed without the noise.</h3>
+                <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
+                  Stories from your partners. Posts filtered by the markets you actually trade. Real wins, real losses, real break-evens — tagged so the work shows, not the flex.
+                </p>
+                <ul className="space-y-2 text-[13px] text-foreground/90">
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Stories from people you actually partner with</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Filter by market — Forex, Futures, Crypto, Options</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Win 🟢 / Loss 🔴 / Break ⚪ tags built in</li>
+                </ul>
+              </div>
+              <div className="order-1 lg:order-2"><FeedMock /></div>
             </div>
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-2">Pulse</div>
-              <h3 className="text-[24px] font-bold text-foreground mb-2">Async chat + voice notes</h3>
-              <p className="text-[14px] text-muted-foreground mb-6 max-w-[420px]">
-                Talk through setups in real time without the pressure of a live call. Send a voice note, get a sanity check.
-              </p>
-              <PulseMock />
+
+            {/* PULSE */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div><PulseMock /></div>
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Pulse</div>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Async chat + voice notes with your partner.</h3>
+                <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
+                  No live calls. No scheduling pressure. Talk through setups in real time when it works for you. Voice notes when you need to be heard. Text when you need to think.
+                </p>
+                <ul className="space-y-2 text-[13px] text-foreground/90">
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Works across timezones — async by design</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Voice notes for setups, sentiment, emotional check-ins</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Sanity check a setup before you click the button</li>
+                </ul>
+              </div>
             </div>
+
+            {/* DISCOVER + MATCH PROFILE */}
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-2">Onboarding</div>
-              <h3 className="text-[24px] font-bold text-foreground mb-2">Built around your style</h3>
-              <p className="text-[14px] text-muted-foreground mb-6 max-w-[420px]">
-                A 7-step trader profile so you only ever see partners who actually fit how you trade.
-              </p>
-              <OnboardingMock />
-            </div>
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-2">Feed</div>
-              <h3 className="text-[24px] font-bold text-foreground mb-2">A community feed, no noise</h3>
-              <p className="text-[14px] text-muted-foreground mb-6 max-w-[420px]">
-                Stories, market-filtered posts, and partner activity. Media-only — text-only spam doesn't get a stage.
-              </p>
-              <FeedMock />
+              <div className="text-center mb-10">
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Discover</div>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-3 tracking-tight">Curated 1-on-1 matches — and the receipts.</h3>
+                <p className="text-[15px] text-muted-foreground max-w-[560px] mx-auto leading-relaxed">
+                  A 100-point algorithm scores every potential partner on the things that actually matter. Tap any match to see exactly why they showed up.
+                </p>
+              </div>
+              <div className="grid lg:grid-cols-2 gap-8 items-start">
+                <DiscoverMock />
+                <MatchProfileMock />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ─── FEATURES ─── */}
-      <section id="features" className="py-24 px-6 sm:px-8">
+      <section id="features" className="py-24 px-6 sm:px-8 bg-card/30 border-y border-border">
         <div className="max-w-[1180px] mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Everything you need</div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Everything inside</div>
             <h2 className="text-[36px] sm:text-[44px] font-black tracking-tight text-foreground">
               One platform for the <span className="text-accent">whole journey.</span>
             </h2>
@@ -551,15 +645,15 @@ const Landing = () => {
             {[
               { icon: Users, title: "1-on-1 Partnerships", body: "Match, request, accept — and grow together. Unmatch or block any time." },
               { icon: Zap, title: "100-Point Match Algorithm", body: "Markets, sessions, style, experience, goals — weighted to surface real fits." },
-              { icon: MessageSquare, title: "Pulse Sessions", body: "Async chat and voice notes for partners who trade different timezones." },
-              { icon: BookOpen, title: "Trading Log", body: "Track every entry with green/red performance tags. Build your edge in public." },
+              { icon: MessageSquare, title: "Pulse Sessions", body: "Async chat and voice notes for partners across any timezone." },
+              { icon: BookOpen, title: "Trading Log", body: "Track every entry with green/red/break-even tags. Build your edge in public — or in private." },
               { icon: Activity, title: "Live Feed & Stories", body: "Media-first community — stories, posts, market filters, partner activity." },
-              { icon: Bell, title: "Accountability Alerts", body: "Win 🟢 Loss 🔴 Break-even ⚪ — your partner sees the pulse, not the P&L." },
+              { icon: Bell, title: "Accountability Alerts", body: "Win 🟢 Loss 🔴 Break ⚪ — your partner sees the pulse, not the P&L." },
               { icon: GlobeIcon, title: "Forums by Market", body: "Dedicated Forex, Futures and Options spaces. Discuss without the algorithm." },
-              { icon: Shield, title: "Privacy & Safety", body: "Block, report, and full account-deletion controls. RLS on every table." },
+              { icon: Shield, title: "Privacy & Safety", body: "Block, report, and full account-deletion controls. Your data, your call." },
               { icon: TrendingUp, title: "Profiles That Mean Something", body: "Verified badges, trading style, recent activity. Built for traders, not influencers." },
             ].map((f, i) => (
-              <div key={i} className="bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
+              <div key={i} className="bg-background border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center mb-3">
                   <f.icon className="w-5 h-5 text-accent" />
                 </div>
@@ -583,7 +677,7 @@ const Landing = () => {
               Be first when we <span className="text-accent">go live.</span>
             </h2>
             <p className="text-muted-foreground text-[15px] max-w-[440px] mx-auto">
-              We're rolling out access in waves. Drop your details and we'll let you know the moment your spot opens.
+              We're rolling out access in waves. Drop your details and we'll let you know the moment your spot opens. Want in early? Tick the beta box.
             </p>
           </div>
           {submitted ? (
@@ -591,9 +685,9 @@ const Landing = () => {
               <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-[22px] font-black text-foreground mb-2">You're on the list!</h3>
+              <h3 className="text-[22px] font-black text-foreground mb-2">You're on the list.</h3>
               <p className="text-muted-foreground text-[14px]">
-                We'll email you the moment a spot opens up. If you opted in for the beta, expect an invite soon.
+                We'll email you the moment a spot opens. If you opted in for the beta, expect an invite soon.
               </p>
             </div>
           ) : (
