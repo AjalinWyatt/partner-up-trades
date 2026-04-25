@@ -166,54 +166,67 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
 /* ───────────────── In-app mock screens ───────────────── */
 
-// FEED — stories row, filter pills, multiple posts
+// FEED — Feed/Pulse tabs, market filter pills, post cards
 const FeedMock = () => {
   const posts = [
-    { user: "marcus.chen", time: "2h", market: "Futures", caption: "Clean breakout on ES. Took +2R. Stuck to plan today.", tag: "WIN", color: "accent" },
-    { user: "aaliyah.r", time: "5h", market: "Forex", caption: "GBPUSD chopped me out twice. Stepping away — bad attention day.", tag: "BREAK", color: "muted" },
-    { user: "diego.alv", time: "8h", market: "Crypto", caption: "BTC reclaim setup played out exactly as journaled. +1.5R.", tag: "WIN", color: "accent" },
+    { name: "@Nilaja - CEO | FOUNDER", photo: mockNilaja, time: "1d ago", tags: ["Forex", "Advanced"],
+      body: "Any feedback thus far? Whoever has access to this, please go through as much as you can and if anything ANYTHING messes up - tell me asap! I don't care how much you critique me. I need every little issue reported please <3",
+      hashtags: ["#Forex", "#Rant"], comments: 1 },
+    { name: "marcus.chen", photo: mockMarcus, time: "2h", tags: ["Futures", "Day"],
+      body: "Clean breakout on ES at 5240. Took +2R. Stuck to plan today — no revenge entries.",
+      hashtags: ["#Futures", "#WinDay"], comments: 4 },
   ];
   return (
     <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+      {/* Header */}
       <div className="px-5 pt-5 flex items-center justify-between">
-        <span className="text-[18px] font-black tracking-tight text-foreground">TradersWorld</span>
-        <Bell className="w-5 h-5 text-foreground" />
+        <span className="text-[16px] font-black tracking-tight text-foreground">TradersWorld</span>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full border border-border bg-card flex items-center justify-center"><Plus className="w-3.5 h-3.5 text-foreground" /></div>
+          <img src={mockNilaja} alt="" className="w-7 h-7 rounded-full object-cover" />
+        </div>
       </div>
-      {/* Stories */}
-      <div className="px-4 pt-4 pb-2 flex gap-3 overflow-hidden">
-        {["You","MC","AR","DA","JT","KW"].map((s,i) => (
-          <div key={i} className="flex flex-col items-center gap-1 shrink-0">
-            <div className={`w-12 h-12 rounded-full p-[2px] ${i===0?"bg-border":"bg-gradient-to-tr from-accent to-primary"}`}>
-              <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[10px] font-bold text-foreground">{s}</div>
-            </div>
-            <span className="text-[9px] text-muted-foreground">{s}</span>
-          </div>
-        ))}
+      {/* Feed/Pulse tabs */}
+      <div className="px-5 pt-3 pb-2 flex justify-center">
+        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+          <span className="px-5 py-1.5 rounded-full bg-accent/10 border border-accent/40 text-[12px] font-bold text-foreground">Feed</span>
+          <span className="px-5 py-1.5 text-[12px] font-semibold text-muted-foreground">Pulse</span>
+        </div>
       </div>
-      {/* Filters */}
-      <div className="px-4 pb-3 flex gap-1.5 overflow-hidden">
-        {["All","Forex","Futures","Crypto","Options"].map((f,i) => (
-          <span key={i} className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${i===0?"bg-accent text-accent-foreground border-accent":"bg-secondary text-muted-foreground border-border"}`}>{f}</span>
+      {/* Market filter pills */}
+      <div className="px-4 pt-2 pb-3 flex gap-1.5 overflow-hidden border-b border-border">
+        {["All","Crypto","Forex","Indices","Futures"].map((f,i) => (
+          <span key={i} className={`px-3 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${i===0?"border-accent text-accent bg-accent/5":"border-border text-muted-foreground bg-secondary"}`}>{f}</span>
         ))}
       </div>
       {/* Posts */}
-      <div className="px-4 pb-4 space-y-4 max-h-[360px] overflow-hidden">
+      <div className="p-3 space-y-3 max-h-[440px] overflow-hidden">
         {posts.map((p, i) => (
-          <div key={i} className="border-t border-border pt-3">
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${i===0?"from-primary to-accent":i===1?"from-accent to-primary":"from-primary/60 to-accent/60"}`} />
+          <div key={i} className="bg-card border border-border rounded-2xl p-3">
+            <div className="flex items-start gap-2.5 mb-2">
+              <img src={p.photo} alt="" className="w-9 h-9 rounded-xl object-cover shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-bold text-foreground truncate">{p.user}</div>
-                <div className="text-[10px] text-muted-foreground">{p.time} · {p.market}</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-[12px] font-bold text-foreground truncate">{p.name}</div>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{p.time}</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  {p.tags.map((t, j) => (
+                    <span key={j} className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-[9px] font-bold text-accent">{t}</span>
+                  ))}
+                </div>
               </div>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${p.color==="accent"?"border-accent/40 text-accent bg-accent/10":"border-border text-muted-foreground bg-secondary"}`}>
-                {p.tag === "WIN" ? "🟢 WIN" : "⚪ BREAK"}
-              </span>
             </div>
-            <div className="text-[12px] text-foreground/90 mb-2 leading-snug">{p.caption}</div>
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="text-[12px] text-foreground/90 leading-snug mb-2">{p.body}</div>
+            <div className="flex items-center gap-1.5 mb-2">
+              {p.hashtags.map((h, j) => (
+                <span key={j} className="px-2 py-0.5 rounded-full bg-secondary border border-border text-[10px] text-muted-foreground">{h}</span>
+              ))}
+            </div>
+            <div className="flex items-center gap-4 text-muted-foreground border-t border-border pt-2">
               <Heart className="w-4 h-4" />
-              <MessageSquare className="w-4 h-4" />
+              <div className="flex items-center gap-1"><MessageSquare className="w-4 h-4" /><span className="text-[10px]">{p.comments}</span></div>
+              <Send className="w-4 h-4" />
               <Bookmark className="w-4 h-4 ml-auto" />
             </div>
           </div>
@@ -223,69 +236,75 @@ const FeedMock = () => {
   );
 };
 
-// PULSE — async chat + voice notes
-const PulseMock = () => (
-  <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
-    <div className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3">
-      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center text-[11px] font-bold text-accent-foreground">MC</div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Pulse Session</p>
-        <p className="truncate text-[13px] font-semibold text-foreground">Marcus Chen · Futures</p>
-      </div>
-      <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Live</span>
-    </div>
-    <div className="px-4 py-5 space-y-2.5 min-h-[360px]">
-      <div className="flex justify-start">
-        <div className="max-w-[78%] rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-1.5 text-[12px]">
-          ES looking heavy at 5240 — might short the rejection.
+// PULSE — main landing screen (globe, online count, Need Help toggle, what's going on pills)
+const PulseMock = () => {
+  const reasons = ["Bad Loss", "Revenge Trading", "Anxiety", "Need Perspective", "Lonely Journey", "Pre-Trade Check", "Just Need to Talk"];
+  return (
+    <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+      {/* Header */}
+      <div className="px-5 pt-5 flex items-center justify-between">
+        <span className="text-[16px] font-black tracking-tight text-foreground">TradersWorld</span>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full border border-border bg-card flex items-center justify-center"><Plus className="w-3.5 h-3.5 text-foreground" /></div>
+          <img src={mockNilaja} alt="" className="w-7 h-7 rounded-full object-cover" />
         </div>
       </div>
-      <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-1.5 text-[12px]">
-          Same view here. Waiting for VWAP reclaim fail.
+      {/* Feed/Pulse tabs */}
+      <div className="px-5 pt-3 pb-3 flex justify-center border-b border-border">
+        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+          <span className="px-5 py-1.5 text-[12px] font-semibold text-muted-foreground">Feed</span>
+          <span className="px-5 py-1.5 rounded-full bg-accent/10 border border-accent/40 text-[12px] font-bold text-foreground">Pulse</span>
         </div>
       </div>
-      <div className="flex justify-start">
-        <div className="rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-2 text-[12px] flex items-center gap-2">
-          <Mic className="w-3.5 h-3.5 text-accent" />
-          <div className="flex items-end gap-0.5">
-            {[3,5,8,4,6,9,5,3,7,5,4,7,8].map((h,i)=>(
-              <span key={i} className="w-0.5 bg-accent rounded-full" style={{height:`${h*2}px`}} />
+      {/* Pulse intro */}
+      <div className="px-4 pt-4">
+        <div className="rounded-2xl border border-border bg-card/50 p-3 text-center">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-accent mb-1">Pulse</div>
+          <div className="text-[12px] text-muted-foreground">Real-time peer connection with traders online right now.</div>
+        </div>
+      </div>
+      {/* Globe + online count */}
+      <div className="flex flex-col items-center pt-4 pb-2">
+        <img src={authGlobe} alt="" className="w-[120px] h-[120px] object-contain" />
+        <div className="mt-1 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+          <span className="text-[14px] font-black text-foreground">16</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-accent">Traders</span>
+        </div>
+      </div>
+      {/* Need Help card */}
+      <div className="px-4 pt-3 pb-4">
+        <div className="rounded-2xl border border-accent/30 bg-card p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-full border border-accent/40 bg-accent/10 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Need Help</div>
+              <div className="text-[13px] font-bold text-foreground">I need someone right now</div>
+            </div>
+            <div className="w-9 h-5 rounded-full bg-accent/30 relative">
+              <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-accent" />
+            </div>
+          </div>
+          <div className="text-[11px] text-muted-foreground mb-3">Send a Pulse to traders online. First one to answer connects with you privately.</div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground mb-2">
+            What's going on? <span className="text-destructive normal-case tracking-normal">(required)</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {reasons.map((r, i) => (
+              <span key={i} className="px-2.5 py-1 rounded-full border border-border bg-secondary text-[10px] text-muted-foreground">{r}</span>
             ))}
           </div>
-          <span className="text-[10px] text-muted-foreground">0:14</span>
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-1.5 text-[12px]">
-          In short. 5238. Stop above HOD.
-        </div>
-      </div>
-      <div className="flex justify-start">
-        <div className="max-w-[78%] rounded-2xl rounded-bl-md bg-secondary text-foreground px-3 py-1.5 text-[12px]">
-          Nice. I'll wait for confirmation. Hold the line 🟢
-        </div>
-      </div>
-      <div className="flex justify-end">
-        <div className="rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-2 text-[12px] flex items-center gap-2">
-          <Mic className="w-3.5 h-3.5" />
-          <div className="flex items-end gap-0.5">
-            {[4,6,9,5,7,8,4,6,7,5,3].map((h,i)=>(
-              <span key={i} className="w-0.5 bg-primary-foreground/80 rounded-full" style={{height:`${h*2}px`}} />
-            ))}
-          </div>
-          <span className="text-[10px] opacity-70">0:09</span>
+          <button className="w-full py-2.5 rounded-full bg-accent text-accent-foreground font-bold text-[12px] inline-flex items-center justify-center gap-2">
+            <Activity className="w-3.5 h-3.5" /> Send Pulse
+          </button>
+          <div className="text-[9px] text-muted-foreground text-center mt-2">Sessions include chat + voice notes. No live calls.</div>
         </div>
       </div>
     </div>
-    <div className="border-t border-border bg-card/80 px-3 py-2 flex items-center gap-2">
-      <div className="flex-1 rounded-full border border-border bg-secondary px-3 py-2 text-[12px] text-muted-foreground">Message…</div>
-      <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center">
-        <Mic className="w-3.5 h-3.5 text-accent-foreground" />
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 // DISCOVER — list of curated matches
 const DiscoverMock = () => {
