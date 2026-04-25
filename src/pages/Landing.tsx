@@ -128,13 +128,14 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
   };
 
   return (
-    <form onSubmit={submit} className="bg-card border border-border rounded-3xl p-6 sm:p-7 space-y-4">
+    <form onSubmit={submit} className="bg-card border border-border rounded-3xl p-6 sm:p-7 space-y-4" autoComplete="on" name="waitlist">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Email *</label>
           <input
             type="email" value={email} onChange={e => setEmail(e.target.value)}
             placeholder="you@email.com" required
+            name="email" id="waitlist-email" autoComplete="email" inputMode="email" autoCapitalize="off" autoCorrect="off" spellCheck={false}
             className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
           />
         </div>
@@ -143,6 +144,7 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
           <input
             type="tel" value={phone} onChange={e => setPhone(e.target.value)}
             placeholder="+1 555 000 0000" required
+            name="phone" id="waitlist-phone" autoComplete="tel" inputMode="tel"
             className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
           />
         </div>
