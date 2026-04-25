@@ -88,6 +88,8 @@ const Feed = () => {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
   const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Feed");
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
+  const [pulseTab, setPulseTab] = useState<"Market" | "Support">("Market");
+  const [supportChips, setSupportChips] = useState<string[]>([]);
 
   const loadStories = useCallback(async (userId: string) => {
     const { data: storyRows, error: storiesError } = await supabase
