@@ -1,4 +1,4 @@
-// Traders World — Partner Matching Algorithm (100-point system)
+// Traders World - Partner Matching Algorithm (100-point system)
 
 interface TradingProfile {
   markets?: string[] | null;

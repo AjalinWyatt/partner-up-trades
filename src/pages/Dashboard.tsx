@@ -94,7 +94,7 @@ const Dashboard = () => {
       for (let i = 0; i < 365; i++) {
         if (days.has(cur.toISOString().slice(0, 10))) { streak++; cur = new Date(cur.getTime() - 86400000); } else break;
       }
-      // Max streak — scan ordered set
+      // Max streak - scan ordered set
       const sortedDays = [...days].sort();
       let maxStreak = 0, run = 0, prevDate: Date | null = null;
       for (const d of sortedDays) {
@@ -126,7 +126,7 @@ const Dashboard = () => {
         chk = new Date(chk.getTime() - 86400000);
       }
       if (missing > 0) {
-        upd.push({ id: "missing-logs", text: `${missing} day${missing > 1 ? "s" : ""} logs missing — Enter now.`, created_at: new Date().toISOString(), route: "/trading-log" });
+        upd.push({ id: "missing-logs", text: `${missing} day${missing > 1 ? "s" : ""} logs missing - Enter now.`, created_at: new Date().toISOString(), route: "/trading-log" });
       }
       if (pendingRequests && pendingRequests > 0) {
         upd.push({ id: "pending-reqs", text: `${pendingRequests} Pending Add request${pendingRequests > 1 ? "s" : ""}`, created_at: new Date().toISOString(), route: "/partners" });
@@ -158,7 +158,7 @@ const Dashboard = () => {
       }
       setUpdates(upd);
 
-      // Notifications — enrich with actor names
+      // Notifications - enrich with actor names
       const ns = notifs || [];
       if (ns.length > 0) {
         const actorIds = [...new Set(ns.map(n => n.actor_id))];

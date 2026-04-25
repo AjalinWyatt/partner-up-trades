@@ -199,14 +199,14 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
 /* ───────────────── In-app mock screens ───────────────── */
 
-// FEED — Feed/Pulse tabs, market filter pills, post cards
+// FEED - Feed/Pulse tabs, market filter pills, post cards
 const FeedMock = () => {
   const posts = [
     { name: "@Nilaja - CEO | FOUNDER", photo: mockNilaja, time: "1d ago", tags: ["Forex", "Advanced"],
       body: "Any feedback thus far? Whoever has access to this, please go through as much as you can and if anything ANYTHING messes up - tell me asap! I don't care how much you critique me. I need every little issue reported please <3",
       hashtags: ["#Forex", "#Rant"], comments: 1 },
     { name: "marcus.chen", photo: mockMarcus, time: "2h", tags: ["Futures", "Day"],
-      body: "Clean breakout on ES at 5240. Took +2R. Stuck to plan today — no revenge entries.",
+      body: "Clean breakout on ES at 5240. Took +2R. Stuck to plan today - no revenge entries.",
       hashtags: ["#Futures", "#WinDay"], comments: 4 },
   ];
   return (
@@ -269,7 +269,7 @@ const FeedMock = () => {
   );
 };
 
-// PULSE — main landing screen (globe, online count, Need Help toggle, what's going on pills)
+// PULSE - main landing screen (globe, online count, Need Help toggle, what's going on pills)
 const PulseMock = () => {
   const reasons = ["Bad Loss", "Revenge Trading", "Anxiety", "Need Perspective", "Lonely Journey", "Pre-Trade Check", "Just Need to Talk"];
   return (
@@ -339,7 +339,7 @@ const PulseMock = () => {
   );
 };
 
-// DISCOVER — list of curated matches
+// DISCOVER - list of curated matches
 const DiscoverMock = () => {
   const matches = [
     { name: "Marcus Chen", age: 28, loc: "Singapore", pct: 94, photo: mockMarcus },
@@ -392,7 +392,7 @@ const DiscoverMock = () => {
   );
 };
 
-// MATCH PROFILE — full why-we-match card
+// MATCH PROFILE - full why-we-match card
 const MatchProfileMock = () => {
   const pct = 94;
   const dasharray = `${(pct / 100) * 100.53} 100.53`;
@@ -625,7 +625,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ─── MANIFESTO — what we're NOT ─── */}
+      {/* ─── MANIFESTO - what we're NOT ─── */}
       <section id="manifesto" className="py-20 px-6 sm:px-8 border-y border-border bg-card/30">
         <div className="max-w-[1180px] mx-auto">
           <div className="text-center mb-12">
@@ -640,7 +640,7 @@ const Landing = () => {
               { icon: GraduationCap, title: "No mentors", body: "No one selling you their $5k course or DMing you to 'get on a call'." },
               { icon: Megaphone, title: "No noisy community", body: "Not a Discord with 12,000 strangers spamming strategies that don't fit yours." },
               { icon: Bot, title: "No AI 'coach'", body: "Real human accountability. A real person who actually cares about your week." },
-              { icon: TrendingUp, title: "No P&L flexing", body: "Wins, losses, break-evens — the work, not the highlight reel." },
+              { icon: TrendingUp, title: "No P&L flexing", body: "Wins, losses, break-evens - the work, not the highlight reel." },
             ].map((f, i) => (
               <div key={i} className="bg-background border border-border rounded-2xl p-5 relative overflow-hidden">
                 <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-destructive/15 border border-destructive/30 flex items-center justify-center">
@@ -665,14 +665,14 @@ const Landing = () => {
                 Real Human. Real Partnership. Real Accountability. <br/><span className="text-accent">= Real Change.</span>
               </h3>
               <p className="text-muted-foreground text-[15px] max-w-[640px] mx-auto leading-relaxed">
-                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. Build one real partnership — or a few — with people who actually show up. You hold each other accountable. You journal together. No gurus. No bots. No bullshit.
+                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. Build one real partnership - or a few - with people who actually show up. You hold each other accountable. You journal together. No gurus. No bots. No bullshit.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS — LIFECYCLE ─── */}
+      {/* ─── HOW IT WORKS - LIFECYCLE ─── */}
       <section id="how" className="py-24 px-6 sm:px-8">
         <div className="max-w-[1180px] mx-auto">
           <div className="text-center mb-14">
@@ -691,14 +691,14 @@ const Landing = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { icon: ClipboardList, step: "01", title: "Onboarding questionnaire", body: "7 quick steps — markets, sessions, style, goals, struggles." },
+                { icon: ClipboardList, step: "01", title: "Onboarding questionnaire", body: "7 quick steps - markets, sessions, style, goals, struggles." },
                 { icon: UserPlus,      step: "02", title: "Build your profile",        body: "Bio, photo, trading identity. Be findable. Be real." },
                 { icon: Search,        step: "03", title: "Discover 70%+ matches",     body: "A 100-point algorithm surfaces only traders worth your time." },
                 { icon: Handshake,     step: "04", title: "Send & accept requests",    body: "Tap into a match. Once they accept, you're partners." },
                 { icon: NotebookPen,   step: "05", title: "Log trades & sessions",     body: "Tag every entry: win, loss, or break-even. Build your edge." },
-                { icon: Share2,        step: "06", title: "Share with your partner",   body: "Logs, voice notes, screenshots — keep each other honest." },
-                { icon: Users,         step: "07", title: "Network on the social feed", body: "Stories, posts, forums — community without the noise." },
-                { icon: Radio,         step: "08", title: "Live Pulse when it matters", body: "Bad loss? Anxious? Lonely? Send a Pulse — get a human, fast." },
+                { icon: Share2,        step: "06", title: "Share with your partner",   body: "Logs, voice notes, screenshots - keep each other honest." },
+                { icon: Users,         step: "07", title: "Network on the social feed", body: "Stories, posts, forums - community without the noise." },
+                { icon: Radio,         step: "08", title: "Live Pulse when it matters", body: "Bad loss? Anxious? Lonely? Send a Pulse - get a human, fast." },
               ].map((s, i) => (
                 <div key={i} className="relative bg-card border border-border rounded-2xl p-5 hover:border-accent/40 transition-colors">
                   <div className="absolute -top-3 left-5 px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-black tracking-wider">
@@ -732,7 +732,7 @@ const Landing = () => {
               See it in <span className="text-accent">action.</span>
             </h2>
             <p className="text-muted-foreground mt-3 max-w-[560px] mx-auto text-[15px]">
-              Three real screens from inside TradersWorld — no mockups, no marketing fluff.
+              Three real screens from inside TradersWorld - no mockups, no marketing fluff.
             </p>
           </div>
 
@@ -743,11 +743,11 @@ const Landing = () => {
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Feed</div>
                 <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">A community feed without the noise.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
-                  Stories from your partners. Posts filtered by the markets you actually trade. Real wins, real losses, real break-evens — tagged so the work shows, not the flex.
+                  Stories from your partners. Posts filtered by the markets you actually trade. Real wins, real losses, real break-evens - tagged so the work shows, not the flex.
                 </p>
                 <ul className="space-y-2 text-[13px] text-foreground/90">
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Stories from people you actually partner with</li>
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Filter by market — Forex, Futures, Crypto, Options</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Filter by market - Forex, Futures, Crypto, Options</li>
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Win 🟢 / Loss 🔴 / Break ⚪ tags built in</li>
                 </ul>
               </div>
@@ -764,7 +764,7 @@ const Landing = () => {
                   No live calls. No scheduling pressure. Talk through setups in real time when it works for you. Voice notes when you need to be heard. Text when you need to think.
                 </p>
                 <ul className="space-y-2 text-[13px] text-foreground/90">
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Works across timezones — async by design</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Works across timezones - async by design</li>
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Voice notes for setups, sentiment, emotional check-ins</li>
                   <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Sanity check a setup before you click the button</li>
                 </ul>
@@ -775,7 +775,7 @@ const Landing = () => {
             <div>
               <div className="text-center mb-10">
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Discover</div>
-                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-3 tracking-tight">Curated 1-on-1 matches — and the receipts.</h3>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-3 tracking-tight">Curated 1-on-1 matches - and the receipts.</h3>
                 <p className="text-[15px] text-muted-foreground max-w-[560px] mx-auto leading-relaxed">
                   A 100-point algorithm scores every potential partner on the things that actually matter. Tap any match to see exactly why they showed up.
                 </p>
@@ -800,12 +800,12 @@ const Landing = () => {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: Users, title: "1-on-1 Partnerships", body: "Match, request, accept — and grow together. Unmatch or block any time." },
-              { icon: Zap, title: "100-Point Match Algorithm", body: "Markets, sessions, style, experience, goals — weighted to surface real fits." },
+              { icon: Users, title: "1-on-1 Partnerships", body: "Match, request, accept - and grow together. Unmatch or block any time." },
+              { icon: Zap, title: "100-Point Match Algorithm", body: "Markets, sessions, style, experience, goals - weighted to surface real fits." },
               { icon: MessageSquare, title: "Pulse Sessions", body: "Async chat and voice notes for partners across any timezone." },
-              { icon: BookOpen, title: "Trading Log", body: "Track every entry with green/red/break-even tags. Build your edge in public — or in private." },
-              { icon: Activity, title: "Live Feed & Stories", body: "Media-first community — stories, posts, market filters, partner activity." },
-              { icon: Bell, title: "Accountability Alerts", body: "Win 🟢 Loss 🔴 Break ⚪ — your partner sees the pulse, not the P&L." },
+              { icon: BookOpen, title: "Trading Log", body: "Track every entry with green/red/break-even tags. Build your edge in public - or in private." },
+              { icon: Activity, title: "Live Feed & Stories", body: "Media-first community - stories, posts, market filters, partner activity." },
+              { icon: Bell, title: "Accountability Alerts", body: "Win 🟢 Loss 🔴 Break ⚪ - your partner sees the pulse, not the P&L." },
               { icon: GlobeIcon, title: "Forums by Market", body: "Dedicated Forex, Futures and Options spaces. Discuss without the algorithm." },
               { icon: Shield, title: "Privacy & Safety", body: "Block, report, and full account-deletion controls. Your data, your call." },
               { icon: TrendingUp, title: "Profiles That Mean Something", body: "Verified badges, trading style, recent activity. Built for traders, not influencers." },

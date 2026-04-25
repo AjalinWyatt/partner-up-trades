@@ -18,7 +18,7 @@ import PromptCard from "@/components/onboarding/PromptCard";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-/** Header used on steps 1-6 — large title on the left, stepper-globe on the right */
+/** Header used on steps 1-6 - large title on the left, stepper-globe on the right */
 const StepHeader = ({ title, accent, step, total }: { title: string; accent: string; step: number; total: number }) => (
   <div className="flex items-end justify-between mb-8">
     <h2 className="text-[28px] font-bold text-foreground tracking-tight leading-tight max-w-[230px]">
@@ -104,7 +104,7 @@ const Onboarding = () => {
           setCity(a.city || a.town || a.village || a.hamlet || a.suburb || "");
           setState(a.state || a.region || "");
           setCountry(a.country || "");
-          toast.success("Location detected — feel free to edit");
+          toast.success("Location detected - feel free to edit");
         } catch {
           toast.error("Couldn't fetch your location");
         } finally {
@@ -210,7 +210,7 @@ const Onboarding = () => {
             </div>
             <div className="h-px bg-border mb-6" />
 
-            {/* Gender — moved earlier into Profile step per mockup */}
+            {/* Gender - moved earlier into Profile step per mockup */}
             <div className="text-[15px] text-foreground mb-3">Your Gender</div>
             <div className="flex items-center gap-3 pb-2 mb-1">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="hsl(var(--accent))" className="shrink-0">
@@ -454,7 +454,7 @@ const Onboarding = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
-      {/* Minimal back button on steps 1-6 — matches mockups (no top progress bar, no skip) */}
+      {/* Minimal back button on steps 1-6 - matches mockups (no top progress bar, no skip) */}
       {step > 0 && step < 7 && (
         <button
           onClick={() => goTo(step - 1)}

@@ -2,10 +2,10 @@
  * Structured Supabase logger.
  *
  * Two layers:
- * 1. `installSupabaseLogger()` — patches the global `fetch` once and emits a
+ * 1. `installSupabaseLogger()` - patches the global `fetch` once and emits a
  *    structured log line for EVERY Supabase REST / Auth / Storage / Realtime
  *    request. Zero changes required at call sites.
- * 2. `track(flow, op, fn)` — opt-in wrapper for individual call sites that
+ * 2. `track(flow, op, fn)` - opt-in wrapper for individual call sites that
  *    want a richer flow/op label (e.g. "onboarding/save_profile") on top of
  *    the auto-captured network log.
  *
@@ -125,7 +125,7 @@ function classify(urlStr: string, method: string): {
 
 /**
  * Patch global `fetch` to emit a structured log for every Supabase request.
- * Safe to call multiple times — it installs at most once.
+ * Safe to call multiple times - it installs at most once.
  */
 export function installSupabaseLogger() {
   if (installed || typeof window === "undefined") return;

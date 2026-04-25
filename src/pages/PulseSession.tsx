@@ -16,7 +16,7 @@ type LocalMessage = {
 };
 
 /**
- * Pulse Session — async chat + voice notes.
+ * Pulse Session - async chat + voice notes.
  *
  * MVP scope (no live calling):
  *  - Text messages
@@ -150,7 +150,7 @@ export default function PulseSession() {
               </p>
               <p className="mt-1 max-w-[260px] text-[11px] leading-5 text-muted-foreground">
                 Send a message or hold the mic to record a voice note. This session is
-                async — no live calling.
+                async - no live calling.
               </p>
             </div>
           ) : (

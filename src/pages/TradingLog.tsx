@@ -222,7 +222,7 @@ export default function TradingLog() {
         userId: partnerId,
         type: "partner_logged",
         title: `${myName} just logged their session 📈`,
-        body: "Hold yourself accountable — log yours too",
+        body: "Hold yourself accountable - log yours too",
         relatedUserId: userId,
       });
     }
@@ -461,7 +461,7 @@ export default function TradingLog() {
               {streak} Day Streak
             </div>
             <div className="text-[10px] text-muted-foreground">
-              {streak > 0 ? "Keep it going — log today's session" : "Start your streak — log today's session"}
+              {streak > 0 ? "Keep it going - log today's session" : "Start your streak - log today's session"}
             </div>
           </div>
           <div className="flex gap-[3px]">

@@ -17,7 +17,7 @@ interface MessageBubbleProps {
   isMine: boolean;
   onDeleted?: (id: string) => void;
   onEdited?: (id: string, content: string) => void;
-  /** Partner's avatar URL — shown next to incoming (not-mine) bubbles */
+  /** Partner's avatar URL - shown next to incoming (not-mine) bubbles */
   partnerAvatarUrl?: string | null;
   /** Partner's display name for the avatar fallback initial */
   partnerName?: string;

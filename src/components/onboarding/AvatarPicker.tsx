@@ -133,7 +133,7 @@ export default function AvatarPicker({ onChange, outputSize = 512, displaySize =
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onClick={(e) => {
-          // Open file picker only when no image yet — otherwise drag is primary action
+          // Open file picker only when no image yet - otherwise drag is primary action
           if (!src) {
             e.stopPropagation();
             inputRef.current?.click();
