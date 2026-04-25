@@ -14,7 +14,7 @@ import authGlobe from "@/assets/tradersworld-globe.svg";
 import mockMarcus from "@/assets/mock-marcus.jpg";
 import mockAaliyah from "@/assets/mock-aaliyah.jpg";
 import mockDiego from "@/assets/mock-diego.jpg";
-import mockNilaja from "@/assets/mock-nilaja.jpg";
+import mockNilaja from "@/assets/nilaja-founder.jpg";
 import mockJt from "@/assets/mock-jt.jpg";
 import mockKw from "@/assets/mock-kw.jpg";
 
