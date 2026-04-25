@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import PillSelect from "@/components/onboarding/PillSelect";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 
 export interface ProfileEditorDraft {
   gender: string;
@@ -99,10 +100,31 @@ const TradingProfileEditor = ({ profileDraft, setProfileDraft, tradingDraft, set
               onChange={(value) => setProfileValue("gender", value)}
             />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <EditorField label="City" value={profileDraft.city} onChange={(value) => setProfileValue("city", value)} placeholder="City" />
-              <EditorField label="State / Region" value={profileDraft.state} onChange={(value) => setProfileValue("state", value)} placeholder="State / Region" />
+              <EditorLocationField
+                label="City"
+                kind="city"
+                value={profileDraft.city}
+                country={profileDraft.country}
+                state={profileDraft.state}
+                onChange={(value) => setProfileValue("city", value)}
+                placeholder="City"
+              />
+              <EditorLocationField
+                label="State / Region"
+                kind="state"
+                value={profileDraft.state}
+                country={profileDraft.country}
+                onChange={(value) => setProfileValue("state", value)}
+                placeholder="State / Region"
+              />
             </div>
-            <EditorField label="Country" value={profileDraft.country} onChange={(value) => setProfileValue("country", value)} placeholder="Country" />
+            <EditorLocationField
+              label="Country"
+              kind="country"
+              value={profileDraft.country}
+              onChange={(value) => setProfileValue("country", value)}
+              placeholder="Country"
+            />
           </AccordionContent>
         </AccordionItem>
 
@@ -202,6 +224,36 @@ const EditorField = ({ label, value, onChange, placeholder }: { label: string; v
       value={value}
       onChange={(event) => onChange(event.target.value)}
       className="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+      placeholder={placeholder}
+    />
+  </div>
+);
+
+const EditorLocationField = ({
+  label,
+  kind,
+  value,
+  onChange,
+  placeholder,
+  country,
+  state,
+}: {
+  label: string;
+  kind: "country" | "state" | "city";
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  country?: string;
+  state?: string;
+}) => (
+  <div>
+    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+    <LocationAutocomplete
+      kind={kind}
+      value={value}
+      onChange={onChange}
+      country={country}
+      state={state}
       placeholder={placeholder}
     />
   </div>

@@ -17,6 +17,7 @@ import GenderSelect from "@/components/onboarding/GenderSelect";
 import PromptCard from "@/components/onboarding/PromptCard";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 
 /** Header used on steps 1-6 - large title on the left, stepper-globe on the right */
 const StepHeader = ({ title, accent, step, total }: { title: string; accent: string; step: number; total: number }) => (
@@ -272,24 +273,30 @@ const Onboarding = () => {
 
             {/* Editable location fields (always visible so users can adjust) */}
             <div className="grid grid-cols-1 gap-2 mb-8">
-              <input
+              <LocationAutocomplete
+                kind="city"
                 placeholder="City"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="bg-transparent border-b border-border text-[14px] text-foreground placeholder:text-muted-foreground outline-none py-2"
+                onChange={setCity}
+                state={state}
+                country={country}
+                underline
               />
               <div className="grid grid-cols-2 gap-3">
-                <input
+                <LocationAutocomplete
+                  kind="state"
                   placeholder="State / Region"
                   value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="bg-transparent border-b border-border text-[14px] text-foreground placeholder:text-muted-foreground outline-none py-2"
+                  onChange={setState}
+                  country={country}
+                  underline
                 />
-                <input
+                <LocationAutocomplete
+                  kind="country"
                   placeholder="Country"
                   value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="bg-transparent border-b border-border text-[14px] text-foreground placeholder:text-muted-foreground outline-none py-2"
+                  onChange={setCountry}
+                  underline
                 />
               </div>
             </div>

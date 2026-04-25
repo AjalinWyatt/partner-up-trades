@@ -205,7 +205,8 @@ export function computeMatch(
   if (sessO.length > 0) reasons.push(`${sessO[0]} session`);
 
   const pct = Math.round(totalScore);
-  if (pct < 70) return { pct, reasons, breakdown, excluded: true, excludeReason: `Score ${pct}% below 70% minimum` };
+  // Beta threshold: 65% (lowered from 70% while user base is still small).
+  if (pct < 65) return { pct, reasons, breakdown, excluded: true, excludeReason: `Score ${pct}% below 65% minimum` };
   return { pct, reasons, breakdown, excluded: false };
 }
 
