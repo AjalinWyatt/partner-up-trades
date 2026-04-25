@@ -679,6 +679,76 @@ const Onboarding = () => {
           </button>
         </div>
       )}
+
+      {/* Friendly geolocation permission explainer */}
+      <AnimatePresence>
+        {showLocationPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-background/80 backdrop-blur-sm px-4 pb-6"
+            onClick={() => setShowLocationPrompt(false)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="loc-prompt-title"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 rounded-full bg-accent/15 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z" />
+                    <circle cx="12" cy="9" r="2.5" />
+                  </svg>
+                </div>
+              </div>
+              <h3 id="loc-prompt-title" className="text-[18px] font-bold text-foreground text-center mb-2">
+                Share your location?
+              </h3>
+              <p className="text-[13.5px] text-muted-foreground text-center leading-snug mb-5">
+                We use your location to match you with traders in your region and time zone. Your exact coordinates are never stored — only city, state, and country.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLocationPrompt(false);
+                    runGeolocation();
+                  }}
+                  className="w-full py-3 rounded-xl bg-accent text-[15px] font-bold text-accent-foreground hover:bg-accent/90 transition-colors"
+                >
+                  Allow location
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLocationPrompt(false);
+                    setLocationDenied(true);
+                    toast.info("No problem — we'll help you fill it in", {
+                      description: "Pre-filling from your network. Edit anything that's off.",
+                    });
+                    fillFromIP();
+                  }}
+                  className="w-full py-3 rounded-xl border border-border bg-background text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Not now — I'll enter it manually
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {locationDenied && step === 6 && (
+        <div className="sr-only" aria-live="polite">Location access denied — please enter manually.</div>
+      )}
     </div>
   );
 };
