@@ -91,8 +91,13 @@ const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [markets, setMarkets] = useState<string[]>([]);
   const [wantsBeta, setWantsBeta] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const MARKET_OPTIONS = ["Forex", "Futures", "Options"];
+  const toggleMarket = (m: string) =>
+    setMarkets(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,12 +107,16 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
     if (!phone.trim() || phone.replace(/\D/g, "").length < 7) {
       toast.error("Please enter a valid phone number"); return;
     }
+    if (markets.length === 0) {
+      toast.error("Pick at least one market you trade"); return;
+    }
     setLoading(true);
     const { error } = await supabase.from("waitlist" as any).insert({
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
       wants_beta: wantsBeta,
-      markets: [],
+      markets,
+      market: markets[0],
     } as any);
     setLoading(false);
     if (error) {
@@ -136,6 +145,29 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
             placeholder="+1 555 000 0000" required
             className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
           />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          Which markets do you trade? * <span className="text-muted-foreground/70 normal-case tracking-normal font-medium">(select all that apply)</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {MARKET_OPTIONS.map(m => {
+            const active = markets.includes(m);
+            return (
+              <button
+                key={m} type="button" onClick={() => toggleMarket(m)}
+                className={`px-4 py-2 rounded-full border text-[13px] font-semibold transition-all ${
+                  active
+                    ? "bg-accent/15 border-accent text-accent"
+                    : "bg-secondary border-border text-muted-foreground hover:border-accent/50 hover:text-foreground"
+                }`}
+              >
+                {m}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -586,10 +618,10 @@ const Landing = () => {
                 <UserCheck className="w-3 h-3" /> What we are
               </div>
               <h3 className="text-[26px] sm:text-[32px] font-black text-foreground mb-3 tracking-tight leading-tight">
-                One real human. One real partnership. <br/><span className="text-accent">That's it.</span>
+                Real Human. Real Partnership. Real Accountability. <br/><span className="text-accent">= Real Change.</span>
               </h3>
               <p className="text-muted-foreground text-[15px] max-w-[640px] mx-auto leading-relaxed">
-                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. You hold each other accountable. You journal together. You show up. No gurus. No bots. No bullshit.
+                You get matched 1-on-1 with another trader who runs your markets, your sessions, your style. Build one real partnership — or a few — with people who actually show up. You hold each other accountable. You journal together. No gurus. No bots. No bullshit.
               </p>
             </div>
           </div>
