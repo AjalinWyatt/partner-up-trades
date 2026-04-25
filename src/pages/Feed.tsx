@@ -106,6 +106,7 @@ const Feed = () => {
       context: string[];
       note?: string;
       ago: string;
+      insight: { experience: string; markets: string[]; style: string; bio: string };
     }[]
   >([
     {
@@ -118,6 +119,12 @@ const Feed = () => {
       context: ["Bad Loss", "Need Perspective"],
       note: "Took a -2R hit on EURUSD, want a sanity check.",
       ago: "12s",
+      insight: {
+        experience: "2 yrs · Intermediate",
+        markets: ["Forex", "Indices"],
+        style: "Day trader · London session",
+        bio: "Discretionary price action. Working on impulse control after losses.",
+      },
     },
     {
       id: "r2",
@@ -129,6 +136,12 @@ const Feed = () => {
       context: ["Pre-Trade Check"],
       note: "About to size up — 5 min gut check?",
       ago: "47s",
+      insight: {
+        experience: "4 yrs · Advanced",
+        markets: ["Futures"],
+        style: "Scalper · NY open",
+        bio: "ES/NQ. Strict daily loss limit. Looking for a reality check before sizing up.",
+      },
     },
   ]);
 
