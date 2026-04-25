@@ -131,7 +131,7 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
     <form onSubmit={submit} className="bg-card border border-border rounded-3xl p-6 sm:p-7 space-y-4" autoComplete="on" name="waitlist">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Email *</label>
+          <label htmlFor="waitlist-email" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Email *</label>
           <input
             type="email" value={email} onChange={e => setEmail(e.target.value)}
             placeholder="you@email.com" required
@@ -140,7 +140,7 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Phone *</label>
+          <label htmlFor="waitlist-phone" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Phone *</label>
           <input
             type="tel" value={phone} onChange={e => setPhone(e.target.value)}
             placeholder="+1 555 000 0000" required
