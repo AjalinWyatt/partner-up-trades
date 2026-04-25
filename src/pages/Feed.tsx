@@ -701,6 +701,13 @@ const Feed = () => {
 
             {/* REQUESTER card — for traders who need someone right now */}
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+              <div className="mb-3 flex items-center justify-center gap-2">
+                <span className="h-px flex-1 bg-border" />
+                <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Need Help
+                </span>
+                <span className="h-px flex-1 bg-border" />
+              </div>
               {/* Centered pulse icon */}
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary shadow-[0_0_28px_hsl(var(--primary)/0.35)]">
                 <Activity className="h-5 w-5 animate-pulse-dot" />
@@ -711,7 +718,9 @@ const Feed = () => {
               </p>
 
               {/* Context chips — what's going on, so helpers know before accepting */}
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">What's going on? <span className="font-normal normal-case tracking-normal text-muted-foreground/70">(optional)</span></p>
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                What's going on? <span className="font-normal normal-case tracking-normal text-destructive/80">(required)</span>
+              </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {[
                   "Bad Loss",
@@ -748,6 +757,10 @@ const Feed = () => {
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => {
+                    if (supportContext.length === 0) {
+                      toast.error("Tap what you need help with first so a trader knows how to show up for you.");
+                      return;
+                    }
                     toast.success("Pulse sent — waiting for a trader to answer…");
                     setSupportContext([]);
                   }}
@@ -757,6 +770,10 @@ const Feed = () => {
                 </button>
                 <button
                   onClick={() => {
+                    if (supportContext.length === 0) {
+                      toast.error("Tap what you need help with first so a trader knows how to show up for you.");
+                      return;
+                    }
                     toast.success("Pulse sent — waiting for a trader to answer…");
                     setSupportContext([]);
                   }}
@@ -772,7 +789,14 @@ const Feed = () => {
             </div>
 
             {/* HELPER card — for traders willing to be there for someone */}
-            <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+            <div className="rounded-2xl border border-primary/30 bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--primary)/0.12)] ring-1 ring-primary/10 [background-image:linear-gradient(180deg,hsl(var(--primary)/0.06),transparent_60%)]">
+              <div className="mb-3 flex items-center justify-center gap-2">
+                <span className="h-px flex-1 bg-primary/20" />
+                <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                  Help Others
+                </span>
+                <span className="h-px flex-1 bg-primary/20" />
+              </div>
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
