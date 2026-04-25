@@ -799,7 +799,7 @@ const Feed = () => {
                       <Activity className="h-4 w-4" /> Send Pulse
                     </button>
                     <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground">
-                      Sessions include chat + voice notes. No live calls.
+                      Sessions include chat + voice notes.
                     </p>
                   </div>
 
