@@ -91,6 +91,7 @@ const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 
 /* ───────────────── Waitlist form (simplified) ───────────────── */
 const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [markets, setMarkets] = useState<string[]>([]);
@@ -103,6 +104,9 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim() || name.trim().length < 2) {
+      toast.error("Please enter your name"); return;
+    }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error("Please enter a valid email"); return;
     }
@@ -114,6 +118,7 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
     setLoading(true);
     const { error } = await supabase.from("waitlist" as any).insert({
+      name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
       wants_beta: wantsBeta,
@@ -131,6 +136,15 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   return (
     <form onSubmit={submit} className="bg-card border border-border rounded-3xl p-6 sm:p-7 space-y-4" autoComplete="on" name="waitlist">
+      <div>
+        <label htmlFor="waitlist-name" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Name *</label>
+        <input
+          type="text" value={name} onChange={e => setName(e.target.value)}
+          placeholder="Your name" required maxLength={80}
+          name="name" id="waitlist-name" autoComplete="name"
+          className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
+        />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label htmlFor="waitlist-email" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Email *</label>
