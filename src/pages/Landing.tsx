@@ -342,6 +342,95 @@ const PulseMock = () => {
   );
 };
 
+// PULSE HELPER - "Available to Help" side, showing incoming Pulse requests waiting to be answered
+const PulseHelperMock = () => {
+  const incoming = [
+    { name: "Marcus C.", reason: "Bad Loss", time: "12s", photo: mockMarcus, market: "Forex" },
+    { name: "Aaliyah R.", reason: "Revenge Trading", time: "38s", photo: mockAaliyah, market: "Futures" },
+    { name: "Diego A.", reason: "Pre-Trade Check", time: "1m", photo: mockDiego, market: "Crypto" },
+    { name: "JT", reason: "Anxiety", time: "2m", photo: mockJt, market: "Forex" },
+    { name: "KW", reason: "Need Perspective", time: "3m", photo: mockKw, market: "Indices" },
+    { name: "Sana M.", reason: "Lonely Journey", time: "4m", initials: "SM", market: "Crypto" },
+    { name: "Theo B.", reason: "Just Need to Talk", time: "5m", initials: "TB", market: "Forex" },
+    { name: "Riya P.", reason: "Bad Loss", time: "7m", initials: "RP", market: "Options" },
+  ];
+  return (
+    <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+      {/* Header */}
+      <div className="px-5 pt-5 flex items-center justify-between">
+        <span className="text-[16px] font-black tracking-tight text-foreground">TradersWorld</span>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full border border-border bg-card flex items-center justify-center"><Plus className="w-3.5 h-3.5 text-foreground" /></div>
+          <img src={mockNilaja} alt="" className="w-7 h-7 rounded-full object-cover" />
+        </div>
+      </div>
+      {/* Feed/Pulse tabs */}
+      <div className="px-5 pt-3 pb-3 flex justify-center border-b border-border">
+        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+          <span className="px-5 py-1.5 text-[12px] font-semibold text-muted-foreground">Feed</span>
+          <span className="px-5 py-1.5 rounded-full bg-accent/10 border border-accent/40 text-[12px] font-bold text-foreground">Pulse</span>
+        </div>
+      </div>
+      {/* Help Others header strip */}
+      <div className="px-4 pt-4">
+        <div className="flex items-center justify-center gap-2">
+          <span className="h-px flex-1 bg-accent/20" />
+          <span className="rounded-full border border-accent/40 bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Help Others</span>
+          <span className="h-px flex-1 bg-accent/20" />
+        </div>
+      </div>
+      {/* Available to Help toggle row */}
+      <div className="px-4 pt-3">
+        <div className="rounded-2xl border border-accent/30 bg-card p-3.5 [background-image:linear-gradient(180deg,hsl(var(--accent)/0.06),transparent_60%)]">
+          <div className="flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-accent shadow-[0_0_10px_hsl(var(--accent))]" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-bold text-foreground">Available to Help</div>
+              <div className="text-[10px] text-muted-foreground">You'll see Pulses from traders who need someone.</div>
+            </div>
+            <div className="w-9 h-5 rounded-full bg-accent/30 relative shrink-0">
+              <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-accent shadow-[0_0_10px_hsl(var(--accent))]" />
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Incoming Pulses */}
+      <div className="px-4 pt-3 pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-accent">Incoming Pulses</div>
+          <div className="text-[10px] font-semibold text-muted-foreground">{incoming.length} waiting</div>
+        </div>
+        <ul className="space-y-1.5 max-h-[260px] overflow-hidden">
+          {incoming.map((p, i) => (
+            <li key={i} className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-2.5 py-2">
+              {p.photo ? (
+                <img src={p.photo} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/30 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-accent">{p.initials}</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-foreground truncate">{p.name}</span>
+                  <span className="px-1.5 py-px rounded-full bg-secondary border border-border text-[8px] font-bold text-muted-foreground">{p.market}</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground truncate">
+                  <span className="text-accent font-semibold">{p.reason}</span> · {p.time} ago
+                </div>
+              </div>
+              <button className="shrink-0 rounded-full bg-accent text-accent-foreground px-2.5 py-1 text-[10px] font-bold inline-flex items-center gap-1">
+                <Activity className="w-3 h-3" /> Connect
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="text-[9px] text-muted-foreground text-center mt-2.5">First to accept connects. Others see "This Pulse has already been answered."</div>
+      </div>
+    </div>
+  );
+};
+
 // DISCOVER - list of curated matches
 const DiscoverMock = () => {
   const matches = [
