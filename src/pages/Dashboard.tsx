@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Inbox, MessageSquareHeart, Calendar, Notebook, Flame, ChevronRight, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck } from "lucide-react";
+import { Inbox, Calendar, Notebook, Flame, ChevronRight, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck, Lock } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
-import { timeAgo, computeMatch } from "@/lib/matchUtils";
+import { timeAgo } from "@/lib/matchUtils";
+import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 
 interface StatCardProps {
   title: string;
@@ -40,7 +41,7 @@ const Dashboard = () => {
   const { loading: guardLoading } = useOnboardingGuard();
 
   const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
-  const [stats, setStats] = useState({ savedYou: 0, savedTotal: 0, matches: 0, streak: 0, maxStreak: 0, logs: 0, activeStreaks: 0 });
+  const [stats, setStats] = useState({ savedYou: 0, savedTotal: 0, waiting: 0, streak: 0, maxStreak: 0, logs: 0, activeStreaks: 0 });
   const [updates, setUpdates] = useState<{ id: string; text: string; created_at: string; route: string }[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,34 +70,21 @@ const Dashboard = () => {
 
       setProfile(prof || null);
 
-      // Matches count: traders with 90%+ score (excluding existing connections & blocks)
-      let matchesCount = 0;
+      // Waiting list count: pending requests that overflow the user's partner cap
+      let waitingCount = 0;
       try {
-        const [{ data: myTrading }, { data: myProfile }, { data: connRows }, { data: blockedRows }] = await Promise.all([
-          supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-          supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-          supabase.from("partner_connections").select("requester_id, receiver_id").or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
-          supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
-        ]);
-        const excluded = new Set<string>([user.id]);
-        (connRows || []).forEach((c: any) => { excluded.add(c.requester_id); excluded.add(c.receiver_id); });
-        (blockedRows || []).forEach((b: any) => excluded.add(b.blocked_id));
-
-        const { data: allProfiles } = await supabase
-          .from("profiles").select("*").neq("id", user.id).eq("onboarding_completed", true);
-        const eligible = (allProfiles || []).filter((p: any) => !excluded.has(p.id));
-        if (eligible.length > 0 && myTrading) {
-          const ids = eligible.map((p: any) => p.id);
-          const { data: allTrading } = await supabase.from("trading_profiles").select("*").in("user_id", ids);
-          const tMap = new Map<string, any>();
-          (allTrading || []).forEach((t: any) => tMap.set(t.user_id, t));
-          matchesCount = eligible.reduce((acc: number, p: any) => {
-            const r = computeMatch(myTrading, tMap.get(p.id), myProfile, p);
-            return !r.excluded && r.pct >= 90 ? acc + 1 : acc;
-          }, 0);
-        }
+        const { count: acceptedCount } = await supabase
+          .from("partner_connections")
+          .select("*", { count: "exact", head: true })
+          .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+          .eq("status", "accepted");
+        const accepted = acceptedCount || 0;
+        const pending = pendingRequests || 0;
+        const pro = await isProMember(user.id);
+        const freeSlotsLeft = Math.max(0, FREE_PARTNER_LIMIT - accepted);
+        waitingCount = pro ? 0 : Math.max(0, pending - freeSlotsLeft);
       } catch (e) {
-        console.error("matches calc failed", e);
+        console.error("waiting calc failed", e);
       }
 
       // Streak calculations
@@ -120,7 +108,7 @@ const Dashboard = () => {
       setStats({
         savedYou: savedYouCount || 0,
         savedTotal: savedByMeCount || 0,
-        matches: matchesCount,
+        waiting: waitingCount,
         streak,
         maxStreak,
         logs: entries?.length || 0,
@@ -246,11 +234,11 @@ const Dashboard = () => {
             onClick={() => navigate("/saved")}
           />
           <StatCard
-            title="Matches"
-            value={stats.matches}
-            subtitle="90% and up"
-            icon={<MessageSquareHeart className="w-5 h-5" strokeWidth={1.6} />}
-            onClick={() => navigate("/discover")}
+            title="Waiting List"
+            value={stats.waiting}
+            subtitle={stats.waiting > 0 ? "Tap to unlock" : "All clear"}
+            icon={<Lock className="w-5 h-5" strokeWidth={1.6} />}
+            onClick={() => navigate("/waiting-list")}
           />
           <StatCard
             title="Daily Streak"
