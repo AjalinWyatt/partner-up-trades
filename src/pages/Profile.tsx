@@ -949,7 +949,7 @@ const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost
   const photos = posts.filter((post) => {
     const media = post.media_urls?.[0] || post.media_url || post.image_url;
     if (!media) return false;
-    const type = post.media_type || "";
+    const type = (post as any).media_type || "";
     return !type.startsWith("video");
   });
 
