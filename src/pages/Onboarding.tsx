@@ -663,6 +663,13 @@ const Onboarding = () => {
           <button
             onClick={async () => {
               if (step === 5) {
+                // Username (lives on step 1)
+                const cleanUsername = nickname.trim().toLowerCase().replace(/[^a-z0-9_.]/g, "");
+                if (cleanUsername && (cleanUsername.length < 3 || cleanUsername.length > 30)) {
+                  flagError("username", 1, "Username must be 3–30 characters (letters, numbers, _ or .)");
+                  return;
+                }
+                // Age (lives on step 1)
                 if (dateOfBirth) {
                   const dob = new Date(dateOfBirth);
                   const today = new Date();
@@ -670,19 +677,20 @@ const Onboarding = () => {
                   const m = today.getMonth() - dob.getMonth();
                   if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
                   if (age < 18) {
-                    toast.error("You must be 18 or older to use Traders World");
+                    flagError("dob", 1, "You must be 18 or older to use Traders World");
                     return;
                   }
                 }
+                // Local reach requires city + country (both live on step 1)
                 if (reach === "Local" && (!city.trim() || !country.trim())) {
-                  toast.error("City and Country are required for Local matching");
+                  flagError(
+                    !city.trim() ? "city" : "country",
+                    1,
+                    "City and Country are required for Local matching",
+                  );
                   return;
                 }
-                const cleanUsername = nickname.trim().toLowerCase().replace(/[^a-z0-9_.]/g, "");
-                if (cleanUsername && (cleanUsername.length < 3 || cleanUsername.length > 30)) {
-                  toast.error("Username must be 3–30 characters (letters, numbers, _ or .)");
-                  return;
-                }
+                setErrorField(null);
                 goTo(6);
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
@@ -761,13 +769,15 @@ const Onboarding = () => {
                   console.error("Onboarding save error:", err);
                   const msg = err?.message || "";
                   if (msg.includes("profiles_username_format")) {
-                    toast.error("Username must be 3–30 chars: lowercase letters, numbers, _ or .");
+                    flagError("username", 1, "Username must be 3–30 chars: lowercase letters, numbers, _ or .");
+                    return;
                   } else if (msg.includes("duplicate key") && msg.includes("username")) {
-                    toast.error("That username is already taken. Pick another.");
+                    flagError("username", 1, "That username is already taken. Pick another.");
+                    return;
                   } else {
                     toast.error(msg ? `Couldn't save: ${msg}` : "Failed to save your profile. Please try again.");
+                    goTo(5);
                   }
-                  goTo(5);
                 }
               } else {
                 goTo(step + 1);
