@@ -385,7 +385,7 @@ export default function TradingLog() {
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
             </button>
             <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
-              {entryType === "study" ? "Log Study" : "Log Trade"}
+              {editingId ? `Edit ${entryType === "study" ? "Study" : "Trade"}` : (entryType === "study" ? "Log Study" : "Log Trade")}
             </span>
           </div>
           <button
@@ -542,6 +542,28 @@ export default function TradingLog() {
               placeholder="Pair (e.g. XAU/USD, NQ, BTC/USD)"
               className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
             />
+            {marketName && PAIR_SUGGESTIONS[marketName] && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {PAIR_SUGGESTIONS[marketName].map((p) => {
+                  const sel = pairName === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPairName(sel ? "" : p)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
+                        sel
+                          ? "bg-accent/[0.12] text-accent border-accent"
+                          : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>}
 
           {/* Account Type */}
