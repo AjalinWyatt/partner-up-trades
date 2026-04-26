@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Heart, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, Pencil, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
+import CreatePhotoAlbumModal from "@/components/CreatePhotoAlbumModal";
 import SharePostSheet from "@/components/SharePostSheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,6 +129,7 @@ const Profile = () => {
   const [posts, setPosts] = useState<ProfilePostItem[]>([]);
   const [savedPosts, setSavedPosts] = useState<ProfilePostItem[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showCreatePhoto, setShowCreatePhoto] = useState(false);
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
@@ -701,20 +703,26 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Posts / Grid / Details / Journal pill tabs */}
-        <div className="mt-6 flex justify-center gap-2.5 px-5">
-          {["Posts", "Grid", "Details", "Journal"].map((tab, index) => (
+        {/* Posts / Grid / Details / Journal icon tabs */}
+        <div className="mt-6 flex items-center justify-center gap-1 border-b border-border px-5">
+          {[
+            { Icon: FileText, label: "Posts" },
+            { Icon: Grid3x3, label: "Grid" },
+            { Icon: Info, label: "Details" },
+            { Icon: NotebookPen, label: "Journal" },
+          ].map(({ Icon, label }, index) => (
             <button
-              key={tab}
+              key={label}
               onClick={() => setActiveTab(index)}
+              aria-label={label}
+              title={label}
               className={cn(
-                "flex-1 max-w-[110px] rounded-full px-4 py-2.5 text-sm font-bold transition-all",
-                activeTab === index
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-transparent text-foreground hover:bg-muted"
+                "relative flex-1 max-w-[120px] flex items-center justify-center py-3 transition-colors",
+                activeTab === index ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {tab}
+              <Icon className="h-[22px] w-[22px]" strokeWidth={activeTab === index ? 2.4 : 1.8} />
+              {activeTab === index && <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-foreground" />}
             </button>
           ))}
         </div>
@@ -734,7 +742,7 @@ const Profile = () => {
             onSharePost={(post) => setPostToShare(post)}
           />
         ) : activeTab === 1 ? (
-          <PhotoGrid posts={posts} onOpenPost={setSelectedPost} />
+          <PhotoGrid posts={posts} onOpenPost={setSelectedPost} onCreate={() => setShowCreatePhoto(true)} />
         ) : activeTab === 2 ? (
           <DetailsGrid
             profile={profile}
@@ -786,6 +794,11 @@ const Profile = () => {
         onShare={(post) => setPostToShare(post)}
       />
       <SharePostSheet post={postToShare} myId={userId} onClose={() => setPostToShare(null)} />
+      <CreatePhotoAlbumModal
+        open={showCreatePhoto}
+        onClose={() => setShowCreatePhoto(false)}
+        onCreated={refreshPosts}
+      />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
@@ -817,7 +830,8 @@ const PostList = ({
   onToggleLike: (postId: string) => void;
   onSharePost: (post: any) => void;
 }) => {
-  if (posts.length === 0 && savedPosts.length === 0) {
+  const visiblePosts = posts.filter((p) => (p as any).share_to_feed !== false);
+  if (visiblePosts.length === 0 && savedPosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
@@ -832,7 +846,7 @@ const PostList = ({
 
   return (
     <div>
-      {posts.map((post) => {
+      {visiblePosts.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         return (
           <div key={post.id} className="border-b border-border px-5 py-4">
@@ -945,7 +959,7 @@ const PostList = ({
   );
 };
 
-const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost: (post: any) => void }) => {
+const PhotoGrid = ({ posts, onOpenPost, onCreate }: { posts: ProfilePostItem[]; onOpenPost: (post: any) => void; onCreate?: () => void }) => {
   const photos = posts.filter((post) => {
     const media = post.media_urls?.[0] || post.media_url || post.image_url;
     if (!media) return false;
@@ -960,13 +974,29 @@ const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost
           <Camera className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="text-base font-bold text-foreground">No photos yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Photos from your posts will show up here in a grid.</p>
+        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Share photos and albums to your grid. They stay on your profile and don't post to the feed.</p>
+        {onCreate && (
+          <button onClick={onCreate} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+            <Plus className="h-4 w-4" /> New photo
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
+    <div className="relative">
+      {onCreate && (
+        <div className="flex justify-end px-3 pt-2 pb-1">
+          <button
+            onClick={onCreate}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" /> New
+          </button>
+        </div>
+      )}
+      <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
       {photos.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         const isMulti = (post.media_urls?.length || 0) > 1;
@@ -985,6 +1015,7 @@ const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost
           </button>
         );
       })}
+      </div>
     </div>
   );
 };

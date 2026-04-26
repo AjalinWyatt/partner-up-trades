@@ -750,6 +750,7 @@ export type Database = {
           media_type: string | null
           media_url: string | null
           media_urls: string[]
+          share_to_feed: boolean
           tags: string[]
           updated_at: string
           user_id: string
@@ -765,6 +766,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           media_urls?: string[]
+          share_to_feed?: boolean
           tags?: string[]
           updated_at?: string
           user_id: string
@@ -780,6 +782,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           media_urls?: string[]
+          share_to_feed?: boolean
           tags?: string[]
           updated_at?: string
           user_id?: string
