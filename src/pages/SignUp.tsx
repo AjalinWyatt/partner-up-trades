@@ -82,7 +82,7 @@ const SignUp = () => {
       toast.error(error.message);
     } else {
       trackEvent("signup_verified", { method: "email" });
-      toast.success("Check your email and click the link to finish signing up.");
+      toast.success("Check your email (and spam/junk folder) to finish signing up.");
       setEmailSent(true);
     }
   };
@@ -117,6 +117,13 @@ const SignUp = () => {
           <p className="mt-2 text-sm text-muted-foreground text-center">
             We sent a confirmation link to <span className="text-foreground font-medium">{email}</span>. Click it and you'll be signed in automatically.
           </p>
+
+          <div className="mt-5 w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 text-center">
+            <p className="text-sm text-foreground font-medium">Don't see it?</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Check your <span className="text-foreground font-medium">spam</span> or <span className="text-foreground font-medium">junk</span> folder — sometimes the confirmation email lands there.
+            </p>
+          </div>
 
           <button onClick={handleResendCode} className="text-sm text-accent hover:underline mt-4">
             Didn't get the email? Resend
