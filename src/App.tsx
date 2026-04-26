@@ -15,7 +15,6 @@ import WaitingList from "./pages/WaitingList";
 import Feed from "./pages/Feed";
 import Messages from "./pages/Messages";
 import PulseSession from "./pages/PulseSession";
-import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import ViewProfile from "./pages/ViewProfile";
@@ -50,7 +49,7 @@ const App = () => (
           <Route path="/feed" element={<Feed />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/pulse/session/:id" element={<PulseSession />} />
-          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/notifications" element={<Navigate to="/dashboard" replace />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile/:userId" element={<ViewProfile />} />
