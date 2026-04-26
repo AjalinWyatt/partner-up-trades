@@ -107,7 +107,7 @@ const Discover = () => {
           }`}
         >
           {filtered.length === 0 && matches.length === 0
-            ? "No traders match your criteria right now, please check back soon as new traders join daily"
+            ? "No traders match your criteria right now. Please check back soon."
             : "Some curated matches for you!"}
         </h2>
 
