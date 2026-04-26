@@ -268,15 +268,15 @@ const ViewProfile = () => {
         <div className="px-5 pt-6">
           <div className="flex items-start gap-4">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profile photo" className="h-24 w-24 shrink-0 rounded-full object-cover" />
+              <img src={profile.avatar_url} alt="Profile photo" className="h-[84px] w-[84px] shrink-0 rounded-full object-cover" />
             ) : (
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground">
+              <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-full bg-secondary text-xl font-black text-foreground">
                 {getInitials(profile?.full_name || profile?.username || "T")}
               </div>
             )}
             <div className="min-w-0 flex-1 pt-1">
-              <h1 className="text-[1.8rem] font-extrabold leading-none text-foreground">{displayName}</h1>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">{displayUsername}</p>
+              <h1 className="text-[18px] font-extrabold leading-tight text-foreground truncate">{displayName}</h1>
+              <p className="mt-0.5 text-[12px] font-medium text-muted-foreground truncate">{displayUsername}</p>
               {(() => {
                 const market = tradingProfile?.markets?.[0];
                 const style = tradingProfile?.trading_style?.[0];
@@ -284,18 +284,18 @@ const ViewProfile = () => {
                 const chips = [market, style, exp].filter(Boolean) as string[];
                 if (chips.length === 0) return null;
                 return (
-                  <div className="mt-2 text-[13px] font-semibold text-primary truncate">
+                  <div className="mt-1 text-[12px] font-semibold text-primary truncate">
                     {chips.join(" · ")}
                   </div>
                 );
               })()}
-              {profile?.bio ? (
-                <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-foreground">{profile.bio}</p>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">No bio yet.</p>
-              )}
             </div>
           </div>
+          {profile?.bio ? (
+            <p className="mt-3 whitespace-pre-line text-[13px] leading-5 text-foreground">{profile.bio}</p>
+          ) : (
+            <p className="mt-3 text-[12px] text-muted-foreground">No bio yet.</p>
+          )}
         </div>
 
         {myId && myId !== userId && (
