@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Apple, Smartphone, Share, Plus, MoreVertical, Download, Check, QrCode, Monitor } from "lucide-react";
+import { ArrowLeft, Apple, Smartphone, Share, Plus, MoreVertical, Download, Check, QrCode, Monitor, ChevronUp } from "lucide-react";
 import Wordmark from "@/components/Wordmark";
 
 type Platform = "ios" | "android" | "desktop";
@@ -180,43 +180,107 @@ function IosSteps() {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
       <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-bold mb-4">
-        iPhone / iPad — Safari
+        iPhone / iPad — must be Safari
       </p>
-      <Step n={1} title="Open this page in Safari">
-        Other browsers (Chrome, Firefox) don't support adding to home screen on iPhone — you must use Safari.
+
+      <Step n={1} title="Open tradersworld.app in Safari">
+        It <strong className="text-foreground">has</strong> to be Safari — Chrome and Firefox can't install
+        apps on iPhone. If you're in another browser, copy the URL and paste it into Safari.
       </Step>
+
       <Step
         n={2}
-        title="Tap the Share button"
+        title="Tap the Share button at the bottom of Safari"
         icon={
           <IconChip>
             <Share className="w-3.5 h-3.5" /> Share
           </IconChip>
         }
       >
-        It's the square with an arrow pointing up — at the bottom of the screen on iPhone, or top-right
-        on iPad.
+        Square icon with an arrow pointing up. On iPhone it's centered in the bottom toolbar; on iPad
+        it's top-right.
       </Step>
+
+      {/* Screenshot-style mock of the iOS Share Sheet */}
+      <div className="ml-10 -mt-2 mb-5">
+        <div className="rounded-2xl bg-[#1c1c1e] border border-white/10 p-3 shadow-xl max-w-[260px]">
+          {/* Top app preview row */}
+          <div className="flex items-center gap-2.5 pb-2.5 border-b border-white/10">
+            <img src="/app-icon-512.png" alt="" width={36} height={36} className="rounded-lg" />
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-[12px] font-semibold truncate">TradersWorld</p>
+              <p className="text-white/50 text-[10px] truncate">tradersworld.app</p>
+            </div>
+          </div>
+          {/* Action rows */}
+          <div className="text-white text-[12px]">
+            <ShareRow icon={<Plus className="w-3.5 h-3.5" />} label="Add to Reading List" />
+            <ShareRow icon={<Plus className="w-3.5 h-3.5" />} label="Add Bookmark" />
+            <ShareRow
+              icon={<Plus className="w-4 h-4 text-primary" />}
+              label="Add to Home Screen"
+              highlight
+            />
+            <ShareRow icon={<Share className="w-3.5 h-3.5" />} label="Copy" />
+          </div>
+          <p className="text-[10px] text-primary/90 mt-2 flex items-center gap-1 font-semibold">
+            <ChevronUp className="w-3 h-3" /> Tap this one
+          </p>
+        </div>
+      </div>
+
       <Step
         n={3}
-        title='Tap "Add to Home Screen"'
+        title='Scroll down and tap "Add to Home Screen"'
         icon={
           <IconChip>
-            <Plus className="w-3.5 h-3.5" /> Add
+            <Plus className="w-3.5 h-3.5" /> Add to Home Screen
           </IconChip>
         }
       >
-        Scroll down in the share menu if you don't see it right away.
+        It's usually a few rows down — scroll through the grey list until you see it (highlighted
+        above).
       </Step>
-      <Step n={4} title='Tap "Add" to confirm'>
-        TradersWorld will appear on your home screen with our app icon. Tap it to launch full-screen.
+
+      <Step n={4} title='Tap "Add" in the top-right corner'>
+        You'll see a preview with our globe icon and the name <strong className="text-foreground">TradersWorld</strong>.
+        Tap <IconChip>Add</IconChip> to confirm.
       </Step>
+
+      <Step n={5} title="Open TradersWorld from your home screen">
+        Look for our green globe icon. The first time you open it, tap{" "}
+        <IconChip>Allow</IconChip> when iOS asks about notifications — that's how you'll get partner
+        requests, matches and messages.
+      </Step>
+
       <div className="mt-2 rounded-lg bg-primary/10 border border-primary/20 p-3">
         <p className="text-[12px] text-foreground leading-relaxed">
-          <strong>📲 After installing</strong>, open the app and allow notifications when prompted —
-          this lets us send you new partner requests, matches, and messages.
+          <strong>💡 Stuck?</strong> Make sure you're in <strong>Safari</strong> (not Chrome or the
+          in-app browser of Instagram/X). If the share menu doesn't show "Add to Home Screen", scroll
+          the grey list further down.
         </p>
       </div>
+    </div>
+  );
+}
+
+function ShareRow({
+  icon,
+  label,
+  highlight,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between py-2 border-b border-white/5 last:border-b-0 ${
+        highlight ? "bg-primary/15 -mx-3 px-3 rounded-md ring-1 ring-primary/40" : ""
+      }`}
+    >
+      <span className={highlight ? "font-semibold text-white" : "text-white/90"}>{label}</span>
+      <span className={highlight ? "text-primary" : "text-white/60"}>{icon}</span>
     </div>
   );
 }
