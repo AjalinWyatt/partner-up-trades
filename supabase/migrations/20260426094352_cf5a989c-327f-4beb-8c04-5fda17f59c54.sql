@@ -1,4 +1,3 @@
--- Remove seeded demo trader accounts so testers see only real data
 DELETE FROM auth.users
 WHERE email IN (
   'maya.fx.demo+tradersworld@gmail.com',
