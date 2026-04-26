@@ -374,6 +374,26 @@ export default function TradingLog() {
   const weekDots = getWeekDots();
   const stats = getWeekStats();
 
+  // Most-used pairs from prior entries (optionally filtered by current market)
+  function getRecentPairs(forMarket?: string): string[] {
+    const counts = new Map<string, number>();
+    for (const e of entries) {
+      if (!e.market_pair) continue;
+      const parts = e.market_pair.split(" · ").map((s) => s.trim()).filter(Boolean);
+      const mk = parts[0];
+      const pr = parts.slice(1).join(" · ");
+      const pair = pr || (MARKETS.includes(mk) ? "" : mk);
+      if (!pair) continue;
+      if (forMarket && MARKETS.includes(mk) && mk !== forMarket) continue;
+      counts.set(pair, (counts.get(pair) || 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([p]) => p);
+  }
+  const recentPairs = getRecentPairs(marketName || undefined);
+
   // ─── FORM VIEW ───
   if (showForm) {
     return (
