@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Lock, Link, BookOpen, TrendingUp } from "lucide-react";
+import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,8 @@ interface JournalEntry {
   created_at: string;
   pnl_unit?: string | null;
   entry_type?: string | null;
+  study_data?: any;
+  account_type?: string | null;
 }
 
 const MOODS = [
@@ -39,6 +41,41 @@ const RESULTS = [
 
 const ACCOUNT_TYPES = ["Demo", "Challenge", "Funded", "Live"];
 const MARKETS = ["Forex", "Futures", "Options", "Crypto", "Stocks", "Indices"];
+
+const PAIR_SUGGESTIONS: Record<string, string[]> = {
+  Forex: ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD", "GBP/JPY", "AUD/USD", "USD/CAD", "EUR/JPY"],
+  Futures: ["NQ", "ES", "YM", "RTY", "CL", "GC", "MNQ", "MES"],
+  Options: ["SPY", "QQQ", "TSLA", "NVDA", "AAPL", "AMZN", "META", "MSFT"],
+  Crypto: ["BTC/USD", "ETH/USD", "SOL/USD", "XRP/USD", "DOGE/USD", "BNB/USD"],
+  Stocks: ["AAPL", "TSLA", "NVDA", "AMZN", "MSFT", "GOOGL", "META", "AMD"],
+  Indices: ["SPX", "NDX", "DJI", "RUT", "VIX", "DAX", "FTSE", "NKY"],
+};
+
+// Study log options
+const STUDY_TYPES = [
+  { value: "backtest", emoji: "🔬", label: "Backtest" },
+  { value: "chart_review", emoji: "📊", label: "Chart Review" },
+  { value: "strategy", emoji: "🧠", label: "Strategy" },
+  { value: "psychology", emoji: "🧘", label: "Psychology" },
+  { value: "course", emoji: "🎓", label: "Course" },
+  { value: "book", emoji: "📖", label: "Book" },
+  { value: "video", emoji: "🎥", label: "Video" },
+  { value: "journal_review", emoji: "🔁", label: "Journal Review" },
+];
+const STUDY_DURATIONS = ["15m", "30m", "1h", "2h", "3h+"];
+const STUDY_TOPICS = [
+  "Price Action", "Order Blocks", "Liquidity", "Fair Value Gaps", "Supply/Demand",
+  "ICT", "SMC", "Wyckoff", "Elliott Wave", "Volume Profile", "Risk Management",
+  "Position Sizing", "Mindset", "Trade Plan", "Backtesting", "Indicators",
+  "Market Structure", "Trendlines", "Fibonacci", "News Trading",
+];
+const STUDY_CONFIDENCE = [
+  { value: 1, label: "Confused", emoji: "😵" },
+  { value: 2, label: "Learning", emoji: "🤔" },
+  { value: 3, label: "Getting it", emoji: "💡" },
+  { value: 4, label: "Solid", emoji: "💪" },
+  { value: 5, label: "Mastered", emoji: "🏆" },
+];
 
 const GREEN_TAGS = [
   "Followed plan", "Clean entry", "Held to TP", "Took partials", "Patient",
@@ -94,6 +131,8 @@ export default function TradingLog() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
@@ -109,6 +148,14 @@ export default function TradingLog() {
   const [shareSetting, setShareSetting] = useState("partners");
   const [saving, setSaving] = useState(false);
   const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
+
+  // Study form state
+  const [studyType, setStudyType] = useState("");
+  const [studyTopics, setStudyTopics] = useState<string[]>([]);
+  const [studyDuration, setStudyDuration] = useState("");
+  const [studyConfidence, setStudyConfidence] = useState<number>(0);
+  const [studyTakeaway, setStudyTakeaway] = useState("");
+  const [studyResource, setStudyResource] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -206,26 +253,45 @@ export default function TradingLog() {
       if (result === "Win") pnlValue = abs;
       else if (result === "Loss") pnlValue = -abs;
     }
-    const { error } = await supabase.from("journal_entries").insert({
+    const studyData = entryType === "study" ? {
+      study_type: studyType || null,
+      topics: studyTopics,
+      duration: studyDuration || null,
+      confidence: studyConfidence || null,
+      takeaway: studyTakeaway || null,
+      resource: studyResource || null,
+    } : {};
+
+    const payload: any = {
       user_id: userId,
       mood: mood || null,
-      result: result || null,
-      pnl_pips: pnlValue,
+      result: entryType === "trade" ? (result || null) : null,
+      pnl_pips: entryType === "trade" ? pnlValue : null,
       pnl_unit: pnlUnit,
-      market_pair: marketPairStr || null,
+      market_pair: entryType === "trade" ? (marketPairStr || null) : null,
       session: null,
-      tags: selectedTags,
+      tags: entryType === "trade" ? selectedTags : [],
       notes: notes || null,
       share_setting: shareSetting,
-      account_type: accountType || null,
+      account_type: entryType === "trade" ? (accountType || null) : null,
       entry_type: entryType,
-    } as any);
+      study_data: studyData,
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await supabase.from("journal_entries").update(payload).eq("id", editingId).eq("user_id", userId));
+    } else {
+      ({ error } = await supabase.from("journal_entries").insert(payload));
+    }
     setSaving(false);
-    if (error) { toast.error("Failed to save entry"); return; }
-    toast.success("Session logged!");
+    if (error) { toast.error(editingId ? "Failed to update entry" : "Failed to save entry"); return; }
+    toast.success(editingId ? "Entry updated" : (entryType === "study" ? "Study logged!" : "Trade logged!"));
+    const wasEditing = !!editingId;
     setShowForm(false);
     resetForm();
     loadEntries();
+    if (wasEditing) return;
 
     // Notify accepted partners that I just logged
     const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
@@ -263,6 +329,45 @@ export default function TradingLog() {
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
     setPnlUnit("pips");
     setEntryType("trade");
+    setStudyType(""); setStudyTopics([]); setStudyDuration("");
+    setStudyConfidence(0); setStudyTakeaway(""); setStudyResource("");
+    setEditingId(null);
+  }
+
+  function startEdit(entry: JournalEntry) {
+    setEditingId(entry.id);
+    setEntryType((entry.entry_type as any) === "study" ? "study" : "trade");
+    setMood(entry.mood || "");
+    setResult(entry.result || "");
+    const p = entry.pnl_pips;
+    setPnl(p == null ? "" : String(Math.abs(p)));
+    setPnlUnit((entry.pnl_unit as any) || "pips");
+    const mp = entry.market_pair || "";
+    const [mk, ...rest] = mp.split(" · ");
+    setMarketName(MARKETS.includes(mk) ? mk : "");
+    setPairName(MARKETS.includes(mk) ? rest.join(" · ") : mp);
+    setAccountType(entry.account_type || "");
+    setSelectedTags(entry.tags || []);
+    setNotes(entry.notes || "");
+    setShareSetting(entry.share_setting || "partners");
+    const sd = entry.study_data || {};
+    setStudyType(sd.study_type || "");
+    setStudyTopics(sd.topics || []);
+    setStudyDuration(sd.duration || "");
+    setStudyConfidence(sd.confidence || 0);
+    setStudyTakeaway(sd.takeaway || "");
+    setStudyResource(sd.resource || "");
+    setOpenMenuId(null);
+    setShowForm(true);
+  }
+
+  async function deleteEntry(id: string) {
+    if (!confirm("Delete this entry? This can't be undone.")) return;
+    setOpenMenuId(null);
+    const { error } = await supabase.from("journal_entries").delete().eq("id", id).eq("user_id", userId!);
+    if (error) { toast.error("Failed to delete"); return; }
+    toast.success("Entry deleted");
+    loadEntries();
   }
 
   const streak = getStreak();
@@ -280,7 +385,7 @@ export default function TradingLog() {
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
             </button>
             <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
-              {entryType === "study" ? "Log Study" : "Log Trade"}
+              {editingId ? `Edit ${entryType === "study" ? "Study" : "Trade"}` : (entryType === "study" ? "Log Study" : "Log Trade")}
             </span>
           </div>
           <button
@@ -342,6 +447,135 @@ export default function TradingLog() {
               ))}
             </div>
           </div>
+
+          {/* Study-specific fields */}
+          {entryType === "study" && (
+            <>
+              {/* Study type */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What kind of study?</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {STUDY_TYPES.map((s) => {
+                    const sel = studyType === s.value;
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setStudyType(sel ? "" : s.value)}
+                        className={cn(
+                          "flex flex-col items-center gap-0.5 py-2 rounded-[10px] border-[1.5px] transition-colors",
+                          sel
+                            ? "border-accent bg-accent/[0.08]"
+                            : "border-border bg-secondary"
+                        )}
+                      >
+                        <span className="text-base leading-none">{s.emoji}</span>
+                        <span className={cn("text-[9px] font-bold", sel ? "text-accent" : "text-muted-foreground")}>{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Topics */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Topics covered</p>
+                <div className="flex flex-wrap gap-[5px]">
+                  {STUDY_TOPICS.map((t) => {
+                    const sel = studyTopics.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setStudyTopics((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
+                        className={cn(
+                          "px-3 py-[5px] rounded-full text-[11px] font-semibold border-[1.5px] transition-colors",
+                          sel
+                            ? "bg-primary/[0.12] text-primary border-primary"
+                            : "border-border text-foreground bg-transparent"
+                        )}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">⏱️ Time spent</p>
+                <div className="flex gap-1.5">
+                  {STUDY_DURATIONS.map((d) => {
+                    const sel = studyDuration === d;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setStudyDuration(sel ? "" : d)}
+                        className={cn(
+                          "flex-1 py-2 rounded-[10px] border-[1.5px] text-[12px] font-bold transition-colors",
+                          sel
+                            ? "bg-accent/[0.12] text-accent border-accent"
+                            : "border-border bg-secondary text-muted-foreground"
+                        )}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Confidence */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How well do you get it?</p>
+                <div className="flex gap-1.5">
+                  {STUDY_CONFIDENCE.map((c) => {
+                    const sel = studyConfidence === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setStudyConfidence(sel ? 0 : c.value)}
+                        className={cn(
+                          "flex-1 flex flex-col items-center py-2 rounded-[10px] border-[1.5px] transition-colors",
+                          sel
+                            ? "border-accent bg-accent/[0.08]"
+                            : "border-border bg-secondary"
+                        )}
+                      >
+                        <span className="text-lg leading-none">{c.emoji}</span>
+                        <span className={cn("text-[9px] font-bold mt-0.5", sel ? "text-accent" : "text-muted-foreground")}>{c.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Key takeaway */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">💡 Biggest takeaway</p>
+                <input
+                  value={studyTakeaway}
+                  onChange={(e) => setStudyTakeaway(e.target.value)}
+                  placeholder="One thing you'll actually use…"
+                  className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                />
+              </div>
+
+              {/* Resource */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">🔗 Source / link (optional)</p>
+                <input
+                  value={studyResource}
+                  onChange={(e) => setStudyResource(e.target.value)}
+                  placeholder="Book title, video URL, course name…"
+                  className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                />
+              </div>
+            </>
+          )}
 
           {/* Result */}
           {entryType === "trade" && <div>
@@ -437,6 +671,28 @@ export default function TradingLog() {
               placeholder="Pair (e.g. XAU/USD, NQ, BTC/USD)"
               className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
             />
+            {marketName && PAIR_SUGGESTIONS[marketName] && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {PAIR_SUGGESTIONS[marketName].map((p) => {
+                  const sel = pairName === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPairName(sel ? "" : p)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
+                        sel
+                          ? "bg-accent/[0.12] text-accent border-accent"
+                          : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>}
 
           {/* Account Type */}
@@ -631,7 +887,7 @@ export default function TradingLog() {
             <div className="space-y-1.5 mx-5">
               {entries.map((entry) => (
                 <div key={entry.id} className={cn(
-                  "bg-card border rounded-xl p-2.5 px-3",
+                  "bg-card border rounded-xl p-2.5 px-3 relative",
                   entry.entry_type === "study" ? "border-primary/40" : "border-border"
                 )}>
                   <div className="flex items-center justify-between mb-1">
@@ -646,22 +902,89 @@ export default function TradingLog() {
                       </span>
                       <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
                     </div>
-                    {entry.entry_type !== "study" && entry.pnl_pips != null && (
-                      <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                        {entry.pnl_unit === "dollars"
-                          ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
-                          : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {entry.entry_type !== "study" && entry.pnl_pips != null && (
+                        <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                          {entry.pnl_unit === "dollars"
+                            ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
+                            : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
+                        className="w-6 h-6 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+                        aria-label="Entry options"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
+                  {openMenuId === entry.id && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
+                      <div className="absolute right-2 top-9 z-40 min-w-[130px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+                        <button
+                          onClick={() => startEdit(entry)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          onClick={() => deleteEntry(entry.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
                   {entry.mood && (
                     <div className="flex items-center gap-1 mb-1">
                       <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
                       <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
                     </div>
                   )}
+                  {entry.entry_type === "study" && entry.study_data && (
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      {entry.study_data.study_type && (() => {
+                        const st = STUDY_TYPES.find((s) => s.value === entry.study_data.study_type);
+                        return st ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/15 text-primary">
+                            {st.emoji} {st.label}
+                          </span>
+                        ) : null;
+                      })()}
+                      {entry.study_data.duration && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground">
+                          ⏱️ {entry.study_data.duration}
+                        </span>
+                      )}
+                      {entry.study_data.confidence && (() => {
+                        const c = STUDY_CONFIDENCE.find((x) => x.value === entry.study_data.confidence);
+                        return c ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
+                            {c.emoji} {c.label}
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                  {entry.entry_type === "study" && entry.study_data?.takeaway && (
+                    <p className="text-[11px] text-foreground leading-snug mb-1 italic">"{entry.study_data.takeaway}"</p>
+                  )}
                   {entry.notes && (
                     <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                  )}
+                  {entry.entry_type === "study" && entry.study_data?.topics?.length > 0 && (
+                    <div className="flex flex-wrap gap-[3px] mb-1">
+                      {entry.study_data.topics.map((t: string) => (
+                        <span key={t} className="text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px] bg-primary/10 text-primary">{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  {entry.entry_type === "study" && entry.study_data?.resource && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5 truncate">🔗 {entry.study_data.resource}</div>
                   )}
                   {entry.tags && entry.tags.length > 0 && (
                     <div className="flex flex-wrap gap-[3px] mb-1">
@@ -717,7 +1040,7 @@ export default function TradingLog() {
 
       {/* FAB */}
       <button
-        onClick={() => setShowForm(true)}
+        onClick={() => { resetForm(); setShowForm(true); }}
         className="fixed bottom-[68px] right-5 w-[52px] h-[52px] rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center z-40"
         style={{ boxShadow: "0 4px 20px rgba(18,184,122,0.3)" }}
       >
