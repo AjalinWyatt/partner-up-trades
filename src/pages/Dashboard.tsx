@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Inbox, Calendar, Notebook, Flame, ChevronRight, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck, Lock } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import AppHeader from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { timeAgo } from "@/lib/matchUtils";
@@ -228,29 +229,11 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
-      <div className="flex-1 overflow-y-auto pb-20 px-5 pt-5">
-        {/* Welcome header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="text-[16px] text-foreground/90">Welcome Back to</p>
-            <h1 className="text-[28px] font-black tracking-tight">
-              <span className="text-foreground">Traders</span>
-              <span className="text-foreground">World</span>
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate("/profile")}
-            className="w-12 h-12 rounded-full overflow-hidden border-2 border-border shrink-0"
-          >
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} className="w-full h-full object-cover" alt="me" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-black text-primary-foreground">
-                {(profile?.username || "U").slice(0, 1).toUpperCase()}
-              </div>
-            )}
-          </button>
-        </div>
+      <AppHeader />
+      <div className="flex-1 overflow-y-auto pb-20 px-5 pt-2">
+        <p className="text-[14px] text-muted-foreground mb-4">
+          Welcome back{profile?.username ? `, @${profile.username}` : ""}
+        </p>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3 mb-8">
