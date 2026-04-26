@@ -486,6 +486,7 @@ export type Database = {
           account_type: string | null
           created_at: string
           entry_type: string
+          hidden_from_journal: boolean
           id: string
           market_pair: string | null
           mood: string | null
@@ -503,6 +504,7 @@ export type Database = {
           account_type?: string | null
           created_at?: string
           entry_type?: string
+          hidden_from_journal?: boolean
           id?: string
           market_pair?: string | null
           mood?: string | null
@@ -520,6 +522,7 @@ export type Database = {
           account_type?: string | null
           created_at?: string
           entry_type?: string
+          hidden_from_journal?: boolean
           id?: string
           market_pair?: string | null
           mood?: string | null
