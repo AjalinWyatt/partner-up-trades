@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2, ChevronDown } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -133,6 +133,7 @@ export default function TradingLog() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
@@ -212,7 +213,10 @@ export default function TradingLog() {
   function getWeekDots() {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    // Monday-start week (handle Sunday = 0 -> go back 6 days)
+    const dow = today.getDay();
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    startOfWeek.setDate(today.getDate() + diffToMon);
     const dots = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek); day.setDate(day.getDate() + i);
@@ -227,11 +231,16 @@ export default function TradingLog() {
   function getWeekStats() {
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    const dow = today.getDay();
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    startOfWeek.setDate(today.getDate() + diffToMon);
     startOfWeek.setHours(0, 0, 0, 0);
     const allWeek = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
     const weekEntries = allWeek.filter((e) => (e.entry_type || "trade") === "trade");
-    const studyCount = allWeek.filter((e) => e.entry_type === "study").length;
+    const studyEntries = allWeek.filter((e) => e.entry_type === "study");
+    const studyCount = studyEntries.length;
+    const DURATION_MINS: Record<string, number> = { "15m": 15, "30m": 30, "1h": 60, "2h": 120, "3h+": 180 };
+    const studyMins = studyEntries.reduce((sum, e) => sum + (DURATION_MINS[e.study_data?.duration] || 0), 0);
     const pipsEntries = weekEntries.filter((e) => (e.pnl_unit || "pips") === "pips");
     const dollarEntries = weekEntries.filter((e) => e.pnl_unit === "dollars");
     const totalPips = pipsEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
@@ -239,7 +248,7 @@ export default function TradingLog() {
     const totalTrades = weekEntries.length;
     const wins = weekEntries.filter((e) => e.result === "Win").length;
     const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-    return { totalPips, totalDollars, totalTrades, winRate, studyCount };
+    return { totalPips, totalDollars, totalTrades, winRate, studyCount, studyMins };
   }
 
   async function saveEntry() {
@@ -444,10 +453,10 @@ export default function TradingLog() {
             })}
           </div>
 
-          {/* Mood */}
-          <div>
+          {/* Mood (trade only) */}
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
-              How are you feeling? {entryType === "study" ? "🧠" : "💭"}
+              How are you feeling? 💭
             </p>
             <div className="flex gap-1.5">
               {MOODS.map((m) => (
@@ -466,7 +475,7 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Study-specific fields */}
           {entryType === "study" && (
@@ -491,31 +500,6 @@ export default function TradingLog() {
                       >
                         <span className="text-base leading-none">{s.emoji}</span>
                         <span className={cn("text-[9px] font-bold", sel ? "text-accent" : "text-muted-foreground")}>{s.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Topics */}
-              <div>
-                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Topics covered</p>
-                <div className="flex flex-wrap gap-[5px]">
-                  {STUDY_TOPICS.map((t) => {
-                    const sel = studyTopics.includes(t);
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setStudyTopics((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
-                        className={cn(
-                          "px-3 py-[5px] rounded-full text-[11px] font-semibold border-[1.5px] transition-colors",
-                          sel
-                            ? "bg-primary/[0.12] text-primary border-primary"
-                            : "border-border text-foreground bg-transparent"
-                        )}
-                      >
-                        {t}
                       </button>
                     );
                   })}
@@ -800,9 +784,12 @@ export default function TradingLog() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={entryType === "study"
-                ? "Topics covered, key takeaways, things to practice…"
+                ? "Write freely about what you learned today…"
                 : "What happened? What did you learn?"}
-              className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
+              className={cn(
+                "w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent",
+                entryType === "study" ? "min-h-[140px]" : "min-h-[60px]"
+              )}
             />
           </div>
 
@@ -895,29 +882,37 @@ export default function TradingLog() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
-          <div className="bg-card py-2.5 px-2 text-center">
-            <div className={cn("text-base font-black", stats.totalPips >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-              {stats.totalPips > 0 ? "+" : ""}{stats.totalPips}{stats.totalDollars !== 0 ? "p" : " pips"}
+        <div className="grid grid-cols-4 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className={cn("text-sm font-black leading-tight", (stats.totalDollars || stats.totalPips) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.totalDollars !== 0
+                ? `${stats.totalDollars > 0 ? "+$" : "-$"}${Math.abs(stats.totalDollars)}`
+                : `${stats.totalPips > 0 ? "+" : ""}${stats.totalPips}p`}
             </div>
-            {stats.totalDollars !== 0 && (
-              <div className={cn("text-[10px] font-bold", stats.totalDollars >= 0 ? "text-accent" : "text-destructive")}>
-                {stats.totalDollars > 0 ? "+$" : "-$"}{Math.abs(stats.totalDollars)}
+            {stats.totalDollars !== 0 && stats.totalPips !== 0 && (
+              <div className={cn("text-[9px] font-bold leading-none", stats.totalPips >= 0 ? "text-accent" : "text-destructive")}>
+                {stats.totalPips > 0 ? "+" : ""}{stats.totalPips}p
               </div>
             )}
-            <div className="text-[9px] text-muted-foreground mt-px">This Week</div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">P&L</div>
           </div>
-          <div className="bg-card py-2.5 px-2 text-center">
-            <div className="text-base font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className="text-sm font-black text-foreground leading-tight" style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.totalTrades}
             </div>
-            <div className="text-[9px] text-muted-foreground mt-px">Trades</div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Trades</div>
           </div>
-          <div className="bg-card py-2.5 px-2 text-center">
-            <div className={cn("text-base font-black", stats.winRate > 50 ? "text-accent" : "text-foreground")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className={cn("text-sm font-black leading-tight", stats.winRate > 50 ? "text-accent" : "text-foreground")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.winRate}%
             </div>
-            <div className="text-[9px] text-muted-foreground mt-px">Win Rate</div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Win Rate</div>
+          </div>
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className="text-sm font-black text-primary leading-tight" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.studyMins >= 60 ? `${(stats.studyMins / 60).toFixed(stats.studyMins % 60 === 0 ? 0 : 1)}h` : `${stats.studyMins}m`}
+            </div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Studied</div>
           </div>
         </div>
 
@@ -943,10 +938,15 @@ export default function TradingLog() {
           <>
             <div className="space-y-1.5 mx-5">
               {entries.map((entry) => (
-                <div key={entry.id} className={cn(
-                  "bg-card border rounded-xl p-2.5 px-3 relative",
-                  entry.entry_type === "study" ? "border-primary/40" : "border-border"
-                )}>
+                <div
+                  key={entry.id}
+                  onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
+                  className={cn(
+                    "bg-card border rounded-xl p-2.5 px-3 relative cursor-pointer transition-colors hover:bg-card/80",
+                    entry.entry_type === "study" ? "border-primary/40" : "border-border",
+                    expandedId === entry.id && "ring-1 ring-accent/40"
+                  )}
+                >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span className={cn(
@@ -967,6 +967,12 @@ export default function TradingLog() {
                             : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
                         </span>
                       )}
+                      {entry.entry_type === "study" && entry.study_data?.duration && (
+                        <span className="text-sm font-extrabold text-primary" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                          ⏱️ {entry.study_data.duration}
+                        </span>
+                      )}
+                      <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expandedId === entry.id && "rotate-180")} />
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
@@ -979,16 +985,16 @@ export default function TradingLog() {
                   </div>
                   {openMenuId === entry.id && (
                     <>
-                      <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
+                      <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
                       <div className="absolute right-2 top-9 z-40 min-w-[130px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
                         <button
-                          onClick={() => startEdit(entry)}
+                          onClick={(e) => { e.stopPropagation(); startEdit(entry); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
                         >
                           <Pencil className="w-3.5 h-3.5" /> Edit
                         </button>
                         <button
-                          onClick={() => deleteEntry(entry.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -996,7 +1002,17 @@ export default function TradingLog() {
                       </div>
                     </>
                   )}
-                  {entry.mood && (
+                  {/* Compact summary row when collapsed */}
+                  {expandedId !== entry.id && (
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {entry.entry_type === "study"
+                        ? (entry.notes || entry.study_data?.takeaway || "Study session")
+                        : [entry.market_pair, entry.mood ? getMoodText(entry.mood) : null].filter(Boolean).join(" · ") || "Trade entry"}
+                    </div>
+                  )}
+                  {/* Full detail when expanded */}
+                  {expandedId === entry.id && <>
+                  {entry.mood && entry.entry_type !== "study" && (
                     <div className="flex items-center gap-1 mb-1">
                       <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
                       <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
@@ -1012,11 +1028,6 @@ export default function TradingLog() {
                           </span>
                         ) : null;
                       })()}
-                      {entry.study_data.duration && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground">
-                          ⏱️ {entry.study_data.duration}
-                        </span>
-                      )}
                       {entry.study_data.confidence && (() => {
                         const c = STUDY_CONFIDENCE.find((x) => x.value === entry.study_data.confidence);
                         return c ? (
@@ -1031,7 +1042,7 @@ export default function TradingLog() {
                     <p className="text-[11px] text-foreground leading-snug mb-1 italic">"{entry.study_data.takeaway}"</p>
                   )}
                   {entry.notes && (
-                    <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                    <p className="text-[11px] text-foreground leading-snug mb-1 whitespace-pre-wrap">{entry.notes}</p>
                   )}
                   {entry.entry_type === "study" && entry.study_data?.topics?.length > 0 && (
                     <div className="flex flex-wrap gap-[3px] mb-1">
@@ -1063,6 +1074,10 @@ export default function TradingLog() {
                       {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
                     </div>
                   )}
+                  {entry.account_type && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5">Account: {entry.account_type}</div>
+                  )}
+                  </>}
                 </div>
               ))}
             </div>
