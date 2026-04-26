@@ -341,7 +341,7 @@ export default function TradingLog() {
           </div>
 
           {/* Result */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Result</p>
             <div className="flex gap-2 mb-2">
               {RESULTS.map((r) => (
@@ -364,13 +364,29 @@ export default function TradingLog() {
               ))}
             </div>
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={pnl}
-                onChange={(e) => setPnl(e.target.value)}
-                placeholder={pnlUnit === "pips" ? "e.g. +38" : "e.g. +250"}
-                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-              />
+              <div className={cn(
+                "flex-1 flex items-center rounded-[10px] border-[1.5px] bg-secondary overflow-hidden focus-within:border-accent",
+                result === "Win" ? "border-accent" : result === "Loss" ? "border-destructive" : "border-border"
+              )}>
+                {result && (
+                  <span className={cn(
+                    "pl-3.5 pr-1 text-base font-black",
+                    result === "Win" ? "text-accent" : result === "Loss" ? "text-destructive" : "text-primary"
+                  )}>
+                    {result === "Win" ? "+" : result === "Loss" ? "−" : ""}
+                  </span>
+                )}
+                <input
+                  type="text"
+                  value={pnl}
+                  onChange={(e) => setPnl(e.target.value.replace(/[+\-−]/g, ""))}
+                  placeholder={pnlUnit === "pips" ? "e.g. 38" : "e.g. 250"}
+                  className={cn(
+                    "flex-1 py-2.5 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none",
+                    result ? "pl-0 pr-3.5" : "px-3.5"
+                  )}
+                />
+              </div>
               <div className="flex rounded-[10px] border-[1.5px] border-border bg-secondary p-0.5">
                 {(["pips", "dollars"] as const).map((u) => (
                   <button
@@ -387,10 +403,10 @@ export default function TradingLog() {
                 ))}
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Market & Pair */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Market & Pair</p>
             <div className="flex gap-2">
               <input
@@ -406,10 +422,10 @@ export default function TradingLog() {
                 className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
               />
             </div>
-          </div>
+          </div>}
 
           {/* Account Type */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Account Type</p>
             <div className="flex gap-2">
               {ACCOUNT_TYPES.map((a) => (
@@ -427,10 +443,10 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Tags */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What went right / wrong?</p>
              <div className="flex flex-wrap gap-[5px]">
               {ALL_TAGS.map((t) => {
@@ -454,15 +470,19 @@ export default function TradingLog() {
                 );
               })}
             </div>
-          </div>
+          </div>}
 
           {/* Notes */}
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Notes</p>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+              {entryType === "study" ? "What did you study?" : "Notes"}
+            </p>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="What happened? What did you learn?"
+              placeholder={entryType === "study"
+                ? "Topics covered, key takeaways, things to practice…"
+                : "What happened? What did you learn?"}
               className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
             />
           </div>
