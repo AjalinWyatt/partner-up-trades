@@ -277,6 +277,18 @@ const ViewProfile = () => {
             <div className="min-w-0 flex-1 pt-1">
               <h1 className="text-[1.8rem] font-extrabold leading-none text-foreground">{displayName}</h1>
               <p className="mt-1 text-sm font-medium text-muted-foreground">{displayUsername}</p>
+              {(() => {
+                const market = tradingProfile?.markets?.[0];
+                const style = tradingProfile?.trading_style?.[0];
+                const exp = tradingProfile?.experience_level;
+                const chips = [market, style, exp].filter(Boolean) as string[];
+                if (chips.length === 0) return null;
+                return (
+                  <div className="mt-2 text-[13px] font-semibold text-primary truncate">
+                    {chips.join(" · ")}
+                  </div>
+                );
+              })()}
               {profile?.bio ? (
                 <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-foreground">{profile.bio}</p>
               ) : (
