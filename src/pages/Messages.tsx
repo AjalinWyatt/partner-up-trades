@@ -16,6 +16,17 @@ import VoiceRecorder from "@/components/messages/VoiceRecorder";
 import AttachmentButton from "@/components/messages/AttachmentButton";
 import ConversationTagsSheet from "@/components/messages/ConversationTagsSheet";
 import { TRADERSWORLD_SYSTEM_USER_ID } from "@/lib/systemDM";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const SYSTEM_CONNECTION_ID = "system-tradersworld";
 
@@ -39,6 +50,8 @@ export default function Messages() {
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [partnerTrading, setPartnerTrading] = useState<{ markets?: string[] | null; experience_level?: string | null; trading_style?: string[] | null } | null>(null);
+  const [systemExitOpen, setSystemExitOpen] = useState(false);
+  const [deletingSystem, setDeletingSystem] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -475,7 +488,13 @@ export default function Messages() {
         activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
       )}>
         <button
-          onClick={() => setActiveChat(null)}
+          onClick={() => {
+            if (activeChat.id === SYSTEM_CONNECTION_ID) {
+              setSystemExitOpen(true);
+            } else {
+              setActiveChat(null);
+            }
+          }}
           className="p-1.5 text-foreground -ml-1"
           aria-label="Back"
         >
@@ -672,6 +691,51 @@ export default function Messages() {
           onChanged={() => loadTagData(userId)}
         />
       )}
+      <AlertDialog open={systemExitOpen} onOpenChange={setSystemExitOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Keep this in your DMs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You can keep this announcement in your inbox or delete it for a
+              cleaner thread. Either way, we won't keep stacking up promos —
+              new announcements come as a fresh, one-and-done message.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setSystemExitOpen(false);
+                setActiveChat(null);
+              }}
+            >
+              Keep
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingSystem}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (deletingSystem) return;
+                setDeletingSystem(true);
+                const { data, error } = await supabase.functions.invoke(
+                  "delete-system-dms",
+                  { body: {} },
+                );
+                setDeletingSystem(false);
+                if (error) {
+                  toast.error("Couldn't delete — try again");
+                  return;
+                }
+                toast.success("Deleted from your DMs");
+                setSystemExitOpen(false);
+                setActiveChat(null);
+                if (userId) loadConnections(userId);
+              }}
+            >
+              {deletingSystem ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
