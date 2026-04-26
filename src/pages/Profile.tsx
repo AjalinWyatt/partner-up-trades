@@ -692,7 +692,20 @@ const Profile = () => {
             tradingProfile={tradingProfile}
           />
         ) : (
-          <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
+          <JournalList
+            entries={journalEntries}
+            onOpenLog={() => navigate("/trading-log")}
+            onChanged={async () => {
+              if (!userId) return;
+              const { data } = await supabase
+                .from("journal_entries")
+                .select("*")
+                .eq("user_id", userId)
+                .order("created_at", { ascending: false })
+                .limit(50);
+              setJournalEntries((data as JournalEntry[]) || []);
+            }}
+          />
         )}
       </div>
 
