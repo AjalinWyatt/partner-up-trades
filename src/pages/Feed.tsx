@@ -687,6 +687,12 @@ const Feed = () => {
           className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
           style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         >
+        <PullToRefresh
+          onRefresh={async () => {
+            await loadFeed();
+            if (myId) await loadStories(myId);
+          }}
+        >
         {activeMode === "Pulse" ? (
           <div className="space-y-3 px-4 py-3">
             {/* Pulse hero header */}
