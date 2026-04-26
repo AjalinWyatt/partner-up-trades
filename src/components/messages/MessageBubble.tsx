@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
 interface MessageBubbleProps {
@@ -37,6 +38,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
   const time = new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toLowerCase();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(msg.content || "");
+  const [imageOpen, setImageOpen] = useState(false);
   const canEdit = isMine && !hasMedia && !isSharedPost;
 
   async function handleDelete() {
@@ -118,13 +120,33 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
           <AudioPlayer url={msg.media_url!} isMine={isMine} />
         )}
         {hasMedia && isImage && (
-          <a href={msg.media_url!} target="_blank" rel="noopener noreferrer">
-            <img
-              src={msg.media_url!}
-              alt={isSharedPost ? "Shared post" : "Shared image"}
-              className={cn("rounded-lg w-auto mb-1 cursor-pointer", isSharedPost ? "max-h-64" : "max-h-48")}
-            />
-          </a>
+          <>
+            <button
+              type="button"
+              onClick={() => setImageOpen(true)}
+              className="block max-w-full"
+              aria-label="Open image"
+            >
+              <img
+                src={msg.media_url!}
+                alt={isSharedPost ? "Shared post" : "Shared image"}
+                className={cn("rounded-lg w-auto mb-1 cursor-pointer", isSharedPost ? "max-h-64" : "max-h-48")}
+              />
+            </button>
+            <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+              <DialogContent
+                className="max-w-[100vw] sm:max-w-[95vw] w-screen h-[100dvh] sm:h-[95vh] p-0 bg-black/95 border-0 flex items-center justify-center overflow-hidden"
+              >
+                <img
+                  src={msg.media_url!}
+                  alt={isSharedPost ? "Shared post" : "Shared image"}
+                  className="max-w-full max-h-full object-contain select-none"
+                  draggable={false}
+                  onClick={() => setImageOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </>
         )}
         {hasMedia && !isAudio && !isImage && (
           <a
