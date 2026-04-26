@@ -21,17 +21,17 @@ const StatCard = ({ title, value, subtitle, icon, prefix, onClick }: StatCardPro
   return (
   <Tag
     onClick={onClick}
-    className={`bg-card border border-border rounded-2xl p-4 flex flex-col justify-between min-h-[120px] text-left ${onClick ? "hover:border-accent/40 transition-colors" : ""}`}
+    className={`bg-card border border-border rounded-2xl p-3 flex flex-col justify-between min-h-[88px] text-left ${onClick ? "hover:border-accent/40 transition-colors" : ""}`}
   >
     <div className="flex items-start justify-between">
-      <span className="text-[14px] font-bold text-foreground">{title}</span>
+      <span className="text-[12px] font-bold text-foreground">{title}</span>
       <span className="text-muted-foreground/60">{icon}</span>
     </div>
-    <div className="flex items-center gap-1.5 mt-1">
+    <div className="flex items-center gap-1 mt-0.5">
       {prefix}
-      <span className="text-[32px] font-black text-accent leading-none">{value}</span>
+      <span className="text-[24px] font-black text-accent leading-none">{value}</span>
     </div>
-    <span className="text-[11px] text-muted-foreground mt-2">{subtitle}</span>
+    <span className="text-[10px] text-muted-foreground mt-1">{subtitle}</span>
   </Tag>
   );
 };
