@@ -416,7 +416,7 @@ export default function TradingLog() {
     return (
       <div className="flex h-[100dvh] w-full min-w-0 max-w-full flex-col overflow-hidden overscroll-none bg-background touch-pan-y">
         {/* Form header */}
-        <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 pb-2 pt-[max(3rem,calc(env(safe-area-inset-top,0px)+1rem))] lg:pt-3">
+        <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 pb-2 pt-[max(7rem,calc(env(safe-area-inset-top,0px)+1rem))] lg:pt-3">
           <div className="flex min-w-0 items-center gap-2">
             <button onClick={() => setShowForm(false)} className="w-7 h-7 flex items-center justify-center">
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
@@ -876,11 +876,11 @@ export default function TradingLog() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-16" style={{ scrollbarWidth: "none" }}>
+      <div className="min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-[calc(96px+env(safe-area-inset-bottom,0px))] touch-pan-y" style={{ scrollbarWidth: "none" }}>
         {/* Streak */}
-        <div className="flex items-center gap-2.5 mx-5 my-2 p-2.5 px-3.5 bg-card border border-border rounded-xl">
+        <div className="mx-5 my-2 flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl border border-border bg-card p-2.5 px-3.5">
           <span className="text-2xl">⚡</span>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <div className="text-xl font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {streak} Day Streak
             </div>
@@ -906,7 +906,7 @@ export default function TradingLog() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
+        <div className="mx-5 mb-3 grid min-w-0 grid-cols-4 gap-px overflow-hidden rounded-[10px] bg-border">
           <div className="bg-card py-2.5 px-1 text-center">
             <div className={cn("text-sm font-black leading-tight", (stats.totalDollars || stats.totalPips) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.totalDollars !== 0
@@ -941,7 +941,7 @@ export default function TradingLog() {
         </div>
 
         {/* Trade / Study view toggle */}
-        <div className="mx-5 mb-2 flex gap-1.5 p-1 rounded-2xl bg-secondary border border-border">
+        <div className="mx-5 mb-2 flex min-w-0 gap-1.5 overflow-hidden rounded-2xl border border-border bg-secondary p-1">
           {([
             { value: "trade", label: "Trade Log", emoji: "📈" },
             { value: "study", label: "Study Log", emoji: "📚" },
