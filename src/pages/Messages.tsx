@@ -16,6 +16,17 @@ import VoiceRecorder from "@/components/messages/VoiceRecorder";
 import AttachmentButton from "@/components/messages/AttachmentButton";
 import ConversationTagsSheet from "@/components/messages/ConversationTagsSheet";
 import { TRADERSWORLD_SYSTEM_USER_ID } from "@/lib/systemDM";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const SYSTEM_CONNECTION_ID = "system-tradersworld";
 
@@ -39,6 +50,8 @@ export default function Messages() {
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [partnerTrading, setPartnerTrading] = useState<{ markets?: string[] | null; experience_level?: string | null; trading_style?: string[] | null } | null>(null);
+  const [systemExitOpen, setSystemExitOpen] = useState(false);
+  const [deletingSystem, setDeletingSystem] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
