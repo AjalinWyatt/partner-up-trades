@@ -938,6 +938,7 @@ const PostList = ({
 
 const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[]; onOpenLog: () => void; onChanged: () => void | Promise<void> }) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<JournalEntry | null>(null);
 
   const togglePrivacy = async (entry: JournalEntry) => {
     const next = entry.share_setting === "private" ? "partners" : "private";
@@ -951,15 +952,17 @@ const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[
     await onChanged();
   };
 
-  const deleteEntry = async (entry: JournalEntry) => {
-    if (!confirm("Delete this journal entry?")) return;
-    const { error } = await supabase.from("journal_entries").delete().eq("id", entry.id);
-    setOpenMenuId(null);
+  const hideFromJournal = async (entry: JournalEntry) => {
+    const { error } = await supabase
+      .from("journal_entries")
+      .update({ hidden_from_journal: true } as any)
+      .eq("id", entry.id);
+    setConfirmDeleteEntry(null);
     if (error) {
-      toast.error("Couldn't delete entry");
+      toast.error("Couldn't remove entry");
       return;
     }
-    toast.success("Entry deleted");
+    toast.success("Removed from journal");
     await onChanged();
   };
 
@@ -1024,7 +1027,7 @@ const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[
                     <Lock className="w-3.5 h-3.5" /> {isPrivate ? "Make public" : "Make private"}
                   </button>
                   <button
-                    onClick={() => deleteEntry(entry)}
+                    onClick={() => { setOpenMenuId(null); setConfirmDeleteEntry(entry); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Delete
