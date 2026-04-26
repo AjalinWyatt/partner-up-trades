@@ -615,6 +615,7 @@ const Landing = () => {
 
   return (
     <div className="dark min-h-screen bg-background text-foreground overflow-x-hidden">
+      <InstallAppBanner />
       {/* ─── NAV ─── */}
       <nav
         className="fixed top-0 left-0 right-0 z-[100] bg-background/85 backdrop-blur-xl border-b border-border transition-all"
