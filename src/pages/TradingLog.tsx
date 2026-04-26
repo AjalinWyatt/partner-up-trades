@@ -134,13 +134,14 @@ export default function TradingLog() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [logView, setLogView] = useState<"trade" | "study">("trade");
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
   const [mood, setMood] = useState("");
   const [result, setResult] = useState("");
   const [pnl, setPnl] = useState("");
-  const [pnlUnit, setPnlUnit] = useState<"pips" | "dollars">("pips");
+  const [pnlUnit] = useState<"pips" | "dollars">("dollars");
   const [marketName, setMarketName] = useState("");
   const [pairName, setPairName] = useState("");
   const [accountType, setAccountType] = useState("");
@@ -336,7 +337,6 @@ export default function TradingLog() {
   function resetForm() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
-    setPnlUnit("pips");
     setEntryType("trade");
     setStudyType(""); setStudyTopics([]); setStudyDuration("");
     setStudyConfidence(0); setStudyTakeaway(""); setStudyResource("");
@@ -350,7 +350,6 @@ export default function TradingLog() {
     setResult(entry.result || "");
     const p = entry.pnl_pips;
     setPnl(p == null ? "" : String(Math.abs(p)));
-    setPnlUnit((entry.pnl_unit as any) || "pips");
     const mp = entry.market_pair || "";
     const [mk, ...rest] = mp.split(" · ");
     setMarketName(MARKETS.includes(mk) ? mk : "");
