@@ -491,10 +491,9 @@ export default function Messages() {
     <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden overscroll-none touch-pan-y">
       <div
         className={cn(
-          "sticky top-0 z-40 flex min-h-[calc(env(safe-area-inset-top,0px)+4.75rem)] w-full max-w-full shrink-0 items-center gap-3 overflow-hidden px-3 pb-3 border-b bg-background/95 backdrop-blur-xl",
+          "sticky top-0 z-40 flex w-full max-w-full shrink-0 items-center gap-3 overflow-hidden border-b bg-background/95 px-3 pb-3 pt-[max(3rem,calc(env(safe-area-inset-top,0px)+1rem))] backdrop-blur-xl lg:pt-3",
           activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
         )}
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.5rem)" }}
       >
         <button
           onClick={() => {
@@ -563,12 +562,12 @@ export default function Messages() {
         )}
       </div>
       {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap px-4 pt-2">
+        <div className="flex max-w-full shrink-0 flex-wrap items-center gap-1.5 overflow-hidden px-4 pt-2">
           {(assignmentsByPartner[activeChat.partnerId] || [])
             .map((tid) => allTags.find((t) => t.id === tid))
             .filter(Boolean)
             .map((t) => (
-              <span key={t!.id} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
+              <span key={t!.id} className="max-w-full truncate rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 {t!.name}
               </span>
             ))}
@@ -645,12 +644,12 @@ export default function Messages() {
             <button
               onClick={sendMessage}
               disabled={sendingMsg}
-              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary disabled:opacity-40"
             >
               <Send className="w-5 h-5 text-primary-foreground" />
             </button>
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary">
               <VoiceRecorder
                 userId={userId!}
                 connectionId={activeChat.id}
