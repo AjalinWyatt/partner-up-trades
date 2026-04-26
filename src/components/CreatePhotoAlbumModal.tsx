@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface Props {
   open: boolean;
