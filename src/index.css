@@ -156,6 +156,17 @@ html, body {
   scrollbar-width: none;          /* Firefox */
   -ms-overflow-style: none;       /* IE/Edge */
 }
+
+/* Prevent iOS standalone (Add to Home Screen) rubber-band scroll
+   from pulling fixed elements like the bottom nav off-screen */
+html, body {
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+}
+body {
+  /* Stops the whole page from bouncing when you pull down at the top */
+  overflow-x: hidden;
+}
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;                  /* Chrome/Safari */
