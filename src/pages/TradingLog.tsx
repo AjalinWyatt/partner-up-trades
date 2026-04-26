@@ -196,11 +196,18 @@ export default function TradingLog() {
     if (!userId) return;
     setSaving(true);
     const marketPairStr = [marketName, pairName].filter(Boolean).join(" · ");
+    // Apply sign automatically based on result
+    let pnlValue: number | null = pnl ? parseFloat(pnl) : null;
+    if (pnlValue !== null && !isNaN(pnlValue)) {
+      const abs = Math.abs(pnlValue);
+      if (result === "Win") pnlValue = abs;
+      else if (result === "Loss") pnlValue = -abs;
+    }
     const { error } = await supabase.from("journal_entries").insert({
       user_id: userId,
       mood: mood || null,
       result: result || null,
-      pnl_pips: pnl ? parseFloat(pnl) : null,
+      pnl_pips: pnlValue,
       pnl_unit: pnlUnit,
       market_pair: marketPairStr || null,
       session: null,
@@ -208,6 +215,7 @@ export default function TradingLog() {
       notes: notes || null,
       share_setting: shareSetting,
       account_type: accountType || null,
+      entry_type: entryType,
     } as any);
     setSaving(false);
     if (error) { toast.error("Failed to save entry"); return; }
@@ -251,6 +259,7 @@ export default function TradingLog() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
     setPnlUnit("pips");
+    setEntryType("trade");
   }
 
   const streak = getStreak();
