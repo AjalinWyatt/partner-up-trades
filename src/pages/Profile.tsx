@@ -721,6 +721,7 @@ const Profile = () => {
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
             onToggleLike={togglePostLike}
+            onSharePost={(post) => setPostToShare(post)}
           />
         ) : activeTab === 1 ? (
           <DetailsGrid
