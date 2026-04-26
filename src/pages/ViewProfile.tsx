@@ -330,9 +330,9 @@ const ViewProfile = () => {
         </div>
 
         {activeTab === 0 ? (
-          posts.length > 0 ? (
+          (() => { const visible = posts.filter((p) => (p as any).share_to_feed !== false); return visible.length > 0 ? (
             <div>
-              {posts.map((post) => {
+              {visible.map((post) => {
                 const media = post.media_urls?.[0] || post.media_url || post.image_url;
                 return (
                   <button key={post.id} onClick={() => setOpenPost(post)} className="block w-full border-b border-border px-5 py-4 text-left transition-colors hover:bg-muted/20">
