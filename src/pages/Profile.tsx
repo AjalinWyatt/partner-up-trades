@@ -875,7 +875,7 @@ const PostList = ({
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
+                onClick={(e) => { e.stopPropagation(); onSharePost(post); }}
                 aria-label="Share"
                 className="transition-colors hover:text-foreground"
               >
