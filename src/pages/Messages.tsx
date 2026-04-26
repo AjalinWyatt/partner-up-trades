@@ -534,7 +534,7 @@ export default function Messages() {
           </div>
           {activeChat.id === SYSTEM_CONNECTION_ID ? (
             <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold leading-tight text-primary">
-              <Megaphone className="w-3 h-3" /> Official announcements
+              <Megaphone className="h-3 w-3 shrink-0" /> <span className="min-w-0 truncate">Official announcements</span>
             </p>
           ) : (
             <p className="text-[11px] text-muted-foreground truncate leading-tight">
