@@ -1051,6 +1051,25 @@ const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[
           </div>
         );
       })}
+      <AlertDialog open={!!confirmDeleteEntry} onOpenChange={(open) => !open && setConfirmDeleteEntry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from journal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This entry will be removed from your profile journal. It will stay in your trading log.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDeleteEntry && hideFromJournal(confirmDeleteEntry)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
