@@ -691,6 +691,51 @@ export default function Messages() {
           onChanged={() => loadTagData(userId)}
         />
       )}
+      <AlertDialog open={systemExitOpen} onOpenChange={setSystemExitOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Keep this in your DMs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You can keep this announcement in your inbox or delete it for a
+              cleaner thread. Either way, we won't keep stacking up promos —
+              new announcements come as a fresh, one-and-done message.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setSystemExitOpen(false);
+                setActiveChat(null);
+              }}
+            >
+              Keep
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingSystem}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (deletingSystem) return;
+                setDeletingSystem(true);
+                const { data, error } = await supabase.functions.invoke(
+                  "delete-system-dms",
+                  { body: {} },
+                );
+                setDeletingSystem(false);
+                if (error) {
+                  toast.error("Couldn't delete — try again");
+                  return;
+                }
+                toast.success("Deleted from your DMs");
+                setSystemExitOpen(false);
+                setActiveChat(null);
+                if (userId) loadConnections(userId);
+              }}
+            >
+              {deletingSystem ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
