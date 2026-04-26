@@ -810,7 +810,14 @@ const Profile = () => {
             onSharePost={(post) => setPostToShare(post)}
           />
         ) : activeTab === 1 ? (
-          <PhotoGrid posts={posts} onOpenPost={setSelectedPost} onCreate={() => setShowCreatePhoto(true)} />
+          <PhotoGrid
+            posts={posts}
+            albums={albums}
+            onOpenPost={setSelectedPost}
+            onCreate={() => setShowCreatePhoto(true)}
+            onCreateAlbum={() => setShowCreateAlbum(true)}
+            onOpenAlbum={(id) => setOpenAlbumId(id)}
+          />
         ) : activeTab === 2 ? (
           <DetailsGrid
             profile={profile}
