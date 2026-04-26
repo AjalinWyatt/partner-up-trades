@@ -20,13 +20,24 @@ const SignIn = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const redirectAfterAuth = useCallback(async (userId: string) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
+    let destination = "/feed";
 
-    navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+    try {
+      const profileResult = await Promise.race([
+        supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", userId)
+          .maybeSingle(),
+        new Promise<{ data: null }>((resolve) => setTimeout(() => resolve({ data: null }), 2000)),
+      ]);
+
+      destination = profileResult.data?.onboarding_completed === false ? "/onboarding" : "/feed";
+    } catch {
+      destination = "/feed";
+    }
+
+    navigate(destination, { replace: true });
   }, [navigate]);
 
   useEffect(() => {
@@ -59,7 +70,7 @@ const SignIn = () => {
     }
 
     if (data.session?.user) {
-      await redirectAfterAuth(data.session.user.id);
+      void redirectAfterAuth(data.session.user.id);
       return;
     }
 
