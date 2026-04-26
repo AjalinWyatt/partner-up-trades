@@ -7,6 +7,7 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import PostDetailModal from "@/components/PostDetailModal";
+import DetailCardsGrid, { type DetailCardItem } from "@/components/profile/DetailCardsGrid";
 
 interface ViewPostItem {
   id: string;
@@ -204,27 +205,25 @@ const ViewProfile = () => {
 
   const displayName = profile?.full_name || `@${profile?.username || "trader"}`;
   const displayUsername = profile?.username ? `@${profile.username}` : "@trader";
-  const detailSections = [
-    { title: "Markets", items: tradingProfile?.markets || [] },
-    { title: "Instruments", items: tradingProfile?.instruments || [] },
-    { title: "Sessions", items: tradingProfile?.sessions || [] },
-    { title: "Trade Times", items: tradingProfile?.trade_times || [] },
-    { title: "Trading Style", items: tradingProfile?.trading_style || [] },
-    { title: "Strategies", items: tradingProfile?.strategies || [] },
-    { title: "Timeframes", items: tradingProfile?.timeframes || [] },
-    { title: "Primary Goals", items: tradingProfile?.primary_goal || [] },
-    { title: "Struggles", items: tradingProfile?.struggles || [] },
-    { title: "Interests", items: profile?.hobbies || [] },
-    { title: "Chart Prompts", items: profile?.chart_prompts || [] },
-    { title: "Off Chart", items: profile?.off_chart_prompts || [] },
-  ].filter((section) => section.items.length > 0);
-
-  const profileFacts = [
-    { label: "Experience", value: tradingProfile?.experience_level || null },
-    { label: "Gender", value: profile?.gender || null },
+  const first = (arr?: any): string | null => (Array.isArray(arr) && arr.length > 0 ? String(arr[0]) : null);
+  const detailItems: DetailCardItem[] = ([
+    { label: "Session", value: first(tradingProfile?.sessions) },
+    { label: "Trading Style", value: first(tradingProfile?.trading_style) },
+    { label: "Strategy", value: first(tradingProfile?.strategies) },
+    { label: "Charts", value: first(profile?.chart_prompts) },
+    { label: "Interests", value: first(profile?.hobbies) },
+    { label: "Off Chart", value: first(profile?.off_chart_prompts) },
+    { label: "Timeframe", value: first(tradingProfile?.timeframes) },
+    { label: "Experience level", value: tradingProfile?.experience_level || null },
+    { label: "Markets", value: first(tradingProfile?.markets) },
+    { label: "Instruments", value: first(tradingProfile?.instruments) },
+    { label: "Trade Times", value: first(tradingProfile?.trade_times) },
+    { label: "Primary Goal", value: first(tradingProfile?.primary_goal) },
+    { label: "Struggles", value: first(tradingProfile?.struggles) },
     { label: "Looking For", value: tradingProfile?.looking_for_gender || null },
+    { label: "Gender", value: profile?.gender || null },
     { label: "Connection Reach", value: tradingProfile?.connection_reach || null },
-  ].filter((item) => item.value);
+  ].filter((it) => !!it.value) as DetailCardItem[]);
 
   return (
     <>
@@ -395,33 +394,11 @@ const ViewProfile = () => {
             <EmptyState title="No journal yet" description="Nothing shared here yet." />
           )
         ) : (
-          <div className="space-y-3 px-5 py-4 pb-8">
-            {profileFacts.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Overview</p>
-                <div className="space-y-3">
-                  {profileFacts.map((item) => (
-                    <div key={item.label} className="flex items-start justify-between gap-4 border-b border-border/60 pb-3 last:border-b-0 last:pb-0">
-                      <span className="text-xs text-muted-foreground">{item.label}</span>
-                      <span className="text-right text-xs font-semibold text-foreground">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {detailSections.length > 0 ? detailSections.map((section) => (
-              <div key={section.title} className="rounded-2xl border border-border bg-card p-4">
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{section.title}</p>
-                <div className="flex flex-wrap gap-2">
-                  {section.items.map((item: string) => (
-                    <span key={item} className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground">{item}</span>
-                  ))}
-                </div>
-              </div>
-            )) : (
-              <EmptyState title="No details yet" description="This trader hasn’t filled out their trading details." />
-            )}
-          </div>
+          detailItems.length > 0 ? (
+            <DetailCardsGrid items={detailItems} />
+          ) : (
+            <EmptyState title="No details yet" description="This trader hasn’t filled out their trading details." />
+          )
         )}
       </div>
     </div>
