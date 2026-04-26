@@ -112,10 +112,12 @@ const Dashboard = () => {
   const [updates, setUpdates] = useState<{ id: string; text: string; created_at: string; route: string }[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notifFilter, setNotifFilter] = useState<NotifFilter>("all");
+  const [notifLoading, setNotifLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadNotifications = async (uid: string, filter: NotifFilter) => {
+    setNotifLoading(true);
     let query = supabase
       .from("notifications")
       .select("*")
@@ -125,7 +127,11 @@ const Dashboard = () => {
     const types = NOTIF_FILTER_TYPES[filter];
     if (types.length > 0) query = query.in("type", types);
     const { data: ns } = await query;
-    if (!ns || ns.length === 0) { setNotifications([]); return; }
+    if (!ns || ns.length === 0) {
+      setNotifications([]);
+      setNotifLoading(false);
+      return;
+    }
     const actorIds = [...new Set(ns.map((n: any) => n.actor_id))];
     const { data: actors } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", actorIds);
     const actorMap = new Map((actors || []).map((a: any) => [a.id, a]));
@@ -133,6 +139,7 @@ const Dashboard = () => {
       const a = actorMap.get(n.actor_id);
       return { ...n, actorUsername: a?.username, actorAvatar: a?.avatar_url || null };
     }));
+    setNotifLoading(false);
   };
 
   useEffect(() => {
