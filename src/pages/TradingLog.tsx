@@ -134,13 +134,14 @@ export default function TradingLog() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [logView, setLogView] = useState<"trade" | "study">("trade");
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
   const [mood, setMood] = useState("");
   const [result, setResult] = useState("");
   const [pnl, setPnl] = useState("");
-  const [pnlUnit, setPnlUnit] = useState<"pips" | "dollars">("pips");
+  const [pnlUnit] = useState<"pips" | "dollars">("dollars");
   const [marketName, setMarketName] = useState("");
   const [pairName, setPairName] = useState("");
   const [accountType, setAccountType] = useState("");
@@ -336,7 +337,6 @@ export default function TradingLog() {
   function resetForm() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
-    setPnlUnit("pips");
     setEntryType("trade");
     setStudyType(""); setStudyTopics([]); setStudyDuration("");
     setStudyConfidence(0); setStudyTakeaway(""); setStudyResource("");
@@ -350,7 +350,6 @@ export default function TradingLog() {
     setResult(entry.result || "");
     const p = entry.pnl_pips;
     setPnl(p == null ? "" : String(Math.abs(p)));
-    setPnlUnit((entry.pnl_unit as any) || "pips");
     const mp = entry.market_pair || "";
     const [mk, ...rest] = mp.split(" · ");
     setMarketName(MARKETS.includes(mk) ? mk : "");
@@ -621,27 +620,15 @@ export default function TradingLog() {
                   type="text"
                   value={pnl}
                   onChange={(e) => setPnl(e.target.value.replace(/[+\-−]/g, ""))}
-                  placeholder={pnlUnit === "pips" ? "e.g. 38" : "e.g. 250"}
+                  placeholder="e.g. 250"
                   className={cn(
                     "flex-1 py-2.5 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none",
                     result ? "pl-0 pr-3.5" : "px-3.5"
                   )}
                 />
               </div>
-              <div className="flex rounded-[10px] border-[1.5px] border-border bg-secondary p-0.5">
-                {(["pips", "dollars"] as const).map((u) => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => setPnlUnit(u)}
-                    className={cn(
-                      "px-3 rounded-[8px] text-[12px] font-bold transition-colors",
-                      pnlUnit === u ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-                    )}
-                  >
-                    {u === "pips" ? "Pips" : "$"}
-                  </button>
-                ))}
+              <div className="flex items-center px-3 rounded-[10px] border-[1.5px] border-border bg-secondary text-[12px] font-bold text-muted-foreground">
+                $
               </div>
             </div>
           </div>}
@@ -916,9 +903,38 @@ export default function TradingLog() {
           </div>
         </div>
 
+        {/* Trade / Study view toggle */}
+        <div className="mx-5 mb-2 flex gap-1.5 p-1 rounded-2xl bg-secondary border border-border">
+          {([
+            { value: "trade", label: "Trade Log", emoji: "📈" },
+            { value: "study", label: "Study Log", emoji: "📚" },
+          ] as const).map((opt) => {
+            const sel = logView === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => setLogView(opt.value)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold transition-all",
+                  sel
+                    ? opt.value === "study"
+                      ? "bg-primary text-primary-foreground shadow-[0_2px_10px_hsl(var(--primary)/0.3)]"
+                      : "bg-accent text-accent-foreground shadow-[0_2px_10px_hsl(var(--accent)/0.3)]"
+                    : "text-muted-foreground"
+                )}
+              >
+                <span className="text-base leading-none">{opt.emoji}</span>
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Section header */}
-        <div className="px-5 pt-2.5 pb-1.5">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Recent Sessions</span>
+        <div className="px-5 pt-1 pb-1.5">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+            Recent {logView === "study" ? "Study Sessions" : "Trades"}
+          </span>
         </div>
 
         {/* Entries */}
@@ -926,18 +942,24 @@ export default function TradingLog() {
           <div className="flex items-center justify-center py-16">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : entries.length === 0 ? (
+        ) : (() => {
+          const filteredEntries = entries.filter((e) =>
+            logView === "study" ? e.entry_type === "study" : (e.entry_type || "trade") === "trade"
+          );
+          return filteredEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
             <div className="text-3xl mb-3">📓</div>
-            <h2 className="text-base font-bold text-foreground mb-1">No sessions logged yet</h2>
+            <h2 className="text-base font-bold text-foreground mb-1">
+              No {logView === "study" ? "study sessions" : "trades"} logged yet
+            </h2>
             <p className="text-xs text-muted-foreground">
-              Tap + to log your first session
+              Tap + to log your first {logView === "study" ? "study session" : "trade"}
             </p>
           </div>
         ) : (
           <>
             <div className="space-y-1.5 mx-5">
-              {entries.map((entry) => (
+              {filteredEntries.map((entry) => (
                 <div
                   key={entry.id}
                   onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
@@ -1083,7 +1105,7 @@ export default function TradingLog() {
             </div>
 
             {/* Shared with partner card */}
-            {entries[0]?.share_setting === "partners" && (
+            {filteredEntries[0]?.share_setting === "partners" && (
               partners.length > 0 ? (
                 <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
@@ -1107,7 +1129,8 @@ export default function TradingLog() {
               )
             )}
           </>
-        )}
+        );
+        })()}
       </div>
 
       
