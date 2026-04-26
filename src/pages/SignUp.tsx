@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, User, Mail, Lock, ChevronLeft } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LogoHeader from "@/components/LogoHeader";
 import AuthGlobeBackground from "@/components/AuthGlobeBackground";
