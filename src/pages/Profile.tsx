@@ -13,6 +13,16 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import DetailCardsGrid from "@/components/profile/DetailCardsGrid";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProfileData {
   username: string | null;
@@ -237,7 +247,7 @@ const Profile = () => {
       const [{ data: pData }, { data: tData }, { data: entries }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("journal_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+        supabase.from("journal_entries").select("*").eq("user_id", user.id).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(50),
       ]);
 
       if (pData) {
@@ -738,6 +748,7 @@ const Profile = () => {
                 .from("journal_entries")
                 .select("*")
                 .eq("user_id", userId)
+                .eq("hidden_from_journal", false)
                 .order("created_at", { ascending: false })
                 .limit(50);
               setJournalEntries((data as JournalEntry[]) || []);
@@ -934,6 +945,7 @@ const PostList = ({
 
 const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[]; onOpenLog: () => void; onChanged: () => void | Promise<void> }) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<JournalEntry | null>(null);
 
   const togglePrivacy = async (entry: JournalEntry) => {
     const next = entry.share_setting === "private" ? "partners" : "private";
@@ -947,15 +959,17 @@ const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[
     await onChanged();
   };
 
-  const deleteEntry = async (entry: JournalEntry) => {
-    if (!confirm("Delete this journal entry?")) return;
-    const { error } = await supabase.from("journal_entries").delete().eq("id", entry.id);
-    setOpenMenuId(null);
+  const hideFromJournal = async (entry: JournalEntry) => {
+    const { error } = await supabase
+      .from("journal_entries")
+      .update({ hidden_from_journal: true } as any)
+      .eq("id", entry.id);
+    setConfirmDeleteEntry(null);
     if (error) {
-      toast.error("Couldn't delete entry");
+      toast.error("Couldn't remove entry");
       return;
     }
-    toast.success("Entry deleted");
+    toast.success("Removed from journal");
     await onChanged();
   };
 
@@ -1020,7 +1034,7 @@ const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[
                     <Lock className="w-3.5 h-3.5" /> {isPrivate ? "Make public" : "Make private"}
                   </button>
                   <button
-                    onClick={() => deleteEntry(entry)}
+                    onClick={() => { setOpenMenuId(null); setConfirmDeleteEntry(entry); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -1044,6 +1058,25 @@ const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[
           </div>
         );
       })}
+      <AlertDialog open={!!confirmDeleteEntry} onOpenChange={(open) => !open && setConfirmDeleteEntry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from journal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This entry will be removed from your profile journal. It will stay in your trading log.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDeleteEntry && hideFromJournal(confirmDeleteEntry)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
