@@ -615,7 +615,10 @@ const Profile = () => {
         {/* Locked header — wordmark, hero, bio, completeness, tabs */}
         <div className="shrink-0 bg-background">
         {/* Top bar: wordmark + settings */}
-        <div className="relative flex items-center justify-center px-5 pt-safe-5">
+        <div
+          className="relative flex items-center justify-center px-5"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
+        >
           <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
             Traders<span className="text-foreground">World</span>
           </h1>
