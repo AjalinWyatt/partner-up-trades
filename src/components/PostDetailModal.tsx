@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Trash2, Pencil, X } from "lucide-react";
+import { Heart, Trash2, Pencil, X, MessageCircle, Send, Bookmark } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import CommentThread from "@/components/CommentThread";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,9 +30,10 @@ interface PostDetailModalProps {
   myId: string | null;
   onDeleted?: () => void;
   onEdit?: (post: NonNullable<PostDetailModalProps["post"]>) => void;
+  onShare?: (post: NonNullable<PostDetailModalProps["post"]>) => void;
 }
 
-const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostDetailModalProps) => {
+const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit, onShare }: PostDetailModalProps) => {
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
   const swipeDismiss = useSwipeDismiss({ onDismiss: onClose });
@@ -40,21 +41,24 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
+  const [saved, setSaved] = useState(false);
   const [matchScore, setMatchScore] = useState<number | null>(null);
 
   useEffect(() => {
     if (!post || !open) return;
     const load = async () => {
-      const [{ data: prof }, { data: likes }, { data: myLike }, { data: comments }] = await Promise.all([
+      const [{ data: prof }, { data: likes }, { data: myLike }, { data: comments }, { data: mySave }] = await Promise.all([
         supabase.from("profiles").select("username, full_name, avatar_url").eq("id", post.user_id).single(),
         supabase.from("feed_likes").select("id").eq("entry_id", post.id),
         myId ? supabase.from("feed_likes").select("id").eq("entry_id", post.id).eq("user_id", myId) : Promise.resolve({ data: [] }),
         supabase.from("feed_comments").select("id").eq("entry_id", post.id),
+        myId ? supabase.from("saved_posts").select("id").eq("post_id", post.id).eq("user_id", myId) : Promise.resolve({ data: [] }),
       ]);
       setProfile(prof || { username: "trader", full_name: "Trader", avatar_url: null });
       setLikeCount(likes?.length || 0);
       setLiked((myLike?.length || 0) > 0);
       setCommentCount(comments?.length || 0);
+      setSaved((mySave?.length || 0) > 0);
 
       if (myId && post.user_id !== myId) {
         const { data: conn } = await supabase.from("partner_connections").select("match_score")
@@ -89,6 +93,17 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
           entryId: post.id,
         });
       }
+    }
+  };
+
+  const toggleSave = async () => {
+    if (!myId || !post) return;
+    if (saved) {
+      await supabase.from("saved_posts").delete().eq("user_id", myId).eq("post_id", post.id);
+      setSaved(false);
+    } else {
+      await supabase.from("saved_posts").insert({ user_id: myId, post_id: post.id });
+      setSaved(true);
     }
   };
 
@@ -201,10 +216,26 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
             {/* Actions */}
             <div className="border-t border-border px-3 py-2.5">
               <div className="flex items-center justify-between">
-                <button onClick={toggleLike} className="flex items-center gap-1.5">
-                  <Heart className={`w-5 h-5 ${liked ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
-                  {likeCount > 0 && <span className="text-xs text-muted-foreground">{likeCount}</span>}
-                </button>
+                <div className="flex items-center gap-5 text-muted-foreground">
+                  <button onClick={toggleLike} aria-label="Like" className="flex items-center gap-1 transition-colors hover:text-foreground">
+                    <Heart className={cn("w-[18px] h-[18px]", liked && "fill-destructive text-destructive")} />
+                    {likeCount > 0 && <span className="text-[11px] tabular-nums">{likeCount}</span>}
+                  </button>
+                  <div className="flex items-center gap-1" aria-label="Comments">
+                    <MessageCircle className="w-[18px] h-[18px]" />
+                    {commentCount > 0 && <span className="text-[11px] tabular-nums">{commentCount}</span>}
+                  </div>
+                  {onShare && (
+                    <button onClick={() => { onShare(post); onClose(); }} aria-label="Share" className="transition-colors hover:text-foreground">
+                      <Send className="w-[18px] h-[18px]" />
+                    </button>
+                  )}
+                  {myId && (
+                    <button onClick={toggleSave} aria-label="Save" className="transition-colors hover:text-foreground">
+                      <Bookmark className={cn("w-[18px] h-[18px]", saved && "fill-primary text-primary")} />
+                    </button>
+                  )}
+                </div>
                 {(myId === post.user_id || isAdmin) && (
                   <div className="flex items-center gap-3">
                     {myId === post.user_id && (
