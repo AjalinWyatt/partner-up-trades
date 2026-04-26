@@ -218,7 +218,7 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
   });
 
   const renderComment = (c: Comment, isReply = false) => (
-    <div key={c.id} className={`flex gap-2 group ${isReply ? "ml-8" : ""}`}>
+    <div key={c.id} className={`group flex w-full max-w-full min-w-0 gap-2 overflow-hidden ${isReply ? "pl-8" : ""}`}>
       <button onClick={() => navigate(`/profile/${c.user_id}`)} className="shrink-0">
         {c.avatar_url ? (
           <img src={c.avatar_url} className={`${isReply ? "w-5 h-5" : "w-6 h-6"} rounded-full object-cover`} />
@@ -228,12 +228,12 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
           </div>
         )}
       </button>
-      <div className="flex-1 min-w-0">
-        <div className="bg-muted rounded-lg px-2.5 py-1.5">
-          <span className="text-[10px] font-bold text-foreground">{c.username}</span>
-          <p className="text-[11px] text-foreground/90 leading-relaxed break-words">{c.content}</p>
+      <div className="min-w-0 max-w-full flex-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg bg-muted px-2.5 py-1.5">
+          <span className="block max-w-full truncate text-[10px] font-bold text-foreground">{c.username}</span>
+          <p className="break-words text-[11px] leading-relaxed text-foreground/90 [overflow-wrap:anywhere]">{c.content}</p>
         </div>
-        <div className="flex items-center gap-3 mt-0.5 px-1">
+        <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 px-1">
           <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
           {myId && (
             <button onClick={() => startReply(c)} className="text-[9px] font-semibold text-muted-foreground hover:text-foreground">
