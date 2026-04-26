@@ -70,7 +70,7 @@ export default function EnableNotifications() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="flex items-center gap-3 px-5 py-4 border-b border-border">
+      <header className="flex items-center gap-3 px-5 pb-4 pt-safe-4 border-b border-border">
         <button onClick={() => navigate(-1)} aria-label="Back" className="p-1 -ml-1">
           <ArrowLeft className="w-5 h-5" />
         </button>
