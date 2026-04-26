@@ -8,6 +8,7 @@ import { sendNotification } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useSwipeDismiss } from "@/hooks/use-swipe-dismiss";
+import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 interface PostDetailModalProps {
