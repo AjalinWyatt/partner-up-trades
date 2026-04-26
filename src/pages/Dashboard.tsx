@@ -8,6 +8,7 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { timeAgo } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type NotifFilter = "all" | "activity" | "partners" | "streaks";
 
@@ -23,6 +24,29 @@ const NOTIF_FILTER_TYPES: Record<NotifFilter, string[]> = {
   activity: ["post_liked", "post_commented", "profile_viewed", "new_match", "like", "comment"],
   partners: ["partner_request", "partner_accepted", "partner_inactive", "partner_support", "partner_logged"],
   streaks: ["streak_warning", "streak_milestone"],
+};
+
+const NOTIF_EMPTY_STATES: Record<NotifFilter, { icon: React.ReactNode; title: string; body: string }> = {
+  all: {
+    icon: <Bell className="w-5 h-5 text-muted-foreground" />,
+    title: "You're all caught up ✓",
+    body: "When someone interacts with you, it'll show up here.",
+  },
+  activity: {
+    icon: <Heart className="w-5 h-5 text-muted-foreground" />,
+    title: "No activity yet",
+    body: "Likes, comments, profile views, and new matches will appear here.",
+  },
+  partners: {
+    icon: <UserPlus className="w-5 h-5 text-muted-foreground" />,
+    title: "Nothing from partners yet",
+    body: "Partner requests, acceptances, and check-ins will land here.",
+  },
+  streaks: {
+    icon: <Flame className="w-5 h-5 text-muted-foreground" />,
+    title: "No streak alerts",
+    body: "We'll nudge you here when your streak is at risk or you hit a milestone.",
+  },
 };
 
 const NOTIF_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; route: string }> = {
@@ -89,10 +113,12 @@ const Dashboard = () => {
   const [updates, setUpdates] = useState<{ id: string; text: string; created_at: string; route: string }[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notifFilter, setNotifFilter] = useState<NotifFilter>("all");
+  const [notifLoading, setNotifLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadNotifications = async (uid: string, filter: NotifFilter) => {
+    setNotifLoading(true);
     let query = supabase
       .from("notifications")
       .select("*")
@@ -102,7 +128,11 @@ const Dashboard = () => {
     const types = NOTIF_FILTER_TYPES[filter];
     if (types.length > 0) query = query.in("type", types);
     const { data: ns } = await query;
-    if (!ns || ns.length === 0) { setNotifications([]); return; }
+    if (!ns || ns.length === 0) {
+      setNotifications([]);
+      setNotifLoading(false);
+      return;
+    }
     const actorIds = [...new Set(ns.map((n: any) => n.actor_id))];
     const { data: actors } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", actorIds);
     const actorMap = new Map((actors || []).map((a: any) => [a.id, a]));
@@ -110,6 +140,7 @@ const Dashboard = () => {
       const a = actorMap.get(n.actor_id);
       return { ...n, actorUsername: a?.username, actorAvatar: a?.avatar_url || null };
     }));
+    setNotifLoading(false);
   };
 
   useEffect(() => {
@@ -411,18 +442,32 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {notifications.length === 0 ? (
-            <div className="bg-card/40 border border-border rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
-                <Bell className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <p className="text-[13px] font-semibold text-foreground mb-1">You're all caught up ✓</p>
-              <p className="text-[11px] text-muted-foreground">
-                {notifFilter === "all"
-                  ? "When someone interacts with you, it'll show up here."
-                  : `No ${NOTIF_FILTERS.find(f => f.key === notifFilter)?.label.toLowerCase()} notifications yet.`}
-              </p>
+          {notifLoading ? (
+            <div className="bg-card/40 border border-border rounded-xl divide-y divide-border overflow-hidden">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-3 px-4 py-3 animate-pulse">
+                  <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2 py-1">
+                    <Skeleton className="h-3 w-2/3 rounded" />
+                    <Skeleton className="h-2.5 w-full rounded" />
+                    <Skeleton className="h-2 w-16 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : notifications.length === 0 ? (
+            (() => {
+              const empty = NOTIF_EMPTY_STATES[notifFilter];
+              return (
+                <div className="bg-card/40 border border-border rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                    {empty.icon}
+                  </div>
+                  <p className="text-[13px] font-semibold text-foreground mb-1">{empty.title}</p>
+                  <p className="text-[11px] text-muted-foreground">{empty.body}</p>
+                </div>
+              );
+            })()
           ) : (
             <div className="bg-card/40 border border-border rounded-xl divide-y divide-border overflow-hidden">
               {notifications.map(n => {
