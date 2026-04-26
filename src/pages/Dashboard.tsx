@@ -503,6 +503,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+      {showTour && <Walkthrough onClose={() => setShowTour(false)} />}
     </AppLayout>
   );
 };
