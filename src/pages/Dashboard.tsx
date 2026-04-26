@@ -142,19 +142,43 @@ const Dashboard = () => {
         const myMarkets = (myTp?.markets || []) as string[];
         if (myMarkets.length > 0) {
           const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-          const { data: newMatches } = await supabase
+          // Build the same exclusion set Discover uses so the count stays consistent
+          const [{ data: allConnections }, { data: blockedData }, { data: passedData }] = await Promise.all([
+            supabase
+              .from("partner_connections")
+              .select("requester_id, receiver_id")
+              .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+              .in("status", ["pending", "accepted"]),
+            supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
+            supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
+          ]);
+          const excludedIds = new Set<string>([user.id]);
+          (allConnections || []).forEach((c: any) => { excludedIds.add(c.requester_id); excludedIds.add(c.receiver_id); });
+          (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
+          (passedData || []).forEach((p: any) => excludedIds.add(p.passed_id));
+
+          const { data: rawMatches } = await supabase
             .from("trading_profiles")
             .select("user_id, markets, created_at")
             .neq("user_id", user.id)
             .gte("created_at", sevenDaysAgo)
             .overlaps("markets", myMarkets)
-            .limit(20);
-          const matchCount = (newMatches || []).length;
+            .limit(50);
+          const candidateIds = (rawMatches || [])
+            .map((m: any) => m.user_id)
+            .filter((id: string) => !excludedIds.has(id));
+          // Only count users who completed onboarding (Discover requirement)
+          const { data: validProfiles } = candidateIds.length > 0
+            ? await supabase.from("profiles").select("id").in("id", candidateIds).eq("onboarding_completed", true)
+            : { data: [] as any[] };
+          const validIds = new Set((validProfiles || []).map((p: any) => p.id));
+          const newMatches = (rawMatches || []).filter((m: any) => validIds.has(m.user_id));
+          const matchCount = newMatches.length;
           if (matchCount > 0) {
             upd.push({
               id: "new-matches",
               text: `${matchCount} new trader${matchCount > 1 ? "s" : ""} that match you joined - View in Discover`,
-              created_at: newMatches![0].created_at as string,
+              created_at: newMatches[0].created_at as string,
               route: "/discover",
             });
           }
