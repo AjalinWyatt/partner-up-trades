@@ -18,6 +18,8 @@ interface Comment {
   username: string;
   full_name: string;
   avatar_url: string | null;
+  liked: boolean;
+  likeCount: number;
 }
 
 interface FeedCommentSheetProps {
@@ -67,6 +69,46 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
   const postId = post?.id ?? null;
   const media = post?.media_urls?.[0] || post?.media_url || post?.image_url || null;
 
+  const goToProfile = (userId: string) => {
+    onClose();
+    navigate(`/profile/${userId}`);
+  };
+
+  const startReplyTo = (username: string) => {
+    const mention = `@${username} `;
+    setEditingCommentId(null);
+    setText((current) => (current.startsWith(mention) ? current : `${mention}${current}`));
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const toggleCommentLike = async (comment: Comment) => {
+    if (!myId) return;
+    const wasLiked = comment.liked;
+    setComments((prev) => prev.map((c) => c.id === comment.id ? {
+      ...c,
+      liked: !wasLiked,
+      likeCount: Math.max(0, c.likeCount + (wasLiked ? -1 : 1)),
+    } : c));
+
+    if (wasLiked) {
+      const { error } = await supabase
+        .from("post_comment_likes" as any)
+        .delete()
+        .eq("comment_id", comment.id)
+        .eq("user_id", myId);
+      if (error) {
+        setComments((prev) => prev.map((c) => c.id === comment.id ? { ...c, liked: true, likeCount: c.likeCount + 1 } : c));
+      }
+    } else {
+      const { error } = await supabase
+        .from("post_comment_likes" as any)
+        .insert({ comment_id: comment.id, user_id: myId });
+      if (error) {
+        setComments((prev) => prev.map((c) => c.id === comment.id ? { ...c, liked: false, likeCount: Math.max(0, c.likeCount - 1) } : c));
+      }
+    }
+  };
+
   useEffect(() => {
     if (!myId) {
       setViewerProfile(null);
@@ -103,11 +145,20 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
       }
 
       const userIds = [...new Set(rawComments.map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, avatar_url")
-        .in("id", userIds);
+      const commentIds = rawComments.map((c: any) => c.id);
+      const [{ data: profiles }, { data: allLikes }, { data: myLikes }] = await Promise.all([
+        supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", userIds),
+        supabase.from("post_comment_likes" as any).select("comment_id").in("comment_id", commentIds),
+        myId
+          ? supabase.from("post_comment_likes" as any).select("comment_id").in("comment_id", commentIds).eq("user_id", myId)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      const likeCounts: Record<string, number> = {};
+      ((allLikes as any[]) || []).forEach((row: any) => {
+        likeCounts[row.comment_id] = (likeCounts[row.comment_id] || 0) + 1;
+      });
+      const mySet = new Set(((myLikes as any[]) || []).map((row: any) => row.comment_id));
 
       setComments(rawComments.map((c: any) => {
         const prof = profileMap.get(c.user_id);
@@ -116,13 +167,15 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
           username: prof?.username || "trader",
           full_name: prof?.full_name || "Trader",
           avatar_url: prof?.avatar_url || null,
+          liked: mySet.has(c.id),
+          likeCount: likeCounts[c.id] || 0,
         };
       }));
       setLoading(false);
     };
     load();
     setTimeout(() => inputRef.current?.focus(), 200);
-  }, [postId]);
+  }, [postId, myId]);
 
   // Realtime
   useEffect(() => {
@@ -143,17 +196,36 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
           .order("created_at", { ascending: true });
         if (rawComments) {
           const uids = [...new Set(rawComments.map((c: any) => c.user_id))];
-          const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", uids);
+          const cids = rawComments.map((c: any) => c.id);
+          const [{ data: profiles }, { data: allLikes }, { data: myLikes }] = await Promise.all([
+            supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", uids),
+            supabase.from("post_comment_likes" as any).select("comment_id").in("comment_id", cids),
+            myId
+              ? supabase.from("post_comment_likes" as any).select("comment_id").in("comment_id", cids).eq("user_id", myId)
+              : Promise.resolve({ data: [] as any[] }),
+          ]);
           const pm = new Map((profiles || []).map((p: any) => [p.id, p]));
+          const counts: Record<string, number> = {};
+          ((allLikes as any[]) || []).forEach((row: any) => {
+            counts[row.comment_id] = (counts[row.comment_id] || 0) + 1;
+          });
+          const mine = new Set(((myLikes as any[]) || []).map((row: any) => row.comment_id));
           setComments(rawComments.map((c: any) => {
             const prof = pm.get(c.user_id);
-            return { ...c, username: prof?.username || "trader", full_name: prof?.full_name || "Trader", avatar_url: prof?.avatar_url || null };
+            return {
+              ...c,
+              username: prof?.username || "trader",
+              full_name: prof?.full_name || "Trader",
+              avatar_url: prof?.avatar_url || null,
+              liked: mine.has(c.id),
+              likeCount: counts[c.id] || 0,
+            };
           }));
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [postId]);
+  }, [postId, myId]);
 
   const handleSend = async () => {
     if (!myId || !postId || sending || (!text.trim() && !commentFile && !editingCommentId)) return;
@@ -215,6 +287,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         username: prof?.username || "trader",
         full_name: prof?.full_name || "Trader",
         avatar_url: prof?.avatar_url || null,
+        liked: false,
+        likeCount: 0,
       }]);
       onCountChange(postId, 1);
       clearComposer();
@@ -350,9 +424,9 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
              {comments.map(c => (
                <div key={c.id} className="relative flex gap-2.5 pl-11">
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
-                <button onClick={() => { onClose(); navigate(`/profile/${c.user_id}`); }} className="shrink-0">
+                <button onClick={() => goToProfile(c.user_id)} className="shrink-0" aria-label={`Open ${c.username}'s profile`}>
                   {c.avatar_url ? (
-                    <img src={c.avatar_url} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={c.avatar_url} alt={`${c.full_name} avatar`} className="relative z-10 w-8 h-8 rounded-full object-cover" />
                   ) : (
                     <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-[9px] font-black text-foreground">
                       {getInitials(c.full_name)}
@@ -362,7 +436,12 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                 <div className="min-w-0 flex-1">
                    <div className="px-0.5 py-1">
                      <div className="flex items-center gap-2">
-                       <span className="text-[11px] font-bold text-foreground">{c.username}</span>
+                       <button
+                         onClick={() => goToProfile(c.user_id)}
+                         className="text-[11px] font-bold text-foreground hover:underline"
+                       >
+                         @{c.username}
+                       </button>
                        <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
                        {c.updated_at && c.updated_at !== c.created_at && <span className="text-[9px] text-muted-foreground">edited</span>}
                      </div>
@@ -370,6 +449,27 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                      {c.media_url && <img src={c.media_url} alt="Comment attachment" className="mt-2 h-28 w-28 rounded-xl object-cover" />}
                    </div>
                   <div className="mt-1 flex items-center gap-3 px-1">
+                    {myId && (
+                      <button
+                        onClick={() => toggleCommentLike(c)}
+                        className={cn(
+                          "flex items-center gap-1 text-[9px] transition-colors",
+                          c.liked ? "text-destructive" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        aria-label={c.liked ? "Unlike comment" : "Like comment"}
+                      >
+                        <Heart className={cn("h-3 w-3", c.liked ? "fill-destructive" : "")} />
+                        {c.likeCount > 0 && <span className="tabular-nums">{c.likeCount}</span>}
+                      </button>
+                    )}
+                    {myId && (
+                      <button
+                        onClick={() => startReplyTo(c.username)}
+                        className="text-[9px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Reply
+                      </button>
+                    )}
                     {c.user_id === myId && (
                        <>
                           <button onClick={() => handleEdit(c)} className="text-[9px] text-muted-foreground transition-colors hover:text-foreground">
