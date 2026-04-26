@@ -701,14 +701,14 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Posts / Details / Journal pill tabs */}
+        {/* Posts / Grid / Details / Journal pill tabs */}
         <div className="mt-6 flex justify-center gap-2.5 px-5">
-          {["Posts", "Details", "Journal"].map((tab, index) => (
+          {["Posts", "Grid", "Details", "Journal"].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(index)}
               className={cn(
-                "flex-1 max-w-[120px] rounded-full px-5 py-2.5 text-sm font-bold transition-all",
+                "flex-1 max-w-[110px] rounded-full px-4 py-2.5 text-sm font-bold transition-all",
                 activeTab === index
                   ? "bg-primary text-primary-foreground"
                   : "border border-border bg-transparent text-foreground hover:bg-muted"
@@ -734,6 +734,8 @@ const Profile = () => {
             onSharePost={(post) => setPostToShare(post)}
           />
         ) : activeTab === 1 ? (
+          <PhotoGrid posts={posts} onOpenPost={setSelectedPost} />
+        ) : activeTab === 2 ? (
           <DetailsGrid
             profile={profile}
             tradingProfile={tradingProfile}
