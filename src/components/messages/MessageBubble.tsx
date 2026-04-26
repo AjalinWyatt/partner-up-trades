@@ -132,12 +132,12 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "flex items-center gap-2 mb-1 px-2 py-1.5 rounded-lg",
-              isMine ? "bg-white/10 hover:bg-white/20" : "bg-muted hover:bg-muted/80"
+              "mb-1 flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5",
+              isMine ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-muted hover:bg-muted/80"
             )}
           >
             <FileText className="w-5 h-5 shrink-0" />
-            <span className="text-xs truncate">{msg.content || "File"}</span>
+            <span className="min-w-0 truncate text-xs">{msg.content || "File"}</span>
           </a>
         )}
         {editing ? (
