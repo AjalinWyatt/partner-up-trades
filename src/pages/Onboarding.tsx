@@ -603,6 +603,11 @@ const Onboarding = () => {
                   toast.error("City and Country are required for Local matching");
                   return;
                 }
+                const cleanUsername = nickname.trim().toLowerCase().replace(/[^a-z0-9_.]/g, "");
+                if (cleanUsername && (cleanUsername.length < 3 || cleanUsername.length > 30)) {
+                  toast.error("Username must be 3–30 characters (letters, numbers, _ or .)");
+                  return;
+                }
                 goTo(6);
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
@@ -630,7 +635,7 @@ const Onboarding = () => {
                     .from("profiles")
                     .upsert({
                       id: user.id,
-                      username: nickname || null,
+                      username: cleanUsername || null,
                       avatar_url: avatarUrl,
                       gender,
                       date_of_birth: dateOfBirth || null,
