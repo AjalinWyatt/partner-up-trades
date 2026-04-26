@@ -251,7 +251,7 @@ const ViewProfile = () => {
 
   return (
     <>
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background">
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-5 pb-4 pt-safe-4 backdrop-blur">
         <button onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
           <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
