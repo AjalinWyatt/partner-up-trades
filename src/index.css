@@ -177,6 +177,55 @@ html, body {
   overflow-x: hidden;
   min-height: 100dvh;
 }
+
+/* ---------------------------------------------------------------
+   Safe-area utilities
+   Use these on any element that touches the screen edges so content
+   never gets covered by the iOS notch, Dynamic Island, status bar
+   or home indicator (and Android display cutouts).
+
+   Examples:
+     <header class="pt-safe">           // pads top inset only
+     <div class="pb-safe">              // pads bottom inset only
+     <main class="px-safe">             // left + right insets
+     <section class="p-safe">           // all four insets
+     <header class="pt-safe-3">         // 0.75rem + top inset
+     <div class="pb-safe-4">            // 1rem + bottom inset
+     <div class="min-h-screen-safe">    // dvh that respects insets
+--------------------------------------------------------------- */
+@layer utilities {
+  .pt-safe   { padding-top: env(safe-area-inset-top, 0px); }
+  .pb-safe   { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .pl-safe   { padding-left: env(safe-area-inset-left, 0px); }
+  .pr-safe   { padding-right: env(safe-area-inset-right, 0px); }
+  .px-safe   { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .py-safe   { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .p-safe    { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+
+  /* Combo utilities: existing spacing + the inset (most common pattern). */
+  .pt-safe-2 { padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem); }
+  .pt-safe-3 { padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem); }
+  .pt-safe-4 { padding-top: calc(env(safe-area-inset-top, 0px) + 1rem); }
+  .pt-safe-5 { padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem); }
+  .pt-safe-6 { padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem); }
+
+  .pb-safe-2 { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem); }
+  .pb-safe-3 { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem); }
+  .pb-safe-4 { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
+  .pb-safe-6 { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem); }
+
+  /* Margin variants (handy on absolutely-positioned floating buttons). */
+  .mt-safe   { margin-top: env(safe-area-inset-top, 0px); }
+  .mb-safe   { margin-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* Full-height containers that respect the insets. */
+  .min-h-screen-safe {
+    min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .h-screen-safe {
+    height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+}
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;                  /* Chrome/Safari */
