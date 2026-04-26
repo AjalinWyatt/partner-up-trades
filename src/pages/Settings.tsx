@@ -219,7 +219,7 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <div className="flex items-center gap-3 px-5 pt-3 pb-2 border-b border-border">
+      <div className="flex items-center gap-3 px-5 pt-safe-3 pb-2 border-b border-border">
         <button onClick={() => navigate(-1)} aria-label="Back" className="w-8 h-8 -ml-1 flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
