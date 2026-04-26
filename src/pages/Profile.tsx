@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, LogOut, MapPin, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, Lock, LogOut, MapPin, MoreVertical, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -692,7 +692,20 @@ const Profile = () => {
             tradingProfile={tradingProfile}
           />
         ) : (
-          <JournalList entries={journalEntries} onOpenLog={() => navigate("/trading-log")} />
+          <JournalList
+            entries={journalEntries}
+            onOpenLog={() => navigate("/trading-log")}
+            onChanged={async () => {
+              if (!userId) return;
+              const { data } = await supabase
+                .from("journal_entries")
+                .select("*")
+                .eq("user_id", userId)
+                .order("created_at", { ascending: false })
+                .limit(50);
+              setJournalEntries((data as JournalEntry[]) || []);
+            }}
+          />
         )}
       </div>
 
@@ -848,7 +861,33 @@ const PostList = ({
   );
 };
 
-const JournalList = ({ entries, onOpenLog }: { entries: JournalEntry[]; onOpenLog: () => void }) => {
+const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[]; onOpenLog: () => void; onChanged: () => void | Promise<void> }) => {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const togglePrivacy = async (entry: JournalEntry) => {
+    const next = entry.share_setting === "private" ? "partners" : "private";
+    const { error } = await supabase.from("journal_entries").update({ share_setting: next }).eq("id", entry.id);
+    setOpenMenuId(null);
+    if (error) {
+      toast.error("Couldn't update privacy");
+      return;
+    }
+    toast.success(next === "private" ? "Marked private" : "Now visible to others");
+    await onChanged();
+  };
+
+  const deleteEntry = async (entry: JournalEntry) => {
+    if (!confirm("Delete this journal entry?")) return;
+    const { error } = await supabase.from("journal_entries").delete().eq("id", entry.id);
+    setOpenMenuId(null);
+    if (error) {
+      toast.error("Couldn't delete entry");
+      return;
+    }
+    toast.success("Entry deleted");
+    await onChanged();
+  };
+
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
@@ -863,6 +902,7 @@ const JournalList = ({ entries, onOpenLog }: { entries: JournalEntry[]; onOpenLo
     <div className="space-y-1.5 px-5 py-4">
       {entries.map((entry) => {
         const isPositive = (entry.pnl_pips || 0) >= 0;
+        const isPrivate = entry.share_setting === "private";
         return (
           <div
             key={entry.id}
@@ -874,6 +914,11 @@ const JournalList = ({ entries, onOpenLog }: { entries: JournalEntry[]; onOpenLo
                   📈 Trade
                 </span>
                 <span className="text-[11px] font-bold text-foreground">{formatProfileDate(entry.created_at)}</span>
+                {isPrivate && (
+                  <span className="flex items-center gap-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-secondary">
+                    <Lock className="w-2.5 h-2.5" /> Private
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5">
                 {typeof entry.pnl_pips === "number" && (
@@ -885,15 +930,33 @@ const JournalList = ({ entries, onOpenLog }: { entries: JournalEntry[]; onOpenLo
                 )}
                 <button
                   type="button"
-                  onClick={onOpenLog}
+                  onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
                   className="w-6 h-6 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  aria-label="Edit in trading log"
-                  title="Edit in trading log"
+                  aria-label="Entry options"
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  <MoreVertical className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
+            {openMenuId === entry.id && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
+                <div className="absolute right-2 top-9 z-40 min-w-[150px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+                  <button
+                    onClick={() => togglePrivacy(entry)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
+                  >
+                    <Lock className="w-3.5 h-3.5" /> {isPrivate ? "Make public" : "Make private"}
+                  </button>
+                  <button
+                    onClick={() => deleteEntry(entry)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </div>
+              </>
+            )}
             <div className="text-[10px] text-muted-foreground truncate">
               {[entry.result, entry.market_pair, entry.mood].filter(Boolean).join(" · ") || "Trade entry"}
             </div>
