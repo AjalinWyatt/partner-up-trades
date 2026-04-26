@@ -865,15 +865,15 @@ const PostList = ({
                 )}
               </div>
             </div>
-            <div className="mt-3 ml-14 flex items-center gap-5 text-muted-foreground">
+            <div className="mt-2 ml-14 flex items-center gap-4 text-muted-foreground">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onToggleLike(post.id); }}
                 aria-label="Like"
                 className="flex items-center gap-1 transition-colors hover:text-foreground"
               >
-                <Heart className={cn("h-[18px] w-[18px]", post.liked && "fill-destructive text-destructive")} />
-                {(post.likeCount || 0) > 0 && <span className="text-[11px] tabular-nums">{post.likeCount}</span>}
+                <Heart className={cn("h-[15px] w-[15px]", post.liked && "fill-destructive text-destructive")} />
+                {(post.likeCount || 0) > 0 && <span className="text-[10px] tabular-nums">{post.likeCount}</span>}
               </button>
               <button
                 type="button"
@@ -881,8 +881,8 @@ const PostList = ({
                 aria-label="Comment"
                 className="flex items-center gap-1 transition-colors hover:text-foreground"
               >
-                <MessageCircle className="h-[18px] w-[18px]" />
-                {(post.commentCount || 0) > 0 && <span className="text-[11px] tabular-nums">{post.commentCount}</span>}
+                <MessageCircle className="h-[15px] w-[15px]" />
+                {(post.commentCount || 0) > 0 && <span className="text-[10px] tabular-nums">{post.commentCount}</span>}
               </button>
               <button
                 type="button"
@@ -890,7 +890,7 @@ const PostList = ({
                 aria-label="Share"
                 className="transition-colors hover:text-foreground"
               >
-                <Send className="h-[18px] w-[18px]" />
+                <Send className="h-[15px] w-[15px]" />
               </button>
             </div>
           </div>
