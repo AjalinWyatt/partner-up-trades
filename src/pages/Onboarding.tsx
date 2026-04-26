@@ -244,7 +244,19 @@ const Onboarding = () => {
               <input
                 placeholder="Username"
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={(e) =>
+                  setNickname(
+                    e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9_.]/g, "")
+                      .slice(0, 30)
+                  )
+                }
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                inputMode="text"
+                maxLength={30}
                 className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
               />
             </div>
@@ -591,6 +603,11 @@ const Onboarding = () => {
                   toast.error("City and Country are required for Local matching");
                   return;
                 }
+                const cleanUsername = nickname.trim().toLowerCase().replace(/[^a-z0-9_.]/g, "");
+                if (cleanUsername && (cleanUsername.length < 3 || cleanUsername.length > 30)) {
+                  toast.error("Username must be 3–30 characters (letters, numbers, _ or .)");
+                  return;
+                }
                 goTo(6);
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
@@ -618,7 +635,7 @@ const Onboarding = () => {
                     .from("profiles")
                     .upsert({
                       id: user.id,
-                      username: nickname || null,
+                      username: cleanUsername || null,
                       avatar_url: avatarUrl,
                       gender,
                       date_of_birth: dateOfBirth || null,
@@ -667,7 +684,14 @@ const Onboarding = () => {
                   setTimeout(() => navigate("/discover", { replace: true }), 2500);
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
-                  toast.error("Failed to save your profile. Please try again.");
+                  const msg = err?.message || "";
+                  if (msg.includes("profiles_username_format")) {
+                    toast.error("Username must be 3–30 chars: lowercase letters, numbers, _ or .");
+                  } else if (msg.includes("duplicate key") && msg.includes("username")) {
+                    toast.error("That username is already taken. Pick another.");
+                  } else {
+                    toast.error(msg ? `Couldn't save: ${msg}` : "Failed to save your profile. Please try again.");
+                  }
                   goTo(5);
                 }
               } else {
