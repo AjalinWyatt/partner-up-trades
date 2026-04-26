@@ -506,31 +506,6 @@ export default function TradingLog() {
                 </div>
               </div>
 
-              {/* Topics */}
-              <div>
-                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Topics covered</p>
-                <div className="flex flex-wrap gap-[5px]">
-                  {STUDY_TOPICS.map((t) => {
-                    const sel = studyTopics.includes(t);
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setStudyTopics((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
-                        className={cn(
-                          "px-3 py-[5px] rounded-full text-[11px] font-semibold border-[1.5px] transition-colors",
-                          sel
-                            ? "bg-primary/[0.12] text-primary border-primary"
-                            : "border-border text-foreground bg-transparent"
-                        )}
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Duration */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">⏱️ Time spent</p>
