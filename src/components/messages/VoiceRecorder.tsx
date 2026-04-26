@@ -100,7 +100,7 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
 
   if (uploading) {
     return (
-      <div className="absolute inset-0 flex items-center justify-end pr-3 rounded-full bg-secondary/70">
+      <div className="absolute inset-0 flex items-center justify-end pr-3 rounded-full bg-secondary">
         <Loader2 className="w-5 h-5 animate-spin text-primary" />
       </div>
     );
@@ -109,7 +109,7 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
   if (preview) {
     const pct = preview.duration > 0 ? Math.min(100, (playPos / preview.duration) * 100) : 0;
     return (
-      <div className="absolute inset-0 flex items-center gap-2 rounded-full bg-secondary/70 pl-2 pr-1.5">
+      <div className="absolute inset-0 flex items-center gap-2 rounded-full bg-secondary pl-2 pr-1.5">
         <audio
           ref={audioRef}
           src={preview.url}
@@ -155,7 +155,7 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
 
   if (recording) {
     return (
-      <div className="absolute inset-0 flex items-center gap-2 rounded-full bg-secondary/70 pl-3 pr-1.5">
+      <div className="absolute inset-0 flex items-center gap-2 rounded-full bg-secondary pl-3 pr-1.5">
         <button
           onClick={() => { if (timerRef.current) clearInterval(timerRef.current); recorderRef.current?.stop(); setRecording(false); chunksRef.current = []; }}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
