@@ -1177,6 +1177,7 @@ const Feed = () => {
           setEditingPost(post as FeedPost);
           setShowCreatePost(true);
         }}
+        onShare={(post) => setPostToShare(post as FeedPost)}
       />
       <FeedCommentSheet
         post={posts.find((entry) => entry.id === commentPostId) || null}
