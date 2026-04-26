@@ -1,10 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, Bell, LogOut } from "lucide-react";
+import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, Bell, LogOut, Shield, Megaphone, UsersRound } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home" },
@@ -22,6 +23,12 @@ export default function AppSidebar() {
   const navigate = useNavigate();
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
+  const isAdmin = useIsAdmin();
+  const [adminOpen, setAdminOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/admin")) setAdminOpen(true);
+  }, [location.pathname]);
 
   useEffect(() => {
     const load = async () => {
@@ -78,6 +85,50 @@ export default function AppSidebar() {
       </nav>
 
       <div className="space-y-0.5 pt-4 border-t border-border mt-4">
+        {isAdmin && (
+          <div className="mb-1">
+            <button
+              onClick={() => setAdminOpen((o) => !o)}
+              className={cn(
+                "w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] transition-all",
+                location.pathname.startsWith("/admin")
+                  ? "font-bold text-foreground bg-secondary"
+                  : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Shield className="w-[22px] h-[22px]" strokeWidth={1.8} />
+              <span className="flex-1 text-left">Admin</span>
+            </button>
+            {adminOpen && (
+              <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2">
+                <button
+                  onClick={() => navigate("/admin/users")}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14px] transition-all",
+                    location.pathname === "/admin/users"
+                      ? "font-semibold text-foreground bg-secondary"
+                      : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  )}
+                >
+                  <UsersRound className="w-[18px] h-[18px]" strokeWidth={1.8} />
+                  <span>Users</span>
+                </button>
+                <button
+                  onClick={() => navigate("/admin/broadcast")}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14px] transition-all",
+                    location.pathname === "/admin/broadcast"
+                      ? "font-semibold text-foreground bg-secondary"
+                      : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  )}
+                >
+                  <Megaphone className="w-[18px] h-[18px]" strokeWidth={1.8} />
+                  <span>Broadcast</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
