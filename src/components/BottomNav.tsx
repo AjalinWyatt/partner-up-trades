@@ -33,6 +33,8 @@ const BottomNav = () => {
         const Icon = tab.icon;
         const active = location.pathname === tab.path;
         const showDot = !!dotForPath[tab.path];
+        // "New" label only on Discover and Partners (not Home / Messages).
+        const showNewLabel = showDot && (tab.path === "/discover" || tab.path === "/partners");
 
         return (
           <button
@@ -57,6 +59,14 @@ const BottomNav = () => {
                 aria-hidden
                 className="pointer-events-none absolute -top-0.5 right-0 h-1.5 w-1.5 rounded-full bg-[hsl(210_100%_60%)] animate-slow-blink"
               />
+            )}
+            {showNewLabel && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[hsl(210_100%_60%)] px-1.5 py-[1px] text-[8px] font-bold uppercase tracking-wide text-white animate-slow-blink"
+              >
+                New
+              </span>
             )}
           </button>
         );
