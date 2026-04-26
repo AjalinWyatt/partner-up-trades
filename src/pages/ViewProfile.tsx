@@ -222,7 +222,10 @@ const ViewProfile = () => {
     { label: "Struggles", value: first(tradingProfile?.struggles) },
     { label: "Looking For", value: tradingProfile?.looking_for_gender || null },
     { label: "Gender", value: profile?.gender || null },
-    { label: "Connection Reach", value: tradingProfile?.connection_reach || null },
+    { label: "Connection Reach", value: (() => {
+        const r = (tradingProfile?.connection_reach || "").toLowerCase();
+        return r === "local" ? "Local" : r === "global" ? "Global" : r === "both" ? "Local/Global" : null;
+      })() },
   ].filter((it) => !!it.value) as DetailCardItem[]);
 
   return (
