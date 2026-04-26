@@ -218,7 +218,7 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
   });
 
   const renderComment = (c: Comment, isReply = false) => (
-    <div key={c.id} className={`flex gap-2 group ${isReply ? "ml-8" : ""}`}>
+    <div key={c.id} className={`group flex w-full max-w-full min-w-0 gap-2 overflow-hidden ${isReply ? "pl-8" : ""}`}>
       <button onClick={() => navigate(`/profile/${c.user_id}`)} className="shrink-0">
         {c.avatar_url ? (
           <img src={c.avatar_url} className={`${isReply ? "w-5 h-5" : "w-6 h-6"} rounded-full object-cover`} />
@@ -228,12 +228,12 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
           </div>
         )}
       </button>
-      <div className="flex-1 min-w-0">
-        <div className="bg-muted rounded-lg px-2.5 py-1.5">
-          <span className="text-[10px] font-bold text-foreground">{c.username}</span>
-          <p className="text-[11px] text-foreground/90 leading-relaxed break-words">{c.content}</p>
+      <div className="min-w-0 max-w-full flex-1 overflow-hidden">
+        <div className="overflow-hidden rounded-lg bg-muted px-2.5 py-1.5">
+          <span className="block max-w-full truncate text-[10px] font-bold text-foreground">{c.username}</span>
+          <p className="break-words text-[11px] leading-relaxed text-foreground/90 [overflow-wrap:anywhere]">{c.content}</p>
         </div>
-        <div className="flex items-center gap-3 mt-0.5 px-1">
+        <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 px-1">
           <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
           {myId && (
             <button onClick={() => startReply(c)} className="text-[9px] font-semibold text-muted-foreground hover:text-foreground">
@@ -270,7 +270,7 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
       </button>
 
       {open && (
-        <div className="mt-2 space-y-2">
+        <div className="mt-2 max-w-full touch-pan-y space-y-2 overflow-x-hidden overscroll-contain">
           {loading ? (
             <div className="flex justify-center py-3">
               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -309,10 +309,10 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
               })}
 
               {myId && (
-                <div className="pt-1">
+                  <div className="max-w-full overflow-hidden pt-1">
                   {replyTo && (
-                    <div className="flex items-center justify-between mb-1 px-1">
-                      <span className="text-[9px] text-muted-foreground">
+                    <div className="mb-1 flex min-w-0 items-center justify-between gap-2 px-1">
+                      <span className="min-w-0 truncate text-[9px] text-muted-foreground">
                         Replying to <span className="font-bold text-foreground">@{replyTo.username}</span>
                       </span>
                       <button onClick={() => setReplyTo(null)} className="text-[9px] text-muted-foreground hover:text-foreground">
@@ -320,14 +320,14 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
                       </button>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <input
                       ref={inputRef}
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSend()}
                       placeholder={replyTo ? `Reply to @${replyTo.username}...` : "Write a comment..."}
-                      className="flex-1 bg-muted border border-border rounded-lg px-3 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
+                      className="min-w-0 flex-1 rounded-lg border border-border bg-muted px-3 py-1.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-primary lg:text-[11px]"
                     />
                     <button
                       onClick={handleSend}

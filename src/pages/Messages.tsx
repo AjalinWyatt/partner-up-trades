@@ -488,13 +488,12 @@ export default function Messages() {
       </p>
     </div>
   ) : (
-    <div className="flex flex-col h-full min-w-0 w-full overflow-x-hidden">
+    <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden overscroll-none touch-pan-y">
       <div
         className={cn(
-          "sticky top-0 z-40 flex items-center gap-3 px-3 pb-3 border-b bg-background/95 backdrop-blur-xl",
+          "sticky top-0 z-40 flex w-full max-w-full shrink-0 items-center gap-3 overflow-hidden border-b bg-background/95 px-3 pb-3 pt-[max(3rem,calc(env(safe-area-inset-top,0px)+1rem))] backdrop-blur-xl lg:pt-3",
           activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
         )}
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
       >
         <button
           onClick={() => {
@@ -523,7 +522,7 @@ export default function Messages() {
             <AvatarIcon conn={activeChat} size="sm" />
           </div>
         )}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
               {activeChat.partnerName.replace(/^@/, "")}
@@ -533,8 +532,8 @@ export default function Messages() {
             )}
           </div>
           {activeChat.id === SYSTEM_CONNECTION_ID ? (
-            <p className="text-[11px] text-primary truncate leading-tight font-semibold flex items-center gap-1">
-              <Megaphone className="w-3 h-3" /> Official announcements
+            <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold leading-tight text-primary">
+              <Megaphone className="h-3 w-3 shrink-0" /> <span className="min-w-0 truncate">Official announcements</span>
             </p>
           ) : (
             <p className="text-[11px] text-muted-foreground truncate leading-tight">
@@ -563,19 +562,19 @@ export default function Messages() {
         )}
       </div>
       {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap px-4 pt-2">
+        <div className="flex max-w-full shrink-0 flex-wrap items-center gap-1.5 overflow-hidden px-4 pt-2">
           {(assignmentsByPartner[activeChat.partnerId] || [])
             .map((tid) => allTags.find((t) => t.id === tid))
             .filter(Boolean)
             .map((t) => (
-              <span key={t!.id} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-semibold">
+              <span key={t!.id} className="max-w-full truncate rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 {t!.name}
               </span>
             ))}
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-4 touch-pan-y">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <AvatarIcon conn={activeChat} size="lg" />
@@ -590,7 +589,7 @@ export default function Messages() {
                   {group.date}
                 </span>
               </div>
-              <div className="space-y-1.5">
+              <div className="w-full max-w-full space-y-1.5 overflow-x-hidden">
                 {group.messages.map((msg, idx) => {
                   const isMine = msg.sender_id === userId;
                   const next = group.messages[idx + 1];
@@ -617,40 +616,40 @@ export default function Messages() {
       </div>
 
       {activeChat.id === SYSTEM_CONNECTION_ID ? (
-        <div className="px-4 pb-4 pt-2">
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-3 py-2.5 text-[12px] text-foreground/80">
+        <div className="shrink-0 overflow-hidden px-4 pt-2 pb-safe-4">
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2.5 text-[12px] text-foreground/80">
             <Megaphone className="w-4 h-4 text-primary shrink-0" />
-            <span>This is an official TradersWorld channel. Replies are disabled.</span>
+            <span className="min-w-0 break-words">This is an official TradersWorld channel. Replies are disabled.</span>
           </div>
         </div>
       ) : (
-      <div className="px-4 pb-4 pt-2">
-        <div className="flex items-center gap-2 bg-secondary/70 rounded-full pl-3 pr-1.5 py-1.5">
+      <div className="shrink-0 overflow-hidden px-4 pt-2 pb-safe-4">
+        <div className="flex w-full max-w-full min-w-0 items-center gap-2 overflow-hidden rounded-full bg-secondary/70 py-1.5 pl-3 pr-1.5">
           <AttachmentButton
             userId={userId!}
             connectionId={activeChat.id}
             partnerId={activeChat.partnerId}
             onSent={() => {}}
           />
-          <span className="w-px h-5 bg-foreground/30" />
+          <span className="h-5 w-px shrink-0 bg-foreground/30" />
           <input
             ref={inputRef}
             value={msgInput}
             onChange={(e) => setMsgInput(e.target.value)}
             placeholder="Type here"
-            className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground py-1.5"
+            className="min-w-0 flex-1 bg-transparent border-none py-1.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground lg:text-sm"
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
           {msgInput.trim() ? (
             <button
               onClick={sendMessage}
               disabled={sendingMsg}
-              className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary disabled:opacity-40"
             >
               <Send className="w-5 h-5 text-primary-foreground" />
             </button>
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary">
               <VoiceRecorder
                 userId={userId!}
                 connectionId={activeChat.id}

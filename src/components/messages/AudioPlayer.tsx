@@ -30,7 +30,7 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
   };
 
   return (
-    <div className="flex items-center gap-2.5 min-w-[210px] py-0.5 pr-1">
+    <div className="flex w-[min(210px,58vw)] max-w-full min-w-0 items-center gap-2.5 py-0.5 pr-1">
       <audio
         ref={audioRef}
         src={url}

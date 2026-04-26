@@ -78,8 +78,8 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
 
   if (recording) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-destructive font-medium animate-pulse">● {formatElapsed(elapsed)}</span>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="max-w-[3.25rem] truncate text-xs font-medium text-destructive animate-pulse">● {formatElapsed(elapsed)}</span>
         <button onClick={stopRecording} className="p-1.5 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive">
           <Square className="w-4 h-4" />
         </button>

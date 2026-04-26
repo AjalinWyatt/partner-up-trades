@@ -342,11 +342,11 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
   if (!postId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex touch-pan-y items-end justify-center overflow-hidden overscroll-none" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
         {...swipeDismiss}
-        className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+        className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] w-full max-w-lg min-w-0 flex-col overflow-hidden overscroll-contain rounded-t-2xl border-t border-border bg-card pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         onClick={e => e.stopPropagation()}
       >
         {/* Handle */}
@@ -355,7 +355,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border px-4 py-2">
           <span className="text-sm font-bold text-foreground">Comments</span>
           <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary text-foreground">
             <X className="w-5 h-5" />
@@ -363,8 +363,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         </div>
 
         {post && (
-          <div className="border-b border-border px-4 py-2.5">
-            <div className="flex items-start gap-2.5">
+          <div className="overflow-hidden border-b border-border px-4 py-2.5">
+            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden">
               <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="shrink-0">
                 {media ? (
                   <img src={media} alt="Post media" className="h-11 w-11 rounded-lg object-cover" />
@@ -378,7 +378,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
               </button>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
+                <div className="flex min-w-0 items-center gap-1.5">
                   <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }} className="truncate text-xs font-bold text-foreground hover:underline">
                     @{post.username}
                   </button>
@@ -410,7 +410,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         )}
 
         {/* Comments list */}
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-3 overscroll-contain">
+        <div className="min-h-0 flex-1 touch-pan-y space-y-3 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -433,7 +433,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                     </div>
                   )}
                 </button>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 max-w-full flex-1 overflow-hidden">
                    <div className="px-0.5 py-1">
                      <div className="flex items-center gap-2 min-w-0">
                        <button
@@ -450,9 +450,9 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                          {c.content}
                        </p>
                      )}
-                     {c.media_url && <img src={c.media_url} alt="Comment attachment" className="mt-2 h-28 w-28 rounded-xl object-cover" />}
+                      {c.media_url && <img src={c.media_url} alt="Comment attachment" className="mt-2 h-28 w-28 max-w-full rounded-xl object-cover" />}
                    </div>
-                  <div className="mt-1 flex items-center gap-3 px-1">
+                   <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 px-1">
                     {myId && (
                       <button
                         onClick={() => toggleCommentLike(c)}
@@ -493,7 +493,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         </div>
 
         {myId && (
-          <div className="border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm overflow-x-hidden">
+          <div className="overflow-x-hidden border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm">
             <div className="relative flex gap-2.5 pl-11 w-full min-w-0">
               <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
               <div className="relative z-10 shrink-0 bg-card">
@@ -505,19 +505,19 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                   </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1 pt-0.5">
-                <div className="flex items-center gap-1.5 text-[11px]">
-                  <span className="font-bold text-foreground">{viewerProfile?.username || "you"}</span>
-                  <span className="text-muted-foreground">{editingCommentId ? "editing reply" : "add reply"}</span>
+              <div className="min-w-0 max-w-full flex-1 overflow-hidden pt-0.5">
+                <div className="flex min-w-0 items-center gap-1.5 text-[11px]">
+                  <span className="min-w-0 truncate font-bold text-foreground">{viewerProfile?.username || "you"}</span>
+                  <span className="shrink-0 text-muted-foreground">{editingCommentId ? "editing reply" : "add reply"}</span>
                 </div>
-                <div className="mt-1 rounded-2xl border border-border bg-secondary px-3 py-2">
+                <div className="mt-1 max-w-full overflow-hidden rounded-2xl border border-border bg-secondary px-3 py-2">
                   <textarea
                     ref={inputRef}
                     value={text}
                     onChange={e => setText(e.target.value)}
                     placeholder={`Reply to ${post.username}...`}
                     rows={2}
-                    className="w-full resize-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                    className="w-full min-w-0 resize-none bg-transparent text-[16px] text-foreground outline-none placeholder:text-muted-foreground [overflow-wrap:anywhere] lg:text-xs"
                   />
                   {commentPreview && (
                     <div className="relative mt-2 inline-flex">
