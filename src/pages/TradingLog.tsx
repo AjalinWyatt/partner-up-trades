@@ -938,10 +938,15 @@ export default function TradingLog() {
           <>
             <div className="space-y-1.5 mx-5">
               {entries.map((entry) => (
-                <div key={entry.id} className={cn(
-                  "bg-card border rounded-xl p-2.5 px-3 relative",
-                  entry.entry_type === "study" ? "border-primary/40" : "border-border"
-                )}>
+                <div
+                  key={entry.id}
+                  onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
+                  className={cn(
+                    "bg-card border rounded-xl p-2.5 px-3 relative cursor-pointer transition-colors hover:bg-card/80",
+                    entry.entry_type === "study" ? "border-primary/40" : "border-border",
+                    expandedId === entry.id && "ring-1 ring-accent/40"
+                  )}
+                >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span className={cn(
@@ -962,6 +967,12 @@ export default function TradingLog() {
                             : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
                         </span>
                       )}
+                      {entry.entry_type === "study" && entry.study_data?.duration && (
+                        <span className="text-sm font-extrabold text-primary" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                          ⏱️ {entry.study_data.duration}
+                        </span>
+                      )}
+                      <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expandedId === entry.id && "rotate-180")} />
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
@@ -974,16 +985,16 @@ export default function TradingLog() {
                   </div>
                   {openMenuId === entry.id && (
                     <>
-                      <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
+                      <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
                       <div className="absolute right-2 top-9 z-40 min-w-[130px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
                         <button
-                          onClick={() => startEdit(entry)}
+                          onClick={(e) => { e.stopPropagation(); startEdit(entry); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
                         >
                           <Pencil className="w-3.5 h-3.5" /> Edit
                         </button>
                         <button
-                          onClick={() => deleteEntry(entry.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -991,7 +1002,17 @@ export default function TradingLog() {
                       </div>
                     </>
                   )}
-                  {entry.mood && (
+                  {/* Compact summary row when collapsed */}
+                  {expandedId !== entry.id && (
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {entry.entry_type === "study"
+                        ? (entry.notes || entry.study_data?.takeaway || "Study session")
+                        : [entry.market_pair, entry.mood ? getMoodText(entry.mood) : null].filter(Boolean).join(" · ") || "Trade entry"}
+                    </div>
+                  )}
+                  {/* Full detail when expanded */}
+                  {expandedId === entry.id && <>
+                  {entry.mood && entry.entry_type !== "study" && (
                     <div className="flex items-center gap-1 mb-1">
                       <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
                       <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
@@ -1007,11 +1028,6 @@ export default function TradingLog() {
                           </span>
                         ) : null;
                       })()}
-                      {entry.study_data.duration && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground">
-                          ⏱️ {entry.study_data.duration}
-                        </span>
-                      )}
                       {entry.study_data.confidence && (() => {
                         const c = STUDY_CONFIDENCE.find((x) => x.value === entry.study_data.confidence);
                         return c ? (
@@ -1026,7 +1042,7 @@ export default function TradingLog() {
                     <p className="text-[11px] text-foreground leading-snug mb-1 italic">"{entry.study_data.takeaway}"</p>
                   )}
                   {entry.notes && (
-                    <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                    <p className="text-[11px] text-foreground leading-snug mb-1 whitespace-pre-wrap">{entry.notes}</p>
                   )}
                   {entry.entry_type === "study" && entry.study_data?.topics?.length > 0 && (
                     <div className="flex flex-wrap gap-[3px] mb-1">
@@ -1058,6 +1074,10 @@ export default function TradingLog() {
                       {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
                     </div>
                   )}
+                  {entry.account_type && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5">Account: {entry.account_type}</div>
+                  )}
+                  </>}
                 </div>
               ))}
             </div>
