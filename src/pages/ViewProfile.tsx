@@ -424,6 +424,13 @@ const ViewProfile = () => {
         )}
       </div>
     </div>
+    <PostDetailModal
+      open={!!openPost}
+      onClose={() => setOpenPost(null)}
+      post={openPost as any}
+      myId={myId}
+    />
+    </>
   );
 };
 
