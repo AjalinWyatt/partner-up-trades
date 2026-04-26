@@ -60,7 +60,7 @@ const Saved = () => {
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto pb-20">
-        <div className="px-5 pt-5 flex items-center gap-3">
+        <div className="px-5 pt-safe-5 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full border border-border flex items-center justify-center"
