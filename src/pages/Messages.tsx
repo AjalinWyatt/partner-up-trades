@@ -488,7 +488,7 @@ export default function Messages() {
       </p>
     </div>
   ) : (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0 w-full overflow-x-hidden">
       <div
         className={cn(
           "sticky top-0 z-40 flex items-center gap-3 px-3 pb-3 border-b bg-background/95 backdrop-blur-xl",
