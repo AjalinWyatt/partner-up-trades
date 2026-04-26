@@ -791,6 +791,7 @@ const PostList = ({
   onOpenPost,
   onCreate,
   onToggleLike,
+  onSharePost,
 }: {
   posts: ProfilePostItem[];
   savedPosts: ProfilePostItem[];
@@ -800,6 +801,7 @@ const PostList = ({
   onOpenPost: (post: any) => void;
   onCreate: () => void;
   onToggleLike: (postId: string) => void;
+  onSharePost: (post: any) => void;
 }) => {
   if (posts.length === 0 && savedPosts.length === 0) {
     return (
