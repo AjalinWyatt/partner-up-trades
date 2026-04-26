@@ -9,6 +9,7 @@ import { sendNotification } from "@/lib/notifications";
 import PostDetailModal from "@/components/PostDetailModal";
 import SharePostSheet from "@/components/SharePostSheet";
 import DetailCardsGrid, { type DetailCardItem } from "@/components/profile/DetailCardsGrid";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
 
 interface ViewPostItem {
   id: string;
@@ -51,6 +52,9 @@ const ViewProfile = () => {
 
     navigate("/feed", { replace: true });
   };
+
+  // Safe left-edge swipe-back to previous page
+  useSwipeBack({ onBack: handleBack });
 
   useEffect(() => {
     if (!userId) return;

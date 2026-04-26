@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
 
 interface JournalEntry {
   id: string;
@@ -137,6 +138,12 @@ export default function TradingLog() {
   const [logView, setLogView] = useState<"trade" | "study">("trade");
   const [statsRange, setStatsRange] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [showRangeMenu, setShowRangeMenu] = useState(false);
+
+  // Safe left-edge swipe-back: in entry form, swipe right to return to log list
+  useSwipeBack({
+    onBack: () => setShowForm(false),
+    enabled: showForm,
+  });
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");

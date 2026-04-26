@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
 import type { Connection, Message } from "@/components/messages/types";
 import { groupMessagesByDate } from "@/components/messages/utils";
 import AvatarIcon from "@/components/messages/AvatarIcon";
@@ -52,6 +53,12 @@ export default function Messages() {
   const [partnerTrading, setPartnerTrading] = useState<{ markets?: string[] | null; experience_level?: string | null; trading_style?: string[] | null } | null>(null);
   const [systemExitOpen, setSystemExitOpen] = useState(false);
   const [deletingSystem, setDeletingSystem] = useState(false);
+
+  // Safe left-edge swipe-back: in chat view, swipe right to return to DM list
+  useSwipeBack({
+    onBack: () => setActiveChat(null),
+    enabled: !!activeChat,
+  });
 
   useEffect(() => {
     if (!userId) return;
