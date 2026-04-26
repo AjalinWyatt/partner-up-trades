@@ -129,6 +129,7 @@ const Profile = () => {
   const [posts, setPosts] = useState<ProfilePostItem[]>([]);
   const [savedPosts, setSavedPosts] = useState<ProfilePostItem[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showCreatePhoto, setShowCreatePhoto] = useState(false);
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
@@ -702,20 +703,26 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Posts / Grid / Details / Journal pill tabs */}
-        <div className="mt-6 flex justify-center gap-2.5 px-5">
-          {["Posts", "Grid", "Details", "Journal"].map((tab, index) => (
+        {/* Posts / Grid / Details / Journal icon tabs */}
+        <div className="mt-6 flex items-center justify-center gap-1 border-b border-border px-5">
+          {[
+            { Icon: FileText, label: "Posts" },
+            { Icon: Grid3x3, label: "Grid" },
+            { Icon: Info, label: "Details" },
+            { Icon: NotebookPen, label: "Journal" },
+          ].map(({ Icon, label }, index) => (
             <button
-              key={tab}
+              key={label}
               onClick={() => setActiveTab(index)}
+              aria-label={label}
+              title={label}
               className={cn(
-                "flex-1 max-w-[110px] rounded-full px-4 py-2.5 text-sm font-bold transition-all",
-                activeTab === index
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-transparent text-foreground hover:bg-muted"
+                "relative flex-1 max-w-[120px] flex items-center justify-center py-3 transition-colors",
+                activeTab === index ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {tab}
+              <Icon className="h-[22px] w-[22px]" strokeWidth={activeTab === index ? 2.4 : 1.8} />
+              {activeTab === index && <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-foreground" />}
             </button>
           ))}
         </div>
@@ -735,7 +742,7 @@ const Profile = () => {
             onSharePost={(post) => setPostToShare(post)}
           />
         ) : activeTab === 1 ? (
-          <PhotoGrid posts={posts} onOpenPost={setSelectedPost} />
+          <PhotoGrid posts={posts} onOpenPost={setSelectedPost} onCreate={() => setShowCreatePhoto(true)} />
         ) : activeTab === 2 ? (
           <DetailsGrid
             profile={profile}
