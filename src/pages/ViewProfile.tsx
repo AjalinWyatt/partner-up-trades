@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, MessageSquare, MoreVertical, Shield, ShieldOff } from "lucide-react";
+import { ChevronLeft, FileText, Grid3x3, Info, MessageSquare, MoreVertical, NotebookPen, Shield, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
@@ -314,17 +314,24 @@ const ViewProfile = () => {
         )}
 
         <div className="mt-6 flex border-b border-border px-5">
-          {["Posts", "Grid", "Journal", "Details"].map((tab, index) => (
+          {[
+            { Icon: FileText, label: "Posts" },
+            { Icon: Grid3x3, label: "Grid" },
+            { Icon: NotebookPen, label: "Journal" },
+            { Icon: Info, label: "Details" },
+          ].map(({ Icon, label }, index) => (
             <button
-              key={tab}
+              key={label}
               onClick={() => setActiveTab(index)}
+              aria-label={label}
+              title={label}
               className={cn(
-                "relative flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider transition-colors",
+                "relative flex-1 flex items-center justify-center py-3 transition-colors",
                 activeTab === index ? "text-foreground" : "text-muted-foreground"
               )}
             >
-              {tab}
-              {activeTab === index && <div className="absolute bottom-0 left-[18%] right-[18%] h-0.5 rounded-full bg-primary" />}
+              <Icon className="h-[22px] w-[22px]" strokeWidth={activeTab === index ? 2.4 : 1.8} />
+              {activeTab === index && <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-foreground" />}
             </button>
           ))}
         </div>
