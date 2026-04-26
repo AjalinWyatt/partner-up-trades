@@ -58,7 +58,7 @@ export default function AppSidebar() {
       <nav className="flex-1 space-y-0.5">
         {navItems.map((item) => {
           const active = location.pathname === item.path;
-          const badge = item.path === "/notifications" ? unreadNotifs : item.path === "/messages" ? unreadMsgs : 0;
+          const badge = item.path === "/dashboard" ? unreadNotifs : item.path === "/messages" ? unreadMsgs : 0;
 
           return (
             <button
