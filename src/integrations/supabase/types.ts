@@ -495,6 +495,7 @@ export type Database = {
           result: string | null
           session: string | null
           share_setting: string | null
+          study_data: Json
           tags: string[] | null
           user_id: string
         }
@@ -511,6 +512,7 @@ export type Database = {
           result?: string | null
           session?: string | null
           share_setting?: string | null
+          study_data?: Json
           tags?: string[] | null
           user_id: string
         }
@@ -527,6 +529,7 @@ export type Database = {
           result?: string | null
           session?: string | null
           share_setting?: string | null
+          study_data?: Json
           tags?: string[] | null
           user_id?: string
         }

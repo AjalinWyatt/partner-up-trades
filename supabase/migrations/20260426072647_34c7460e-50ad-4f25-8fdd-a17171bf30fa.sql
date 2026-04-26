@@ -1,0 +1,1 @@
+ALTER TABLE public.journal_entries ADD COLUMN IF NOT EXISTS study_data JSONB NOT NULL DEFAULT '{}'::jsonb;
