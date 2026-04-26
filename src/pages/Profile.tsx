@@ -860,45 +860,56 @@ const JournalList = ({ entries, onOpenLog }: { entries: JournalEntry[]; onOpenLo
   }
 
   return (
-    <div className="space-y-3 px-5 py-4">
-      {entries.map((entry) => (
-        <div key={entry.id} className="rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                {entry.result && <span className="text-sm font-bold text-foreground">{entry.result}</span>}
-                {entry.market_pair && <span className="text-xs text-muted-foreground">{entry.market_pair}</span>}
+    <div className="space-y-1.5 px-5 py-4">
+      {entries.map((entry) => {
+        const isPositive = (entry.pnl_pips || 0) >= 0;
+        return (
+          <div
+            key={entry.id}
+            className="bg-card border border-border rounded-xl p-2.5 px-3 relative"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
+                  📈 Trade
+                </span>
+                <span className="text-[11px] font-bold text-foreground">{formatProfileDate(entry.created_at)}</span>
               </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">{formatProfileDate(entry.created_at)}</p>
+              <div className="flex items-center gap-1.5">
+                {typeof entry.pnl_pips === "number" && (
+                  <span className={cn("text-sm font-extrabold", isPositive ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                    {entry.pnl_unit === "dollars"
+                      ? `${isPositive ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
+                      : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips} pips`}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={onOpenLog}
+                  className="w-6 h-6 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  aria-label="Edit in trading log"
+                  title="Edit in trading log"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
-            {typeof entry.pnl_pips === "number" && (
-              <span className="text-sm font-bold text-foreground">
-                {entry.pnl_unit === "dollars"
-                  ? `${entry.pnl_pips >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
-                  : `${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips`}
-              </span>
+            <div className="text-[10px] text-muted-foreground truncate">
+              {[entry.result, entry.market_pair, entry.mood].filter(Boolean).join(" · ") || "Trade entry"}
+            </div>
+            {entry.notes && (
+              <p className="mt-1 text-[11px] text-foreground leading-snug whitespace-pre-wrap">{entry.notes}</p>
+            )}
+            {!!entry.tags?.length && (
+              <div className="mt-1 flex flex-wrap gap-[3px]">
+                {entry.tags.map((tag) => (
+                  <span key={tag} className="text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px] bg-secondary text-muted-foreground">{tag}</span>
+                ))}
+              </div>
             )}
           </div>
-
-          {(entry.mood || entry.session || entry.account_type) && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {entry.mood && <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground">{entry.mood}</span>}
-              {entry.session && <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground">{entry.session}</span>}
-              {entry.account_type && <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground">{entry.account_type}</span>}
-            </div>
-          )}
-
-          {entry.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{entry.notes}</p>}
-
-          {!!entry.tags?.length && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {entry.tags.map((tag) => (
-                <span key={tag} className="rounded-full border border-border px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">{tag}</span>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
