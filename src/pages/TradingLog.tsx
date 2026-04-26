@@ -448,6 +448,135 @@ export default function TradingLog() {
             </div>
           </div>
 
+          {/* Study-specific fields */}
+          {entryType === "study" && (
+            <>
+              {/* Study type */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What kind of study?</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {STUDY_TYPES.map((s) => {
+                    const sel = studyType === s.value;
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setStudyType(sel ? "" : s.value)}
+                        className={cn(
+                          "flex flex-col items-center gap-0.5 py-2 rounded-[10px] border-[1.5px] transition-colors",
+                          sel
+                            ? "border-accent bg-accent/[0.08]"
+                            : "border-border bg-secondary"
+                        )}
+                      >
+                        <span className="text-base leading-none">{s.emoji}</span>
+                        <span className={cn("text-[9px] font-bold", sel ? "text-accent" : "text-muted-foreground")}>{s.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Topics */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Topics covered</p>
+                <div className="flex flex-wrap gap-[5px]">
+                  {STUDY_TOPICS.map((t) => {
+                    const sel = studyTopics.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setStudyTopics((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
+                        className={cn(
+                          "px-3 py-[5px] rounded-full text-[11px] font-semibold border-[1.5px] transition-colors",
+                          sel
+                            ? "bg-primary/[0.12] text-primary border-primary"
+                            : "border-border text-foreground bg-transparent"
+                        )}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">⏱️ Time spent</p>
+                <div className="flex gap-1.5">
+                  {STUDY_DURATIONS.map((d) => {
+                    const sel = studyDuration === d;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setStudyDuration(sel ? "" : d)}
+                        className={cn(
+                          "flex-1 py-2 rounded-[10px] border-[1.5px] text-[12px] font-bold transition-colors",
+                          sel
+                            ? "bg-accent/[0.12] text-accent border-accent"
+                            : "border-border bg-secondary text-muted-foreground"
+                        )}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Confidence */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How well do you get it?</p>
+                <div className="flex gap-1.5">
+                  {STUDY_CONFIDENCE.map((c) => {
+                    const sel = studyConfidence === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setStudyConfidence(sel ? 0 : c.value)}
+                        className={cn(
+                          "flex-1 flex flex-col items-center py-2 rounded-[10px] border-[1.5px] transition-colors",
+                          sel
+                            ? "border-accent bg-accent/[0.08]"
+                            : "border-border bg-secondary"
+                        )}
+                      >
+                        <span className="text-lg leading-none">{c.emoji}</span>
+                        <span className={cn("text-[9px] font-bold mt-0.5", sel ? "text-accent" : "text-muted-foreground")}>{c.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Key takeaway */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">💡 Biggest takeaway</p>
+                <input
+                  value={studyTakeaway}
+                  onChange={(e) => setStudyTakeaway(e.target.value)}
+                  placeholder="One thing you'll actually use…"
+                  className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                />
+              </div>
+
+              {/* Resource */}
+              <div>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">🔗 Source / link (optional)</p>
+                <input
+                  value={studyResource}
+                  onChange={(e) => setStudyResource(e.target.value)}
+                  placeholder="Book title, video URL, course name…"
+                  className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                />
+              </div>
+            </>
+          )}
+
           {/* Result */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Result</p>
