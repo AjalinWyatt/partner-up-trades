@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useNavBadges } from "@/hooks/use-nav-badges";
 
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
@@ -24,6 +25,12 @@ export default function AppSidebar() {
   const [unreadMsgs, setUnreadMsgs] = useState(0);
   const isAdmin = useIsAdmin();
   const [adminOpen, setAdminOpen] = useState(false);
+  const { homeDot, messagesDot, discoverDot } = useNavBadges();
+  const dotForPath: Record<string, boolean> = {
+    "/dashboard": homeDot,
+    "/messages": messagesDot,
+    "/discover": discoverDot,
+  };
 
   useEffect(() => {
     if (location.pathname.startsWith("/admin")) setAdminOpen(true);
@@ -72,7 +79,15 @@ export default function AppSidebar() {
                   : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               )}
             >
-              <item.icon className={cn("w-[22px] h-[22px]", active && "text-foreground")} strokeWidth={active ? 2.2 : 1.6} />
+              <span className="relative inline-flex">
+                <item.icon className={cn("w-[22px] h-[22px]", active && "text-foreground")} strokeWidth={active ? 2.2 : 1.6} />
+                {dotForPath[item.path] && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[hsl(210_100%_60%)] animate-slow-blink"
+                  />
+                )}
+              </span>
               <span className="flex-1 text-left">{item.label}</span>
               {badge > 0 && (
                 <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
