@@ -3,12 +3,12 @@ import { Home, Earth, MessagesSquare, BookOpen, Users } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
 
 const tabs = [
-  { path: "/dashboard", icon: Home, label: "Home" },
-  { path: "/discover", icon: Earth, label: "Discover" },
-  { path: "/feed", icon: FeedNavIcon, label: "Feed" },
-  { path: "/messages", icon: MessagesSquare, label: "Messages" },
-  { path: "/trading-log", icon: BookOpen, label: "Log" },
-  { path: "/partners", icon: Users, label: "Partners" },
+  { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
+  { path: "/discover", icon: Earth, label: "Discover", tour: "nav-discover" },
+  { path: "/feed", icon: FeedNavIcon, label: "Feed", tour: "nav-feed" },
+  { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
+  { path: "/trading-log", icon: BookOpen, label: "Log", tour: "nav-log" },
+  { path: "/partners", icon: Users, label: "Partners", tour: "nav-partners" },
 ];
 
 const BottomNav = () => {
@@ -24,6 +24,7 @@ const BottomNav = () => {
         return (
           <button
             key={tab.path}
+            data-tour={tab.tour}
             onClick={() => navigate(tab.path)}
             className="flex items-center justify-center"
             aria-label={tab.label}

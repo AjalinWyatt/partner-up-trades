@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, X, AlertCircle, LogOut, Trash2, ShieldOff, Bell, User as UserIcon, Eye, FileText } from "lucide-react";
+import { ArrowLeft, Check, X, AlertCircle, LogOut, Trash2, ShieldOff, Bell, User as UserIcon, Eye, FileText, Sparkles } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -375,6 +375,21 @@ export default function Settings() {
         <Section icon={<FileText className="w-4 h-4" />} title="About">
           <button onClick={() => navigate("/terms")} className="w-full text-left text-[13px] text-foreground py-2 border-b border-border">Terms of Service</button>
           <button onClick={() => navigate("/privacy")} className="w-full text-left text-[13px] text-foreground py-2">Privacy Policy</button>
+        </Section>
+
+        {/* Walkthrough */}
+        <Section icon={<Sparkles className="w-4 h-4" />} title="Help">
+          <button
+            onClick={() => {
+              sessionStorage.setItem("tw:replay-tour", "1");
+              toast.success("Replaying walkthrough…");
+              navigate("/dashboard");
+            }}
+            className="w-full text-left text-[13px] text-foreground py-2 flex items-center justify-between"
+          >
+            <span>Replay walkthrough</span>
+            <span className="text-muted-foreground text-[11px]">~60s tour</span>
+          </button>
         </Section>
 
         {/* Danger zone */}

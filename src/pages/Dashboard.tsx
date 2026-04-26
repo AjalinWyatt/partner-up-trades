@@ -9,6 +9,7 @@ import { timeAgo } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
 import { Skeleton } from "@/components/ui/skeleton";
+import Walkthrough from "@/components/Walkthrough";
 
 type NotifFilter = "all" | "activity" | "partners" | "streaks";
 
@@ -116,6 +117,7 @@ const Dashboard = () => {
   const [notifLoading, setNotifLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTour, setShowTour] = useState(false);
 
   const loadNotifications = async (uid: string, filter: NotifFilter) => {
     setNotifLoading(true);
@@ -201,7 +203,7 @@ const Dashboard = () => {
         { data: notifs },
         { count: pendingRequests },
       ] = await Promise.all([
-        supabase.from("profiles").select("username, avatar_url").eq("id", user.id).maybeSingle(),
+        supabase.from("profiles").select("username, avatar_url, tour_completed").eq("id", user.id).maybeSingle(),
         supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saver_id", user.id),
         supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saver_id", user.id),
         supabase.from("journal_entries").select("id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
@@ -210,6 +212,13 @@ const Dashboard = () => {
       ]);
 
       setProfile(prof || null);
+      // Trigger first-time walkthrough or replay flag from Settings
+      const replay = sessionStorage.getItem("tw:replay-tour") === "1";
+      if (replay || (prof && (prof as any).tour_completed === false)) {
+        sessionStorage.removeItem("tw:replay-tour");
+        // Small delay so the layout settles before we measure nav items
+        setTimeout(() => setShowTour(true), 300);
+      }
 
       // Waiting list count: pending requests that overflow the user's partner cap
       let waitingCount = 0;
@@ -494,6 +503,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+      {showTour && <Walkthrough onClose={() => setShowTour(false)} />}
     </AppLayout>
   );
 };
