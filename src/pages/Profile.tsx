@@ -830,7 +830,8 @@ const PostList = ({
   onToggleLike: (postId: string) => void;
   onSharePost: (post: any) => void;
 }) => {
-  if (posts.length === 0 && savedPosts.length === 0) {
+  const visiblePosts = posts.filter((p) => (p as any).share_to_feed !== false);
+  if (visiblePosts.length === 0 && savedPosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
@@ -845,7 +846,7 @@ const PostList = ({
 
   return (
     <div>
-      {posts.map((post) => {
+      {visiblePosts.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         return (
           <div key={post.id} className="border-b border-border px-5 py-4">
