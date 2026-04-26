@@ -326,7 +326,10 @@ export default function Messages() {
 
   const conversationListContent = (
     <div className="flex flex-col h-full">
-      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+      <div
+        className="sticky top-0 z-40 px-5 pb-4 flex items-center justify-between bg-background/95 backdrop-blur-xl"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+      >
         {showSearch ? (
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
