@@ -4,6 +4,7 @@ import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, UserPlus, Trash2, Plu
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
+import PullToRefresh from "@/components/PullToRefresh";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
