@@ -12,6 +12,16 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import DetailCardsGrid from "@/components/profile/DetailCardsGrid";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProfileData {
   username: string | null;
@@ -235,7 +245,7 @@ const Profile = () => {
       const [{ data: pData }, { data: tData }, { data: entries }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("journal_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+        supabase.from("journal_entries").select("*").eq("user_id", user.id).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(50),
       ]);
 
       if (pData) {
@@ -735,6 +745,7 @@ const Profile = () => {
                 .from("journal_entries")
                 .select("*")
                 .eq("user_id", userId)
+                .eq("hidden_from_journal", false)
                 .order("created_at", { ascending: false })
                 .limit(50);
               setJournalEntries((data as JournalEntry[]) || []);
