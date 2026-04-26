@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, ArrowLeft, X } from "lucide-react";
+import { Sparkles, ArrowRight, ArrowLeft, X, Smartphone } from "lucide-react";
 import Wordmark from "@/components/Wordmark";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +17,8 @@ type Step = {
   body: string;
   /** Optional route to navigate to before showing this step */
   route?: string;
+  /** Marks the final "install the app" full-screen prompt */
+  install?: boolean;
 };
 
 const STEPS: Step[] = [
@@ -32,6 +34,12 @@ const STEPS: Step[] = [
   { target: "nav-log", title: "Trading Log", body: "Log every trade. Builds your streak and helps your partner keep you accountable.", route: "/dashboard" },
   { target: "nav-partners", title: "Partners", body: "Send & manage partner requests here. Up to 3 active partners on free.", route: "/dashboard" },
   { target: "nav-profile", title: "Profile", body: "That's you. Customise it so the right traders save you back.", route: "/dashboard" },
+  {
+    install: true,
+    title: "One last thing — install the app 📲",
+    body:
+      "TradersWorld works best installed on your phone — full-screen, push notifications and one-tap access. Takes 10 seconds. We'll show you exactly how.",
+  },
 ];
 
 const PADDING = 8;
@@ -41,7 +49,9 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const navigate = useNavigate();
   const step = STEPS[stepIdx];
-  const isWelcome = !step.target;
+  const isInstall = !!step.install;
+  const isWelcome = !step.target && !isInstall;
+  const isFullScreenSlide = isWelcome || isInstall;
 
   // Navigate to the step's route before measuring
   useEffect(() => {
@@ -52,7 +62,7 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
 
   // Measure target element
   useLayoutEffect(() => {
-    if (isWelcome) {
+    if (isFullScreenSlide) {
       setRect(null);
       return;
     }
@@ -82,7 +92,7 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
     };
-  }, [stepIdx, isWelcome, step.target]);
+  }, [stepIdx, isFullScreenSlide, step.target]);
 
   const finish = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -118,28 +128,62 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
 
   const node = (
     <div className="fixed inset-0 z-[100]">
-      {isWelcome ? (
+      {isFullScreenSlide ? (
         <div className="absolute inset-0 bg-background/95 backdrop-blur-md flex items-center justify-center px-6">
           <div className="max-w-sm w-full text-center">
-            <div className="mx-auto mb-5 w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary" />
-            </div>
-            <Wordmark size="text-2xl" />
+            {isInstall ? (
+              <img
+                src="/app-icon-512.png"
+                alt="TradersWorld app icon"
+                width={88}
+                height={88}
+                className="mx-auto rounded-2xl shadow-lg mb-4"
+              />
+            ) : (
+              <>
+                <div className="mx-auto mb-5 w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <Wordmark size="text-2xl" />
+              </>
+            )}
             <h2 className="text-foreground text-[22px] font-bold mt-5">{step.title}</h2>
             <p className="text-muted-foreground text-[14px] mt-2 leading-relaxed">{step.body}</p>
             <div className="mt-7 flex flex-col gap-2">
-              <button
-                onClick={next}
-                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-[14px] flex items-center justify-center gap-2"
-              >
-                Take the tour <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={finish}
-                className="w-full py-2.5 text-muted-foreground text-[13px] font-medium hover:text-foreground transition-colors"
-              >
-                Skip — I'll explore on my own
-              </button>
+              {isInstall ? (
+                <>
+                  <button
+                    onClick={async () => {
+                      await finish();
+                      navigate("/install");
+                    }}
+                    className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-[14px] flex items-center justify-center gap-2"
+                  >
+                    <Smartphone className="w-4 h-4" /> Show me how to install
+                  </button>
+                  <button
+                    onClick={finish}
+                    className="w-full py-2.5 text-muted-foreground text-[13px] font-medium hover:text-foreground transition-colors"
+                  >
+                    Maybe later
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={next}
+                    className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-[14px] flex items-center justify-center gap-2"
+                  >
+                    Take the tour <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={finish}
+                    className="w-full py-2.5 text-muted-foreground text-[13px] font-medium hover:text-foreground transition-colors"
+                  >
+                    Skip — I'll explore on my own
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
