@@ -410,7 +410,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         )}
 
         {/* Comments list */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 space-y-3 overscroll-contain">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-3 overscroll-contain">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -493,8 +493,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         </div>
 
         {myId && (
-          <div className="border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm">
-            <div className="relative flex gap-2.5 pl-11">
+          <div className="border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm overflow-x-hidden">
+            <div className="relative flex gap-2.5 pl-11 w-full min-w-0">
               <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
               <div className="relative z-10 shrink-0 bg-card">
                 {viewerProfile?.avatar_url ? (
