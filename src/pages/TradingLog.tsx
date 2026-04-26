@@ -491,7 +491,7 @@ export default function TradingLog() {
               {/* Study type */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What kind of study?</p>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STUDY_TYPES.map((s) => {
                     const sel = studyType === s.value;
                     return (
@@ -526,7 +526,7 @@ export default function TradingLog() {
                         type="button"
                         onClick={() => setStudyDuration(sel ? "" : d)}
                         className={cn(
-                          "flex-1 py-2 rounded-[10px] border-[1.5px] text-[12px] font-bold transition-colors",
+                            "min-w-0 rounded-[10px] border-[1.5px] py-2 text-[12px] font-bold transition-colors",
                           sel
                             ? "bg-accent/[0.12] text-accent border-accent"
                             : "border-border bg-secondary text-muted-foreground"
@@ -542,7 +542,7 @@ export default function TradingLog() {
               {/* Confidence */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How well do you get it?</p>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STUDY_CONFIDENCE.map((c) => {
                     const sel = studyConfidence === c.value;
                     return (
@@ -551,7 +551,7 @@ export default function TradingLog() {
                         type="button"
                         onClick={() => setStudyConfidence(sel ? 0 : c.value)}
                         className={cn(
-                          "flex-1 flex flex-col items-center py-2 rounded-[10px] border-[1.5px] transition-colors",
+                            "flex min-w-0 flex-col items-center rounded-[10px] border-[1.5px] py-2 transition-colors",
                           sel
                             ? "border-accent bg-accent/[0.08]"
                             : "border-border bg-secondary"
@@ -612,7 +612,7 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="flex min-w-0 gap-2">
               <div className={cn(
                 "flex min-w-0 flex-1 items-center overflow-hidden rounded-[10px] border-[1.5px] bg-secondary focus-within:border-accent",
                 result === "Win" ? "border-accent" : result === "Loss" ? "border-destructive" : "border-border"
