@@ -953,7 +953,7 @@ const PostList = ({
   );
 };
 
-const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost: (post: any) => void }) => {
+const PhotoGrid = ({ posts, onOpenPost, onCreate }: { posts: ProfilePostItem[]; onOpenPost: (post: any) => void; onCreate?: () => void }) => {
   const photos = posts.filter((post) => {
     const media = post.media_urls?.[0] || post.media_url || post.image_url;
     if (!media) return false;
@@ -968,13 +968,29 @@ const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost
           <Camera className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="text-base font-bold text-foreground">No photos yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Photos from your posts will show up here in a grid.</p>
+        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Share photos and albums to your grid. They stay on your profile and don't post to the feed.</p>
+        {onCreate && (
+          <button onClick={onCreate} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+            <Plus className="h-4 w-4" /> New photo
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
+    <div className="relative">
+      {onCreate && (
+        <div className="flex justify-end px-3 pt-2 pb-1">
+          <button
+            onClick={onCreate}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" /> New
+          </button>
+        </div>
+      )}
+      <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
       {photos.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         const isMulti = (post.media_urls?.length || 0) > 1;
@@ -993,6 +1009,7 @@ const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost
           </button>
         );
       })}
+      </div>
     </div>
   );
 };
