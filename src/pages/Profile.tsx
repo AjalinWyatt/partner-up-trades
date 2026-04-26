@@ -673,20 +673,6 @@ const Profile = () => {
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
-        {/* Bio - full width below avatar */}
-        <div className="mt-3 px-5">
-          {profile?.bio ? (
-            <p className="whitespace-pre-line text-[13px] leading-5 text-muted-foreground">{profile.bio}</p>
-          ) : (
-            <button
-              onClick={() => setEditing(true)}
-              className="text-left text-[13px] text-muted-foreground italic hover:text-foreground transition-colors"
-            >
-              Add a bio so traders know how you move.
-            </button>
-          )}
-        </div>
-
         {/* Meta row: Location · Joined date */}
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-5 text-[12px] text-muted-foreground">
           {(profile?.city || profile?.state || profile?.country) && (
@@ -702,6 +688,20 @@ const Profile = () => {
               <CalendarDays className="h-3.5 w-3.5" />
               <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
             </span>
+          )}
+        </div>
+
+        {/* Bio - full width below meta */}
+        <div className="mt-3 px-5">
+          {profile?.bio ? (
+            <p className="whitespace-pre-line text-[13px] leading-5 text-muted-foreground">{profile.bio}</p>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="text-left text-[13px] text-muted-foreground italic hover:text-foreground transition-colors"
+            >
+              Add a bio so traders know how you move.
+            </button>
           )}
         </div>
 
