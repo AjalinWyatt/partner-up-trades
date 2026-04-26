@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Lock, LogOut, MapPin, MoreVertical, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, Heart, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, Pencil, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -83,6 +83,9 @@ interface ProfilePostItem {
   originalUsername?: string;
   originalAvatarUrl?: string | null;
   originalCreatedAt?: string;
+  likeCount?: number;
+  commentCount?: number;
+  liked?: boolean;
 }
 
 const Profile = () => {
@@ -118,6 +121,19 @@ const Profile = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
+  const togglePostLike = async (postId: string) => {
+    if (!userId) return;
+    const target = posts.find((p) => p.id === postId);
+    if (!target) return;
+    const isLiked = !!target.liked;
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, liked: !isLiked, likeCount: (p.likeCount || 0) + (isLiked ? -1 : 1) } : p));
+    if (isLiked) {
+      await supabase.from("feed_likes").delete().eq("user_id", userId).eq("entry_id", postId);
+    } else {
+      await supabase.from("feed_likes").insert({ user_id: userId, entry_id: postId });
+    }
+  };
+
   const loadProfileCollections = async (uid: string, ownUsername?: string | null) => {
     const [{ data: ownPosts }, { data: repostRows }, { data: savedRows }, { data: ownProfile }] = await Promise.all([
       supabase.from("posts").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
@@ -140,7 +156,31 @@ const Profile = () => {
     const referencedMap = new Map((referencedPosts || []).map((entry: any) => [entry.id, entry]));
     const myUsername = ownUsername || ownProfile?.username || profile?.username || "username";
 
-    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => ({
+    // Aggregate likes/comments for all visible posts
+    const allPostIds = [
+      ...(ownPosts || []).map((p: any) => p.id),
+      ...referencedIds,
+    ];
+    const [{ data: allLikes }, { data: myLikes }, { data: allComments }] = allPostIds.length > 0
+      ? await Promise.all([
+          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds),
+          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds).eq("user_id", uid),
+          supabase.from("feed_comments").select("entry_id").in("entry_id", allPostIds),
+        ])
+      : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
+    const likeCounts = new Map<string, number>();
+    (allLikes || []).forEach((l: any) => likeCounts.set(l.entry_id, (likeCounts.get(l.entry_id) || 0) + 1));
+    const commentCounts = new Map<string, number>();
+    (allComments || []).forEach((c: any) => commentCounts.set(c.entry_id, (commentCounts.get(c.entry_id) || 0) + 1));
+    const mySet = new Set<string>((myLikes || []).map((l: any) => l.entry_id));
+    const decorate = (p: any): ProfilePostItem => ({
+      ...p,
+      likeCount: likeCounts.get(p.id) || 0,
+      commentCount: commentCounts.get(p.id) || 0,
+      liked: mySet.has(p.id),
+    });
+
+    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => decorate({
       ...post,
       username: `@${myUsername}`,
       avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
@@ -150,7 +190,7 @@ const Profile = () => {
     const repostItems: ProfilePostItem[] = (repostRows || []).map((row: any) => {
       const original = referencedMap.get(row.post_id);
       const author = original ? authorMap.get(original.user_id) : null;
-      return original ? {
+      return original ? decorate({
         ...original,
         created_at: row.created_at,
         username: `@${myUsername}`,
@@ -159,13 +199,13 @@ const Profile = () => {
         originalUsername: author?.username ? `@${author.username}` : "@trader",
         originalAvatarUrl: author?.avatar_url || null,
         originalCreatedAt: original.created_at,
-      } : null;
+      }) : null;
     }).filter(Boolean) as ProfilePostItem[];
 
     const savedItems: ProfilePostItem[] = (savedRows || []).map((row: any) => {
       const original = referencedMap.get(row.post_id);
       const author = original ? authorMap.get(original.user_id) : null;
-      return original ? {
+      return original ? decorate({
         ...original,
         created_at: row.created_at,
         username: author?.username ? `@${author.username}` : "@trader",
@@ -174,7 +214,7 @@ const Profile = () => {
         originalUsername: author?.username ? `@${author.username}` : "@trader",
         originalAvatarUrl: author?.avatar_url || null,
         originalCreatedAt: original.created_at,
-      } : null;
+      }) : null;
     }).filter(Boolean) as ProfilePostItem[];
 
     setPosts([...ownItems, ...repostItems].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
@@ -617,7 +657,7 @@ const Profile = () => {
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
-        {/* Identity chips: Market · Style · Experience */}
+        {/* Identity line: Market · Style · Experience */}
         {(() => {
           const market = tradingProfile?.markets?.[0];
           const style = tradingProfile?.trading_style?.[0];
@@ -625,15 +665,8 @@ const Profile = () => {
           const chips = [market, style, exp].filter(Boolean) as string[];
           if (chips.length === 0) return null;
           return (
-            <div className="mt-4 flex flex-wrap items-center gap-1.5 px-5">
-              {chips.map((chip, i) => (
-                <span
-                  key={`${chip}-${i}`}
-                  className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary"
-                >
-                  {chip}
-                </span>
-              ))}
+            <div className="mt-3 px-5 text-[13px] font-semibold text-primary">
+              {chips.join(" · ")}
             </div>
           );
         })()}
@@ -685,6 +718,7 @@ const Profile = () => {
             username={displayUsername}
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
+            onToggleLike={togglePostLike}
           />
         ) : activeTab === 1 ? (
           <DetailsGrid
@@ -752,6 +786,7 @@ const PostList = ({
   username,
   onOpenPost,
   onCreate,
+  onToggleLike,
 }: {
   posts: ProfilePostItem[];
   savedPosts: ProfilePostItem[];
@@ -760,6 +795,7 @@ const PostList = ({
   username: string;
   onOpenPost: (post: any) => void;
   onCreate: () => void;
+  onToggleLike: (postId: string) => void;
 }) => {
   if (posts.length === 0 && savedPosts.length === 0) {
     return (
@@ -779,8 +815,8 @@ const PostList = ({
       {posts.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         return (
-          <button key={post.id} onClick={() => onOpenPost(post)} className="block w-full border-b border-border px-5 py-4 text-left transition-colors hover:bg-muted/20">
-            <div className="flex items-start gap-3">
+          <div key={post.id} className="border-b border-border px-5 py-4">
+            <div onClick={() => onOpenPost(post)} className="flex items-start gap-3 cursor-pointer transition-colors hover:bg-muted/20 -mx-5 px-5 py-1">
               <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-secondary">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Profile photo" className="h-full w-full object-cover" />
@@ -811,7 +847,35 @@ const PostList = ({
                 )}
               </div>
             </div>
-          </button>
+            <div className="mt-3 ml-14 flex items-center gap-5 text-muted-foreground">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleLike(post.id); }}
+                aria-label="Like"
+                className="flex items-center gap-1 transition-colors hover:text-foreground"
+              >
+                <Heart className={cn("h-[18px] w-[18px]", post.liked && "fill-destructive text-destructive")} />
+                {(post.likeCount || 0) > 0 && <span className="text-[11px] tabular-nums">{post.likeCount}</span>}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
+                aria-label="Comment"
+                className="flex items-center gap-1 transition-colors hover:text-foreground"
+              >
+                <MessageCircle className="h-[18px] w-[18px]" />
+                {(post.commentCount || 0) > 0 && <span className="text-[11px] tabular-nums">{post.commentCount}</span>}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
+                aria-label="Share"
+                className="transition-colors hover:text-foreground"
+              >
+                <Send className="h-[18px] w-[18px]" />
+              </button>
+            </div>
+          </div>
         );
       })}
 
