@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Apple, Smartphone, Share, Plus, MoreVertical, Download, Check, QrCode, Monitor, ChevronUp } from "lucide-react";
+import { ArrowLeft, Apple, Smartphone, Share, Plus, MoreVertical, Download, Check, QrCode, Monitor, ChevronUp, Bell, ChevronRight } from "lucide-react";
 import Wordmark from "@/components/Wordmark";
 
 type Platform = "ios" | "android" | "desktop";
@@ -126,6 +126,27 @@ export default function Install() {
           <AndroidSteps canPrompt={!!deferred} onInstall={triggerInstall} />
         )}
         {platform === "desktop" && <DesktopSteps />}
+
+        {/* Next step: enable notifications */}
+        <button
+          onClick={() => navigate("/enable-notifications")}
+          className="mt-6 w-full flex items-center justify-between gap-3 p-4 rounded-2xl border border-primary/30 bg-primary/10 hover:bg-primary/15 transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+              <Bell className="w-5 h-5 text-primary" />
+            </span>
+            <div>
+              <p className="text-[14px] font-bold text-foreground">
+                {installed ? "Next: turn on notifications" : "After installing, turn on notifications"}
+              </p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                We'll show you exactly what to tap.
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-primary shrink-0" />
+        </button>
 
         <div className="mt-8 rounded-xl border border-border bg-card p-4">
           <p className="text-[12px] text-muted-foreground leading-relaxed">

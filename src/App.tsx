@@ -27,6 +27,7 @@ import AdminBroadcast from "./pages/AdminBroadcast";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Install from "./pages/Install";
+import EnableNotifications from "./pages/EnableNotifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/install" element={<Install />} />
+          <Route path="/enable-notifications" element={<EnableNotifications />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
