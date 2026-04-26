@@ -644,7 +644,7 @@ const Profile = () => {
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
-        {/* Identity chips: Market · Style · Experience */}
+        {/* Identity line: Market · Style · Experience */}
         {(() => {
           const market = tradingProfile?.markets?.[0];
           const style = tradingProfile?.trading_style?.[0];
@@ -652,15 +652,8 @@ const Profile = () => {
           const chips = [market, style, exp].filter(Boolean) as string[];
           if (chips.length === 0) return null;
           return (
-            <div className="mt-4 flex flex-wrap items-center gap-1.5 px-5">
-              {chips.map((chip, i) => (
-                <span
-                  key={`${chip}-${i}`}
-                  className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary"
-                >
-                  {chip}
-                </span>
-              ))}
+            <div className="mt-3 px-5 text-[13px] font-semibold text-primary">
+              {chips.join(" · ")}
             </div>
           );
         })()}
