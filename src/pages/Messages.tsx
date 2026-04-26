@@ -631,7 +631,7 @@ export default function Messages() {
         </div>
       ) : (
       <div className="shrink-0 overflow-hidden px-4 pt-2 pb-safe-4">
-        <div className="flex w-full max-w-full min-w-0 items-center gap-2 overflow-hidden rounded-full bg-secondary/70 py-1.5 pl-3 pr-1.5">
+        <div className="relative flex w-full max-w-full min-w-0 items-center gap-2 overflow-hidden rounded-full bg-secondary/70 py-1.5 pl-3 pr-1.5">
           <AttachmentButton
             userId={userId!}
             connectionId={activeChat.id}
