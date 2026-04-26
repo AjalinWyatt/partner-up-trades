@@ -610,8 +610,10 @@ const Profile = () => {
   }
 
   return (
-    <AppLayout>
-      <div className="flex-1 overflow-y-auto pb-24">
+    <AppLayout lockHeight>
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        {/* Locked header — wordmark, hero, bio, completeness, tabs */}
+        <div className="shrink-0 bg-background">
         {/* Top bar: wordmark + settings */}
         <div className="relative flex items-center justify-center px-5 pt-safe-5">
           <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
@@ -748,9 +750,13 @@ const Profile = () => {
             </button>
           ))}
         </div>
+        </div>
 
-        <div className="mt-2" />
-
+        {/* Scrollable tab content — only this region scrolls */}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-2"
+          style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
+        >
         {activeTab === 0 ? (
           <PostList
             posts={posts}
@@ -791,6 +797,7 @@ const Profile = () => {
             }}
           />
         )}
+      </div>
       </div>
 
       <CreatePostModal
