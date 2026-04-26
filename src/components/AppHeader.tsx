@@ -41,7 +41,10 @@ export default function AppHeader({ rightSlot }: { rightSlot?: React.ReactNode }
   }, []);
 
   return (
-    <div className="relative flex items-center justify-center px-5 pt-3 pb-2">
+    <div
+      className="sticky top-0 z-40 relative flex items-center justify-center px-5 pb-2 bg-background/95 backdrop-blur-xl"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+    >
       <Wordmark size="text-lg" />
       <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
         {rightSlot}
