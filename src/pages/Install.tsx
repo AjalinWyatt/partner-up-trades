@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Apple, Smartphone, Share, Plus, MoreVertical, Download, Check, QrCode, Monitor } from "lucide-react";
 import Wordmark from "@/components/Wordmark";
-import appIcon from "../../public/app-icon-512.png?url";
 
 type Platform = "ios" | "android" | "desktop";
 
@@ -72,7 +71,7 @@ export default function Install() {
         {/* Hero */}
         <div className="flex flex-col items-center text-center mb-7">
           <img
-            src={appIcon}
+            src="/app-icon-512.png"
             alt="TradersWorld app icon"
             width={88}
             height={88}
