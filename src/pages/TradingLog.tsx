@@ -784,9 +784,12 @@ export default function TradingLog() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={entryType === "study"
-                ? "Topics covered, key takeaways, things to practice…"
+                ? "Write freely about what you learned today…"
                 : "What happened? What did you learn?"}
-              className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
+              className={cn(
+                "w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent",
+                entryType === "study" ? "min-h-[140px]" : "min-h-[60px]"
+              )}
             />
           </div>
 
