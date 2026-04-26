@@ -38,6 +38,7 @@ const RESULTS = [
 ];
 
 const ACCOUNT_TYPES = ["Demo", "Challenge", "Funded", "Live"];
+const MARKETS = ["Forex", "Futures", "Options", "Crypto", "Stocks", "Indices"];
 
 const GREEN_TAGS = [
   "Followed plan", "Clean entry", "Held to TP", "Took partials", "Patient",
