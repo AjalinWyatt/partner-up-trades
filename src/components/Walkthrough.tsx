@@ -57,13 +57,19 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
       return;
     }
     let raf = 0;
+    let attempts = 0;
+    let cancelled = false;
     const measure = () => {
+      if (cancelled) return;
       const el = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`);
       if (el) {
         setRect(el.getBoundingClientRect());
-      } else {
-        // retry next frame – nav may not have mounted yet
+      } else if (attempts++ < 60) {
+        // retry next frame – nav may not have mounted yet (~1s max)
         raf = requestAnimationFrame(measure);
+      } else {
+        // Target not found (e.g. Profile on mobile bottom nav). Skip step.
+        setStepIdx((i) => (i < STEPS.length - 1 ? i + 1 : i));
       }
     };
     measure();
@@ -71,6 +77,7 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onResize, true);
     return () => {
+      cancelled = true;
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
