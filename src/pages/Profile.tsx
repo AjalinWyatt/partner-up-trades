@@ -121,6 +121,19 @@ const Profile = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
+  const togglePostLike = async (postId: string) => {
+    if (!userId) return;
+    const target = posts.find((p) => p.id === postId);
+    if (!target) return;
+    const isLiked = !!target.liked;
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, liked: !isLiked, likeCount: (p.likeCount || 0) + (isLiked ? -1 : 1) } : p));
+    if (isLiked) {
+      await supabase.from("feed_likes").delete().eq("user_id", userId).eq("entry_id", postId);
+    } else {
+      await supabase.from("feed_likes").insert({ user_id: userId, entry_id: postId });
+    }
+  };
+
   const loadProfileCollections = async (uid: string, ownUsername?: string | null) => {
     const [{ data: ownPosts }, { data: repostRows }, { data: savedRows }, { data: ownProfile }] = await Promise.all([
       supabase.from("posts").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
