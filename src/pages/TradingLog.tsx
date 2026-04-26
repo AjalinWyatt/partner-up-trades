@@ -636,7 +636,7 @@ export default function TradingLog() {
                   )}
                 />
               </div>
-              <div className="flex items-center px-3 rounded-[10px] border-[1.5px] border-border bg-secondary text-[12px] font-bold text-muted-foreground">
+              <div className="flex shrink-0 items-center rounded-[10px] border-[1.5px] border-border bg-secondary px-3 text-[12px] font-bold text-muted-foreground">
                 $
               </div>
             </div>
@@ -645,7 +645,7 @@ export default function TradingLog() {
           {/* Market & Pair */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Market & Pair</p>
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="mb-2 flex max-w-full flex-wrap gap-1.5 overflow-hidden">
               {MARKETS.map((m) => {
                 const sel = marketName === m;
                 return (
