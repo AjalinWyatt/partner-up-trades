@@ -485,6 +485,7 @@ export type Database = {
         Row: {
           account_type: string | null
           created_at: string
+          entry_type: string
           id: string
           market_pair: string | null
           mood: string | null
@@ -500,6 +501,7 @@ export type Database = {
         Insert: {
           account_type?: string | null
           created_at?: string
+          entry_type?: string
           id?: string
           market_pair?: string | null
           mood?: string | null
@@ -515,6 +517,7 @@ export type Database = {
         Update: {
           account_type?: string | null
           created_at?: string
+          entry_type?: string
           id?: string
           market_pair?: string | null
           mood?: string | null

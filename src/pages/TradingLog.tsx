@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Lock, Link } from "lucide-react";
+import { Plus, X, Lock, Link, BookOpen, TrendingUp } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ interface JournalEntry {
   share_setting: string | null;
   created_at: string;
   pnl_unit?: string | null;
+  entry_type?: string | null;
 }
 
 const MOODS = [
@@ -94,6 +95,7 @@ export default function TradingLog() {
   const [showForm, setShowForm] = useState(false);
 
   // Form state
+  const [entryType, setEntryType] = useState<"trade" | "study">("trade");
   const [mood, setMood] = useState("");
   const [result, setResult] = useState("");
   const [pnl, setPnl] = useState("");
@@ -179,7 +181,9 @@ export default function TradingLog() {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
-    const weekEntries = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
+    const allWeek = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
+    const weekEntries = allWeek.filter((e) => (e.entry_type || "trade") === "trade");
+    const studyCount = allWeek.filter((e) => e.entry_type === "study").length;
     const pipsEntries = weekEntries.filter((e) => (e.pnl_unit || "pips") === "pips");
     const dollarEntries = weekEntries.filter((e) => e.pnl_unit === "dollars");
     const totalPips = pipsEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
@@ -187,18 +191,25 @@ export default function TradingLog() {
     const totalTrades = weekEntries.length;
     const wins = weekEntries.filter((e) => e.result === "Win").length;
     const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-    return { totalPips, totalDollars, totalTrades, winRate };
+    return { totalPips, totalDollars, totalTrades, winRate, studyCount };
   }
 
   async function saveEntry() {
     if (!userId) return;
     setSaving(true);
     const marketPairStr = [marketName, pairName].filter(Boolean).join(" · ");
+    // Apply sign automatically based on result
+    let pnlValue: number | null = pnl ? parseFloat(pnl) : null;
+    if (pnlValue !== null && !isNaN(pnlValue)) {
+      const abs = Math.abs(pnlValue);
+      if (result === "Win") pnlValue = abs;
+      else if (result === "Loss") pnlValue = -abs;
+    }
     const { error } = await supabase.from("journal_entries").insert({
       user_id: userId,
       mood: mood || null,
       result: result || null,
-      pnl_pips: pnl ? parseFloat(pnl) : null,
+      pnl_pips: pnlValue,
       pnl_unit: pnlUnit,
       market_pair: marketPairStr || null,
       session: null,
@@ -206,6 +217,7 @@ export default function TradingLog() {
       notes: notes || null,
       share_setting: shareSetting,
       account_type: accountType || null,
+      entry_type: entryType,
     } as any);
     setSaving(false);
     if (error) { toast.error("Failed to save entry"); return; }
@@ -249,6 +261,7 @@ export default function TradingLog() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
     setPnlUnit("pips");
+    setEntryType("trade");
   }
 
   const streak = getStreak();
@@ -265,7 +278,9 @@ export default function TradingLog() {
             <button onClick={() => setShowForm(false)} className="w-7 h-7 flex items-center justify-center">
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
             </button>
-            <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Log Session</span>
+            <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {entryType === "study" ? "Log Study" : "Log Trade"}
+            </span>
           </div>
           <button
             onClick={saveEntry}
@@ -277,9 +292,37 @@ export default function TradingLog() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3.5" style={{ scrollbarWidth: "none" }}>
+          {/* Entry type toggle */}
+          <div className="flex gap-2 p-1 rounded-2xl bg-secondary border border-border">
+            {([
+              { value: "trade", label: "Trade Log", icon: TrendingUp, emoji: "📈" },
+              { value: "study", label: "Study Log", icon: BookOpen, emoji: "📚" },
+            ] as const).map((opt) => {
+              const sel = entryType === opt.value;
+              const Icon = opt.icon;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setEntryType(opt.value)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[13px] font-bold transition-all",
+                    sel
+                      ? "bg-accent text-accent-foreground shadow-[0_2px_10px_hsl(var(--accent)/0.3)]"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <span className="text-base leading-none">{opt.emoji}</span>
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Mood */}
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How are you feeling?</p>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+              How are you feeling? {entryType === "study" ? "🧠" : "💭"}
+            </p>
             <div className="flex gap-1.5">
               {MOODS.map((m) => (
                 <button
@@ -300,7 +343,7 @@ export default function TradingLog() {
           </div>
 
           {/* Result */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Result</p>
             <div className="flex gap-2 mb-2">
               {RESULTS.map((r) => (
@@ -323,13 +366,29 @@ export default function TradingLog() {
               ))}
             </div>
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={pnl}
-                onChange={(e) => setPnl(e.target.value)}
-                placeholder={pnlUnit === "pips" ? "e.g. +38" : "e.g. +250"}
-                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-              />
+              <div className={cn(
+                "flex-1 flex items-center rounded-[10px] border-[1.5px] bg-secondary overflow-hidden focus-within:border-accent",
+                result === "Win" ? "border-accent" : result === "Loss" ? "border-destructive" : "border-border"
+              )}>
+                {result && (
+                  <span className={cn(
+                    "pl-3.5 pr-1 text-base font-black",
+                    result === "Win" ? "text-accent" : result === "Loss" ? "text-destructive" : "text-primary"
+                  )}>
+                    {result === "Win" ? "+" : result === "Loss" ? "−" : ""}
+                  </span>
+                )}
+                <input
+                  type="text"
+                  value={pnl}
+                  onChange={(e) => setPnl(e.target.value.replace(/[+\-−]/g, ""))}
+                  placeholder={pnlUnit === "pips" ? "e.g. 38" : "e.g. 250"}
+                  className={cn(
+                    "flex-1 py-2.5 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none",
+                    result ? "pl-0 pr-3.5" : "px-3.5"
+                  )}
+                />
+              </div>
               <div className="flex rounded-[10px] border-[1.5px] border-border bg-secondary p-0.5">
                 {(["pips", "dollars"] as const).map((u) => (
                   <button
@@ -346,10 +405,10 @@ export default function TradingLog() {
                 ))}
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Market & Pair */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Market & Pair</p>
             <div className="flex gap-2">
               <input
@@ -365,10 +424,10 @@ export default function TradingLog() {
                 className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
               />
             </div>
-          </div>
+          </div>}
 
           {/* Account Type */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Account Type</p>
             <div className="flex gap-2">
               {ACCOUNT_TYPES.map((a) => (
@@ -386,10 +445,10 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Tags */}
-          <div>
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What went right / wrong?</p>
              <div className="flex flex-wrap gap-[5px]">
               {ALL_TAGS.map((t) => {
@@ -413,15 +472,19 @@ export default function TradingLog() {
                 );
               })}
             </div>
-          </div>
+          </div>}
 
           {/* Notes */}
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Notes</p>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+              {entryType === "study" ? "What did you study?" : "Notes"}
+            </p>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="What happened? What did you learn?"
+              placeholder={entryType === "study"
+                ? "Topics covered, key takeaways, things to practice…"
+                : "What happened? What did you learn?"}
               className="w-full min-h-[60px] py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent"
             />
           </div>
@@ -554,14 +617,29 @@ export default function TradingLog() {
           <>
             <div className="space-y-1.5 mx-5">
               {entries.map((entry) => (
-                <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
+                <div key={entry.id} className={cn(
+                  "bg-card border rounded-xl p-2.5 px-3",
+                  entry.entry_type === "study" ? "border-primary/40" : "border-border"
+                )}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
-                    <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                      {entry.pnl_unit === "dollars"
-                        ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
-                        : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md flex items-center gap-0.5",
+                        entry.entry_type === "study"
+                          ? "bg-primary/15 text-primary"
+                          : "bg-accent/15 text-accent"
+                      )}>
+                        {entry.entry_type === "study" ? "📚 Study" : "📈 Trade"}
+                      </span>
+                      <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
+                    </div>
+                    {entry.entry_type !== "study" && entry.pnl_pips != null && (
+                      <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                        {entry.pnl_unit === "dollars"
+                          ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
+                          : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
+                      </span>
+                    )}
                   </div>
                   {entry.mood && (
                     <div className="flex items-center gap-1 mb-1">
