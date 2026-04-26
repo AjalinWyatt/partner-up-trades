@@ -1,4 +1,4 @@
-import brandGlobe from "@/assets/tradersworld-globe.png";
+import brandGlobe from "@/assets/pulse-globe.svg";
 
 interface Props {
   /** Current step (1-based) */

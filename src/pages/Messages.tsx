@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
-import brandGlobe from "@/assets/tradersworld-globe.png";
+import brandGlobe from "@/assets/pulse-globe.svg";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
