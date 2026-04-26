@@ -213,7 +213,10 @@ export default function TradingLog() {
   function getWeekDots() {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    // Monday-start week (handle Sunday = 0 -> go back 6 days)
+    const dow = today.getDay();
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    startOfWeek.setDate(today.getDate() + diffToMon);
     const dots = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek); day.setDate(day.getDate() + i);
@@ -228,11 +231,16 @@ export default function TradingLog() {
   function getWeekStats() {
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    const dow = today.getDay();
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    startOfWeek.setDate(today.getDate() + diffToMon);
     startOfWeek.setHours(0, 0, 0, 0);
     const allWeek = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
     const weekEntries = allWeek.filter((e) => (e.entry_type || "trade") === "trade");
-    const studyCount = allWeek.filter((e) => e.entry_type === "study").length;
+    const studyEntries = allWeek.filter((e) => e.entry_type === "study");
+    const studyCount = studyEntries.length;
+    const DURATION_MINS: Record<string, number> = { "15m": 15, "30m": 30, "1h": 60, "2h": 120, "3h+": 180 };
+    const studyMins = studyEntries.reduce((sum, e) => sum + (DURATION_MINS[e.study_data?.duration] || 0), 0);
     const pipsEntries = weekEntries.filter((e) => (e.pnl_unit || "pips") === "pips");
     const dollarEntries = weekEntries.filter((e) => e.pnl_unit === "dollars");
     const totalPips = pipsEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
@@ -240,7 +248,7 @@ export default function TradingLog() {
     const totalTrades = weekEntries.length;
     const wins = weekEntries.filter((e) => e.result === "Win").length;
     const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-    return { totalPips, totalDollars, totalTrades, winRate, studyCount };
+    return { totalPips, totalDollars, totalTrades, winRate, studyCount, studyMins };
   }
 
   async function saveEntry() {
