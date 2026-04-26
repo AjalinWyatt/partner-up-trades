@@ -120,7 +120,7 @@ const WaitingList = () => {
     <AppLayout>
       <div className="flex-1 overflow-y-auto pb-24">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 pb-3 pt-safe-3 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="text-foreground" aria-label="Back">
             <ChevronLeft className="w-6 h-6" />
           </button>
