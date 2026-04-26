@@ -119,14 +119,21 @@ const Dashboard = () => {
       // Build updates feed (logs missing, pending requests, partner activity)
       const upd: { id: string; text: string; created_at: string; route: string }[] = [];
       const todayStr = new Date().toISOString().slice(0, 10);
+      // Only count missing log days BETWEEN account creation and yesterday.
+      // Today is excluded because the day isn't over yet.
+      const joinedAt = user.created_at ? new Date(user.created_at) : new Date();
+      const joinedStr = joinedAt.toISOString().slice(0, 10);
       let missing = 0;
-      let chk = new Date();
+      let chk = new Date(Date.now() - 86400000); // start at yesterday
       for (let i = 0; i < 7; i++) {
         const ds = chk.toISOString().slice(0, 10);
-        if (ds !== todayStr && !days.has(ds)) missing++;
+        if (ds < joinedStr) break; // don't count days before signup
+        if (!days.has(ds)) missing++;
         chk = new Date(chk.getTime() - 86400000);
       }
-      if (missing > 0) {
+      // Don't nag if they already logged today either
+      const loggedToday = days.has(todayStr);
+      if (missing > 0 && !loggedToday) {
         upd.push({ id: "missing-logs", text: `${missing} day${missing > 1 ? "s" : ""} logs missing - Enter now.`, created_at: new Date().toISOString(), route: "/trading-log" });
       }
       if (pendingRequests && pendingRequests > 0) {
