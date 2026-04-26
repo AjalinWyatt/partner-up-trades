@@ -637,7 +637,7 @@ export default function Messages() {
             value={msgInput}
             onChange={(e) => setMsgInput(e.target.value)}
             placeholder="Type here"
-            className="min-w-0 flex-1 bg-transparent border-none py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 bg-transparent border-none py-1.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground lg:text-sm"
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
           {msgInput.trim() ? (
