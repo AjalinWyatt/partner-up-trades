@@ -314,7 +314,7 @@ const ViewProfile = () => {
         )}
 
         <div className="mt-6 flex border-b border-border px-5">
-          {["Posts", "Journal", "Details"].map((tab, index) => (
+          {["Posts", "Grid", "Journal", "Details"].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(index)}
@@ -375,6 +375,32 @@ const ViewProfile = () => {
             <EmptyState title="No posts yet" description="This trader hasn’t posted anything yet." />
           )
         ) : activeTab === 1 ? (
+          (() => {
+            const photos = posts.filter((p) => {
+              const m = p.media_urls?.[0] || p.media_url || p.image_url;
+              return !!m;
+            });
+            if (photos.length === 0) return <EmptyState title="No photos yet" description="This trader hasn't shared any photos yet." />;
+            return (
+              <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
+                {photos.map((post) => {
+                  const media = post.media_urls?.[0] || post.media_url || post.image_url;
+                  const isMulti = (post.media_urls?.length || 0) > 1;
+                  return (
+                    <button key={post.id} onClick={() => setOpenPost(post)} className="relative aspect-square overflow-hidden bg-secondary">
+                      <img src={media!} alt="Post" className="h-full w-full object-cover" />
+                      {isMulti && (
+                        <div className="absolute right-1.5 top-1.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-bold text-foreground backdrop-blur">
+                          {post.media_urls!.length}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()
+        ) : activeTab === 2 ? (
           journalEntries.length > 0 ? (
             <div className="space-y-3 px-5 py-4">
               {journalEntries.map((entry) => (
