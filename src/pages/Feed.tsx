@@ -600,9 +600,10 @@ const Feed = () => {
   }
 
   return (
-    <AppLayout hideBottomNav={!!commentPostId}>
-      <div className="flex-1 overflow-y-auto bg-background">
-        <div className="sticky top-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
+    <AppLayout hideBottomNav={!!commentPostId} lockHeight>
+      <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
+        {/* Locked header — does not scroll with the feed */}
+        <div className="shrink-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
           <div
             className="space-y-4 px-4 pb-4"
             style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
@@ -680,6 +681,11 @@ const Feed = () => {
           </div>
         </div>
 
+        {/* Scrollable content area — only this region scrolls */}
+        <div
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+          style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
+        >
         {activeMode === "Pulse" ? (
           <div className="space-y-3 px-4 py-3">
             {/* Pulse hero header */}
@@ -1156,6 +1162,7 @@ const Feed = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       <CreatePostModal
