@@ -11,6 +11,7 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
+import DetailCardsGrid from "@/components/profile/DetailCardsGrid";
 
 interface ProfileData {
   username: string | null;
