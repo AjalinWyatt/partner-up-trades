@@ -70,10 +70,16 @@ const Partners = () => {
   const [myId, setMyId] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    let userId: string | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) { setLoading(false); return; }
+      if (cancelled) return;
+      userId = user.id;
       setMyId(user.id);
 
       // Pending requests where I am the receiver
@@ -231,11 +237,41 @@ const Partners = () => {
         });
       }
 
+      if (cancelled) return;
       setAlerts(alertList);
       setPartners(partnerRows);
       setLoading(false);
     };
-    load();
+
+    load().then(() => {
+      if (cancelled || !userId) return;
+      // Realtime: refresh on any partner_connections change involving me
+      channel = supabase
+        .channel(`partner-connections-${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "partner_connections", filter: `requester_id=eq.${userId}` },
+          () => load()
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "partner_connections", filter: `receiver_id=eq.${userId}` },
+          () => load()
+        )
+        .subscribe();
+    });
+
+    const onFocus = () => load();
+    const onVisibility = () => { if (document.visibilityState === "visible") load(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   const handleAccept = async (connectionId: string, requesterId: string) => {
