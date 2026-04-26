@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -585,27 +585,6 @@ const Profile = () => {
               <div className="mt-1 text-right text-[10px] text-muted-foreground">{editBio.length}/150</div>
             </div>
             <TradingProfileEditor profileDraft={profileDraft} setProfileDraft={setProfileDraft} tradingDraft={tradingDraft} setTradingDraft={setTradingDraft} />
-
-            <div className="pt-2">
-              <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Appearance</label>
-              <div className="flex items-center justify-between rounded-xl border border-border bg-secondary px-4 py-3">
-                <div className="flex items-center gap-2.5">
-                  {isDark ? <Moon className="h-4 w-4 text-muted-foreground" /> : <Sun className="h-4 w-4 text-muted-foreground" />}
-                  <span className="text-sm text-foreground">Dark mode</span>
-                </div>
-                <button
-                  onClick={() => {
-                    const next = !isDark;
-                    setIsDark(next);
-                    document.documentElement.classList.toggle("dark", next);
-                    localStorage.setItem("theme", next ? "dark" : "light");
-                  }}
-                  className={cn("relative h-[22px] w-10 rounded-full transition-colors", isDark ? "bg-primary" : "bg-muted")}
-                >
-                  <div className={cn("absolute top-[2px] h-[18px] w-[18px] rounded-full bg-background shadow transition-transform", isDark ? "left-[20px]" : "left-[2px]")} />
-                </button>
-              </div>
-            </div>
 
             <button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10">
               <LogOut className="h-4 w-4" />
