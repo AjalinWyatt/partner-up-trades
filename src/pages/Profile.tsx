@@ -945,6 +945,50 @@ const PostList = ({
   );
 };
 
+const PhotoGrid = ({ posts, onOpenPost }: { posts: ProfilePostItem[]; onOpenPost: (post: any) => void }) => {
+  const photos = posts.filter((post) => {
+    const media = post.media_urls?.[0] || post.media_url || post.image_url;
+    if (!media) return false;
+    const type = post.media_type || "";
+    return !type.startsWith("video");
+  });
+
+  if (photos.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
+          <Camera className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <p className="text-base font-bold text-foreground">No photos yet</p>
+        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Photos from your posts will show up here in a grid.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
+      {photos.map((post) => {
+        const media = post.media_urls?.[0] || post.media_url || post.image_url;
+        const isMulti = (post.media_urls?.length || 0) > 1;
+        return (
+          <button
+            key={post.id}
+            onClick={() => onOpenPost(post)}
+            className="relative aspect-square overflow-hidden bg-secondary"
+          >
+            <img src={media!} alt="Post" className="h-full w-full object-cover" />
+            {isMulti && (
+              <div className="absolute right-1.5 top-1.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-bold text-foreground backdrop-blur">
+                {post.media_urls!.length}
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[]; onOpenLog: () => void; onChanged: () => void | Promise<void> }) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<JournalEntry | null>(null);
