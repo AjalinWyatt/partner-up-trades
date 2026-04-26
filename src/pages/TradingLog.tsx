@@ -903,9 +903,38 @@ export default function TradingLog() {
           </div>
         </div>
 
+        {/* Trade / Study view toggle */}
+        <div className="mx-5 mb-2 flex gap-1.5 p-1 rounded-2xl bg-secondary border border-border">
+          {([
+            { value: "trade", label: "Trade Log", emoji: "📈" },
+            { value: "study", label: "Study Log", emoji: "📚" },
+          ] as const).map((opt) => {
+            const sel = logView === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => setLogView(opt.value)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold transition-all",
+                  sel
+                    ? opt.value === "study"
+                      ? "bg-primary text-primary-foreground shadow-[0_2px_10px_hsl(var(--primary)/0.3)]"
+                      : "bg-accent text-accent-foreground shadow-[0_2px_10px_hsl(var(--accent)/0.3)]"
+                    : "text-muted-foreground"
+                )}
+              >
+                <span className="text-base leading-none">{opt.emoji}</span>
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Section header */}
-        <div className="px-5 pt-2.5 pb-1.5">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Recent Sessions</span>
+        <div className="px-5 pt-1 pb-1.5">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+            Recent {logView === "study" ? "Study Sessions" : "Trades"}
+          </span>
         </div>
 
         {/* Entries */}
