@@ -441,18 +441,32 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {notifications.length === 0 ? (
-            <div className="bg-card/40 border border-border rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
-                <Bell className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <p className="text-[13px] font-semibold text-foreground mb-1">You're all caught up ✓</p>
-              <p className="text-[11px] text-muted-foreground">
-                {notifFilter === "all"
-                  ? "When someone interacts with you, it'll show up here."
-                  : `No ${NOTIF_FILTERS.find(f => f.key === notifFilter)?.label.toLowerCase()} notifications yet.`}
-              </p>
+          {notifLoading ? (
+            <div className="bg-card/40 border border-border rounded-xl divide-y divide-border overflow-hidden">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-3 px-4 py-3 animate-pulse">
+                  <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2 py-1">
+                    <Skeleton className="h-3 w-2/3 rounded" />
+                    <Skeleton className="h-2.5 w-full rounded" />
+                    <Skeleton className="h-2 w-16 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : notifications.length === 0 ? (
+            (() => {
+              const empty = NOTIF_EMPTY_STATES[notifFilter];
+              return (
+                <div className="bg-card/40 border border-border rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                    {empty.icon}
+                  </div>
+                  <p className="text-[13px] font-semibold text-foreground mb-1">{empty.title}</p>
+                  <p className="text-[11px] text-muted-foreground">{empty.body}</p>
+                </div>
+              );
+            })()
           ) : (
             <div className="bg-card/40 border border-border rounded-xl divide-y divide-border overflow-hidden">
               {notifications.map(n => {
