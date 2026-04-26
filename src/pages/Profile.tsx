@@ -689,11 +689,11 @@ const Profile = () => {
 
         {/* Meta row: Location · Joined date */}
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-5 text-[12px] text-muted-foreground">
-          {(profile?.city || profile?.country) && (
+          {(profile?.city || profile?.state || profile?.country) && (
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />
               <span className="font-medium text-foreground">
-                {`${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")}
+                {[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ")}
               </span>
             </span>
           )}
