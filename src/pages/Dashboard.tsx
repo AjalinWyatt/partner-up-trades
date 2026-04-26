@@ -300,13 +300,9 @@ const Dashboard = () => {
 
         {/* Updates */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate("/trading-log")}
-            className="w-full flex items-center justify-between mb-3"
-          >
+          <div className="w-full flex items-center justify-between mb-3">
             <h2 className="text-[18px] font-black text-foreground">Updates</h2>
-            <ChevronRight className="w-5 h-5 text-accent" />
-          </button>
+          </div>
           {updates.length === 0 ? (
             <div className="bg-card/40 border border-border rounded-xl p-4 text-center">
               <p className="text-[12px] text-muted-foreground">You're all caught up ✓</p>
