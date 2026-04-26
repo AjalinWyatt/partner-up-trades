@@ -691,9 +691,36 @@ export default function TradingLog() {
               placeholder="Pair (e.g. XAU/USD, NQ, BTC/USD)"
               className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
             />
+            {recentPairs.length > 0 && (
+              <div className="mt-2">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">⭐ Your most-used</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {recentPairs.map((p) => {
+                    const sel = pairName === p;
+                    return (
+                      <button
+                        key={`recent-${p}`}
+                        type="button"
+                        onClick={() => setPairName(sel ? "" : p)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
+                          sel
+                            ? "bg-accent/[0.12] text-accent border-accent"
+                            : "border-accent/40 bg-accent/[0.04] text-foreground"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {marketName && PAIR_SUGGESTIONS[marketName] && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {PAIR_SUGGESTIONS[marketName].map((p) => {
+              <div className="mt-2">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Suggestions</p>
+                <div className="flex flex-wrap gap-1.5">
+                {PAIR_SUGGESTIONS[marketName].filter((p) => !recentPairs.includes(p)).map((p) => {
                   const sel = pairName === p;
                   return (
                     <button
@@ -711,6 +738,7 @@ export default function TradingLog() {
                     </button>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>}
