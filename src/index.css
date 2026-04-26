@@ -162,10 +162,17 @@ html, body {
 html, body {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
+  /* Reserve space for scrollbar so content doesn't shift left/right
+     when the inner scroll content grows/shrinks */
+  scrollbar-gutter: stable;
 }
 body {
   /* Stops the whole page from bouncing when you pull down at the top */
   overflow-x: hidden;
+  /* Lock body width to viewport so headers don't drift horizontally
+     between renders when the scrollbar appears/disappears */
+  width: 100vw;
+  max-width: 100%;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
