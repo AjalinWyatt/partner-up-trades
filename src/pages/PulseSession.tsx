@@ -120,7 +120,7 @@ export default function PulseSession() {
     <AppLayout>
       <div className="flex h-[100dvh] flex-col bg-background">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur">
+        <div className="flex items-center gap-3 border-b border-border bg-card/80 px-4 pb-3 pt-safe-3 backdrop-blur">
           <button
             onClick={() => navigate("/feed")}
             className="-ml-1 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
