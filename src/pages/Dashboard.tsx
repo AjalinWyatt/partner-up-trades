@@ -21,17 +21,17 @@ const StatCard = ({ title, value, subtitle, icon, prefix, onClick }: StatCardPro
   return (
   <Tag
     onClick={onClick}
-    className={`bg-card border border-border rounded-2xl p-4 flex flex-col justify-between min-h-[120px] text-left ${onClick ? "hover:border-accent/40 transition-colors" : ""}`}
+    className={`bg-card border border-border rounded-2xl p-3 flex flex-col justify-between min-h-[88px] text-left ${onClick ? "hover:border-accent/40 transition-colors" : ""}`}
   >
     <div className="flex items-start justify-between">
-      <span className="text-[14px] font-bold text-foreground">{title}</span>
+      <span className="text-[12px] font-bold text-foreground">{title}</span>
       <span className="text-muted-foreground/60">{icon}</span>
     </div>
-    <div className="flex items-center gap-1.5 mt-1">
+    <div className="flex items-center gap-1 mt-0.5">
       {prefix}
-      <span className="text-[32px] font-black text-accent leading-none">{value}</span>
+      <span className="text-[24px] font-black text-accent leading-none">{value}</span>
     </div>
-    <span className="text-[11px] text-muted-foreground mt-2">{subtitle}</span>
+    <span className="text-[10px] text-muted-foreground mt-1">{subtitle}</span>
   </Tag>
   );
 };
@@ -131,6 +131,34 @@ const Dashboard = () => {
       if (pendingRequests && pendingRequests > 0) {
         upd.push({ id: "pending-reqs", text: `${pendingRequests} Pending Add request${pendingRequests > 1 ? "s" : ""}`, created_at: new Date().toISOString(), route: "/partners" });
       }
+      // New matching traders joined recently
+      try {
+        const { data: myTp } = await supabase
+          .from("trading_profiles")
+          .select("markets")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const myMarkets = (myTp?.markets || []) as string[];
+        if (myMarkets.length > 0) {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+          const { data: newMatches } = await supabase
+            .from("trading_profiles")
+            .select("user_id, markets, created_at")
+            .neq("user_id", user.id)
+            .gte("created_at", sevenDaysAgo)
+            .overlaps("markets", myMarkets)
+            .limit(20);
+          const matchCount = (newMatches || []).length;
+          if (matchCount > 0) {
+            upd.push({
+              id: "new-matches",
+              text: `${matchCount} new trader${matchCount > 1 ? "s" : ""} that match you joined - View in Discover`,
+              created_at: newMatches![0].created_at as string,
+              route: "/discover",
+            });
+          }
+        }
+      } catch (e) { console.error("new matches calc failed", e); }
       // Partner shared logs (latest 1)
       const { data: myConns } = await supabase
         .from("partner_connections")
@@ -244,14 +272,15 @@ const Dashboard = () => {
             title="Daily Streak"
             value={stats.streak}
             subtitle={`Max ${stats.maxStreak}`}
-            icon={<Calendar className="w-5 h-5" strokeWidth={1.6} />}
-            prefix={<Flame className="w-7 h-7 text-destructive" fill="currentColor" />}
+            icon={<Calendar className="w-4 h-4" strokeWidth={1.6} />}
+            prefix={<Flame className="w-5 h-5 text-destructive" fill="currentColor" />}
           />
           <StatCard
             title="My Logs"
             value={stats.logs}
             subtitle={`${stats.activeStreaks} Active`}
             icon={<Notebook className="w-5 h-5" strokeWidth={1.6} />}
+            onClick={() => navigate("/trading-log")}
           />
         </div>
 
