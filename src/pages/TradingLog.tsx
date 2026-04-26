@@ -38,6 +38,7 @@ const RESULTS = [
 ];
 
 const ACCOUNT_TYPES = ["Demo", "Challenge", "Funded", "Live"];
+const MARKETS = ["Forex", "Futures", "Options", "Crypto", "Stocks", "Indices"];
 
 const GREEN_TAGS = [
   "Followed plan", "Clean entry", "Held to TP", "Took partials", "Patient",
@@ -410,20 +411,32 @@ export default function TradingLog() {
           {/* Market & Pair */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Market & Pair</p>
-            <div className="flex gap-2">
-              <input
-                value={marketName}
-                onChange={(e) => setMarketName(e.target.value)}
-                placeholder="e.g. Forex"
-                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-              />
-              <input
-                value={pairName}
-                onChange={(e) => setPairName(e.target.value)}
-                placeholder="e.g. XAU/USD"
-                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-              />
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {MARKETS.map((m) => {
+                const sel = marketName === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMarketName(sel ? "" : m)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-[12px] font-bold border-[1.5px] transition-colors",
+                      sel
+                        ? "bg-accent/[0.12] text-accent border-accent"
+                        : "border-border bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
             </div>
+            <input
+              value={pairName}
+              onChange={(e) => setPairName(e.target.value)}
+              placeholder="Pair (e.g. XAU/USD, NQ, BTC/USD)"
+              className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+            />
           </div>}
 
           {/* Account Type */}
