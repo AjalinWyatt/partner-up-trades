@@ -1054,6 +1054,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_dm_log: {
+        Row: {
+          created_at: string
+          dm_key: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dm_key: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dm_key?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trading_profiles: {
         Row: {
           connect_frequency: string[] | null
