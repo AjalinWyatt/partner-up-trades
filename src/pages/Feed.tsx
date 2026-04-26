@@ -603,7 +603,10 @@ const Feed = () => {
     <AppLayout hideBottomNav={!!commentPostId}>
       <div className="flex-1 overflow-y-auto bg-background">
         <div className="sticky top-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
-          <div className="space-y-4 px-4 pb-4 pt-3">
+          <div
+            className="space-y-4 px-4 pb-4"
+            style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+          >
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div />
               <Wordmark size="text-lg" />
