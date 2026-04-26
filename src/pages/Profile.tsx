@@ -657,6 +657,18 @@ const Profile = () => {
           {/* Name + bio (right of avatar) */}
           <div className="flex-1 min-w-0 pt-1">
             <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}</h2>
+            {(() => {
+              const market = tradingProfile?.markets?.[0];
+              const style = tradingProfile?.trading_style?.[0];
+              const exp = tradingProfile?.experience_level;
+              const chips = [market, style, exp].filter(Boolean) as string[];
+              if (chips.length === 0) return null;
+              return (
+                <div className="mt-1 text-[13px] font-semibold text-primary truncate">
+                  {chips.join(" · ")}
+                </div>
+              );
+            })()}
             {profile?.bio ? (
               <p className="mt-1.5 whitespace-pre-line text-[13.5px] leading-5 text-muted-foreground line-clamp-4">{profile.bio}</p>
             ) : (
@@ -670,20 +682,6 @@ const Profile = () => {
           </div>
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-
-        {/* Identity line: Market · Style · Experience */}
-        {(() => {
-          const market = tradingProfile?.markets?.[0];
-          const style = tradingProfile?.trading_style?.[0];
-          const exp = tradingProfile?.experience_level;
-          const chips = [market, style, exp].filter(Boolean) as string[];
-          if (chips.length === 0) return null;
-          return (
-            <div className="mt-3 px-5 text-[13px] font-semibold text-primary">
-              {chips.join(" · ")}
-            </div>
-          );
-        })()}
 
         {/* Meta row: Location · Joined date */}
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-5 text-[12px] text-muted-foreground">
