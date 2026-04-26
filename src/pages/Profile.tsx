@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Heart, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, Pencil, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
+import CreatePhotoAlbumModal from "@/components/CreatePhotoAlbumModal";
 import SharePostSheet from "@/components/SharePostSheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
