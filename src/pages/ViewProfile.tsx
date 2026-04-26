@@ -40,6 +40,7 @@ const ViewProfile = () => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [openPost, setOpenPost] = useState<ViewPostItem | null>(null);
+  const [postToShare, setPostToShare] = useState<ViewPostItem | null>(null);
 
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.state?.idx > 0) {
@@ -415,7 +416,9 @@ const ViewProfile = () => {
       onClose={() => setOpenPost(null)}
       post={openPost as any}
       myId={myId}
+      onShare={(post) => setPostToShare(post as ViewPostItem)}
     />
+    <SharePostSheet post={postToShare as any} myId={myId} onClose={() => setPostToShare(null)} />
     </>
   );
 };
