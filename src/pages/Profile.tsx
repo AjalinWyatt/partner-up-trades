@@ -7,8 +7,6 @@ import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
 import CreatePhotoAlbumModal from "@/components/CreatePhotoAlbumModal";
 import SharePostSheet from "@/components/SharePostSheet";
-import CreateAlbumDialog from "@/components/CreateAlbumDialog";
-import AlbumDetailModal from "@/components/AlbumDetailModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -135,9 +133,6 @@ const Profile = () => {
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
-  const [albums, setAlbums] = useState<Array<{ id: string; title: string; cover_post_id: string | null; coverThumb: string | null; count: number }>>([]);
-  const [showCreateAlbum, setShowCreateAlbum] = useState(false);
-  const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
 
   const togglePostLike = async (postId: string) => {
     if (!userId) return;
@@ -330,7 +325,6 @@ const Profile = () => {
       }
 
       await loadProfileCollections(user.id, pData?.username);
-      await loadAlbums(user.id);
       setJournalEntries((entries as JournalEntry[]) || []);
       setLoading(false);
     };
@@ -376,46 +370,6 @@ const Profile = () => {
   const refreshPosts = async () => {
     if (!userId) return;
     await loadProfileCollections(userId, profile?.username);
-    await loadAlbums(userId);
-  };
-
-  const loadAlbums = async (uid: string) => {
-    const { data: rows } = await supabase
-      .from("albums")
-      .select("id, title, cover_post_id")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false });
-    if (!rows) { setAlbums([]); return; }
-
-    const albumIds = rows.map((r: any) => r.id);
-    const { data: links } = albumIds.length
-      ? await supabase.from("album_posts").select("album_id, post_id").in("album_id", albumIds)
-      : { data: [] as any[] };
-    const counts = new Map<string, number>();
-    const firstByAlbum = new Map<string, string>();
-    for (const l of (links || []) as any[]) {
-      counts.set(l.album_id, (counts.get(l.album_id) || 0) + 1);
-      if (!firstByAlbum.has(l.album_id)) firstByAlbum.set(l.album_id, l.post_id);
-    }
-
-    const coverIds = Array.from(new Set(
-      (rows as any[]).map((r) => r.cover_post_id || firstByAlbum.get(r.id)).filter(Boolean)
-    )) as string[];
-    const { data: coverPosts } = coverIds.length
-      ? await supabase.from("posts").select("id, media_urls, media_url, image_url").in("id", coverIds)
-      : { data: [] as any[] };
-    const coverMap = new Map((coverPosts || []).map((p: any) => [p.id, p.media_urls?.[0] || p.media_url || p.image_url || null]));
-
-    setAlbums((rows as any[]).map((r) => {
-      const coverId = r.cover_post_id || firstByAlbum.get(r.id) || null;
-      return {
-        id: r.id,
-        title: r.title,
-        cover_post_id: coverId,
-        coverThumb: coverId ? (coverMap.get(coverId) || null) : null,
-        count: counts.get(r.id) || 0,
-      };
-    }));
   };
 
   const handleSaveProfile = async () => {
@@ -812,11 +766,8 @@ const Profile = () => {
         ) : activeTab === 1 ? (
           <PhotoGrid
             posts={posts}
-            albums={albums}
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePhoto(true)}
-            onCreateAlbum={() => setShowCreateAlbum(true)}
-            onOpenAlbum={(id) => setOpenAlbumId(id)}
           />
         ) : activeTab === 2 ? (
           <DetailsGrid
@@ -873,35 +824,6 @@ const Profile = () => {
         open={showCreatePhoto}
         onClose={() => setShowCreatePhoto(false)}
         onCreated={refreshPosts}
-      />
-      {userId && (
-        <CreateAlbumDialog
-          open={showCreateAlbum}
-          onClose={() => setShowCreateAlbum(false)}
-          onCreated={refreshPosts}
-          userId={userId}
-          photos={posts
-            .filter((p) => {
-              const m = p.media_urls?.[0] || p.media_url || p.image_url;
-              const t = (p as any).media_type || "";
-              return !!m && !t.startsWith("video");
-            })
-            .map((p) => ({ id: p.id, thumb: (p.media_urls?.[0] || p.media_url || p.image_url)! }))}
-        />
-      )}
-      <AlbumDetailModal
-        albumId={openAlbumId}
-        onClose={() => setOpenAlbumId(null)}
-        onChanged={refreshPosts}
-        onOpenPost={setSelectedPost}
-        myUserId={userId}
-        allPhotos={posts
-          .filter((p) => {
-            const m = p.media_urls?.[0] || p.media_url || p.image_url;
-            const t = (p as any).media_type || "";
-            return !!m && !t.startsWith("video");
-          })
-          .map((p) => ({ id: p.id, thumb: (p.media_urls?.[0] || p.media_url || p.image_url)! }))}
       />
       <AvatarCropDialog
         open={!!cropSrc}
@@ -1065,18 +987,12 @@ const PostList = ({
 
 const PhotoGrid = ({
   posts,
-  albums,
   onOpenPost,
   onCreate,
-  onCreateAlbum,
-  onOpenAlbum,
 }: {
   posts: ProfilePostItem[];
-  albums?: Array<{ id: string; title: string; cover_post_id: string | null; coverThumb: string | null; count: number }>;
   onOpenPost: (post: any) => void;
   onCreate?: () => void;
-  onCreateAlbum?: () => void;
-  onOpenAlbum?: (id: string) => void;
 }) => {
   const photos = posts.filter((post) => {
     const media = post.media_urls?.[0] || post.media_url || post.image_url;
@@ -1085,16 +1001,14 @@ const PhotoGrid = ({
     return !type.startsWith("video");
   });
 
-  const albumList = albums || [];
-
-  if (photos.length === 0 && albumList.length === 0) {
+  if (photos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
           <Camera className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="text-base font-bold text-foreground">No photos yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Share photos and albums to your grid. They stay on your profile and don't post to the feed.</p>
+        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Share photos to your grid. They stay on your profile and don't post to the feed.</p>
         {onCreate && (
           <button onClick={onCreate} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
             <Plus className="h-4 w-4" /> New photo
@@ -1106,50 +1020,17 @@ const PhotoGrid = ({
 
   return (
     <div className="relative">
-      {(onCreate || onCreateAlbum) && (
+      {onCreate && (
         <div className="flex justify-end gap-2 px-3 pt-2 pb-1">
-          {onCreateAlbum && (
-            <button
-              onClick={onCreateAlbum}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-bold text-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" /> Album
-            </button>
-          )}
-          {onCreate && (
-            <button
-              onClick={onCreate}
-              className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" /> Photo
-            </button>
-          )}
+          <button
+            onClick={onCreate}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" /> Photo
+          </button>
         </div>
       )}
       <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
-      {albumList.map((album) => (
-        <button
-          key={`album-${album.id}`}
-          onClick={() => onOpenAlbum?.(album.id)}
-          className="relative aspect-square overflow-hidden bg-secondary"
-        >
-          {album.coverThumb ? (
-            <img src={album.coverThumb} alt={album.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <Camera className="h-6 w-6 text-muted-foreground" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
-          <div className="absolute right-1.5 top-1.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-bold text-foreground backdrop-blur">
-            {album.count}
-          </div>
-          <div className="absolute inset-x-0 bottom-0 px-2 py-1.5 text-left">
-            <p className="truncate text-[11px] font-bold text-foreground">{album.title}</p>
-            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Album</p>
-          </div>
-        </button>
-      ))}
       {photos.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         const isMulti = (post.media_urls?.length || 0) > 1;
