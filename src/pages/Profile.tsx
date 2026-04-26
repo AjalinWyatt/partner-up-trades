@@ -786,6 +786,7 @@ const PostList = ({
   username,
   onOpenPost,
   onCreate,
+  onToggleLike,
 }: {
   posts: ProfilePostItem[];
   savedPosts: ProfilePostItem[];
@@ -794,6 +795,7 @@ const PostList = ({
   username: string;
   onOpenPost: (post: any) => void;
   onCreate: () => void;
+  onToggleLike: (postId: string) => void;
 }) => {
   if (posts.length === 0 && savedPosts.length === 0) {
     return (
@@ -813,8 +815,8 @@ const PostList = ({
       {posts.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         return (
-          <button key={post.id} onClick={() => onOpenPost(post)} className="block w-full border-b border-border px-5 py-4 text-left transition-colors hover:bg-muted/20">
-            <div className="flex items-start gap-3">
+          <div key={post.id} className="border-b border-border px-5 py-4">
+            <div onClick={() => onOpenPost(post)} className="flex items-start gap-3 cursor-pointer transition-colors hover:bg-muted/20 -mx-5 px-5 py-1">
               <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-secondary">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Profile photo" className="h-full w-full object-cover" />
@@ -845,7 +847,35 @@ const PostList = ({
                 )}
               </div>
             </div>
-          </button>
+            <div className="mt-3 ml-14 flex items-center gap-5 text-muted-foreground">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleLike(post.id); }}
+                aria-label="Like"
+                className="flex items-center gap-1 transition-colors hover:text-foreground"
+              >
+                <Heart className={cn("h-[18px] w-[18px]", post.liked && "fill-destructive text-destructive")} />
+                {(post.likeCount || 0) > 0 && <span className="text-[11px] tabular-nums">{post.likeCount}</span>}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
+                aria-label="Comment"
+                className="flex items-center gap-1 transition-colors hover:text-foreground"
+              >
+                <MessageCircle className="h-[18px] w-[18px]" />
+                {(post.commentCount || 0) > 0 && <span className="text-[11px] tabular-nums">{post.commentCount}</span>}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
+                aria-label="Share"
+                className="transition-colors hover:text-foreground"
+              >
+                <Send className="h-[18px] w-[18px]" />
+              </button>
+            </div>
+          </div>
         );
       })}
 
