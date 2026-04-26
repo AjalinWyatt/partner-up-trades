@@ -198,6 +198,7 @@ const Feed = () => {
     let query = supabase
       .from("posts")
       .select("*")
+      .eq("share_to_feed", true)
       .order("created_at", { ascending: false })
       .limit(50);
 
