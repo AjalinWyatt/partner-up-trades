@@ -94,18 +94,22 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
 
   if (!post) return null;
 
+  const hasMedia = !!(post.media_urls?.length || post.image_url || post.media_url);
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] max-w-3xl overflow-hidden rounded-none border-border bg-card p-0 sm:rounded-xl">
+      <DialogContent className={cn(
+        "max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] overflow-hidden rounded-none border-border bg-card p-0 sm:rounded-xl",
+        hasMedia ? "max-w-3xl" : "max-w-md"
+      )}>
         <DialogTitle className="sr-only">Post Detail</DialogTitle>
-        <div {...swipeDismiss} className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] flex-col md:flex-row">
-          {/* Media / Content */}
-          <div className={cn(
-            "relative flex bg-black/30 md:w-[60%]",
-            (post.media_urls?.length || post.image_url || post.media_url)
-              ? "min-h-[260px] max-h-[48dvh] items-center justify-center md:max-h-none"
-              : "items-start justify-center overflow-y-auto max-h-[48dvh] md:max-h-none"
-          )}>
+        <div {...swipeDismiss} className={cn(
+          "flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem) flex-col",
+          hasMedia && "md:flex-row"
+        )}>
+          {/* Media (only when present) */}
+          {hasMedia && (
+          <div className="relative flex min-h-[260px] max-h-[48dvh] items-center justify-center bg-black/30 md:max-h-none md:w-[60%]">
             <button
               onClick={onClose}
               className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background/80 text-foreground backdrop-blur-sm"
@@ -122,21 +126,24 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
                   ))}
                 </CarouselContent>
               </Carousel>
-            ) : post.image_url || (post.media_url && post.media_type === "image") || post.media_urls?.[0] ? (
-              <img src={post.media_urls?.[0] || post.media_url || post.image_url || ""} alt="" className="w-full h-full object-contain" />
             ) : (
-              <div className="w-full px-6 py-10 md:px-10 md:py-14">
-                <p className="mx-auto max-w-prose whitespace-pre-wrap text-left text-[15px] leading-7 text-foreground">
-                  {post.content || post.caption}
-                </p>
-              </div>
+              <img src={post.media_urls?.[0] || post.media_url || post.image_url || ""} alt="" className="w-full h-full object-contain" />
             )}
           </div>
+          )}
 
           {/* Details */}
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:w-[40%]">
+          <div className={cn("flex min-h-0 flex-1 flex-col overflow-hidden", hasMedia && "md:w-[40%]")}>
             {/* Header */}
-            <div className="flex items-center gap-2.5 border-b border-border p-3">
+            <div className="relative flex items-center gap-2.5 border-b border-border p-3">
+              {!hasMedia && (
+                <button
+                  onClick={onClose}
+                  className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
               <button onClick={() => { onClose(); navigate(`/profile/${post.user_id}`); }}>
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} className="w-8 h-8 rounded-full object-cover" />
