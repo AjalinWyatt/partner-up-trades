@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2, ChevronDown } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import LogoHeader from "@/components/LogoHeader";
+import AppHeader from "@/components/AppHeader";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
@@ -826,7 +826,7 @@ export default function TradingLog() {
   // ─── MAIN LOG VIEW ───
   return (
     <AppLayout>
-      <LogoHeader />
+      <AppHeader />
 
       {/* Page nav */}
       <div className="flex items-center justify-between px-5 py-1.5">
