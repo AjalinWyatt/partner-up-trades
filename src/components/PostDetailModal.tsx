@@ -99,7 +99,12 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
         <DialogTitle className="sr-only">Post Detail</DialogTitle>
         <div {...swipeDismiss} className="flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-0.5rem)] flex-col md:flex-row">
           {/* Media / Content */}
-          <div className="relative flex min-h-[260px] max-h-[48dvh] items-center justify-center bg-black/30 md:max-h-none md:w-[60%]">
+          <div className={cn(
+            "relative flex bg-black/30 md:w-[60%]",
+            (post.media_urls?.length || post.image_url || post.media_url)
+              ? "min-h-[260px] max-h-[48dvh] items-center justify-center md:max-h-none"
+              : "items-start justify-center overflow-y-auto max-h-[48dvh] md:max-h-none"
+          )}>
             <button
               onClick={onClose}
               className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background/80 text-foreground backdrop-blur-sm"
@@ -119,8 +124,8 @@ const PostDetailModal = ({ open, onClose, post, myId, onDeleted, onEdit }: PostD
             ) : post.image_url || (post.media_url && post.media_type === "image") || post.media_urls?.[0] ? (
               <img src={post.media_urls?.[0] || post.media_url || post.image_url || ""} alt="" className="w-full h-full object-contain" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center p-8">
-                <p className="max-w-lg whitespace-pre-wrap text-center text-base leading-relaxed text-foreground">
+              <div className="w-full px-6 py-10 md:px-10 md:py-14">
+                <p className="mx-auto max-w-prose whitespace-pre-wrap text-left text-[15px] leading-7 text-foreground">
                   {post.content || post.caption}
                 </p>
               </div>
