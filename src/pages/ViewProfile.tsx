@@ -7,6 +7,7 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import PostDetailModal from "@/components/PostDetailModal";
+import SharePostSheet from "@/components/SharePostSheet";
 import DetailCardsGrid, { type DetailCardItem } from "@/components/profile/DetailCardsGrid";
 
 interface ViewPostItem {
