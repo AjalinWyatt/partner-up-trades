@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
+import SharePostSheet from "@/components/SharePostSheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -119,6 +120,7 @@ const Profile = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [postToShare, setPostToShare] = useState<any>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   const togglePostLike = async (postId: string) => {
@@ -719,6 +721,7 @@ const Profile = () => {
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
             onToggleLike={togglePostLike}
+            onSharePost={(post) => setPostToShare(post)}
           />
         ) : activeTab === 1 ? (
           <DetailsGrid
@@ -767,7 +770,9 @@ const Profile = () => {
           setEditingPost(post as ProfilePostItem);
           setShowCreatePost(true);
         }}
+        onShare={(post) => setPostToShare(post)}
       />
+      <SharePostSheet post={postToShare} myId={userId} onClose={() => setPostToShare(null)} />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
@@ -787,6 +792,7 @@ const PostList = ({
   onOpenPost,
   onCreate,
   onToggleLike,
+  onSharePost,
 }: {
   posts: ProfilePostItem[];
   savedPosts: ProfilePostItem[];
@@ -796,6 +802,7 @@ const PostList = ({
   onOpenPost: (post: any) => void;
   onCreate: () => void;
   onToggleLike: (postId: string) => void;
+  onSharePost: (post: any) => void;
 }) => {
   if (posts.length === 0 && savedPosts.length === 0) {
     return (
@@ -868,7 +875,7 @@ const PostList = ({
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
+                onClick={(e) => { e.stopPropagation(); onSharePost(post); }}
                 aria-label="Share"
                 className="transition-colors hover:text-foreground"
               >
