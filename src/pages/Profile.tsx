@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Lock, LogOut, MapPin, MoreVertical, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, Heart, Lock, LogOut, MapPin, MessageCircle, MoreVertical, Moon, Pencil, Send, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -83,6 +83,9 @@ interface ProfilePostItem {
   originalUsername?: string;
   originalAvatarUrl?: string | null;
   originalCreatedAt?: string;
+  likeCount?: number;
+  commentCount?: number;
+  liked?: boolean;
 }
 
 const Profile = () => {
@@ -140,7 +143,31 @@ const Profile = () => {
     const referencedMap = new Map((referencedPosts || []).map((entry: any) => [entry.id, entry]));
     const myUsername = ownUsername || ownProfile?.username || profile?.username || "username";
 
-    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => ({
+    // Aggregate likes/comments for all visible posts
+    const allPostIds = [
+      ...(ownPosts || []).map((p: any) => p.id),
+      ...referencedIds,
+    ];
+    const [{ data: allLikes }, { data: myLikes }, { data: allComments }] = allPostIds.length > 0
+      ? await Promise.all([
+          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds),
+          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds).eq("user_id", uid),
+          supabase.from("feed_comments").select("entry_id").in("entry_id", allPostIds),
+        ])
+      : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
+    const likeCounts = new Map<string, number>();
+    (allLikes || []).forEach((l: any) => likeCounts.set(l.entry_id, (likeCounts.get(l.entry_id) || 0) + 1));
+    const commentCounts = new Map<string, number>();
+    (allComments || []).forEach((c: any) => commentCounts.set(c.entry_id, (commentCounts.get(c.entry_id) || 0) + 1));
+    const mySet = new Set<string>((myLikes || []).map((l: any) => l.entry_id));
+    const decorate = (p: any): ProfilePostItem => ({
+      ...p,
+      likeCount: likeCounts.get(p.id) || 0,
+      commentCount: commentCounts.get(p.id) || 0,
+      liked: mySet.has(p.id),
+    });
+
+    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => decorate({
       ...post,
       username: `@${myUsername}`,
       avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
@@ -150,7 +177,7 @@ const Profile = () => {
     const repostItems: ProfilePostItem[] = (repostRows || []).map((row: any) => {
       const original = referencedMap.get(row.post_id);
       const author = original ? authorMap.get(original.user_id) : null;
-      return original ? {
+      return original ? decorate({
         ...original,
         created_at: row.created_at,
         username: `@${myUsername}`,
@@ -159,13 +186,13 @@ const Profile = () => {
         originalUsername: author?.username ? `@${author.username}` : "@trader",
         originalAvatarUrl: author?.avatar_url || null,
         originalCreatedAt: original.created_at,
-      } : null;
+      }) : null;
     }).filter(Boolean) as ProfilePostItem[];
 
     const savedItems: ProfilePostItem[] = (savedRows || []).map((row: any) => {
       const original = referencedMap.get(row.post_id);
       const author = original ? authorMap.get(original.user_id) : null;
-      return original ? {
+      return original ? decorate({
         ...original,
         created_at: row.created_at,
         username: author?.username ? `@${author.username}` : "@trader",
@@ -174,7 +201,7 @@ const Profile = () => {
         originalUsername: author?.username ? `@${author.username}` : "@trader",
         originalAvatarUrl: author?.avatar_url || null,
         originalCreatedAt: original.created_at,
-      } : null;
+      }) : null;
     }).filter(Boolean) as ProfilePostItem[];
 
     setPosts([...ownItems, ...repostItems].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
