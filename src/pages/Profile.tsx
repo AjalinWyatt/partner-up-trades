@@ -571,7 +571,7 @@ const Profile = () => {
             Traders<span className="text-foreground">World</span>
           </h1>
           <button
-            onClick={() => setEditing(true)}
+            onClick={() => navigate("/settings")}
             className="absolute right-5 flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
             aria-label="Settings"
           >
