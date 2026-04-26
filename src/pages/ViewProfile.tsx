@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, FileText, Grid3x3, Info, MessageSquare, MoreVertical, NotebookPen, Shield, ShieldOff } from "lucide-react";
+import { CalendarDays, ChevronLeft, FileText, Grid3x3, Info, MapPin, MessageSquare, MoreVertical, NotebookPen, Shield, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
@@ -295,6 +295,26 @@ const ViewProfile = () => {
             <p className="mt-3 whitespace-pre-line text-[13px] leading-5 text-foreground">{profile.bio}</p>
           ) : (
             <p className="mt-3 text-[12px] text-muted-foreground">No bio yet.</p>
+          )}
+
+          {/* Meta row: Location · Joined date */}
+          {((profile?.city || profile?.state || profile?.country) || profile?.created_at) && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
+              {(profile?.city || profile?.state || profile?.country) && (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span className="font-medium text-foreground">
+                    {`${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")}
+                  </span>
+                </span>
+              )}
+              {profile?.created_at && (
+                <span className="inline-flex items-center gap-1">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
 
