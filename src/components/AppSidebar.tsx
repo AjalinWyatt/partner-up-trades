@@ -66,6 +66,7 @@ export default function AppSidebar() {
         {navItems.map((item) => {
           const active = location.pathname === item.path;
           const badge = item.path === "/dashboard" ? unreadNotifs : item.path === "/messages" ? unreadMsgs : 0;
+          const showNewLabel = !!dotForPath[item.path] && (item.path === "/discover" || item.path === "/partners");
 
           return (
             <button
@@ -89,6 +90,11 @@ export default function AppSidebar() {
                 )}
               </span>
               <span className="flex-1 text-left">{item.label}</span>
+              {showNewLabel && (
+                <span className="rounded-full bg-[hsl(210_100%_60%)] px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide text-white animate-slow-blink">
+                  New
+                </span>
+              )}
               {badge > 0 && (
                 <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
                   {badge > 99 ? "99+" : badge}
