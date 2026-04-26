@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
+import SharePostSheet from "@/components/SharePostSheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -119,6 +120,7 @@ const Profile = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [postToShare, setPostToShare] = useState<any>(null);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   const togglePostLike = async (postId: string) => {
@@ -767,7 +769,9 @@ const Profile = () => {
           setEditingPost(post as ProfilePostItem);
           setShowCreatePost(true);
         }}
+        onShare={(post) => setPostToShare(post)}
       />
+      <SharePostSheet post={postToShare} myId={userId} onClose={() => setPostToShare(null)} />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
