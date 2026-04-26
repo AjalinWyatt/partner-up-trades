@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Lock, Link, BookOpen, TrendingUp } from "lucide-react";
+import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,8 @@ interface JournalEntry {
   created_at: string;
   pnl_unit?: string | null;
   entry_type?: string | null;
+  study_data?: any;
+  account_type?: string | null;
 }
 
 const MOODS = [
@@ -39,6 +41,41 @@ const RESULTS = [
 
 const ACCOUNT_TYPES = ["Demo", "Challenge", "Funded", "Live"];
 const MARKETS = ["Forex", "Futures", "Options", "Crypto", "Stocks", "Indices"];
+
+const PAIR_SUGGESTIONS: Record<string, string[]> = {
+  Forex: ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD", "GBP/JPY", "AUD/USD", "USD/CAD", "EUR/JPY"],
+  Futures: ["NQ", "ES", "YM", "RTY", "CL", "GC", "MNQ", "MES"],
+  Options: ["SPY", "QQQ", "TSLA", "NVDA", "AAPL", "AMZN", "META", "MSFT"],
+  Crypto: ["BTC/USD", "ETH/USD", "SOL/USD", "XRP/USD", "DOGE/USD", "BNB/USD"],
+  Stocks: ["AAPL", "TSLA", "NVDA", "AMZN", "MSFT", "GOOGL", "META", "AMD"],
+  Indices: ["SPX", "NDX", "DJI", "RUT", "VIX", "DAX", "FTSE", "NKY"],
+};
+
+// Study log options
+const STUDY_TYPES = [
+  { value: "backtest", emoji: "🔬", label: "Backtest" },
+  { value: "chart_review", emoji: "📊", label: "Chart Review" },
+  { value: "strategy", emoji: "🧠", label: "Strategy" },
+  { value: "psychology", emoji: "🧘", label: "Psychology" },
+  { value: "course", emoji: "🎓", label: "Course" },
+  { value: "book", emoji: "📖", label: "Book" },
+  { value: "video", emoji: "🎥", label: "Video" },
+  { value: "journal_review", emoji: "🔁", label: "Journal Review" },
+];
+const STUDY_DURATIONS = ["15m", "30m", "1h", "2h", "3h+"];
+const STUDY_TOPICS = [
+  "Price Action", "Order Blocks", "Liquidity", "Fair Value Gaps", "Supply/Demand",
+  "ICT", "SMC", "Wyckoff", "Elliott Wave", "Volume Profile", "Risk Management",
+  "Position Sizing", "Mindset", "Trade Plan", "Backtesting", "Indicators",
+  "Market Structure", "Trendlines", "Fibonacci", "News Trading",
+];
+const STUDY_CONFIDENCE = [
+  { value: 1, label: "Confused", emoji: "😵" },
+  { value: 2, label: "Learning", emoji: "🤔" },
+  { value: 3, label: "Getting it", emoji: "💡" },
+  { value: 4, label: "Solid", emoji: "💪" },
+  { value: 5, label: "Mastered", emoji: "🏆" },
+];
 
 const GREEN_TAGS = [
   "Followed plan", "Clean entry", "Held to TP", "Took partials", "Patient",
@@ -94,6 +131,8 @@ export default function TradingLog() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
@@ -109,6 +148,14 @@ export default function TradingLog() {
   const [shareSetting, setShareSetting] = useState("partners");
   const [saving, setSaving] = useState(false);
   const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
+
+  // Study form state
+  const [studyType, setStudyType] = useState("");
+  const [studyTopics, setStudyTopics] = useState<string[]>([]);
+  const [studyDuration, setStudyDuration] = useState("");
+  const [studyConfidence, setStudyConfidence] = useState<number>(0);
+  const [studyTakeaway, setStudyTakeaway] = useState("");
+  const [studyResource, setStudyResource] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
