@@ -7,6 +7,8 @@ import CreatePostModal from "@/components/CreatePostModal";
 import PostDetailModal from "@/components/PostDetailModal";
 import CreatePhotoAlbumModal from "@/components/CreatePhotoAlbumModal";
 import SharePostSheet from "@/components/SharePostSheet";
+import CreateAlbumDialog from "@/components/CreateAlbumDialog";
+import AlbumDetailModal from "@/components/AlbumDetailModal";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
