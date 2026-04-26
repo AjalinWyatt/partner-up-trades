@@ -470,7 +470,11 @@ export default function Messages() {
     </div>
   ) : (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-3 py-2 border-b border-border/40">
+      {(() => null)()}
+      <div className={cn(
+        "flex items-center gap-3 px-3 py-2 border-b",
+        activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
+      )}>
         <button
           onClick={() => setActiveChat(null)}
           className="p-1.5 text-foreground -ml-1"
@@ -482,7 +486,10 @@ export default function Messages() {
           <img
             src={activeChat.avatarUrl}
             alt={activeChat.partnerName}
-            className="w-9 h-9 rounded-full object-cover bg-secondary shrink-0"
+            className={cn(
+              "w-9 h-9 rounded-full object-cover bg-secondary shrink-0",
+              activeChat.id === SYSTEM_CONNECTION_ID && "ring-2 ring-primary/60"
+            )}
           />
         ) : (
           <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
@@ -490,12 +497,23 @@ export default function Messages() {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
-            {activeChat.partnerName.replace(/^@/, "")}
-          </p>
-          <p className="text-[11px] text-muted-foreground truncate leading-tight">
-            @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
-          </p>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
+              {activeChat.partnerName.replace(/^@/, "")}
+            </p>
+            {activeChat.id === SYSTEM_CONNECTION_ID && (
+              <BadgeCheck className="w-4 h-4 text-primary shrink-0 fill-primary/20" />
+            )}
+          </div>
+          {activeChat.id === SYSTEM_CONNECTION_ID ? (
+            <p className="text-[11px] text-primary truncate leading-tight font-semibold flex items-center gap-1">
+              <Megaphone className="w-3 h-3" /> Official announcements
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground truncate leading-tight">
+              @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
+            </p>
+          )}
           {partnerTrading && (partnerTrading.markets?.length || partnerTrading.experience_level || partnerTrading.trading_style?.length) ? (
             <p className="text-[10px] text-primary/80 truncate leading-tight mt-0.5 font-medium">
               {[
@@ -506,14 +524,16 @@ export default function Messages() {
             </p>
           ) : null}
         </div>
-        <button
-          onClick={() => setTagsOpen(true)}
-          className="p-2 text-primary shrink-0"
-          aria-label="Tag conversation"
-          title="Tag conversation"
-        >
-          <TagIcon className="w-5 h-5" strokeWidth={2} />
-        </button>
+        {activeChat.id !== SYSTEM_CONNECTION_ID && (
+          <button
+            onClick={() => setTagsOpen(true)}
+            className="p-2 text-primary shrink-0"
+            aria-label="Tag conversation"
+            title="Tag conversation"
+          >
+            <TagIcon className="w-5 h-5" strokeWidth={2} />
+          </button>
+        )}
       </div>
       {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap px-4 pt-2">
