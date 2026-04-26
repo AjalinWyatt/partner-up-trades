@@ -620,27 +620,15 @@ export default function TradingLog() {
                   type="text"
                   value={pnl}
                   onChange={(e) => setPnl(e.target.value.replace(/[+\-−]/g, ""))}
-                  placeholder={pnlUnit === "pips" ? "e.g. 38" : "e.g. 250"}
+                  placeholder="e.g. 250"
                   className={cn(
                     "flex-1 py-2.5 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none",
                     result ? "pl-0 pr-3.5" : "px-3.5"
                   )}
                 />
               </div>
-              <div className="flex rounded-[10px] border-[1.5px] border-border bg-secondary p-0.5">
-                {(["pips", "dollars"] as const).map((u) => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => setPnlUnit(u)}
-                    className={cn(
-                      "px-3 rounded-[8px] text-[12px] font-bold transition-colors",
-                      pnlUnit === u ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-                    )}
-                  >
-                    {u === "pips" ? "Pips" : "$"}
-                  </button>
-                ))}
+              <div className="flex items-center px-3 rounded-[10px] border-[1.5px] border-border bg-secondary text-[12px] font-bold text-muted-foreground">
+                $
               </div>
             </div>
           </div>}
