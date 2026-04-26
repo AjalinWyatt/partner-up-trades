@@ -5,36 +5,14 @@ import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
-import { computeMatch } from "@/lib/matchUtils";
+import { DiscoverMatchCandidate, getDiscoverMatches } from "@/lib/discoverMatches";
 
-interface MatchCandidate {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
-  age: number | null;
-  location: string | null;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  markets: string[];
-  trading_style: string[];
-  experience_level: string | null;
-  sessions: string[];
-  matchPct: number;
-}
+type MatchCandidate = DiscoverMatchCandidate;
 
 const FILTER_OPTIONS = {
   market: ["Forex", "Futures", "Options"],
   session: ["London", "New York", "Asian"],
   experience: ["Just getting started", "Building my edge", "Consistent & growing", "Profitable trader"],
-};
-
-const calcAge = (dob: string | null): number | null => {
-  if (!dob) return null;
-  const d = new Date(dob);
-  const diff = Date.now() - d.getTime();
-  return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
 };
 
 const Discover = () => {
@@ -56,83 +34,9 @@ const Discover = () => {
       const user = session?.user;
       if (!user) { setLoading(false); return; }
 
-      const [{ data: allConnections }, { data: blockedData }, { data: passedData }, { data: meData }] = await Promise.all([
-        supabase
-          .from("partner_connections")
-          .select("requester_id, receiver_id")
-          .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
-          .in("status", ["pending", "accepted"]),
-        supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
-        supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
-        supabase.from("profiles").select("avatar_url, username").eq("id", user.id).maybeSingle(),
-      ]);
-      setMe(meData || null);
-
-      const excludedIds = new Set<string>([user.id]);
-      (allConnections || []).forEach((c: any) => { excludedIds.add(c.requester_id); excludedIds.add(c.receiver_id); });
-      (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
-      (passedData || []).forEach((p: any) => excludedIds.add(p.passed_id));
-
-      const { data: myTrading } = await supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle();
-      const { data: allProfiles } = await supabase.from("profiles").select("*").neq("id", user.id).eq("onboarding_completed", true);
-
-      if (!allProfiles || allProfiles.length === 0) { setLoading(false); return; }
-      const eligible = allProfiles.filter((p: any) => !excludedIds.has(p.id));
-      if (eligible.length === 0) { setMatches([]); setLoading(false); return; }
-
-      const userIds = eligible.map((p: any) => p.id);
-      const { data: allTrading } = await supabase.from("trading_profiles").select("*").in("user_id", userIds);
-      const tradingMap = new Map<string, any>();
-      (allTrading || []).forEach((t: any) => tradingMap.set(t.user_id, t));
-
-      const { data: myProfile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-      const myReach = myTrading?.connection_reach;
-
-      const candidates: MatchCandidate[] = eligible
-        .map((p: any) => {
-          const t = tradingMap.get(p.id);
-          const result = computeMatch(myTrading, t, myProfile, p);
-          if (result.excluded) return null;
-
-          let locationBonus = 0;
-          if (myReach === "Local" && myProfile) {
-            if (myProfile.country && p.country && myProfile.country.toLowerCase() === p.country.toLowerCase()) {
-              locationBonus += 5;
-              if (myProfile.state && p.state && myProfile.state.toLowerCase() === p.state.toLowerCase()) {
-                locationBonus += 5;
-                if (myProfile.city && p.city && myProfile.city.toLowerCase() === p.city.toLowerCase()) locationBonus += 5;
-              }
-            }
-          }
-
-          const locParts = [p.city, p.state].filter(Boolean);
-          const displayLoc = locParts.length > 0 ? locParts.join(", ") : (p.country || p.location);
-
-          return {
-            id: p.id,
-            username: p.username,
-            full_name: p.full_name,
-            avatar_url: p.avatar_url,
-            age: calcAge(p.date_of_birth),
-            location: displayLoc,
-            city: p.city, state: p.state, country: p.country,
-            markets: t?.markets || [],
-            trading_style: t?.trading_style || [],
-            experience_level: t?.experience_level || null,
-            sessions: t?.sessions || [],
-            matchPct: Math.min(result.pct + locationBonus, 100),
-          };
-        })
-        .filter((c: MatchCandidate | null): c is MatchCandidate => c !== null)
-        .filter((c: MatchCandidate) => {
-          if (myReach === "Local" && myProfile?.country) {
-            return c.country && c.country.toLowerCase() === myProfile.country.toLowerCase();
-          }
-          return true;
-        })
-        .sort((a, b) => b.matchPct - a.matchPct);
-
-      setMatches(candidates);
+      const { me, matches } = await getDiscoverMatches(user.id);
+      setMe(me);
+      setMatches(matches);
       setLoading(false);
     };
     load();
@@ -203,7 +107,7 @@ const Discover = () => {
           }`}
         >
           {filtered.length === 0 && matches.length === 0
-            ? "No traders match your criteria right now, please check back soon as new traders join daily"
+            ? "No traders match your criteria right now. Please check back soon."
             : "Some curated matches for you!"}
         </h2>
 
