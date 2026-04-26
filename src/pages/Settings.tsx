@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, X, AlertCircle, LogOut, Trash2, ShieldOff, Bell, User as UserIcon, Eye, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, X, AlertCircle, LogOut, Trash2, ShieldOff, Bell, User as UserIcon, Eye, FileText, Sparkles, Smartphone } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -389,6 +389,13 @@ export default function Settings() {
           >
             <span>Replay walkthrough</span>
             <span className="text-muted-foreground text-[11px]">~60s tour</span>
+          </button>
+          <button
+            onClick={() => navigate("/install")}
+            className="w-full text-left text-[13px] text-foreground py-2 flex items-center justify-between border-t border-border"
+          >
+            <span className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5 text-muted-foreground" /> Install on your phone</span>
+            <span className="text-muted-foreground text-[11px]">iPhone / Android</span>
           </button>
         </Section>
 
