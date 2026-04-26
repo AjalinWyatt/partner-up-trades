@@ -580,42 +580,47 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Hero: centered avatar with streak badge */}
-        <div className="flex flex-col items-center px-5 pt-7">
-          <div className="relative">
+        {/* Hero: avatar on the left, name + bio on the right */}
+        <div className="flex items-start gap-4 px-5 pt-6">
+          <div className="relative shrink-0">
             <button onClick={() => avatarInputRef.current?.click()} className="block">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile photo" className="h-[120px] w-[120px] rounded-full object-cover ring-2 ring-primary/60" />
+                <img src={profile.avatar_url} alt="Profile photo" className="h-[104px] w-[104px] rounded-full object-cover ring-2 ring-primary/60" />
               ) : (
-                <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-secondary text-3xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
+                <div className="flex h-[104px] w-[104px] items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
               )}
             </button>
             {/* Streak badge - top right */}
-            <div className="absolute -top-1 -right-2 flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-0.5 shadow-md">
+            <div className="absolute -top-1 -right-1 flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-0.5 shadow-md">
               <Flame className="h-3.5 w-3.5 fill-destructive text-destructive" />
               <span className="text-[12px] font-extrabold text-foreground leading-none">{journalEntries.length || 0}</span>
             </div>
             {/* Edit button - bottom center */}
             <button
               onClick={() => setEditing(true)}
-              className="absolute -bottom-1 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
+              className="absolute -bottom-1 left-1/2 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
               aria-label="Edit profile"
             >
-              <Pencil className="h-4 w-4" strokeWidth={2.2} />
+              <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
             </button>
+          </div>
+
+          {/* Name + bio (right of avatar) */}
+          <div className="flex-1 min-w-0 pt-1">
+            <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}</h2>
+            {profile?.bio ? (
+              <p className="mt-1.5 whitespace-pre-line text-[13.5px] leading-5 text-muted-foreground line-clamp-4">{profile.bio}</p>
+            ) : (
+              <button
+                onClick={() => setEditing(true)}
+                className="mt-1.5 text-left text-[13px] text-muted-foreground italic hover:text-foreground transition-colors"
+              >
+                Add a bio so traders know how you move.
+              </button>
+            )}
           </div>
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-
-        {/* Name + bio */}
-        <div className="mt-5 px-5 text-center">
-          <h2 className="text-[22px] font-extrabold leading-tight text-foreground">{displayName}</h2>
-          {profile?.bio ? (
-            <p className="mx-auto mt-1.5 max-w-[320px] whitespace-pre-line text-[14px] leading-6 text-muted-foreground">{profile.bio}</p>
-          ) : (
-            <p className="mt-1.5 text-sm text-muted-foreground">Add a bio so traders know how you move.</p>
-          )}
-        </div>
 
         {/* Identity chips: Market · Style · Experience */}
         {(() => {
