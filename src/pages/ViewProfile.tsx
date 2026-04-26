@@ -252,7 +252,9 @@ const ViewProfile = () => {
   return (
     <>
     <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background">
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-5 pb-4 pt-safe-4 backdrop-blur">
+      {/* Locked header — back bar + hero + action button + tabs */}
+      <div className="shrink-0 bg-background">
+      <div className="flex items-center justify-between border-b border-border bg-background/95 px-5 pb-4 pt-safe-4 backdrop-blur">
         <button onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
           <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
         </button>
@@ -283,8 +285,7 @@ const ViewProfile = () => {
         ) : <div className="h-9 w-9" />}
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-16">
-        <div className="px-5 pt-6">
+      <div className="px-5 pt-6">
           <div className="flex items-start gap-4">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="Profile photo" className="h-[84px] w-[84px] shrink-0 rounded-full object-cover" />
@@ -393,7 +394,13 @@ const ViewProfile = () => {
             </button>
           ))}
         </div>
+      </div>
 
+      {/* Scrollable tab content — only this region scrolls */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-2"
+        style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
+      >
         {activeTab === 0 ? (
           (() => { const visible = posts.filter((p) => (p as any).share_to_feed !== false); return visible.length > 0 ? (
             <div>
