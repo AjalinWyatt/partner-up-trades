@@ -15,12 +15,13 @@ const tabs = [
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { homeDot, messagesDot, discoverDot } = useNavBadges();
+  const { homeDot, messagesDot, discoverDot, partnersDot } = useNavBadges();
 
   const dotForPath: Record<string, boolean> = {
     "/dashboard": homeDot,
     "/messages": messagesDot,
     "/discover": discoverDot,
+    "/partners": partnersDot,
   };
 
   return (
