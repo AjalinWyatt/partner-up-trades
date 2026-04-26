@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Flame, Globe, LogOut, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Flame, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
@@ -27,6 +27,7 @@ interface ProfileData {
   chart_prompts: string[];
   off_chart_prompts: string[];
   onboarding_completed: boolean;
+  created_at?: string | null;
 }
 
 interface TradingProfileData {
