@@ -932,17 +932,12 @@ const DetailsGrid = ({
 
   return (
     <div className="px-6 pt-6 pb-10 space-y-8">
-      <div className="grid grid-cols-3 gap-y-7 gap-x-4">
-        {items.map((it, i) => (
-          <div key={`${it.label}-${i}`} className="text-left">
-            <p className="text-[15px] font-extrabold leading-tight text-primary">{it.value}</p>
-            <p className="mt-1 text-[12px] text-foreground">{it.label}</p>
-          </div>
-        ))}
+      <div className="-mx-6">
+        <DetailCardsGrid items={items} />
       </div>
 
       {reachIndex >= 0 && (
-        <div>
+        <div className="px-0">
           <p className="text-[15px] font-semibold text-foreground">Connection Reach</p>
           <div className="mt-5 mb-3 h-[6px] w-full rounded-full bg-muted relative">
             <div
