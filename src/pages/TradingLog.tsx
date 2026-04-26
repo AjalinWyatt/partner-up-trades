@@ -882,29 +882,37 @@ export default function TradingLog() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
-          <div className="bg-card py-2.5 px-2 text-center">
-            <div className={cn("text-base font-black", stats.totalPips >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-              {stats.totalPips > 0 ? "+" : ""}{stats.totalPips}{stats.totalDollars !== 0 ? "p" : " pips"}
+        <div className="grid grid-cols-4 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className={cn("text-sm font-black leading-tight", (stats.totalDollars || stats.totalPips) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.totalDollars !== 0
+                ? `${stats.totalDollars > 0 ? "+$" : "-$"}${Math.abs(stats.totalDollars)}`
+                : `${stats.totalPips > 0 ? "+" : ""}${stats.totalPips}p`}
             </div>
-            {stats.totalDollars !== 0 && (
-              <div className={cn("text-[10px] font-bold", stats.totalDollars >= 0 ? "text-accent" : "text-destructive")}>
-                {stats.totalDollars > 0 ? "+$" : "-$"}{Math.abs(stats.totalDollars)}
+            {stats.totalDollars !== 0 && stats.totalPips !== 0 && (
+              <div className={cn("text-[9px] font-bold leading-none", stats.totalPips >= 0 ? "text-accent" : "text-destructive")}>
+                {stats.totalPips > 0 ? "+" : ""}{stats.totalPips}p
               </div>
             )}
-            <div className="text-[9px] text-muted-foreground mt-px">This Week</div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">P&L</div>
           </div>
-          <div className="bg-card py-2.5 px-2 text-center">
-            <div className="text-base font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className="text-sm font-black text-foreground leading-tight" style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.totalTrades}
             </div>
-            <div className="text-[9px] text-muted-foreground mt-px">Trades</div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Trades</div>
           </div>
-          <div className="bg-card py-2.5 px-2 text-center">
-            <div className={cn("text-base font-black", stats.winRate > 50 ? "text-accent" : "text-foreground")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className={cn("text-sm font-black leading-tight", stats.winRate > 50 ? "text-accent" : "text-foreground")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.winRate}%
             </div>
-            <div className="text-[9px] text-muted-foreground mt-px">Win Rate</div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Win Rate</div>
+          </div>
+          <div className="bg-card py-2.5 px-1 text-center">
+            <div className="text-sm font-black text-primary leading-tight" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {stats.studyMins >= 60 ? `${(stats.studyMins / 60).toFixed(stats.studyMins % 60 === 0 ? 0 : 1)}h` : `${stats.studyMins}m`}
+            </div>
+            <div className="text-[9px] text-muted-foreground mt-0.5">Studied</div>
           </div>
         </div>
 
