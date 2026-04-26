@@ -133,6 +133,7 @@ export default function TradingLog() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
