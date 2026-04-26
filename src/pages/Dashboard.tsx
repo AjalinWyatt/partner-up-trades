@@ -25,6 +25,29 @@ const NOTIF_FILTER_TYPES: Record<NotifFilter, string[]> = {
   streaks: ["streak_warning", "streak_milestone"],
 };
 
+const NOTIF_EMPTY_STATES: Record<NotifFilter, { icon: React.ReactNode; title: string; body: string }> = {
+  all: {
+    icon: <Bell className="w-5 h-5 text-muted-foreground" />,
+    title: "You're all caught up ✓",
+    body: "When someone interacts with you, it'll show up here.",
+  },
+  activity: {
+    icon: <Heart className="w-5 h-5 text-muted-foreground" />,
+    title: "No activity yet",
+    body: "Likes, comments, profile views, and new matches will appear here.",
+  },
+  partners: {
+    icon: <UserPlus className="w-5 h-5 text-muted-foreground" />,
+    title: "Nothing from partners yet",
+    body: "Partner requests, acceptances, and check-ins will land here.",
+  },
+  streaks: {
+    icon: <Flame className="w-5 h-5 text-muted-foreground" />,
+    title: "No streak alerts",
+    body: "We'll nudge you here when your streak is at risk or you hit a milestone.",
+  },
+};
+
 const NOTIF_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; route: string }> = {
   partner_request:  { icon: <UserPlus className="w-4 h-4" />,       color: "text-primary bg-primary/15",         route: "/partners" },
   partner_accepted: { icon: <UserCheck className="w-4 h-4" />,      color: "text-success bg-success/15",         route: "/messages" },
