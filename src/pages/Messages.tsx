@@ -325,7 +325,7 @@ export default function Messages() {
   const grouped = activeChat ? groupMessagesByDate(messages) : [];
 
   const conversationListContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0 w-full overflow-x-hidden">
       <div
         className="sticky top-0 z-40 px-5 pb-4 flex items-center justify-between bg-background/95 backdrop-blur-xl"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
@@ -488,11 +488,14 @@ export default function Messages() {
       </p>
     </div>
   ) : (
-    <div className="flex flex-col h-full">
-      <div className={cn(
-        "flex items-center gap-3 px-3 py-2 border-b",
-        activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
-      )}>
+    <div className="flex flex-col h-full min-w-0 w-full overflow-x-hidden">
+      <div
+        className={cn(
+          "sticky top-0 z-40 flex items-center gap-3 px-3 pb-3 border-b bg-background/95 backdrop-blur-xl",
+          activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
+        )}
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+      >
         <button
           onClick={() => {
             if (activeChat.id === SYSTEM_CONNECTION_ID) {
