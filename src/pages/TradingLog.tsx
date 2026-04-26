@@ -276,7 +276,9 @@ export default function TradingLog() {
             <button onClick={() => setShowForm(false)} className="w-7 h-7 flex items-center justify-center">
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
             </button>
-            <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Log Session</span>
+            <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+              {entryType === "study" ? "Log Study" : "Log Trade"}
+            </span>
           </div>
           <button
             onClick={saveEntry}
@@ -288,9 +290,37 @@ export default function TradingLog() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3.5" style={{ scrollbarWidth: "none" }}>
+          {/* Entry type toggle */}
+          <div className="flex gap-2 p-1 rounded-2xl bg-secondary border border-border">
+            {([
+              { value: "trade", label: "Trade Log", icon: TrendingUp, emoji: "📈" },
+              { value: "study", label: "Study Log", icon: BookOpen, emoji: "📚" },
+            ] as const).map((opt) => {
+              const sel = entryType === opt.value;
+              const Icon = opt.icon;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setEntryType(opt.value)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[13px] font-bold transition-all",
+                    sel
+                      ? "bg-accent text-accent-foreground shadow-[0_2px_10px_hsl(var(--accent)/0.3)]"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <span className="text-base leading-none">{opt.emoji}</span>
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Mood */}
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How are you feeling?</p>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+              How are you feeling? {entryType === "study" ? "🧠" : "💭"}
+            </p>
             <div className="flex gap-1.5">
               {MOODS.map((m) => (
                 <button
