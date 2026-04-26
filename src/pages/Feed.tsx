@@ -607,7 +607,7 @@ const Feed = () => {
         <div className="shrink-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
           <div
             className="space-y-4 px-4 pb-4"
-            style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+            style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
           >
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div />

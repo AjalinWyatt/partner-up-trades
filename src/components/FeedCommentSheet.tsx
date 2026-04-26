@@ -410,7 +410,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         )}
 
         {/* Comments list */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 space-y-3 overscroll-contain">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-3 overscroll-contain">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -421,8 +421,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
             </div>
           ) : (
             <>
-             {comments.map(c => (
-               <div key={c.id} className="relative flex gap-2.5 pl-11">
+              {comments.map(c => (
+               <div key={c.id} className="relative flex gap-2.5 pl-11 w-full min-w-0">
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                 <button onClick={() => goToProfile(c.user_id)} className="shrink-0" aria-label={`Open ${c.username}'s profile`}>
                   {c.avatar_url ? (
@@ -435,17 +435,21 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                 </button>
                 <div className="min-w-0 flex-1">
                    <div className="px-0.5 py-1">
-                     <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2 min-w-0">
                        <button
                          onClick={() => goToProfile(c.user_id)}
-                         className="text-[11px] font-bold text-foreground hover:underline"
+                         className="min-w-0 truncate text-[11px] font-bold text-foreground hover:underline"
                        >
                          @{c.username}
                        </button>
-                       <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
+                       <span className="text-[9px] text-muted-foreground shrink-0">{timeAgo(c.created_at)}</span>
                        {c.updated_at && c.updated_at !== c.created_at && <span className="text-[9px] text-muted-foreground">edited</span>}
                      </div>
-                     {!!c.content && <p className="mt-0.5 text-xs leading-relaxed text-foreground/90">{c.content}</p>}
+                     {!!c.content && (
+                       <p className="mt-0.5 text-xs leading-relaxed text-foreground/90 break-words whitespace-pre-wrap [overflow-wrap:anywhere]">
+                         {c.content}
+                       </p>
+                     )}
                      {c.media_url && <img src={c.media_url} alt="Comment attachment" className="mt-2 h-28 w-28 rounded-xl object-cover" />}
                    </div>
                   <div className="mt-1 flex items-center gap-3 px-1">
@@ -489,8 +493,8 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
         </div>
 
         {myId && (
-          <div className="border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm">
-            <div className="relative flex gap-2.5 pl-11">
+          <div className="border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm overflow-x-hidden">
+            <div className="relative flex gap-2.5 pl-11 w-full min-w-0">
               <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
               <div className="relative z-10 shrink-0 bg-card">
                 {viewerProfile?.avatar_url ? (
