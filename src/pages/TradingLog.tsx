@@ -1040,7 +1040,7 @@ export default function TradingLog() {
 
       {/* FAB */}
       <button
-        onClick={() => setShowForm(true)}
+        onClick={() => { resetForm(); setShowForm(true); }}
         className="fixed bottom-[68px] right-5 w-[52px] h-[52px] rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center z-40"
         style={{ boxShadow: "0 4px 20px rgba(18,184,122,0.3)" }}
       >
