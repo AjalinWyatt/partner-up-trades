@@ -797,11 +797,17 @@ export type Database = {
           hobbies: string[] | null
           id: string
           location: string | null
+          notify_email: boolean
+          notify_messages: boolean
+          notify_new_matches: boolean
+          notify_partner_activity: boolean
           off_chart_prompts: string[] | null
           onboarding_completed: boolean | null
+          profile_visibility: string
           state: string | null
           updated_at: string | null
           username: string | null
+          username_changes_count: number
         }
         Insert: {
           avatar_url?: string | null
@@ -816,11 +822,17 @@ export type Database = {
           hobbies?: string[] | null
           id: string
           location?: string | null
+          notify_email?: boolean
+          notify_messages?: boolean
+          notify_new_matches?: boolean
+          notify_partner_activity?: boolean
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
+          profile_visibility?: string
           state?: string | null
           updated_at?: string | null
           username?: string | null
+          username_changes_count?: number
         }
         Update: {
           avatar_url?: string | null
@@ -835,11 +847,17 @@ export type Database = {
           hobbies?: string[] | null
           id?: string
           location?: string | null
+          notify_email?: boolean
+          notify_messages?: boolean
+          notify_new_matches?: boolean
+          notify_partner_activity?: boolean
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
+          profile_visibility?: string
           state?: string | null
           updated_at?: string | null
           username?: string | null
+          username_changes_count?: number
         }
         Relationships: []
       }
