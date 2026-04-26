@@ -108,7 +108,7 @@ export default function InstallAppBanner() {
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-md">
         <div className="rounded-2xl border border-primary/30 bg-card/95 backdrop-blur-md shadow-2xl p-3 pl-4 flex items-center gap-3">
           <img
-            src="/app-icon-192.png"
+            src="/favicon.png"
             alt=""
             width={40}
             height={40}
@@ -174,7 +174,7 @@ function IosHowTo() {
   return (
     <div className="p-5">
       <div className="flex items-center gap-3 mb-4">
-        <img src="/app-icon-192.png" alt="" width={44} height={44} className="rounded-xl" />
+        <img src="/favicon.png" alt="" width={44} height={44} className="rounded-xl" />
         <div>
           <p className="text-[15px] font-bold">Add to your iPhone</p>
           <p className="text-[11px] text-muted-foreground">Takes about 10 seconds</p>
@@ -206,7 +206,7 @@ function AndroidHowTo() {
   return (
     <div className="p-5">
       <div className="flex items-center gap-3 mb-4">
-        <img src="/app-icon-192.png" alt="" width={44} height={44} className="rounded-xl" />
+        <img src="/favicon.png" alt="" width={44} height={44} className="rounded-xl" />
         <div>
           <p className="text-[15px] font-bold">Install on Android</p>
           <p className="text-[11px] text-muted-foreground">Works in Chrome</p>
