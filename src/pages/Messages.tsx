@@ -589,6 +589,14 @@ export default function Messages() {
         <div ref={messagesEndRef} />
       </div>
 
+      {activeChat.id === SYSTEM_CONNECTION_ID ? (
+        <div className="px-4 pb-4 pt-2">
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-3 py-2.5 text-[12px] text-foreground/80">
+            <Megaphone className="w-4 h-4 text-primary shrink-0" />
+            <span>This is an official TradersWorld channel. Replies are disabled.</span>
+          </div>
+        </div>
+      ) : (
       <div className="px-4 pb-4 pt-2">
         <div className="flex items-center gap-2 bg-secondary/70 rounded-full pl-3 pr-1.5 py-1.5">
           <AttachmentButton
@@ -626,6 +634,7 @@ export default function Messages() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 
