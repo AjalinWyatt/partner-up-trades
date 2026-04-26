@@ -684,7 +684,14 @@ const Onboarding = () => {
                   setTimeout(() => navigate("/discover", { replace: true }), 2500);
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
-                  toast.error("Failed to save your profile. Please try again.");
+                  const msg = err?.message || "";
+                  if (msg.includes("profiles_username_format")) {
+                    toast.error("Username must be 3–30 chars: lowercase letters, numbers, _ or .");
+                  } else if (msg.includes("duplicate key") && msg.includes("username")) {
+                    toast.error("That username is already taken. Pick another.");
+                  } else {
+                    toast.error(msg ? `Couldn't save: ${msg}` : "Failed to save your profile. Please try again.");
+                  }
                   goTo(5);
                 }
               } else {
