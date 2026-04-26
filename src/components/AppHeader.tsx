@@ -42,16 +42,19 @@ export default function AppHeader({ rightSlot }: { rightSlot?: React.ReactNode }
 
   return (
     <div
-      className="sticky top-0 z-40 relative flex items-center justify-center px-5 pb-2 bg-background/95 backdrop-blur-xl"
-      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+      className="sticky top-0 z-40 relative flex items-center justify-center px-5 pb-3 bg-background/95 backdrop-blur-xl"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
     >
       <Wordmark size="text-lg" />
-      <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+      <div
+        className="absolute right-5 flex items-center gap-2"
+        style={{ bottom: "0.5rem" }}
+      >
         {rightSlot}
         <button
           onClick={() => navigate("/profile")}
           aria-label="Open my profile"
-          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
+          className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
         >
           {avatar ? (
             <img src={avatar} alt="My profile" className="h-full w-full object-cover" />
