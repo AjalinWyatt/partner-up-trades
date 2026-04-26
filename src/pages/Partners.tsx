@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Bell, MessageSquare, Check, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import AppHeader from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
@@ -307,6 +308,7 @@ const Partners = () => {
 
   return (
     <AppLayout>
+      <AppHeader />
       <div className="flex-1 overflow-y-auto">
         <div className="px-5 pt-4 pb-2">
           <h1 className="text-lg font-black text-foreground">Partners</h1>
