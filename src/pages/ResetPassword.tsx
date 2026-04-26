@@ -57,7 +57,7 @@ const ResetPassword = () => {
   if (!ready) return null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background px-6 py-8">
+    <div className="flex flex-col min-h-screen bg-background px-6 pb-8 pt-safe-6">
       <div className="flex items-center gap-4">
         <button onClick={() => navigate("/sign-in")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-5 h-5" />
