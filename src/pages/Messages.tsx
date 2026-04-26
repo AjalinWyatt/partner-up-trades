@@ -96,13 +96,8 @@ export default function Messages() {
       .eq("status", "accepted")
       .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
 
-    if (!conns || conns.length === 0) {
-      setConnections([]);
-      setLoading(false);
-      return;
-    }
-
-    const partnerIds = conns.map((c: any) => c.requester_id === uid ? c.receiver_id : c.requester_id);
+    const safeConns = conns || [];
+    const partnerIds = safeConns.map((c: any) => c.requester_id === uid ? c.receiver_id : c.requester_id);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, username, full_name, avatar_url")
@@ -111,7 +106,7 @@ export default function Messages() {
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
     const connectionList: Connection[] = [];
 
-    for (const c of conns) {
+    for (const c of safeConns) {
       const partnerId = c.requester_id === uid ? c.receiver_id : c.requester_id;
       const profile = profileMap.get(partnerId);
       const { data: lastMsgs } = await supabase
@@ -149,6 +144,38 @@ export default function Messages() {
         lastMessageFromMe: lastFromMe,
         lastMessageRead: lastRead,
         unreadCount: count ?? 0,
+      });
+    }
+
+    // Synthesize a "TradersWorld" system conversation if any system DMs exist
+    // for this user. This appears alongside real partner conversations and is
+    // marked as an official channel.
+    const { data: sysMsgs } = await supabase
+      .from("messages")
+      .select("content, created_at, sender_id, read")
+      .eq("sender_id", TRADERSWORLD_SYSTEM_USER_ID)
+      .eq("receiver_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (sysMsgs && sysMsgs.length > 0) {
+      const last = sysMsgs[0];
+      const { count: sysUnread } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("sender_id", TRADERSWORLD_SYSTEM_USER_ID)
+        .eq("receiver_id", uid)
+        .eq("read", false);
+      connectionList.push({
+        id: SYSTEM_CONNECTION_ID,
+        partnerId: TRADERSWORLD_SYSTEM_USER_ID,
+        partnerName: "TradersWorld",
+        partnerUsername: "tradersworld",
+        avatarUrl: tradersworldGlobe,
+        lastMessage: last?.content,
+        lastMessageTime: last?.created_at,
+        lastMessageFromMe: false,
+        lastMessageRead: typeof last?.read === "boolean" ? last.read : true,
+        unreadCount: sysUnread ?? 0,
       });
     }
 
