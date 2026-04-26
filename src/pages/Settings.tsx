@@ -297,7 +297,7 @@ export default function Settings() {
               ) : usernameAvailable === true ? (
                 <span className="text-accent">Available ✓</span>
               ) : (
-                <span className="text-muted-foreground">One word, lowercase letters/numbers/_/. — like Instagram. Max 3 changes ever.</span>
+                <span className="text-muted-foreground">One word, lowercase letters/numbers/_/. Max 3 changes ever.</span>
               )}
             </div>
           </Field>
