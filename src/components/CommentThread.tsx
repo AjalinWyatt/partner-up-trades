@@ -197,7 +197,6 @@ const CommentThread = ({ entryId, entryOwnerId, myId, commentCount, onCountChang
           body: comment.content.slice(0, 50),
           relatedUserId: myId,
           entryId,
-          commentId: comment.id,
         });
       }
     }
