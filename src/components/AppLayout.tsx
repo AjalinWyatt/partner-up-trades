@@ -17,13 +17,13 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children, hideBottomNav, lockHeight }: AppLayoutProps) {
   return (
-    <div className={`flex w-full bg-background ${lockHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"}`}>
+    <div className={`flex w-full overflow-x-hidden bg-background ${lockHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop sidebar */}
       <AppSidebar />
 
       {/* Main content */}
       <main
-        className={`flex-1 flex flex-col max-w-[935px] mx-auto w-full ${
+        className={`flex-1 flex flex-col max-w-[935px] mx-auto w-full min-w-0 overflow-x-hidden ${
           lockHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"
         }`}
       >
