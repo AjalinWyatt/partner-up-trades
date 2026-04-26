@@ -16,7 +16,10 @@ const BottomNav = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around rounded-t-[28px] bg-card/95 px-3 pt-2.5 pb-5 backdrop-blur-xl">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around rounded-t-[28px] bg-card/95 px-3 pt-2.5 backdrop-blur-xl"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+    >
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = location.pathname === tab.path;
