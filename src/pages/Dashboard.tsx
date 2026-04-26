@@ -5,7 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import AppHeader from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
-import { timeAgo } from "@/lib/matchUtils";
+import { timeAgo, computeMatch } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 
 interface StatCardProps {
@@ -141,54 +141,57 @@ const Dashboard = () => {
       }
       // New matching traders joined recently
       try {
-        const { data: myTp } = await supabase
-          .from("trading_profiles")
-          .select("markets")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        const myMarkets = (myTp?.markets || []) as string[];
-        if (myMarkets.length > 0) {
-          const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-          // Build the same exclusion set Discover uses so the count stays consistent
-          const [{ data: allConnections }, { data: blockedData }, { data: passedData }] = await Promise.all([
-            supabase
-              .from("partner_connections")
-              .select("requester_id, receiver_id")
-              .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
-              .in("status", ["pending", "accepted"]),
-            supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
-            supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
-          ]);
-          const excludedIds = new Set<string>([user.id]);
-          (allConnections || []).forEach((c: any) => { excludedIds.add(c.requester_id); excludedIds.add(c.receiver_id); });
-          (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
-          (passedData || []).forEach((p: any) => excludedIds.add(p.passed_id));
+        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        const [{ data: myTrading }, { data: myProfile }, { data: allConnections }, { data: blockedData }, { data: passedData }] = await Promise.all([
+          supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+          supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+          supabase
+            .from("partner_connections")
+            .select("requester_id, receiver_id")
+            .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+            .in("status", ["pending", "accepted"]),
+          supabase.from("blocked_users").select("blocked_id").eq("blocker_id", user.id),
+          supabase.from("passed_profiles").select("passed_id").eq("passer_id", user.id),
+        ]);
+        const excludedIds = new Set<string>([user.id]);
+        (allConnections || []).forEach((c: any) => { excludedIds.add(c.requester_id); excludedIds.add(c.receiver_id); });
+        (blockedData || []).forEach((b: any) => excludedIds.add(b.blocked_id));
+        (passedData || []).forEach((p: any) => excludedIds.add(p.passed_id));
 
-          const { data: rawMatches } = await supabase
+        const { data: recentProfiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .neq("id", user.id)
+          .eq("onboarding_completed", true)
+          .gte("created_at", sevenDaysAgo);
+        const eligible = (recentProfiles || []).filter((p: any) => !excludedIds.has(p.id));
+        const myReach = (myTrading as any)?.connection_reach;
+        let newMatches: { id: string; created_at: string }[] = [];
+        if (eligible.length > 0) {
+          const { data: allTrading } = await supabase
             .from("trading_profiles")
-            .select("user_id, markets, created_at")
-            .neq("user_id", user.id)
-            .gte("created_at", sevenDaysAgo)
-            .overlaps("markets", myMarkets)
-            .limit(50);
-          const candidateIds = (rawMatches || [])
-            .map((m: any) => m.user_id)
-            .filter((id: string) => !excludedIds.has(id));
-          // Only count users who completed onboarding (Discover requirement)
-          const { data: validProfiles } = candidateIds.length > 0
-            ? await supabase.from("profiles").select("id").in("id", candidateIds).eq("onboarding_completed", true)
-            : { data: [] as any[] };
-          const validIds = new Set((validProfiles || []).map((p: any) => p.id));
-          const newMatches = (rawMatches || []).filter((m: any) => validIds.has(m.user_id));
-          const matchCount = newMatches.length;
-          if (matchCount > 0) {
-            upd.push({
-              id: "new-matches",
-              text: `${matchCount} new trader${matchCount > 1 ? "s" : ""} that match you joined - View in Discover`,
-              created_at: newMatches[0].created_at as string,
-              route: "/discover",
-            });
-          }
+            .select("*")
+            .in("user_id", eligible.map((p: any) => p.id));
+          const tradingMap = new Map<string, any>();
+          (allTrading || []).forEach((t: any) => tradingMap.set(t.user_id, t));
+          newMatches = eligible.filter((p: any) => {
+            const t = tradingMap.get(p.id);
+            const result = computeMatch(myTrading as any, t, myProfile as any, p);
+            if (result.excluded) return false;
+            if (myReach === "Local" && (myProfile as any)?.country) {
+              if (!p.country || p.country.toLowerCase() !== (myProfile as any).country.toLowerCase()) return false;
+            }
+            return true;
+          }).map((p: any) => ({ id: p.id, created_at: p.created_at }));
+        }
+        const matchCount = newMatches.length;
+        if (matchCount > 0) {
+          upd.push({
+            id: "new-matches",
+            text: `${matchCount} new trader${matchCount > 1 ? "s" : ""} that match you joined - View in Discover`,
+            created_at: newMatches[0].created_at,
+            route: "/discover",
+          });
         }
       } catch (e) { console.error("new matches calc failed", e); }
       // Partner shared logs (latest 1)
