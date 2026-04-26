@@ -252,6 +252,7 @@ const Dashboard = () => {
             value={stats.logs}
             subtitle={`${stats.activeStreaks} Active`}
             icon={<Notebook className="w-5 h-5" strokeWidth={1.6} />}
+            onClick={() => navigate("/trading-log")}
           />
         </div>
 
