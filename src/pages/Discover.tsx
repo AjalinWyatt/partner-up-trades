@@ -74,7 +74,7 @@ const Discover = () => {
     <AppLayout>
       <div className="flex-1 overflow-y-auto pb-20">
         {/* Header */}
-        <div className="px-5 pt-5 flex items-center justify-between">
+        <div className="px-5 pt-safe-5 flex items-center justify-between">
           <div className="w-12" />
           <h1 className="text-[24px] font-black tracking-tight">
             <span className="text-foreground">Traders</span><span className="text-foreground">World</span>
