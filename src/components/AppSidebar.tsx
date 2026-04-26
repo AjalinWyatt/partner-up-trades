@@ -8,13 +8,13 @@ import Wordmark from "@/components/Wordmark";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const navItems = [
-  { path: "/dashboard", icon: Home, label: "Home" },
-  { path: "/discover", icon: Earth, label: "Discover" },
-  { path: "/feed", icon: FeedNavIcon, label: "Feed" },
-  { path: "/messages", icon: MessagesSquare, label: "Messages" },
-  { path: "/trading-log", icon: BookOpen, label: "Log" },
-  { path: "/partners", icon: Users, label: "Partners" },
-  { path: "/profile", icon: UserRound, label: "Profile" },
+  { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
+  { path: "/discover", icon: Earth, label: "Discover", tour: "nav-discover" },
+  { path: "/feed", icon: FeedNavIcon, label: "Feed", tour: "nav-feed" },
+  { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
+  { path: "/trading-log", icon: BookOpen, label: "Log", tour: "nav-log" },
+  { path: "/partners", icon: Users, label: "Partners", tour: "nav-partners" },
+  { path: "/profile", icon: UserRound, label: "Profile", tour: "nav-profile" },
 ];
 
 export default function AppSidebar() {
@@ -63,6 +63,7 @@ export default function AppSidebar() {
           return (
             <button
               key={item.path}
+              data-tour={item.tour}
               onClick={() => navigate(item.path)}
               className={cn(
                 "w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] transition-all group",
