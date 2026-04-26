@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
+import { ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
+import brandGlobe from "@/assets/tradersworld-globe.png";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -355,9 +356,7 @@ export default function Messages() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-3">
-              <MessageCircle className="w-7 h-7 text-muted-foreground" />
-            </div>
+            <img src={brandGlobe} alt="" className="w-20 h-20 object-contain opacity-95 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)] mb-3 animate-globe-float motion-reduce:animate-none" />
             <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
             <p className="text-xs text-muted-foreground mb-4">Connect with a match to start chatting</p>
             <button onClick={() => navigate("/discover")} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold">
