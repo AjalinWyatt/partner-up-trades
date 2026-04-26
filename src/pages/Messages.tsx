@@ -488,7 +488,13 @@ export default function Messages() {
         activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
       )}>
         <button
-          onClick={() => setActiveChat(null)}
+          onClick={() => {
+            if (activeChat.id === SYSTEM_CONNECTION_ID) {
+              setSystemExitOpen(true);
+            } else {
+              setActiveChat(null);
+            }
+          }}
           className="p-1.5 text-foreground -ml-1"
           aria-label="Back"
         >
