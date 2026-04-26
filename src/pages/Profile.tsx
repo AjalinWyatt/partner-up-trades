@@ -330,6 +330,7 @@ const Profile = () => {
       }
 
       await loadProfileCollections(user.id, pData?.username);
+      await loadAlbums(user.id);
       setJournalEntries((entries as JournalEntry[]) || []);
       setLoading(false);
     };
