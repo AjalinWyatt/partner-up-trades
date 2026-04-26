@@ -374,6 +374,26 @@ export default function TradingLog() {
   const weekDots = getWeekDots();
   const stats = getWeekStats();
 
+  // Most-used pairs from prior entries (optionally filtered by current market)
+  function getRecentPairs(forMarket?: string): string[] {
+    const counts = new Map<string, number>();
+    for (const e of entries) {
+      if (!e.market_pair) continue;
+      const parts = e.market_pair.split(" · ").map((s) => s.trim()).filter(Boolean);
+      const mk = parts[0];
+      const pr = parts.slice(1).join(" · ");
+      const pair = pr || (MARKETS.includes(mk) ? "" : mk);
+      if (!pair) continue;
+      if (forMarket && MARKETS.includes(mk) && mk !== forMarket) continue;
+      counts.set(pair, (counts.get(pair) || 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([p]) => p);
+  }
+  const recentPairs = getRecentPairs(marketName || undefined);
+
   // ─── FORM VIEW ───
   if (showForm) {
     return (
@@ -671,9 +691,36 @@ export default function TradingLog() {
               placeholder="Pair (e.g. XAU/USD, NQ, BTC/USD)"
               className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
             />
+            {recentPairs.length > 0 && (
+              <div className="mt-2">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">⭐ Your most-used</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {recentPairs.map((p) => {
+                    const sel = pairName === p;
+                    return (
+                      <button
+                        key={`recent-${p}`}
+                        type="button"
+                        onClick={() => setPairName(sel ? "" : p)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
+                          sel
+                            ? "bg-accent/[0.12] text-accent border-accent"
+                            : "border-accent/40 bg-accent/[0.04] text-foreground"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {marketName && PAIR_SUGGESTIONS[marketName] && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {PAIR_SUGGESTIONS[marketName].map((p) => {
+              <div className="mt-2">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Suggestions</p>
+                <div className="flex flex-wrap gap-1.5">
+                {PAIR_SUGGESTIONS[marketName].filter((p) => !recentPairs.includes(p)).map((p) => {
                   const sel = pairName === p;
                   return (
                     <button
@@ -691,6 +738,7 @@ export default function TradingLog() {
                     </button>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>}
@@ -800,12 +848,21 @@ export default function TradingLog() {
       {/* Page nav */}
       <div className="flex items-center justify-between px-5 py-1.5">
         <h1 className="text-lg font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Trading Log</h1>
-        <button className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-          This Week
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+            This Week
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <button
+            onClick={() => { resetForm(); setShowForm(true); }}
+            aria-label="Log new entry"
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_2px_10px_hsl(var(--accent)/0.35)]"
+          >
+            <Plus className="w-4 h-4 text-accent-foreground" strokeWidth={2.8} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-16" style={{ scrollbarWidth: "none" }}>
@@ -1027,7 +1084,7 @@ export default function TradingLog() {
                   <p className="text-[11px] text-muted-foreground mb-2">Connect with a partner to share your sessions</p>
                   <button
                     onClick={() => navigate("/discover")}
-                    className="px-4 py-2 rounded-lg bg-gradient-brand text-white text-[11px] font-bold"
+                    className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-[11px] font-bold shadow-[0_2px_10px_hsl(var(--accent)/0.35)]"
                   >
                     Find a partner
                   </button>
@@ -1037,15 +1094,6 @@ export default function TradingLog() {
           </>
         )}
       </div>
-
-      {/* FAB */}
-      <button
-        onClick={() => { resetForm(); setShowForm(true); }}
-        className="fixed bottom-[68px] right-5 w-[52px] h-[52px] rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center z-40"
-        style={{ boxShadow: "0 4px 20px rgba(18,184,122,0.3)" }}
-      >
-        <Plus className="w-6 h-6 text-foreground" strokeWidth={2.5} />
-      </button>
 
       
     </AppLayout>
