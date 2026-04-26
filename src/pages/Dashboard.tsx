@@ -244,8 +244,8 @@ const Dashboard = () => {
             title="Daily Streak"
             value={stats.streak}
             subtitle={`Max ${stats.maxStreak}`}
-            icon={<Calendar className="w-5 h-5" strokeWidth={1.6} />}
-            prefix={<Flame className="w-7 h-7 text-destructive" fill="currentColor" />}
+            icon={<Calendar className="w-4 h-4" strokeWidth={1.6} />}
+            prefix={<Flame className="w-5 h-5 text-destructive" fill="currentColor" />}
           />
           <StatCard
             title="My Logs"
