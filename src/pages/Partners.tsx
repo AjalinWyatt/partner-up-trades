@@ -111,7 +111,7 @@ const Partners = () => {
       // Fetch profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, username, avatar_url")
+        .select("id, full_name, username, avatar_url, created_at")
         .in("id", allIds);
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
@@ -179,7 +179,13 @@ const Partners = () => {
         }
 
         // Check alerts: hasn't logged in 2+ days
-        if (!lastEntry || lastEntry.created_at < twoDaysAgo) {
+        // Skip if the partner's account itself is younger than 2 days —
+        // a brand-new user can't have "missed" 2 days of logging.
+        const profCreatedAt = (prof as any)?.created_at as string | undefined;
+        const accountAgeMs = profCreatedAt ? Date.now() - new Date(profCreatedAt).getTime() : Infinity;
+        const accountOldEnough = accountAgeMs >= 2 * 86400000;
+        const inactive = accountOldEnough && (!lastEntry || lastEntry.created_at < twoDaysAgo);
+        if (inactive) {
           alertList.push({
             userId: id,
             name: prof?.username ? `@${prof.username}` : "Partner",
