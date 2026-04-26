@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,40 +19,50 @@ const SignIn = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
+  const redirectAfterAuth = useCallback(async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("id", userId)
+      .maybeSingle();
+
+    navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+  }, [navigate]);
+
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted || !session) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      if (mounted) navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+      void redirectAfterAuth(session.user.id);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted || !session) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      if (mounted) navigate(profile?.onboarding_completed ? "/feed" : "/onboarding", { replace: true });
+      setTimeout(() => {
+        if (mounted) void redirectAfterAuth(session.user.id);
+      }, 0);
     });
     return () => { mounted = false; subscription.unsubscribe(); };
-  }, [navigate]);
+  }, [redirectAfterAuth]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.message.toLowerCase().includes("email not confirmed")) {
         toast.error("Please verify your email first. Check your inbox for a confirmation link.");
       } else {
         toast.error(error.message);
       }
+      setLoading(false);
+      return;
     }
+
+    if (data.session?.user) {
+      await redirectAfterAuth(data.session.user.id);
+      return;
+    }
+
     setLoading(false);
   };
 
