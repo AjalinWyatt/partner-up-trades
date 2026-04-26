@@ -17,6 +17,7 @@ import Messages from "./pages/Messages";
 import PulseSession from "./pages/PulseSession";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import ViewProfile from "./pages/ViewProfile";
 import TradingLog from "./pages/TradingLog";
 import Saved from "./pages/Saved";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/pulse/session/:id" element={<PulseSession />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/profile/:userId" element={<ViewProfile />} />
           <Route path="/trading-log" element={<TradingLog />} />
           <Route path="/saved" element={<Saved />} />
