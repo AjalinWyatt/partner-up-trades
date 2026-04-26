@@ -323,7 +323,7 @@ const ViewProfile = () => {
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
                   <span className="font-medium text-foreground">
-                    {`${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")}
+                    {[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ")}
                   </span>
                 </span>
               )}
