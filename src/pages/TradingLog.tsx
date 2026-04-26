@@ -887,7 +887,7 @@ export default function TradingLog() {
             <div className="space-y-1.5 mx-5">
               {entries.map((entry) => (
                 <div key={entry.id} className={cn(
-                  "bg-card border rounded-xl p-2.5 px-3",
+                  "bg-card border rounded-xl p-2.5 px-3 relative",
                   entry.entry_type === "study" ? "border-primary/40" : "border-border"
                 )}>
                   <div className="flex items-center justify-between mb-1">
@@ -902,22 +902,89 @@ export default function TradingLog() {
                       </span>
                       <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
                     </div>
-                    {entry.entry_type !== "study" && entry.pnl_pips != null && (
-                      <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                        {entry.pnl_unit === "dollars"
-                          ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
-                          : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {entry.entry_type !== "study" && entry.pnl_pips != null && (
+                        <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                          {entry.pnl_unit === "dollars"
+                            ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
+                            : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
+                        className="w-6 h-6 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+                        aria-label="Entry options"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
+                  {openMenuId === entry.id && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
+                      <div className="absolute right-2 top-9 z-40 min-w-[130px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+                        <button
+                          onClick={() => startEdit(entry)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button
+                          onClick={() => deleteEntry(entry.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
                   {entry.mood && (
                     <div className="flex items-center gap-1 mb-1">
                       <div className={cn("w-1.5 h-1.5 rounded-full", getMoodDotColor(entry.mood))} />
                       <span className="text-[10px] text-muted-foreground">{getMoodText(entry.mood)}</span>
                     </div>
                   )}
+                  {entry.entry_type === "study" && entry.study_data && (
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      {entry.study_data.study_type && (() => {
+                        const st = STUDY_TYPES.find((s) => s.value === entry.study_data.study_type);
+                        return st ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/15 text-primary">
+                            {st.emoji} {st.label}
+                          </span>
+                        ) : null;
+                      })()}
+                      {entry.study_data.duration && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground">
+                          ⏱️ {entry.study_data.duration}
+                        </span>
+                      )}
+                      {entry.study_data.confidence && (() => {
+                        const c = STUDY_CONFIDENCE.find((x) => x.value === entry.study_data.confidence);
+                        return c ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
+                            {c.emoji} {c.label}
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                  {entry.entry_type === "study" && entry.study_data?.takeaway && (
+                    <p className="text-[11px] text-foreground leading-snug mb-1 italic">"{entry.study_data.takeaway}"</p>
+                  )}
                   {entry.notes && (
                     <p className="text-[11px] text-muted-foreground leading-snug mb-1">{entry.notes}</p>
+                  )}
+                  {entry.entry_type === "study" && entry.study_data?.topics?.length > 0 && (
+                    <div className="flex flex-wrap gap-[3px] mb-1">
+                      {entry.study_data.topics.map((t: string) => (
+                        <span key={t} className="text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px] bg-primary/10 text-primary">{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  {entry.entry_type === "study" && entry.study_data?.resource && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5 truncate">🔗 {entry.study_data.resource}</div>
                   )}
                   {entry.tags && entry.tags.length > 0 && (
                     <div className="flex flex-wrap gap-[3px] mb-1">
