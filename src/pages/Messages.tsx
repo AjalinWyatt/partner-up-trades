@@ -325,7 +325,7 @@ export default function Messages() {
   const grouped = activeChat ? groupMessagesByDate(messages) : [];
 
   const conversationListContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0 w-full overflow-x-hidden">
       <div
         className="sticky top-0 z-40 px-5 pb-4 flex items-center justify-between bg-background/95 backdrop-blur-xl"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
