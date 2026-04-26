@@ -1169,6 +1169,7 @@ const Feed = () => {
             ))}
           </div>
         )}
+        </PullToRefresh>
         </div>
       </div>
 
