@@ -133,7 +133,6 @@ const Profile = () => {
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   const togglePostLike = async (postId: string) => {
     if (!userId) return;
