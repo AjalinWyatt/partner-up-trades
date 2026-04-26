@@ -8,6 +8,7 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { timeAgo } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type NotifFilter = "all" | "activity" | "partners" | "streaks";
 
