@@ -35,6 +35,7 @@ const ViewProfile = () => {
   const [journalEntries, setJournalEntries] = useState<any[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string | null>(null);
+  const [iAmRequester, setIAmRequester] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -97,7 +98,7 @@ const ViewProfile = () => {
         const [{ data: conn }, { data: blockData }] = await Promise.all([
           supabase
             .from("partner_connections")
-            .select("id, status")
+            .select("id, status, requester_id")
             .or(`and(requester_id.eq.${user.id},receiver_id.eq.${userId}),and(requester_id.eq.${userId},receiver_id.eq.${user.id})`)
             .maybeSingle(),
           supabase.from("blocked_users").select("id").eq("blocker_id", user.id).eq("blocked_id", userId).maybeSingle(),
@@ -105,6 +106,7 @@ const ViewProfile = () => {
 
         setConnectionStatus(conn?.status || null);
         setConnectionId(conn?.id || null);
+        setIAmRequester(conn?.requester_id === user.id);
         setIsBlocked(!!blockData);
 
         if (user.id !== userId) {
@@ -142,6 +144,7 @@ const ViewProfile = () => {
     } else {
       toast.success("Match request sent");
       setConnectionStatus("pending");
+      setIAmRequester(true);
       const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
       await sendNotification({
         userId,
@@ -169,6 +172,22 @@ const ViewProfile = () => {
     setConnectionId(null);
     setShowMenu(false);
     toast.success("Unmatched");
+  };
+
+  const handleCancelRequest = async () => {
+    if (!connectionId || sending) return;
+    if (!confirm("Cancel your match request?")) return;
+    setSending(true);
+    const { error } = await supabase.from("partner_connections").delete().eq("id", connectionId);
+    setSending(false);
+    if (error) {
+      toast.error("Could not cancel request");
+      return;
+    }
+    setConnectionStatus(null);
+    setConnectionId(null);
+    setIAmRequester(false);
+    toast.success("Request canceled");
   };
 
   const handleBlock = async () => {
@@ -329,6 +348,14 @@ const ViewProfile = () => {
               <button onClick={() => navigate(`/messages?partner=${userId}`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
                 <MessageSquare className="h-4 w-4" />
                 Message
+              </button>
+            ) : connectionStatus === "pending" && iAmRequester ? (
+              <button
+                onClick={handleCancelRequest}
+                disabled={sending}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+              >
+                Pending · Tap to cancel
               </button>
             ) : (
               <button
