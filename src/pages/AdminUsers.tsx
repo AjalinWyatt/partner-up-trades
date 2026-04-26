@@ -154,10 +154,11 @@ const AdminUsers = () => {
 
         <div className="border border-border rounded-2xl overflow-hidden bg-card">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-xs uppercase tracking-wide text-muted-foreground border-b border-border">
-            <div className="col-span-4">Name / Username</div>
-            <div className="col-span-4">Email / Phone</div>
+            <div className="col-span-3">Name / Username</div>
+            <div className="col-span-3">Email / Phone</div>
             <div className="col-span-2">Provider</div>
             <div className="col-span-2">Last sign-in</div>
+            <div className="col-span-2 text-right">Actions</div>
           </div>
 
           {loading && (
