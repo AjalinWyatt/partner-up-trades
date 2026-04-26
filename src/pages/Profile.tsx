@@ -794,6 +794,11 @@ const Profile = () => {
         onShare={(post) => setPostToShare(post)}
       />
       <SharePostSheet post={postToShare} myId={userId} onClose={() => setPostToShare(null)} />
+      <CreatePhotoAlbumModal
+        open={showCreatePhoto}
+        onClose={() => setShowCreatePhoto(false)}
+        onCreated={refreshPosts}
+      />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
