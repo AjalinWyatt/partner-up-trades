@@ -719,6 +719,34 @@ const Profile = () => {
           )}
         </div>
 
+        {/* Profile completeness */}
+        {completenessPct < 100 && (
+          <div className="mt-4 px-5">
+            <button
+              onClick={() => setEditing(true)}
+              className="w-full rounded-2xl border border-border bg-card/60 p-3 text-left transition-colors hover:bg-card"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold text-foreground">Profile completeness</span>
+                <span className="text-[12px] font-semibold text-primary">{completenessPct}%</span>
+              </div>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${completenessPct}%` }} />
+              </div>
+              {missingFields.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {missingFields.slice(0, 5).map((f) => (
+                    <span key={f.key} className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-[10.5px] font-medium text-muted-foreground">
+                      + {f.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2 text-[10.5px] font-semibold uppercase tracking-wide text-primary">Tap to complete</div>
+            </button>
+          </div>
+        )}
+
         {/* Posts / Grid / Details / Journal icon tabs */}
         <div className="mt-6 flex items-center justify-center gap-1 border-b border-border px-5">
           {[
