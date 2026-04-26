@@ -517,7 +517,7 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                     onChange={e => setText(e.target.value)}
                     placeholder={`Reply to ${post.username}...`}
                     rows={2}
-                    className="w-full min-w-0 resize-none bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground [overflow-wrap:anywhere]"
+                    className="w-full min-w-0 resize-none bg-transparent text-[16px] text-foreground outline-none placeholder:text-muted-foreground [overflow-wrap:anywhere] lg:text-xs"
                   />
                   {commentPreview && (
                     <div className="relative mt-2 inline-flex">
