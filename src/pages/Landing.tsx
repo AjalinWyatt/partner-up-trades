@@ -10,6 +10,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
+import InstallAppBanner from "@/components/InstallAppBanner";
 // Use the lightweight, preloaded PNG instead of the 3MB SVG
 // so the hero globe is already in cache before React mounts.
 const authGlobe = "/auth-globe.png?v=3";
@@ -614,6 +615,7 @@ const Landing = () => {
 
   return (
     <div className="dark min-h-screen bg-background text-foreground overflow-x-hidden">
+      <InstallAppBanner />
       {/* ─── NAV ─── */}
       <nav
         className="fixed top-0 left-0 right-0 z-[100] bg-background/85 backdrop-blur-xl border-b border-border transition-all"
