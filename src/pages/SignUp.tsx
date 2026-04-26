@@ -148,7 +148,10 @@ const SignUp = () => {
       </button>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col px-7 pb-8 pt-[200px] max-w-md mx-auto w-full">
+      <div
+        className="relative z-10 flex-1 flex flex-col px-7 pb-8 max-w-md mx-auto w-full"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 200px)" }}
+      >
         <div className="flex justify-center"><Wordmark size="text-3xl" /></div>
         <p className="text-[18px] text-foreground text-center mt-4">Create an account</p>
 
