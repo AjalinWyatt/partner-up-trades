@@ -424,9 +424,9 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
              {comments.map(c => (
                <div key={c.id} className="relative flex gap-2.5 pl-11">
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
-                <button onClick={() => { onClose(); navigate(`/profile/${c.user_id}`); }} className="shrink-0">
+                <button onClick={() => goToProfile(c.user_id)} className="shrink-0" aria-label={`Open ${c.username}'s profile`}>
                   {c.avatar_url ? (
-                    <img src={c.avatar_url} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={c.avatar_url} alt={`${c.full_name} avatar`} className="relative z-10 w-8 h-8 rounded-full object-cover" />
                   ) : (
                     <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-[9px] font-black text-foreground">
                       {getInitials(c.full_name)}
@@ -436,7 +436,12 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                 <div className="min-w-0 flex-1">
                    <div className="px-0.5 py-1">
                      <div className="flex items-center gap-2">
-                       <span className="text-[11px] font-bold text-foreground">{c.username}</span>
+                       <button
+                         onClick={() => goToProfile(c.user_id)}
+                         className="text-[11px] font-bold text-foreground hover:underline"
+                       >
+                         @{c.username}
+                       </button>
                        <span className="text-[9px] text-muted-foreground">{timeAgo(c.created_at)}</span>
                        {c.updated_at && c.updated_at !== c.created_at && <span className="text-[9px] text-muted-foreground">edited</span>}
                      </div>
@@ -444,6 +449,27 @@ export default function FeedCommentSheet({ post, myId, onClose, onCountChange, o
                      {c.media_url && <img src={c.media_url} alt="Comment attachment" className="mt-2 h-28 w-28 rounded-xl object-cover" />}
                    </div>
                   <div className="mt-1 flex items-center gap-3 px-1">
+                    {myId && (
+                      <button
+                        onClick={() => toggleCommentLike(c)}
+                        className={cn(
+                          "flex items-center gap-1 text-[9px] transition-colors",
+                          c.liked ? "text-destructive" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        aria-label={c.liked ? "Unlike comment" : "Like comment"}
+                      >
+                        <Heart className={cn("h-3 w-3", c.liked ? "fill-destructive" : "")} />
+                        {c.likeCount > 0 && <span className="tabular-nums">{c.likeCount}</span>}
+                      </button>
+                    )}
+                    {myId && (
+                      <button
+                        onClick={() => startReplyTo(c.username)}
+                        className="text-[9px] text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Reply
+                      </button>
+                    )}
                     {c.user_id === myId && (
                        <>
                           <button onClick={() => handleEdit(c)} className="text-[9px] text-muted-foreground transition-colors hover:text-foreground">
