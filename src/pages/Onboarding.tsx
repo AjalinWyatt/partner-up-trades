@@ -544,7 +544,8 @@ const Onboarding = () => {
       {step > 0 && step < 7 && (
         <button
           onClick={() => goTo(step - 1)}
-          className="absolute top-5 left-5 z-20 w-9 h-9 flex items-center justify-center text-foreground/80 hover:text-foreground"
+          className="absolute left-5 z-20 w-9 h-9 flex items-center justify-center text-foreground/80 hover:text-foreground mt-safe"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
