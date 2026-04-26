@@ -453,10 +453,10 @@ export default function TradingLog() {
             })}
           </div>
 
-          {/* Mood */}
-          <div>
+          {/* Mood (trade only) */}
+          {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
-              How are you feeling? {entryType === "study" ? "🧠" : "💭"}
+              How are you feeling? 💭
             </p>
             <div className="flex gap-1.5">
               {MOODS.map((m) => (
@@ -475,7 +475,7 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Study-specific fields */}
           {entryType === "study" && (
