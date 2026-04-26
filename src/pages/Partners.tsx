@@ -8,7 +8,6 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
-import { sendSystemDMOnce, WELCOME_NO_PARTNERS_DM } from "@/lib/systemDM";
 
 type AlertType = "win" | "loss" | "breakeven" | "inactive" | "rough";
 
