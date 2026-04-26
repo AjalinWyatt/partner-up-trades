@@ -952,7 +952,7 @@ export default function TradingLog() {
                 key={opt.value}
                 onClick={() => setLogView(opt.value)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold transition-all",
+                  "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12px] font-bold transition-all",
                   sel
                     ? opt.value === "study"
                       ? "bg-primary text-primary-foreground shadow-[0_2px_10px_hsl(var(--primary)/0.3)]"
@@ -1007,7 +1007,7 @@ export default function TradingLog() {
                   )}
                 >
                   <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
-                    <div className="flex shrink-0 items-center gap-1.5">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
                       <span className={cn(
                         "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md flex items-center gap-0.5",
                         entry.entry_type === "study"
