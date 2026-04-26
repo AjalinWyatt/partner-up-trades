@@ -135,6 +135,8 @@ export default function TradingLog() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [logView, setLogView] = useState<"trade" | "study">("trade");
+  const [statsRange, setStatsRange] = useState<"daily" | "weekly" | "monthly">("weekly");
+  const [showRangeMenu, setShowRangeMenu] = useState(false);
 
   // Form state
   const [entryType, setEntryType] = useState<"trade" | "study">("trade");
@@ -231,12 +233,19 @@ export default function TradingLog() {
 
   function getWeekStats() {
     const today = new Date();
-    const startOfWeek = new Date(today);
-    const dow = today.getDay();
-    const diffToMon = dow === 0 ? -6 : 1 - dow;
-    startOfWeek.setDate(today.getDate() + diffToMon);
-    startOfWeek.setHours(0, 0, 0, 0);
-    const allWeek = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
+    const start = new Date(today);
+    if (statsRange === "daily") {
+      start.setHours(0, 0, 0, 0);
+    } else if (statsRange === "monthly") {
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+    } else {
+      const dow = today.getDay();
+      const diffToMon = dow === 0 ? -6 : 1 - dow;
+      start.setDate(today.getDate() + diffToMon);
+      start.setHours(0, 0, 0, 0);
+    }
+    const allWeek = entries.filter((e) => new Date(e.created_at) >= start);
     const weekEntries = allWeek.filter((e) => (e.entry_type || "trade") === "trade");
     const studyEntries = allWeek.filter((e) => e.entry_type === "study");
     const studyCount = studyEntries.length;
