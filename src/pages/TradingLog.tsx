@@ -832,12 +832,40 @@ export default function TradingLog() {
       <div className="flex items-center justify-between px-5 py-1.5">
         <h1 className="text-lg font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Trading Log</h1>
         <div className="flex items-center gap-2">
-          <button className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-            This Week
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowRangeMenu((v) => !v)}
+              className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"
+            >
+              {statsRange === "daily" ? "Today" : statsRange === "monthly" ? "This Month" : "This Week"}
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {showRangeMenu && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setShowRangeMenu(false)} />
+                <div className="absolute right-0 top-6 z-40 min-w-[120px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+                  {([
+                    { v: "daily", label: "Daily" },
+                    { v: "weekly", label: "Weekly" },
+                    { v: "monthly", label: "Monthly" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.v}
+                      onClick={() => { setStatsRange(opt.v); setShowRangeMenu(false); }}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-[12px] font-semibold hover:bg-secondary",
+                        statsRange === opt.v ? "text-accent" : "text-foreground"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <button
             onClick={() => { resetForm(); setShowForm(true); }}
             aria-label="Log new entry"
