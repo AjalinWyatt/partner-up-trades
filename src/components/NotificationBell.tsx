@@ -192,7 +192,7 @@ const NotificationBell = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => { setOpen(false); navigate("/notifications"); }}
+                  onClick={() => { setOpen(false); navigate("/dashboard"); }}
                   className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
                 >
                   View all

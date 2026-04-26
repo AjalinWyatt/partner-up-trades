@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Inbox, Calendar, Notebook, Flame, ChevronRight, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck, Lock } from "lucide-react";
+import { Inbox, Calendar, Notebook, Flame, Bell, MessageCircle, ThumbsUp, AlarmClock, CheckCheck, Lock, Heart, UserPlus, UserCheck, Eye, Target, AlertTriangle, BookOpen as BookOpenIcon } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AppHeader from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,48 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { timeAgo } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
+
+type NotifFilter = "all" | "activity" | "partners" | "streaks";
+
+const NOTIF_FILTERS: { key: NotifFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "activity", label: "Activity" },
+  { key: "partners", label: "Partners" },
+  { key: "streaks", label: "Streaks" },
+];
+
+const NOTIF_FILTER_TYPES: Record<NotifFilter, string[]> = {
+  all: [],
+  activity: ["post_liked", "post_commented", "profile_viewed", "new_match", "like", "comment"],
+  partners: ["partner_request", "partner_accepted", "partner_inactive", "partner_support", "partner_logged"],
+  streaks: ["streak_warning", "streak_milestone"],
+};
+
+const NOTIF_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; route: string }> = {
+  partner_request:  { icon: <UserPlus className="w-4 h-4" />,       color: "text-primary bg-primary/15",         route: "/partners" },
+  partner_accepted: { icon: <UserCheck className="w-4 h-4" />,      color: "text-success bg-success/15",         route: "/messages" },
+  partner_inactive: { icon: <AlertTriangle className="w-4 h-4" />,  color: "text-orange-400 bg-orange-400/15",   route: "/messages" },
+  partner_support:  { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/messages" },
+  post_liked:       { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/feed" },
+  post_commented:   { icon: <MessageCircle className="w-4 h-4" />,  color: "text-primary bg-primary/15",         route: "/feed" },
+  profile_viewed:   { icon: <Eye className="w-4 h-4" />,            color: "text-accent-foreground bg-accent/15", route: "/partners" },
+  new_match:        { icon: <Target className="w-4 h-4" />,         color: "text-success bg-success/15",         route: "/discover" },
+  streak_warning:   { icon: <Flame className="w-4 h-4" />,          color: "text-orange-400 bg-orange-400/15",   route: "/trading-log" },
+  streak_milestone: { icon: <Flame className="w-4 h-4" />,          color: "text-success bg-success/15",         route: "/trading-log" },
+  partner_logged:   { icon: <BookOpenIcon className="w-4 h-4" />,   color: "text-primary bg-primary/15",         route: "/trading-log" },
+  like:             { icon: <Heart className="w-4 h-4" />,          color: "text-destructive bg-destructive/15", route: "/feed" },
+  comment:          { icon: <MessageCircle className="w-4 h-4" />,  color: "text-primary bg-primary/15",         route: "/feed" },
+};
+
+const fallbackNotifText = (type: string) => {
+  switch (type) {
+    case "like": case "post_liked": return "liked your post";
+    case "comment": case "post_commented": return "commented on your post";
+    case "partner_request": return "sent you a partner request";
+    case "partner_accepted": return "accepted your partner request";
+    default: return "interacted with you";
+  }
+};
 
 interface StatCardProps {
   title: string;
@@ -46,13 +88,55 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ savedYou: 0, savedTotal: 0, waiting: 0, streak: 0, maxStreak: 0, logs: 0, activeStreaks: 0 });
   const [updates, setUpdates] = useState<{ id: string; text: string; created_at: string; route: string }[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifFilter, setNotifFilter] = useState<NotifFilter>("all");
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const loadNotifications = async (uid: string, filter: NotifFilter) => {
+    let query = supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    const types = NOTIF_FILTER_TYPES[filter];
+    if (types.length > 0) query = query.in("type", types);
+    const { data: ns } = await query;
+    if (!ns || ns.length === 0) { setNotifications([]); return; }
+    const actorIds = [...new Set(ns.map((n: any) => n.actor_id))];
+    const { data: actors } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", actorIds);
+    const actorMap = new Map((actors || []).map((a: any) => [a.id, a]));
+    setNotifications(ns.map((n: any) => {
+      const a = actorMap.get(n.actor_id);
+      return { ...n, actorUsername: a?.username, actorAvatar: a?.avatar_url || null };
+    }));
+  };
+
+  useEffect(() => {
+    if (userId) loadNotifications(userId, notifFilter);
+  }, [notifFilter, userId]);
+
+  const markAllRead = async () => {
+    if (!userId) return;
+    await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleNotifClick = async (n: any) => {
+    if (!n.read) {
+      await supabase.from("notifications").update({ read: true }).eq("id", n.id);
+      setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+    }
+    const config = NOTIF_TYPE_CONFIG[n.type] || NOTIF_TYPE_CONFIG.like;
+    navigate(config.route);
+  };
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) return;
+      setUserId(user.id);
 
       const [
         { data: prof },
@@ -181,13 +265,13 @@ const Dashboard = () => {
       }
       setUpdates(upd);
 
-      // Notifications - enrich with actor names
+      // Notifications - enrich with actor names (initial load uses 'all' filter)
       const ns = notifs || [];
       if (ns.length > 0) {
         const actorIds = [...new Set(ns.map(n => n.actor_id))];
-        const { data: actors } = await supabase.from("profiles").select("id, username").in("id", actorIds);
+        const { data: actors } = await supabase.from("profiles").select("id, username, avatar_url").in("id", actorIds);
         const actorMap = new Map((actors || []).map(a => [a.id, a]));
-        setNotifications(ns.map(n => ({ ...n, actorUsername: actorMap.get(n.actor_id)?.username })));
+        setNotifications(ns.map(n => ({ ...n, actorUsername: actorMap.get(n.actor_id)?.username, actorAvatar: actorMap.get(n.actor_id)?.avatar_url || null })));
       }
 
       setLoading(false);
@@ -205,21 +289,13 @@ const Dashboard = () => {
     );
   }
 
-  const notifIcon = (type: string) => {
-    if (type === "post_commented" || type === "comment") return <MessageCircle className="w-4 h-4 text-accent" />;
-    if (type === "post_liked" || type === "like") return <ThumbsUp className="w-4 h-4 text-accent" />;
-    return <AlarmClock className="w-4 h-4 text-accent" />;
-  };
-
-  const notifText = (n: any) => {
+  const getNotifTitle = (n: any) => {
     if (n.title) return n.title;
     const who = n.actorUsername ? `@${n.actorUsername}` : "Someone";
-    if (n.type === "post_commented" || n.type === "comment") return `${who} commented on your post`;
-    if (n.type === "post_liked" || n.type === "like") return `${who} liked your post`;
-    if (n.type === "partner_request") return `${who} sent you a partner request`;
-    if (n.type === "partner_accepted") return `${who} accepted your partner request`;
-    return `${who} interacted with you`;
+    return `${who} ${fallbackNotifText(n.type)}`;
   };
+  const getNotifBody = (n: any) => n.body || fallbackNotifText(n.type);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <AppLayout>
@@ -285,32 +361,66 @@ const Dashboard = () => {
 
         {/* Notifications */}
         <div>
-          <button
-            onClick={() => navigate("/notifications")}
-            className="w-full flex items-center justify-between mb-3"
-          >
+          <div className="w-full flex items-center justify-between mb-3">
             <h2 className="text-[18px] font-black text-foreground">Notifications</h2>
-            <ChevronRight className="w-5 h-5 text-accent" />
-          </button>
+            {unreadCount > 0 && (
+              <button onClick={markAllRead} className="flex items-center gap-1 text-[11px] text-primary font-semibold">
+                <CheckCheck className="w-3.5 h-3.5" /> Read all
+              </button>
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
+            {NOTIF_FILTERS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => setNotifFilter(f.key)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors ${
+                  notifFilter === f.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
           {notifications.length === 0 ? (
-            <div className="bg-card/40 border border-border rounded-xl p-4 text-center">
-              <Bell className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-              <p className="text-[12px] text-muted-foreground">No new notifications</p>
+            <div className="bg-card/40 border border-border rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                <Bell className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-[13px] font-semibold text-foreground mb-1">You're all caught up ✓</p>
+              <p className="text-[11px] text-muted-foreground">
+                {notifFilter === "all"
+                  ? "When someone interacts with you, it'll show up here."
+                  : `No ${NOTIF_FILTERS.find(f => f.key === notifFilter)?.label.toLowerCase()} notifications yet.`}
+              </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {notifications.slice(0, 5).map(n => (
-                <button
-                  key={n.id}
-                  onClick={() => navigate("/notifications")}
-                  className="w-full bg-card/60 border border-border rounded-xl px-4 py-3 flex items-center gap-3 text-left hover:bg-card/80 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
-                    {notifIcon(n.type)}
-                  </div>
-                  <span className="flex-1 text-[13px] text-foreground line-clamp-1">{notifText(n)}</span>
-                </button>
-              ))}
+            <div className="bg-card/40 border border-border rounded-xl divide-y divide-border overflow-hidden">
+              {notifications.map(n => {
+                const config = NOTIF_TYPE_CONFIG[n.type] || NOTIF_TYPE_CONFIG.like;
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => handleNotifClick(n)}
+                    className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30 ${!n.read ? "bg-primary/5" : ""}`}
+                  >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
+                      {config.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-foreground leading-snug">{getNotifTitle(n)}</p>
+                      <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">{getNotifBody(n)}</p>
+                      <span className="text-[10px] text-muted-foreground mt-1 block">{timeAgo(n.created_at)}</span>
+                    </div>
+                    {!n.read && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
