@@ -3,45 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 export const TRADERSWORLD_SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 /**
- * Sends a one-time DM from the official TradersWorld system account to the
- * given user. Uses `system_dm_log` to make sure each `dmKey` is delivered at
- * most once per user.
+ * Asks the server to send a one-time DM from the official TradersWorld system
+ * account to the currently authenticated user. The actual insert happens in
+ * the `send-system-dm` edge function with the service role, because direct
+ * client inserts as the system account are blocked by RLS + a DB trigger.
+ * Idempotent: each `dmKey` is delivered at most once per user.
  */
 export async function sendSystemDMOnce(params: {
-  userId: string;
+  userId?: string; // accepted for back-compat, not used (server reads JWT)
   dmKey: string;
-  body: string;
+  body?: string;   // accepted for back-compat; the server owns the template
 }) {
-  const { userId, dmKey, body } = params;
-
-  // Already sent? bail.
-  const { data: existing } = await supabase
-    .from("system_dm_log")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("dm_key", dmKey)
-    .maybeSingle();
-  if (existing) return false;
-
-  // Insert the message (RLS allows this only when sender = TradersWorld
-  // system account AND receiver = current user).
-  const { error: msgErr } = await supabase.from("messages").insert({
-    sender_id: TRADERSWORLD_SYSTEM_USER_ID,
-    receiver_id: userId,
-    content: body,
-  } as any);
-  if (msgErr) {
-    console.error("system DM insert failed", msgErr);
+  const { dmKey } = params;
+  const { data, error } = await supabase.functions.invoke("send-system-dm", {
+    body: { dmKey },
+  });
+  if (error) {
+    console.error("system DM invoke failed", error);
     return false;
   }
-
-  // Record that we sent it (best-effort; unique constraint prevents dupes).
-  await supabase.from("system_dm_log").insert({
-    user_id: userId,
-    dm_key: dmKey,
-  } as any);
-
-  return true;
+  return !!data?.sent;
 }
 
 export const WELCOME_NO_PARTNERS_DM = `Welcome to TradersWorld! 👋
