@@ -657,7 +657,7 @@ const Feed = () => {
             </div>
 
             {activeMode === "Feed" && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
                 {FEED_FILTERS.map((filter) => {
                   const active = selectedFeedFilter === filter;
                   return (
@@ -665,7 +665,7 @@ const Feed = () => {
                       key={filter}
                       onClick={() => setSelectedFeedFilter(filter)}
                       className={cn(
-                        "shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all",
+                        "shrink-0 snap-start rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all",
                         active
                           ? "border-primary bg-primary/10 text-foreground shadow-[0_0_18px_hsl(var(--primary)/0.16)]"
                           : "border-border bg-secondary text-muted-foreground hover:text-foreground"
