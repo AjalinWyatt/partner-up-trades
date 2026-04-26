@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface Props {
   open: boolean;
@@ -9,24 +10,20 @@ interface Props {
   onCreated: () => void;
 }
 
-const MAX_VIDEO_SECONDS = 60;
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+const MAX_PHOTOS = 10;
 
 export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Props) {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string>("");
-  const [kind, setKind] = useState<"image" | "video" | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [caption, setCaption] = useState("");
   const [posting, setPosting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
-      if (preview) URL.revokeObjectURL(preview);
-      setFile(null);
-      setPreview("");
-      setKind(null);
+      previews.forEach((u) => URL.revokeObjectURL(u));
+      setFiles([]);
+      setPreviews([]);
       setCaption("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -34,55 +31,34 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
 
   if (!open) return null;
 
-  const addFile = async (incoming: FileList | null) => {
+  const addFiles = (incoming: FileList | null) => {
     if (!incoming?.length) return;
-    const f = incoming[0];
-    const isImage = f.type.startsWith("image/");
-    const isVideo = f.type.startsWith("video/");
-    if (!isImage && !isVideo) {
-      toast.error("Upload a photo or video");
+    const incomingArr = Array.from(incoming);
+    if (incomingArr.some((f) => !f.type.startsWith("image/"))) {
+      toast.error("Photos only");
       return;
     }
-    if (isImage && f.size > MAX_IMAGE_BYTES) {
-      toast.error("Photo must be under 10MB");
+    if (incomingArr.some((f) => f.size > 10 * 1024 * 1024)) {
+      toast.error("Each photo must be under 10MB");
       return;
     }
-    if (isVideo && f.size > MAX_VIDEO_BYTES) {
-      toast.error("Video must be under 100MB");
-      return;
-    }
-    if (isVideo) {
-      const ok = await new Promise<boolean>((resolve) => {
-        const v = document.createElement("video");
-        v.preload = "metadata";
-        v.onloadedmetadata = () => {
-          URL.revokeObjectURL(v.src);
-          resolve(v.duration <= MAX_VIDEO_SECONDS + 0.5);
-        };
-        v.onerror = () => resolve(false);
-        v.src = URL.createObjectURL(f);
-      });
-      if (!ok) {
-        toast.error("Video must be 60 seconds or less");
-        return;
-      }
-    }
-    if (preview) URL.revokeObjectURL(preview);
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-    setKind(isVideo ? "video" : "image");
+    const combined = [...files, ...incomingArr].slice(0, MAX_PHOTOS);
+    previews.forEach((u) => URL.revokeObjectURL(u));
+    setFiles(combined);
+    setPreviews(combined.map((f) => URL.createObjectURL(f)));
   };
 
-  const removeFile = () => {
-    if (preview) URL.revokeObjectURL(preview);
-    setFile(null);
-    setPreview("");
-    setKind(null);
+  const removeAt = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
+    const nextFiles = files.filter((_, i) => i !== index);
+    const nextPreviews = previews.filter((_, i) => i !== index);
+    setFiles(nextFiles);
+    setPreviews(nextPreviews);
   };
 
   const submit = async () => {
-    if (!file) {
-      toast.error("Add a photo or video");
+    if (files.length === 0) {
+      toast.error("Add at least one photo");
       return;
     }
     setPosting(true);
@@ -91,29 +67,32 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
       const user = session?.user;
       if (!user) throw new Error("Not authenticated");
 
-      const ext = file.name.split(".").pop() || (kind === "video" ? "mp4" : "jpg");
-      const filePath = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("post-images").upload(filePath, file, { upsert: true, contentType: file.type });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(filePath);
-      const mediaUrl = urlData.publicUrl;
+      const mediaUrls: string[] = [];
+      for (const [index, file] of files.entries()) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const filePath = `${user.id}/${Date.now()}-${index}.${ext}`;
+        const { error } = await supabase.storage.from("post-images").upload(filePath, file, { upsert: true, contentType: file.type });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(filePath);
+        mediaUrls.push(urlData.publicUrl);
+      }
 
       const trimmed = caption.trim();
       const { error: insertErr } = await supabase.from("posts").insert({
         user_id: user.id,
         content: trimmed || null,
         caption: trimmed || null,
-        image_url: kind === "image" ? mediaUrl : null,
-        media_url: mediaUrl,
-        media_type: kind === "video" ? "video" : "image",
-        media_urls: [mediaUrl],
+        image_url: mediaUrls[0],
+        media_url: mediaUrls[0],
+        media_type: "image",
+        media_urls: mediaUrls,
         market: null,
         tags: [],
         share_to_feed: false,
       } as any);
       if (insertErr) throw insertErr;
 
-      toast.success(kind === "video" ? "Video shared to your grid" : "Photo shared to your grid");
+      toast.success(files.length > 1 ? "Album shared to your grid" : "Photo shared to your grid");
       onCreated();
       onClose();
     } catch (err) {
@@ -136,11 +115,11 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
           </button>
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Grid</p>
-            <p className="text-sm font-semibold text-foreground">{kind === "video" ? "New video" : "New photo"}</p>
+            <p className="text-sm font-semibold text-foreground">{files.length > 1 ? "New album" : "New photo"}</p>
           </div>
           <button
             onClick={submit}
-            disabled={posting || !file}
+            disabled={posting || files.length === 0}
             className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
           >
             {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Share"}
@@ -148,32 +127,48 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
         </div>
 
         <div className="space-y-4 px-4 py-4">
-          {!preview ? (
+          {previews.length === 0 ? (
             <button
               onClick={() => inputRef.current?.click()}
               className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-secondary/40 py-16 text-muted-foreground transition-colors hover:bg-secondary/60"
             >
               <Camera className="h-8 w-8" />
-              <span className="text-sm font-semibold">Add 1 photo or 1 video</span>
-              <span className="text-[11px]">Photo: JPG/PNG/GIF · 10MB · Video: up to 60s</span>
+              <span className="text-sm font-semibold">Add up to {MAX_PHOTOS} photos</span>
+              <span className="text-[11px]">JPG, PNG, GIF · max 10MB each</span>
             </button>
           ) : (
             <>
               <div className="overflow-hidden rounded-2xl border border-border bg-muted">
-                <div className="relative">
-                  {kind === "video" ? (
-                    <video src={preview} controls className="h-[340px] w-full object-cover" />
-                  ) : (
-                    <img src={preview} alt="Selected" className="h-[340px] w-full object-cover" />
-                  )}
-                  <button
-                    onClick={removeFile}
-                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
+                <Carousel opts={{ loop: previews.length > 1 }}>
+                  <CarouselContent className="ml-0">
+                    {previews.map((preview, index) => (
+                      <CarouselItem key={preview} className="pl-0">
+                        <div className="relative">
+                          <img src={preview} alt={`Photo ${index + 1}`} className="h-[340px] w-full object-cover" />
+                          <button
+                            onClick={() => removeAt(index)}
+                            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <div className="absolute bottom-2 right-2 rounded-full bg-background/70 px-2 py-0.5 text-[10px] font-bold text-foreground backdrop-blur">
+                            {index + 1}/{previews.length}
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
               </div>
+
+              {files.length < MAX_PHOTOS && (
+                <button
+                  onClick={() => inputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  <Camera className="h-4 w-4 text-primary" /> Add more
+                </button>
+              )}
 
               <textarea
                 value={caption}
@@ -191,10 +186,11 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
-            addFile(e.target.files);
+            addFiles(e.target.files);
             e.target.value = "";
           }}
         />

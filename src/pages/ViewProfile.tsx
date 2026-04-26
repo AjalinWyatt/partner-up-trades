@@ -289,13 +289,13 @@ const ViewProfile = () => {
                   </div>
                 );
               })()}
-              {profile?.bio ? (
-                <p className="mt-2 whitespace-pre-line text-[13px] leading-5 text-foreground">{profile.bio}</p>
-              ) : (
-                <p className="mt-2 text-[12px] text-muted-foreground">No bio yet.</p>
-              )}
             </div>
           </div>
+          {profile?.bio ? (
+            <p className="mt-3 whitespace-pre-line text-[13px] leading-5 text-foreground">{profile.bio}</p>
+          ) : (
+            <p className="mt-3 text-[12px] text-muted-foreground">No bio yet.</p>
+          )}
         </div>
 
         {myId && myId !== userId && (
