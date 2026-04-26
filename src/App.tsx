@@ -30,7 +30,17 @@ import Install from "./pages/Install";
 import EnableNotifications from "./pages/EnableNotifications";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,           // 30s — avoid refetching on every remount
+      gcTime: 5 * 60_000,          // keep cached data 5 min after unmount
+      refetchOnWindowFocus: false, // don't re-hit DB every tab focus
+      refetchOnReconnect: true,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
