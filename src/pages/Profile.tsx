@@ -580,57 +580,79 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Hero: streak | avatar | location */}
-        <div className="grid grid-cols-3 items-center gap-3 px-5 pt-6">
-          {/* Streak */}
-          <div className="flex flex-col items-center">
-            <Flame className="h-7 w-7 fill-destructive text-destructive" />
-            <p className="mt-1.5 text-[22px] font-extrabold leading-none text-foreground">{journalEntries.length || 0}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Streak</p>
-          </div>
-
-          {/* Avatar */}
-          <div className="flex justify-center">
-            <div className="relative">
-              <button onClick={() => avatarInputRef.current?.click()} className="block">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Profile photo" className="h-[110px] w-[110px] rounded-full object-cover ring-2 ring-primary/60" />
-                ) : (
-                  <div className="flex h-[110px] w-[110px] items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
-                )}
-              </button>
-              <button
-                onClick={() => setEditing(true)}
-                className="absolute -bottom-1 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
-                aria-label="Edit profile"
-              >
-                <Pencil className="h-4 w-4" strokeWidth={2.2} />
-              </button>
+        {/* Hero: centered avatar with streak badge */}
+        <div className="flex flex-col items-center px-5 pt-7">
+          <div className="relative">
+            <button onClick={() => avatarInputRef.current?.click()} className="block">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Profile photo" className="h-[120px] w-[120px] rounded-full object-cover ring-2 ring-primary/60" />
+              ) : (
+                <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-secondary text-3xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
+              )}
+            </button>
+            {/* Streak badge - top right */}
+            <div className="absolute -top-1 -right-2 flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-0.5 shadow-md">
+              <Flame className="h-3.5 w-3.5 fill-destructive text-destructive" />
+              <span className="text-[12px] font-extrabold text-foreground leading-none">{journalEntries.length || 0}</span>
             </div>
-          </div>
-
-          {/* Location */}
-          <div className="flex flex-col items-center">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15">
-              <Globe className="h-5 w-5 text-primary" strokeWidth={2} />
-            </div>
-            <p className="mt-1.5 text-[15px] font-extrabold leading-none text-foreground text-center">
-              {profile?.city || profile?.country
-                ? `${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")
-                : "-"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">Location</p>
+            {/* Edit button - bottom center */}
+            <button
+              onClick={() => setEditing(true)}
+              className="absolute -bottom-1 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
+              aria-label="Edit profile"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2.2} />
+            </button>
           </div>
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
         {/* Name + bio */}
-        <div className="mt-6 px-5 text-center">
+        <div className="mt-5 px-5 text-center">
           <h2 className="text-[22px] font-extrabold leading-tight text-foreground">{displayName}</h2>
           {profile?.bio ? (
-            <p className="mx-auto mt-2 max-w-[320px] whitespace-pre-line text-[14px] leading-6 text-muted-foreground">{profile.bio}</p>
+            <p className="mx-auto mt-1.5 max-w-[320px] whitespace-pre-line text-[14px] leading-6 text-muted-foreground">{profile.bio}</p>
           ) : (
-            <p className="mt-2 text-sm text-muted-foreground">Add a bio so traders know how you move.</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">Add a bio so traders know how you move.</p>
+          )}
+        </div>
+
+        {/* Identity chips: Market · Style · Experience */}
+        {(() => {
+          const market = tradingProfile?.markets?.[0];
+          const style = tradingProfile?.trading_style?.[0];
+          const exp = tradingProfile?.experience_level;
+          const chips = [market, style, exp].filter(Boolean) as string[];
+          if (chips.length === 0) return null;
+          return (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 px-5">
+              {chips.map((chip, i) => (
+                <span
+                  key={`${chip}-${i}`}
+                  className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Meta row: Location · Joined date */}
+        <div className="mt-3 flex items-center justify-center gap-4 px-5 text-[12px] text-muted-foreground">
+          {(profile?.city || profile?.country) && (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              <span className="font-medium text-foreground">
+                {`${profile?.state || profile?.city || ""}${profile?.country ? `, ${profile.country}` : ""}`.replace(/^,\s*/, "")}
+              </span>
+            </span>
+          )}
+          {profile?.created_at && (
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="h-3.5 w-3.5" />
+              <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
+            </span>
           )}
         </div>
 
