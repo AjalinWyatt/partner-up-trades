@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
+import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone } from "lucide-react";
 import brandGlobe from "@/assets/pulse-globe.svg";
+import tradersworldGlobe from "@/assets/tradersworld-globe.png";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,9 @@ import MessageBubble from "@/components/messages/MessageBubble";
 import VoiceRecorder from "@/components/messages/VoiceRecorder";
 import AttachmentButton from "@/components/messages/AttachmentButton";
 import ConversationTagsSheet from "@/components/messages/ConversationTagsSheet";
+import { TRADERSWORLD_SYSTEM_USER_ID } from "@/lib/systemDM";
+
+const SYSTEM_CONNECTION_ID = "system-tradersworld";
 
 export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
