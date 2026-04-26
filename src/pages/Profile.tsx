@@ -525,6 +525,20 @@ const Profile = () => {
     { label: "Connection Reach", value: tradingProfile?.connection_reach || null },
   ].filter((item) => item.value);
 
+  // Profile completeness: short list of high-impact fields others see
+  const completenessChecks = [
+    { key: "avatar", label: "Profile photo", done: !!profile?.avatar_url },
+    { key: "bio", label: "Bio", done: !!(profile?.bio && profile.bio.trim().length > 0) },
+    { key: "location", label: "Location (city, state, country)", done: !!(profile?.city || profile?.state || profile?.country) },
+    { key: "markets", label: "Markets", done: (tradingProfile?.markets?.length || 0) > 0 },
+    { key: "trading_style", label: "Trading style", done: (tradingProfile?.trading_style?.length || 0) > 0 },
+    { key: "experience", label: "Experience level", done: !!tradingProfile?.experience_level },
+    { key: "interests", label: "Interests / hobbies", done: (profile?.hobbies?.length || 0) > 0 },
+  ];
+  const completedCount = completenessChecks.filter((c) => c.done).length;
+  const completenessPct = Math.round((completedCount / completenessChecks.length) * 100);
+  const missingFields = completenessChecks.filter((c) => !c.done);
+
   if (guardLoading || loading || !onboardingComplete) {
     return (
       <AppLayout>
