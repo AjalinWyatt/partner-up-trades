@@ -669,19 +669,23 @@ const Profile = () => {
                 </div>
               );
             })()}
-            {profile?.bio ? (
-              <p className="mt-1.5 whitespace-pre-line text-[13.5px] leading-5 text-muted-foreground line-clamp-4">{profile.bio}</p>
-            ) : (
-              <button
-                onClick={() => setEditing(true)}
-                className="mt-1.5 text-left text-[13px] text-muted-foreground italic hover:text-foreground transition-colors"
-              >
-                Add a bio so traders know how you move.
-              </button>
-            )}
           </div>
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+
+        {/* Bio - full width below avatar */}
+        <div className="mt-3 px-5">
+          {profile?.bio ? (
+            <p className="whitespace-pre-line text-[13px] leading-5 text-muted-foreground">{profile.bio}</p>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="text-left text-[13px] text-muted-foreground italic hover:text-foreground transition-colors"
+            >
+              Add a bio so traders know how you move.
+            </button>
+          )}
+        </div>
 
         {/* Meta row: Location · Joined date */}
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-5 text-[12px] text-muted-foreground">
