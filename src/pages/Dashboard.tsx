@@ -116,6 +116,30 @@ const Dashboard = () => {
     if (userId) loadNotifications(userId, notifFilter);
   }, [notifFilter, userId]);
 
+  // Realtime: refresh the dashboard notifications list whenever a new
+  // notification is inserted, updated, or deleted for this user.
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`dashboard-notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          loadNotifications(userId, notifFilter);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, notifFilter]);
+
   const markAllRead = async () => {
     if (!userId) return;
     await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
