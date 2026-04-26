@@ -253,26 +253,45 @@ export default function TradingLog() {
       if (result === "Win") pnlValue = abs;
       else if (result === "Loss") pnlValue = -abs;
     }
-    const { error } = await supabase.from("journal_entries").insert({
+    const studyData = entryType === "study" ? {
+      study_type: studyType || null,
+      topics: studyTopics,
+      duration: studyDuration || null,
+      confidence: studyConfidence || null,
+      takeaway: studyTakeaway || null,
+      resource: studyResource || null,
+    } : {};
+
+    const payload: any = {
       user_id: userId,
       mood: mood || null,
-      result: result || null,
-      pnl_pips: pnlValue,
+      result: entryType === "trade" ? (result || null) : null,
+      pnl_pips: entryType === "trade" ? pnlValue : null,
       pnl_unit: pnlUnit,
-      market_pair: marketPairStr || null,
+      market_pair: entryType === "trade" ? (marketPairStr || null) : null,
       session: null,
-      tags: selectedTags,
+      tags: entryType === "trade" ? selectedTags : [],
       notes: notes || null,
       share_setting: shareSetting,
-      account_type: accountType || null,
+      account_type: entryType === "trade" ? (accountType || null) : null,
       entry_type: entryType,
-    } as any);
+      study_data: studyData,
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await supabase.from("journal_entries").update(payload).eq("id", editingId).eq("user_id", userId));
+    } else {
+      ({ error } = await supabase.from("journal_entries").insert(payload));
+    }
     setSaving(false);
-    if (error) { toast.error("Failed to save entry"); return; }
-    toast.success("Session logged!");
+    if (error) { toast.error(editingId ? "Failed to update entry" : "Failed to save entry"); return; }
+    toast.success(editingId ? "Entry updated" : (entryType === "study" ? "Study logged!" : "Trade logged!"));
+    const wasEditing = !!editingId;
     setShowForm(false);
     resetForm();
     loadEntries();
+    if (wasEditing) return;
 
     // Notify accepted partners that I just logged
     const { data: myProf } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
@@ -310,6 +329,45 @@ export default function TradingLog() {
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
     setPnlUnit("pips");
     setEntryType("trade");
+    setStudyType(""); setStudyTopics([]); setStudyDuration("");
+    setStudyConfidence(0); setStudyTakeaway(""); setStudyResource("");
+    setEditingId(null);
+  }
+
+  function startEdit(entry: JournalEntry) {
+    setEditingId(entry.id);
+    setEntryType((entry.entry_type as any) === "study" ? "study" : "trade");
+    setMood(entry.mood || "");
+    setResult(entry.result || "");
+    const p = entry.pnl_pips;
+    setPnl(p == null ? "" : String(Math.abs(p)));
+    setPnlUnit((entry.pnl_unit as any) || "pips");
+    const mp = entry.market_pair || "";
+    const [mk, ...rest] = mp.split(" · ");
+    setMarketName(MARKETS.includes(mk) ? mk : "");
+    setPairName(MARKETS.includes(mk) ? rest.join(" · ") : mp);
+    setAccountType(entry.account_type || "");
+    setSelectedTags(entry.tags || []);
+    setNotes(entry.notes || "");
+    setShareSetting(entry.share_setting || "partners");
+    const sd = entry.study_data || {};
+    setStudyType(sd.study_type || "");
+    setStudyTopics(sd.topics || []);
+    setStudyDuration(sd.duration || "");
+    setStudyConfidence(sd.confidence || 0);
+    setStudyTakeaway(sd.takeaway || "");
+    setStudyResource(sd.resource || "");
+    setOpenMenuId(null);
+    setShowForm(true);
+  }
+
+  async function deleteEntry(id: string) {
+    if (!confirm("Delete this entry? This can't be undone.")) return;
+    setOpenMenuId(null);
+    const { error } = await supabase.from("journal_entries").delete().eq("id", id).eq("user_id", userId!);
+    if (error) { toast.error("Failed to delete"); return; }
+    toast.success("Entry deleted");
+    loadEntries();
   }
 
   const streak = getStreak();
