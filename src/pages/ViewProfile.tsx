@@ -373,7 +373,7 @@ const ViewProfile = () => {
             </div>
           ) : (
             <EmptyState title="No posts yet" description="This trader hasn’t posted anything yet." />
-          )
+          ); })()
         ) : activeTab === 1 ? (
           (() => {
             const photos = posts.filter((p) => {
