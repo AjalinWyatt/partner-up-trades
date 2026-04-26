@@ -105,7 +105,10 @@ const SignIn = () => {
       <AuthGlobeBackground height={520} />
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col px-7 pb-8 pt-[360px] max-w-md mx-auto w-full">
+      <div
+        className="relative z-10 flex-1 flex flex-col px-7 pb-8 max-w-md mx-auto w-full"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 360px)" }}
+      >
         {/* Brand + tagline */}
         <div className="flex justify-center"><Wordmark size="text-3xl" /></div>
         <p className="text-[15px] text-foreground text-center mt-3 flex items-center justify-center gap-3">
