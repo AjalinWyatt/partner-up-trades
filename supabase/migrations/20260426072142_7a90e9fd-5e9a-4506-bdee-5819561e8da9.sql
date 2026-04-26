@@ -1,0 +1,1 @@
+ALTER TABLE public.journal_entries ADD COLUMN IF NOT EXISTS entry_type TEXT NOT NULL DEFAULT 'trade';
