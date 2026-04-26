@@ -798,6 +798,7 @@ const Profile = () => {
           />
         )}
       </div>
+      </div>
 
       <CreatePostModal
         open={showCreatePost}
