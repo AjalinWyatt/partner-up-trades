@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Earth, MessagesSquare, BookOpen, Users } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
+import { useNavBadges } from "@/hooks/use-nav-badges";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
@@ -14,6 +15,13 @@ const tabs = [
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { homeDot, messagesDot, discoverDot } = useNavBadges();
+
+  const dotForPath: Record<string, boolean> = {
+    "/dashboard": homeDot,
+    "/messages": messagesDot,
+    "/discover": discoverDot,
+  };
 
   return (
     <div
@@ -23,13 +31,14 @@ const BottomNav = () => {
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = location.pathname === tab.path;
+        const showDot = !!dotForPath[tab.path];
 
         return (
           <button
             key={tab.path}
             data-tour={tab.tour}
             onClick={() => navigate(tab.path)}
-            className="flex items-center justify-center"
+            className="relative flex items-center justify-center"
             aria-label={tab.label}
           >
             {active ? (
@@ -41,6 +50,12 @@ const BottomNav = () => {
               </div>
             ) : (
               <Icon className="h-[22px] w-[22px] text-foreground" strokeWidth={1.8} />
+            )}
+            {showDot && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-0.5 right-0 h-1.5 w-1.5 rounded-full bg-[hsl(210_100%_60%)] animate-slow-blink"
+              />
             )}
           </button>
         );
