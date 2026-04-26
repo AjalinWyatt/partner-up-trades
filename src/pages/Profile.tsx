@@ -630,7 +630,7 @@ const Profile = () => {
           const chips = [market, style, exp].filter(Boolean) as string[];
           if (chips.length === 0) return null;
           return (
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 px-5">
+            <div className="mt-4 flex flex-wrap items-center gap-1.5 px-5">
               {chips.map((chip, i) => (
                 <span
                   key={`${chip}-${i}`}
@@ -644,7 +644,7 @@ const Profile = () => {
         })()}
 
         {/* Meta row: Location · Joined date */}
-        <div className="mt-3 flex items-center justify-center gap-4 px-5 text-[12px] text-muted-foreground">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-5 text-[12px] text-muted-foreground">
           {(profile?.city || profile?.country) && (
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />
