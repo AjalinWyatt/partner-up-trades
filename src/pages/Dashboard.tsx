@@ -131,6 +131,34 @@ const Dashboard = () => {
       if (pendingRequests && pendingRequests > 0) {
         upd.push({ id: "pending-reqs", text: `${pendingRequests} Pending Add request${pendingRequests > 1 ? "s" : ""}`, created_at: new Date().toISOString(), route: "/partners" });
       }
+      // New matching traders joined recently
+      try {
+        const { data: myTp } = await supabase
+          .from("trading_profiles")
+          .select("markets")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const myMarkets = (myTp?.markets || []) as string[];
+        if (myMarkets.length > 0) {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+          const { data: newMatches } = await supabase
+            .from("trading_profiles")
+            .select("user_id, markets, created_at")
+            .neq("user_id", user.id)
+            .gte("created_at", sevenDaysAgo)
+            .overlaps("markets", myMarkets)
+            .limit(20);
+          const matchCount = (newMatches || []).length;
+          if (matchCount > 0) {
+            upd.push({
+              id: "new-matches",
+              text: `${matchCount} new trader${matchCount > 1 ? "s" : ""} that match you joined - View in Discover`,
+              created_at: newMatches![0].created_at as string,
+              route: "/discover",
+            });
+          }
+        }
+      } catch (e) { console.error("new matches calc failed", e); }
       // Partner shared logs (latest 1)
       const { data: myConns } = await supabase
         .from("partner_connections")
