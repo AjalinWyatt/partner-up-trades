@@ -11,7 +11,19 @@ import { getDiscoverMatches } from "@/lib/discoverMatches";
  *
  * Counts auto-clear when the user visits the corresponding page (we treat the
  * visit as "seen" for the dot — actual read-state in DB is handled elsewhere).
+ *
+ * Performance:
+ * - Route-change refreshes are debounced (150ms) and coalesced — rapid
+ *   navigation only fires one batched query at the end.
+ * - In-flight refreshes are cancelled when a newer one starts (via a
+ *   monotonically-increasing request id), so stale results never overwrite
+ *   fresh ones.
+ * - The discover query (the heaviest) is additionally throttled by a
+ *   minimum interval, so realtime bursts can't spam it.
  */
+const ROUTE_DEBOUNCE_MS = 150;
+const DISCOVER_MIN_INTERVAL_MS = 1500;
+
 export function useNavBadges() {
   const location = useLocation();
   const [home, setHome] = useState(0);
@@ -19,46 +31,71 @@ export function useNavBadges() {
   const [discover, setDiscover] = useState(0);
   const [partners, setPartners] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
-  // Debounce repeated discover refreshes (it's the heaviest query).
+  // Debounce timers / cancellation tokens.
+  const routeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const discoverDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reqIdRef = useRef(0); // monotonic id; stale responses are dropped
+  const lastDiscoverAtRef = useRef(0); // throttle floor for discover
+  const cachedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    // Coalesce rapid route changes into a single batched query.
+    if (routeDebounceRef.current) clearTimeout(routeDebounceRef.current);
 
-    const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (!user) return;
-      if (!cancelled) setUserId(user.id);
+    const myReqId = ++reqIdRef.current;
+
+    routeDebounceRef.current = setTimeout(async () => {
+      // Resolve user id once, then cache it for subsequent route changes.
+      let uid = cachedUserIdRef.current;
+      if (!uid) {
+        const { data: { session } } = await supabase.auth.getSession();
+        uid = session?.user?.id ?? null;
+        if (!uid) return;
+        cachedUserIdRef.current = uid;
+        if (myReqId === reqIdRef.current) setUserId(uid);
+      }
+
+      // Skip discover if we ran it very recently (covers tab-spam scenarios).
+      const now = Date.now();
+      const skipDiscover = now - lastDiscoverAtRef.current < DISCOVER_MIN_INTERVAL_MS;
+      if (!skipDiscover) lastDiscoverAtRef.current = now;
 
       const [notifs, msgs, reqs, matches] = await Promise.all([
         supabase
           .from("notifications")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
+          .eq("user_id", uid)
           .eq("read", false),
         supabase
           .from("messages")
           .select("*", { count: "exact", head: true })
-          .eq("receiver_id", user.id)
+          .eq("receiver_id", uid)
           .eq("read", false),
         supabase
           .from("partner_connections")
           .select("*", { count: "exact", head: true })
-          .eq("receiver_id", user.id)
+          .eq("receiver_id", uid)
           .eq("status", "pending"),
-        getDiscoverMatches(user.id).catch(() => ({ matches: [] as Array<{ matchPct: number }> })),
+        skipDiscover
+          ? Promise.resolve(null)
+          : getDiscoverMatches(uid).catch(() => ({ matches: [] as Array<{ matchPct: number }> })),
       ]);
-      if (cancelled) return;
+
+      // Drop stale responses if a newer route change has already kicked off.
+      if (myReqId !== reqIdRef.current) return;
+
       setHome(notifs.count ?? 0);
       setMessages(msgs.count ?? 0);
       setPartners(reqs.count ?? 0);
-      const strongMatches = (matches?.matches || []).filter((m) => (m.matchPct ?? 0) >= 65).length;
-      setDiscover(strongMatches);
-    };
+      if (matches) {
+        const strong = (matches.matches || []).filter((m) => (m.matchPct ?? 0) >= 65).length;
+        setDiscover(strong);
+      }
+    }, ROUTE_DEBOUNCE_MS);
 
-    load();
-    return () => { cancelled = true; };
+    return () => {
+      if (routeDebounceRef.current) clearTimeout(routeDebounceRef.current);
+    };
   }, [location.pathname]);
 
   // Realtime listeners: bump counts the moment new rows arrive on the server,
@@ -69,8 +106,18 @@ export function useNavBadges() {
     const refreshDiscover = () => {
       if (discoverDebounceRef.current) clearTimeout(discoverDebounceRef.current);
       discoverDebounceRef.current = setTimeout(async () => {
+        // Throttle: respect the minimum interval so realtime bursts don't spam.
+        const now = Date.now();
+        const wait = Math.max(0, DISCOVER_MIN_INTERVAL_MS - (now - lastDiscoverAtRef.current));
+        if (wait > 0) {
+          discoverDebounceRef.current = setTimeout(refreshDiscover, wait);
+          return;
+        }
+        lastDiscoverAtRef.current = Date.now();
+        const myReqId = ++reqIdRef.current;
         try {
           const { matches } = await getDiscoverMatches(userId);
+          if (myReqId !== reqIdRef.current) return;
           const strong = (matches || []).filter((m) => (m.matchPct ?? 0) >= 65).length;
           setDiscover(strong);
         } catch {/* ignore */}
