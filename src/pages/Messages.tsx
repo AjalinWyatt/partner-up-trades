@@ -470,7 +470,6 @@ export default function Messages() {
     </div>
   ) : (
     <div className="flex flex-col h-full">
-      {(() => null)()}
       <div className={cn(
         "flex items-center gap-3 px-3 py-2 border-b",
         activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
