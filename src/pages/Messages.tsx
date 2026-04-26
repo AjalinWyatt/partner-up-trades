@@ -674,13 +674,15 @@ export default function Messages() {
         </AppLayout>
       </div>
       <div className="lg:hidden">
-        <AppLayout hideBottomNav={!!activeChat}>
+        <AppLayout hideBottomNav={!!activeChat} lockHeight>
           {activeChat ? (
-            <div className="flex flex-col h-[100dvh]">
+            <div className="flex flex-col h-full min-h-0">
               {chatPanelContent}
             </div>
           ) : (
-            conversationListContent
+            <div className="flex flex-col h-full min-h-0">
+              {conversationListContent}
+            </div>
           )}
         </AppLayout>
       </div>
