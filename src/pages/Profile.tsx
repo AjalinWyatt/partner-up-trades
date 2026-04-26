@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Flame, LogOut, MapPin, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, LogOut, MapPin, Moon, Pencil, SlidersHorizontal, Sun, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import CreatePostModal from "@/components/CreatePostModal";
