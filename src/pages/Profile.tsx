@@ -639,13 +639,22 @@ const Profile = () => {
           <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
             Traders<span className="text-foreground">World</span>
           </h1>
-          <button
-            onClick={() => navigate("/settings")}
-            className="absolute right-5 flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-            aria-label="Settings"
-          >
-            <SlidersHorizontal className="h-5 w-5" strokeWidth={2} />
-          </button>
+          <div className="absolute right-5 flex items-center gap-1">
+            <button
+              onClick={() => setEditing(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              aria-label="Edit profile"
+            >
+              <Pencil className="h-5 w-5" strokeWidth={2} />
+            </button>
+            <button
+              onClick={() => navigate("/settings")}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              aria-label="Settings"
+            >
+              <SlidersHorizontal className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
         {/* Hero: avatar on the left, name + bio on the right */}
@@ -657,14 +666,6 @@ const Profile = () => {
               ) : (
                 <div className="flex h-[104px] w-[104px] items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
               )}
-            </button>
-            {/* Edit button - bottom center */}
-            <button
-              onClick={() => setEditing(true)}
-              className="absolute -bottom-1 left-1/2 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
-              aria-label="Edit profile"
-            >
-              <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
             </button>
           </div>
 
