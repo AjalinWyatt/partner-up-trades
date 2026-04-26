@@ -874,6 +874,35 @@ const Profile = () => {
         onClose={() => setShowCreatePhoto(false)}
         onCreated={refreshPosts}
       />
+      {userId && (
+        <CreateAlbumDialog
+          open={showCreateAlbum}
+          onClose={() => setShowCreateAlbum(false)}
+          onCreated={refreshPosts}
+          userId={userId}
+          photos={posts
+            .filter((p) => {
+              const m = p.media_urls?.[0] || p.media_url || p.image_url;
+              const t = (p as any).media_type || "";
+              return !!m && !t.startsWith("video");
+            })
+            .map((p) => ({ id: p.id, thumb: (p.media_urls?.[0] || p.media_url || p.image_url)! }))}
+        />
+      )}
+      <AlbumDetailModal
+        albumId={openAlbumId}
+        onClose={() => setOpenAlbumId(null)}
+        onChanged={refreshPosts}
+        onOpenPost={setSelectedPost}
+        myUserId={userId}
+        allPhotos={posts
+          .filter((p) => {
+            const m = p.media_urls?.[0] || p.media_url || p.image_url;
+            const t = (p as any).media_type || "";
+            return !!m && !t.startsWith("video");
+          })
+          .map((p) => ({ id: p.id, thumb: (p.media_urls?.[0] || p.media_url || p.image_url)! }))}
+      />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
