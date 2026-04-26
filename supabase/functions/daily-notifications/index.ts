@@ -211,6 +211,89 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ===== Welcome / share DM from TradersWorld system account =====
+  // Send 24h after signup, only if the user has nothing in their Discover
+  // (no eligible candidate profiles to match with yet).
+  try {
+    const SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000001";
+    const WELCOME_DM_KEY = "welcome_share_v2";
+    const WELCOME_DM_BODY = `Welcome to TradersWorld 👋🏽
+
+We're actively growing the network, so matches may take a little time. Want to help speed it up?
+
+Share TradersWorld on your socials and help bring more traders into the community. More traders = better matches for everyone.
+
+Appreciate you being early 🙏🏾`;
+
+    // Candidates: onboarded users who signed up >= 24h ago
+    const { data: candidates } = await supabase
+      .from("profiles")
+      .select("id, created_at")
+      .eq("onboarding_completed", true)
+      .lte("created_at", since24h);
+
+    if (candidates && candidates.length > 0) {
+      const ids = candidates.map((c: any) => c.id);
+
+      // Already-sent log
+      const { data: alreadySent } = await supabase
+        .from("system_dm_log")
+        .select("user_id")
+        .eq("dm_key", WELCOME_DM_KEY)
+        .in("user_id", ids);
+      const sentSet = new Set((alreadySent || []).map((r: any) => r.user_id));
+
+      const targets = candidates.filter((c: any) => !sentSet.has(c.id));
+      if (targets.length > 0) {
+        // For Discover-empty check we need: total onboarded user count,
+        // plus per-user excluded counts (connections/blocked/passed).
+        const { count: onboardedCount } = await supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("onboarding_completed", true);
+        const totalOnboarded = onboardedCount || 0;
+
+        for (const u of targets) {
+          // Build excluded id set (self + all pending/accepted partners + blocked + passed)
+          const excluded = new Set<string>([u.id]);
+          const [{ data: conns }, { data: blocked }, { data: passed }] = await Promise.all([
+            supabase
+              .from("partner_connections")
+              .select("requester_id, receiver_id")
+              .or(`requester_id.eq.${u.id},receiver_id.eq.${u.id}`)
+              .in("status", ["pending", "accepted"]),
+            supabase.from("blocked_users").select("blocked_id").eq("blocker_id", u.id),
+            supabase.from("passed_profiles").select("passed_id").eq("passer_id", u.id),
+          ]);
+          (conns || []).forEach((c: any) => { excluded.add(c.requester_id); excluded.add(c.receiver_id); });
+          (blocked || []).forEach((b: any) => excluded.add(b.blocked_id));
+          (passed || []).forEach((p: any) => excluded.add(p.passed_id));
+
+          // Discover is empty if every onboarded user is excluded.
+          const availableCount = totalOnboarded - excluded.size;
+          if (availableCount > 0) continue; // they have matches to look at — no DM
+
+          // Send the DM
+          const { error: msgErr } = await supabase.from("messages").insert({
+            sender_id: SYSTEM_USER_ID,
+            receiver_id: u.id,
+            content: WELCOME_DM_BODY,
+          });
+          if (msgErr) {
+            console.error("welcome DM insert failed", u.id, msgErr.message);
+            continue;
+          }
+          await supabase.from("system_dm_log").insert({
+            user_id: u.id,
+            dm_key: WELCOME_DM_KEY,
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("welcome DM batch failed", e);
+  }
+
   return new Response(
     JSON.stringify({ message: "Daily checks completed", timestamp: now.toISOString() }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }

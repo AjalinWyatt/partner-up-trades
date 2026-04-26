@@ -25,10 +25,10 @@ export async function sendSystemDMOnce(params: {
   return !!data?.sent;
 }
 
-export const WELCOME_NO_PARTNERS_DM = `Welcome to TradersWorld! 👋
+export const WELCOME_SHARE_DM = `Welcome to TradersWorld 👋🏽
 
-We're a brand new community working to bring traders together to find their accountability partners. Looks like you don't have any partners yet — would you mind sharing TradersWorld on your socials? It helps both you (more traders = better matches for you) and everyone else find their people here.
+We're actively growing the network, so matches may take a little time. Want to help speed it up?
 
-Even one post or story makes a real difference. Thank you for being an early member 🙏
+Share TradersWorld on your socials and help bring more traders into the community. More traders = better matches for everyone.
 
-— The TradersWorld team`;
+Appreciate you being early 🙏🏾`;
