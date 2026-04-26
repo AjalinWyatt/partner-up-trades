@@ -26,10 +26,11 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   token,
+  confirmationUrl,
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your TradersWorld verification code: {token}</Preview>
+    <Preview>Confirm your email to finish signing up for TradersWorld</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={logo}>TradersWorld</Text>
@@ -42,15 +43,22 @@ export const SignupEmail = ({
           — your trading accountability partner is waiting.
         </Text>
         <Text style={text}>
-          Enter this code to verify your email (
+          Click the button below to verify your email (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
           ):
         </Text>
-        <Text style={codeStyle}>{token}</Text>
+        <Link href={confirmationUrl} style={button}>
+          Verify email & continue
+        </Link>
+        <Text style={text}>
+          Or paste this link into your browser:
+          <br />
+          <Link href={confirmationUrl} style={link}>{confirmationUrl}</Link>
+        </Text>
         <Text style={footer}>
-          This code expires shortly. If you didn't create an account, you can safely ignore this email.
+          This link expires shortly. If you didn't create an account, you can safely ignore this email.
         </Text>
       </Container>
     </Body>
@@ -65,5 +73,5 @@ const logo = { fontSize: '18px', fontWeight: 'bold' as const, color: 'hsl(214, 7
 const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#0a0a0f', margin: '0 0 16px' }
 const text = { fontSize: '15px', color: '#666666', lineHeight: '1.6', margin: '0 0 20px' }
 const link = { color: 'hsl(214, 76%, 50%)', textDecoration: 'underline' }
-const codeStyle = { fontFamily: 'Courier, monospace', fontSize: '32px', fontWeight: 'bold' as const, color: 'hsl(214, 76%, 50%)', margin: '0 0 30px', letterSpacing: '6px', textAlign: 'center' as const }
+const button = { display: 'inline-block', backgroundColor: 'hsl(214, 76%, 50%)', color: '#ffffff', padding: '14px 28px', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold' as const, textDecoration: 'none', margin: '0 0 24px' }
 const footer = { fontSize: '12px', color: '#999999', margin: '32px 0 0' }
