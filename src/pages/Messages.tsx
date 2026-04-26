@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
+import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone } from "lucide-react";
 import brandGlobe from "@/assets/pulse-globe.svg";
+import tradersworldGlobe from "@/assets/tradersworld-globe.png";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,9 @@ import MessageBubble from "@/components/messages/MessageBubble";
 import VoiceRecorder from "@/components/messages/VoiceRecorder";
 import AttachmentButton from "@/components/messages/AttachmentButton";
 import ConversationTagsSheet from "@/components/messages/ConversationTagsSheet";
+import { TRADERSWORLD_SYSTEM_USER_ID } from "@/lib/systemDM";
+
+const SYSTEM_CONNECTION_ID = "system-tradersworld";
 
 export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
@@ -47,7 +51,7 @@ export default function Messages() {
   }, [userId]);
 
   useEffect(() => {
-    if (!activeChat?.partnerId) { setPartnerTrading(null); return; }
+    if (!activeChat?.partnerId || activeChat.id === SYSTEM_CONNECTION_ID) { setPartnerTrading(null); return; }
     supabase
       .from("trading_profiles")
       .select("markets, experience_level, trading_style")
@@ -92,13 +96,8 @@ export default function Messages() {
       .eq("status", "accepted")
       .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
 
-    if (!conns || conns.length === 0) {
-      setConnections([]);
-      setLoading(false);
-      return;
-    }
-
-    const partnerIds = conns.map((c: any) => c.requester_id === uid ? c.receiver_id : c.requester_id);
+    const safeConns = conns || [];
+    const partnerIds = safeConns.map((c: any) => c.requester_id === uid ? c.receiver_id : c.requester_id);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, username, full_name, avatar_url")
@@ -107,7 +106,7 @@ export default function Messages() {
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
     const connectionList: Connection[] = [];
 
-    for (const c of conns) {
+    for (const c of safeConns) {
       const partnerId = c.requester_id === uid ? c.receiver_id : c.requester_id;
       const profile = profileMap.get(partnerId);
       const { data: lastMsgs } = await supabase
@@ -145,6 +144,38 @@ export default function Messages() {
         lastMessageFromMe: lastFromMe,
         lastMessageRead: lastRead,
         unreadCount: count ?? 0,
+      });
+    }
+
+    // Synthesize a "TradersWorld" system conversation if any system DMs exist
+    // for this user. This appears alongside real partner conversations and is
+    // marked as an official channel.
+    const { data: sysMsgs } = await supabase
+      .from("messages")
+      .select("content, created_at, sender_id, read")
+      .eq("sender_id", TRADERSWORLD_SYSTEM_USER_ID)
+      .eq("receiver_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (sysMsgs && sysMsgs.length > 0) {
+      const last = sysMsgs[0];
+      const { count: sysUnread } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("sender_id", TRADERSWORLD_SYSTEM_USER_ID)
+        .eq("receiver_id", uid)
+        .eq("read", false);
+      connectionList.push({
+        id: SYSTEM_CONNECTION_ID,
+        partnerId: TRADERSWORLD_SYSTEM_USER_ID,
+        partnerName: "TradersWorld",
+        partnerUsername: "tradersworld",
+        avatarUrl: tradersworldGlobe,
+        lastMessage: last?.content,
+        lastMessageTime: last?.created_at,
+        lastMessageFromMe: false,
+        lastMessageRead: typeof last?.read === "boolean" ? last.read : true,
+        unreadCount: sysUnread ?? 0,
       });
     }
 
@@ -364,14 +395,19 @@ export default function Messages() {
             </button>
           </div>
         ) : (
-          filtered.map((conn) => (
+          filtered.map((conn) => {
+            const isSystem = conn.id === SYSTEM_CONNECTION_ID;
+            return (
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); markConversationRead(conn); }}
               className="w-full flex items-center gap-3 py-2.5 text-left"
             >
               <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-secondary">
+                <div className={cn(
+                  "w-12 h-12 rounded-full overflow-hidden bg-secondary",
+                  isSystem && "ring-2 ring-primary/60"
+                )}>
                   <AvatarIcon conn={conn} size="md" />
                 </div>
                 {conn.unreadCount > 0 && (
@@ -379,9 +415,19 @@ export default function Messages() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-foreground truncate leading-tight">
-                  {conn.partnerName.replace(/^@/, "")}
-                </p>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <p className="text-[14px] font-semibold text-foreground truncate leading-tight">
+                    {conn.partnerName.replace(/^@/, "")}
+                  </p>
+                  {isSystem && (
+                    <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0 fill-primary/20" />
+                  )}
+                  {isSystem && (
+                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30 shrink-0">
+                      Official
+                    </span>
+                  )}
+                </div>
                 <p className={cn("text-[13px] truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
@@ -405,7 +451,8 @@ export default function Messages() {
                 )}
               </div>
             </button>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -423,7 +470,10 @@ export default function Messages() {
     </div>
   ) : (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-3 py-2 border-b border-border/40">
+      <div className={cn(
+        "flex items-center gap-3 px-3 py-2 border-b",
+        activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
+      )}>
         <button
           onClick={() => setActiveChat(null)}
           className="p-1.5 text-foreground -ml-1"
@@ -435,7 +485,10 @@ export default function Messages() {
           <img
             src={activeChat.avatarUrl}
             alt={activeChat.partnerName}
-            className="w-9 h-9 rounded-full object-cover bg-secondary shrink-0"
+            className={cn(
+              "w-9 h-9 rounded-full object-cover bg-secondary shrink-0",
+              activeChat.id === SYSTEM_CONNECTION_ID && "ring-2 ring-primary/60"
+            )}
           />
         ) : (
           <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
@@ -443,12 +496,23 @@ export default function Messages() {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
-            {activeChat.partnerName.replace(/^@/, "")}
-          </p>
-          <p className="text-[11px] text-muted-foreground truncate leading-tight">
-            @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
-          </p>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">
+              {activeChat.partnerName.replace(/^@/, "")}
+            </p>
+            {activeChat.id === SYSTEM_CONNECTION_ID && (
+              <BadgeCheck className="w-4 h-4 text-primary shrink-0 fill-primary/20" />
+            )}
+          </div>
+          {activeChat.id === SYSTEM_CONNECTION_ID ? (
+            <p className="text-[11px] text-primary truncate leading-tight font-semibold flex items-center gap-1">
+              <Megaphone className="w-3 h-3" /> Official announcements
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground truncate leading-tight">
+              @{activeChat.partnerUsername || activeChat.partnerName.replace(/^@/, "")}
+            </p>
+          )}
           {partnerTrading && (partnerTrading.markets?.length || partnerTrading.experience_level || partnerTrading.trading_style?.length) ? (
             <p className="text-[10px] text-primary/80 truncate leading-tight mt-0.5 font-medium">
               {[
@@ -459,14 +523,16 @@ export default function Messages() {
             </p>
           ) : null}
         </div>
-        <button
-          onClick={() => setTagsOpen(true)}
-          className="p-2 text-primary shrink-0"
-          aria-label="Tag conversation"
-          title="Tag conversation"
-        >
-          <TagIcon className="w-5 h-5" strokeWidth={2} />
-        </button>
+        {activeChat.id !== SYSTEM_CONNECTION_ID && (
+          <button
+            onClick={() => setTagsOpen(true)}
+            className="p-2 text-primary shrink-0"
+            aria-label="Tag conversation"
+            title="Tag conversation"
+          >
+            <TagIcon className="w-5 h-5" strokeWidth={2} />
+          </button>
+        )}
       </div>
       {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap px-4 pt-2">
@@ -522,6 +588,14 @@ export default function Messages() {
         <div ref={messagesEndRef} />
       </div>
 
+      {activeChat.id === SYSTEM_CONNECTION_ID ? (
+        <div className="px-4 pb-4 pt-2">
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-3 py-2.5 text-[12px] text-foreground/80">
+            <Megaphone className="w-4 h-4 text-primary shrink-0" />
+            <span>This is an official TradersWorld channel. Replies are disabled.</span>
+          </div>
+        </div>
+      ) : (
       <div className="px-4 pb-4 pt-2">
         <div className="flex items-center gap-2 bg-secondary/70 rounded-full pl-3 pr-1.5 py-1.5">
           <AttachmentButton
@@ -559,6 +633,7 @@ export default function Messages() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 
