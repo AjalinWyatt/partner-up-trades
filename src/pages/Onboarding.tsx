@@ -244,7 +244,19 @@ const Onboarding = () => {
               <input
                 placeholder="Username"
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={(e) =>
+                  setNickname(
+                    e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9_.]/g, "")
+                      .slice(0, 30)
+                  )
+                }
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                inputMode="text"
+                maxLength={30}
                 className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
               />
             </div>
