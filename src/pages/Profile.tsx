@@ -684,27 +684,26 @@ const Profile = () => {
                 </div>
               );
             })()}
+            {/* Meta row: Location · Joined date - directly under chips */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+              {(profile?.city || profile?.state || profile?.country) && (
+                <span className="inline-flex items-center gap-1 min-w-0">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="font-medium text-foreground truncate">
+                    {[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ")}
+                  </span>
+                </span>
+              )}
+              {profile?.created_at && (
+                <span className="inline-flex items-center gap-1">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-
-        {/* Meta row: Location · Joined date */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-5 text-[12px] text-muted-foreground">
-          {(profile?.city || profile?.state || profile?.country) && (
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">
-                {[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ")}
-              </span>
-            </span>
-          )}
-          {profile?.created_at && (
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
-            </span>
-          )}
-        </div>
 
         {/* Bio - full width below meta */}
         <div className="mt-3 px-5">
