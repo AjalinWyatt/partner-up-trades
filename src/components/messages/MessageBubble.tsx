@@ -65,18 +65,18 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
   }
 
   return (
-    <div className={cn("group flex flex-col", isMine ? "items-end" : "items-start")}>
-      <div className={cn("flex items-end gap-1.5 w-full", isMine ? "flex-row justify-end" : "flex-row")}>
+    <div className={cn("group flex w-full max-w-full min-w-0 flex-col overflow-hidden", isMine ? "items-end" : "items-start")}>
+      <div className={cn("flex w-full max-w-full min-w-0 items-end gap-1.5 overflow-hidden", isMine ? "flex-row justify-end" : "flex-row")}>
         {!isMine && (
           showAvatar ? (
             partnerAvatarUrl ? (
               <img
                 src={partnerAvatarUrl}
                 alt={partnerName || "partner"}
-                className="w-6 h-6 rounded-full object-cover shrink-0 mb-0.5"
+                className="mb-0.5 h-6 w-6 shrink-0 rounded-full object-cover"
               />
             ) : (
-              <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center shrink-0 mb-0.5 text-[10px] font-bold text-foreground/70">
+              <div className="mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-foreground/70">
                 {(partnerName || "?").replace(/^@/, "").charAt(0).toUpperCase()}
               </div>
             )
@@ -88,7 +88,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground"
+                className="shrink-0 p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus:opacity-100 group-hover:opacity-100"
                 aria-label="Message actions"
               >
                 <MoreVertical className="w-4 h-4" />
@@ -108,7 +108,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
         )}
         <div
         className={cn(
-          "max-w-[78%] px-3 py-1.5 text-[12px] leading-snug",
+          "min-w-0 max-w-[78%] overflow-hidden px-3 py-1.5 text-[12px] leading-snug [overflow-wrap:anywhere]",
           isMine
             ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
             : "bg-secondary text-foreground rounded-2xl rounded-bl-md"
@@ -141,20 +141,20 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
           </a>
         )}
         {editing ? (
-          <div className="flex items-center gap-1.5 min-w-[180px]">
+          <div className="flex w-[min(180px,60vw)] max-w-full min-w-0 items-center gap-1.5">
             <input
               autoFocus
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(false); }}
-              className="flex-1 bg-white/10 rounded px-2 py-1 text-[12px] outline-none placeholder:text-primary-foreground/60"
+              className="min-w-0 flex-1 rounded bg-primary-foreground/10 px-2 py-1 text-[12px] outline-none placeholder:text-primary-foreground/60"
             />
             <button onClick={saveEdit} aria-label="Save"><Check className="w-4 h-4" /></button>
             <button onClick={() => setEditing(false)} aria-label="Cancel"><X className="w-4 h-4" /></button>
           </div>
         ) : (
           msg.content && (!hasMedia || isImage) && !isAudio && (
-            <p className={cn(isSharedPost && "whitespace-pre-wrap text-[11px] leading-5 font-medium")}>{msg.content}</p>
+            <p className={cn("break-words whitespace-pre-wrap [overflow-wrap:anywhere]", isSharedPost && "text-[11px] leading-5 font-medium")}>{msg.content}</p>
           )
         )}
         </div>
