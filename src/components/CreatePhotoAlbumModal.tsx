@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface Props {
   open: boolean;
@@ -10,20 +9,18 @@ interface Props {
   onCreated: () => void;
 }
 
-const MAX_PHOTOS = 10;
-
 export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Props) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
   const [posting, setPosting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
-      previews.forEach((u) => URL.revokeObjectURL(u));
-      setFiles([]);
-      setPreviews([]);
+      if (preview) URL.revokeObjectURL(preview);
+      setFile(null);
+      setPreview(null);
       setCaption("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -31,34 +28,31 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
 
   if (!open) return null;
 
-  const addFiles = (incoming: FileList | null) => {
-    if (!incoming?.length) return;
-    const incomingArr = Array.from(incoming);
-    if (incomingArr.some((f) => !f.type.startsWith("image/"))) {
+  const pickFile = (incoming: FileList | null) => {
+    const next = incoming?.[0];
+    if (!next) return;
+    if (!next.type.startsWith("image/")) {
       toast.error("Photos only");
       return;
     }
-    if (incomingArr.some((f) => f.size > 10 * 1024 * 1024)) {
-      toast.error("Each photo must be under 10MB");
+    if (next.size > 10 * 1024 * 1024) {
+      toast.error("Photo must be under 10MB");
       return;
     }
-    const combined = [...files, ...incomingArr].slice(0, MAX_PHOTOS);
-    previews.forEach((u) => URL.revokeObjectURL(u));
-    setFiles(combined);
-    setPreviews(combined.map((f) => URL.createObjectURL(f)));
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(next);
+    setPreview(URL.createObjectURL(next));
   };
 
-  const removeAt = (index: number) => {
-    URL.revokeObjectURL(previews[index]);
-    const nextFiles = files.filter((_, i) => i !== index);
-    const nextPreviews = previews.filter((_, i) => i !== index);
-    setFiles(nextFiles);
-    setPreviews(nextPreviews);
+  const clearFile = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(null);
+    setPreview(null);
   };
 
   const submit = async () => {
-    if (files.length === 0) {
-      toast.error("Add at least one photo");
+    if (!file) {
+      toast.error("Add a photo");
       return;
     }
     setPosting(true);
@@ -67,32 +61,29 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
       const user = session?.user;
       if (!user) throw new Error("Not authenticated");
 
-      const mediaUrls: string[] = [];
-      for (const [index, file] of files.entries()) {
-        const ext = file.name.split(".").pop() || "jpg";
-        const filePath = `${user.id}/${Date.now()}-${index}.${ext}`;
-        const { error } = await supabase.storage.from("post-images").upload(filePath, file, { upsert: true, contentType: file.type });
-        if (error) throw error;
-        const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(filePath);
-        mediaUrls.push(urlData.publicUrl);
-      }
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("post-images").upload(filePath, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(filePath);
+      const url = urlData.publicUrl;
 
       const trimmed = caption.trim();
       const { error: insertErr } = await supabase.from("posts").insert({
         user_id: user.id,
         content: trimmed || null,
         caption: trimmed || null,
-        image_url: mediaUrls[0],
-        media_url: mediaUrls[0],
+        image_url: url,
+        media_url: url,
         media_type: "image",
-        media_urls: mediaUrls,
+        media_urls: [url],
         market: null,
         tags: [],
         share_to_feed: false,
       } as any);
       if (insertErr) throw insertErr;
 
-      toast.success(files.length > 1 ? "Album shared to your grid" : "Photo shared to your grid");
+      toast.success("Photo shared to your grid");
       onCreated();
       onClose();
     } catch (err) {
@@ -115,11 +106,11 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
           </button>
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Grid</p>
-            <p className="text-sm font-semibold text-foreground">{files.length > 1 ? "New album" : "New photo"}</p>
+            <p className="text-sm font-semibold text-foreground">New photo</p>
           </div>
           <button
             onClick={submit}
-            disabled={posting || files.length === 0}
+            disabled={posting || !file}
             className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
           >
             {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Share"}
@@ -127,48 +118,29 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
         </div>
 
         <div className="space-y-4 px-4 py-4">
-          {previews.length === 0 ? (
+          {!preview ? (
             <button
               onClick={() => inputRef.current?.click()}
               className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-secondary/40 py-16 text-muted-foreground transition-colors hover:bg-secondary/60"
             >
               <Camera className="h-8 w-8" />
-              <span className="text-sm font-semibold">Add up to {MAX_PHOTOS} photos</span>
+              <span className="text-sm font-semibold">Add a photo</span>
               <span className="text-[11px]">JPG, PNG, GIF · max 10MB each</span>
+              <span className="text-[11px] text-muted-foreground/70">You can group photos into albums afterwards</span>
             </button>
           ) : (
             <>
               <div className="overflow-hidden rounded-2xl border border-border bg-muted">
-                <Carousel opts={{ loop: previews.length > 1 }}>
-                  <CarouselContent className="ml-0">
-                    {previews.map((preview, index) => (
-                      <CarouselItem key={preview} className="pl-0">
-                        <div className="relative">
-                          <img src={preview} alt={`Photo ${index + 1}`} className="h-[340px] w-full object-cover" />
-                          <button
-                            onClick={() => removeAt(index)}
-                            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                          <div className="absolute bottom-2 right-2 rounded-full bg-background/70 px-2 py-0.5 text-[10px] font-bold text-foreground backdrop-blur">
-                            {index + 1}/{previews.length}
-                          </div>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
+                <div className="relative">
+                  <img src={preview} alt="Photo" className="h-[340px] w-full object-cover" />
+                  <button
+                    onClick={clearFile}
+                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-
-              {files.length < MAX_PHOTOS && (
-                <button
-                  onClick={() => inputRef.current?.click()}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  <Camera className="h-4 w-4 text-primary" /> Add more
-                </button>
-              )}
 
               <textarea
                 value={caption}
@@ -187,10 +159,9 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
           ref={inputRef}
           type="file"
           accept="image/*"
-          multiple
           className="hidden"
           onChange={(e) => {
-            addFiles(e.target.files);
+            pickFile(e.target.files);
             e.target.value = "";
           }}
         />
