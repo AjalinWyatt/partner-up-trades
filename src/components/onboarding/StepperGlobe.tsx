@@ -1,4 +1,4 @@
-import { Globe } from "lucide-react";
+import brandGlobe from "@/assets/tradersworld-globe.png";
 
 interface Props {
   /** Current step (1-based) */
@@ -41,7 +41,7 @@ const StepperGlobe = ({ step, total }: Props) => {
         })}
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <Globe className="w-7 h-7 text-accent" strokeWidth={1.5} />
+        <img src={brandGlobe} alt="" className="w-9 h-9 object-contain drop-shadow-[0_0_10px_hsl(var(--primary)/0.45)]" />
       </div>
     </div>
   );
