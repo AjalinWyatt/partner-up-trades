@@ -395,14 +395,19 @@ export default function Messages() {
             </button>
           </div>
         ) : (
-          filtered.map((conn) => (
+          filtered.map((conn) => {
+            const isSystem = conn.id === SYSTEM_CONNECTION_ID;
+            return (
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); markConversationRead(conn); }}
               className="w-full flex items-center gap-3 py-2.5 text-left"
             >
               <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-secondary">
+                <div className={cn(
+                  "w-12 h-12 rounded-full overflow-hidden bg-secondary",
+                  isSystem && "ring-2 ring-primary/60"
+                )}>
                   <AvatarIcon conn={conn} size="md" />
                 </div>
                 {conn.unreadCount > 0 && (
@@ -410,9 +415,19 @@ export default function Messages() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-foreground truncate leading-tight">
-                  {conn.partnerName.replace(/^@/, "")}
-                </p>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <p className="text-[14px] font-semibold text-foreground truncate leading-tight">
+                    {conn.partnerName.replace(/^@/, "")}
+                  </p>
+                  {isSystem && (
+                    <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0 fill-primary/20" />
+                  )}
+                  {isSystem && (
+                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30 shrink-0">
+                      Official
+                    </span>
+                  )}
+                </div>
                 <p className={cn("text-[13px] truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
                   {conn.lastMessage || "No messages yet"}
                 </p>
@@ -436,7 +451,8 @@ export default function Messages() {
                 )}
               </div>
             </button>
-          ))
+            );
+          })
         )}
       </div>
     </div>
