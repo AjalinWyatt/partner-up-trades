@@ -51,7 +51,7 @@ export default function Messages() {
   }, [userId]);
 
   useEffect(() => {
-    if (!activeChat?.partnerId) { setPartnerTrading(null); return; }
+    if (!activeChat?.partnerId || activeChat.id === SYSTEM_CONNECTION_ID) { setPartnerTrading(null); return; }
     supabase
       .from("trading_profiles")
       .select("markets, experience_level, trading_style")
