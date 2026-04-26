@@ -718,6 +718,7 @@ const Profile = () => {
             username={displayUsername}
             onOpenPost={setSelectedPost}
             onCreate={() => setShowCreatePost(true)}
+            onToggleLike={togglePostLike}
           />
         ) : activeTab === 1 ? (
           <DetailsGrid
