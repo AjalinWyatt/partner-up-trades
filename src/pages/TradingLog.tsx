@@ -942,18 +942,24 @@ export default function TradingLog() {
           <div className="flex items-center justify-center py-16">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : entries.length === 0 ? (
+        ) : (() => {
+          const filteredEntries = entries.filter((e) =>
+            logView === "study" ? e.entry_type === "study" : (e.entry_type || "trade") === "trade"
+          );
+          return filteredEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
             <div className="text-3xl mb-3">📓</div>
-            <h2 className="text-base font-bold text-foreground mb-1">No sessions logged yet</h2>
+            <h2 className="text-base font-bold text-foreground mb-1">
+              No {logView === "study" ? "study sessions" : "trades"} logged yet
+            </h2>
             <p className="text-xs text-muted-foreground">
-              Tap + to log your first session
+              Tap + to log your first {logView === "study" ? "study session" : "trade"}
             </p>
           </div>
         ) : (
           <>
             <div className="space-y-1.5 mx-5">
-              {entries.map((entry) => (
+              {filteredEntries.map((entry) => (
                 <div
                   key={entry.id}
                   onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
@@ -1099,7 +1105,7 @@ export default function TradingLog() {
             </div>
 
             {/* Shared with partner card */}
-            {entries[0]?.share_setting === "partners" && (
+            {filteredEntries[0]?.share_setting === "partners" && (
               partners.length > 0 ? (
                 <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
@@ -1123,7 +1129,8 @@ export default function TradingLog() {
               )
             )}
           </>
-        )}
+        );
+        })()}
       </div>
 
       
