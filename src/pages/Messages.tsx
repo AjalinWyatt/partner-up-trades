@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
 import type { Connection, Message } from "@/components/messages/types";
 import { groupMessagesByDate } from "@/components/messages/utils";
 import AvatarIcon from "@/components/messages/AvatarIcon";
