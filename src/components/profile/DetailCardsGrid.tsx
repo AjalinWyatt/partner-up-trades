@@ -60,22 +60,22 @@ const ICONS: Record<string, LucideIcon> = {
 export const DetailCardsGrid = ({ items }: { items: DetailCardItem[] }) => {
   if (items.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 gap-3 px-4 pt-4 pb-8">
+    <div className="grid grid-cols-2 gap-2.5 px-4 pt-4 pb-8">
       {items.map((it, i) => {
         const Icon = ICONS[it.label] || BarChart3;
         return (
           <div
             key={`${it.label}-${i}`}
-            className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-3.5 py-3.5"
+            className="flex items-center gap-2.5 rounded-2xl border border-border/70 bg-card px-3 py-3"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-secondary/40 text-primary">
-              <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-secondary/40 text-primary">
+              <Icon className="h-4 w-4" strokeWidth={1.8} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              <p className="text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
                 {it.label}
               </p>
-              <p className="mt-0.5 truncate text-[15px] font-extrabold leading-tight text-foreground">
+              <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight text-foreground">
                 {it.value}
               </p>
             </div>
