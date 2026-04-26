@@ -54,6 +54,12 @@ export default function Messages() {
   const [systemExitOpen, setSystemExitOpen] = useState(false);
   const [deletingSystem, setDeletingSystem] = useState(false);
 
+  // Safe left-edge swipe-back: in chat view, swipe right to return to DM list
+  useSwipeBack({
+    onBack: () => setActiveChat(null),
+    enabled: !!activeChat,
+  });
+
   useEffect(() => {
     if (!userId) return;
     supabase
