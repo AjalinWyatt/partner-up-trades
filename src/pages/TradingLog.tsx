@@ -181,7 +181,9 @@ export default function TradingLog() {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
-    const weekEntries = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
+    const allWeek = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
+    const weekEntries = allWeek.filter((e) => (e.entry_type || "trade") === "trade");
+    const studyCount = allWeek.filter((e) => e.entry_type === "study").length;
     const pipsEntries = weekEntries.filter((e) => (e.pnl_unit || "pips") === "pips");
     const dollarEntries = weekEntries.filter((e) => e.pnl_unit === "dollars");
     const totalPips = pipsEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
@@ -189,7 +191,7 @@ export default function TradingLog() {
     const totalTrades = weekEntries.length;
     const wins = weekEntries.filter((e) => e.result === "Win").length;
     const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-    return { totalPips, totalDollars, totalTrades, winRate };
+    return { totalPips, totalDollars, totalTrades, winRate, studyCount };
   }
 
   async function saveEntry() {
@@ -615,14 +617,29 @@ export default function TradingLog() {
           <>
             <div className="space-y-1.5 mx-5">
               {entries.map((entry) => (
-                <div key={entry.id} className="bg-card border border-border rounded-xl p-2.5 px-3">
+                <div key={entry.id} className={cn(
+                  "bg-card border rounded-xl p-2.5 px-3",
+                  entry.entry_type === "study" ? "border-primary/40" : "border-border"
+                )}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
-                    <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                      {entry.pnl_unit === "dollars"
-                        ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
-                        : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md flex items-center gap-0.5",
+                        entry.entry_type === "study"
+                          ? "bg-primary/15 text-primary"
+                          : "bg-accent/15 text-accent"
+                      )}>
+                        {entry.entry_type === "study" ? "📚 Study" : "📈 Trade"}
+                      </span>
+                      <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
+                    </div>
+                    {entry.entry_type !== "study" && entry.pnl_pips != null && (
+                      <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
+                        {entry.pnl_unit === "dollars"
+                          ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
+                          : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
+                      </span>
+                    )}
                   </div>
                   {entry.mood && (
                     <div className="flex items-center gap-1 mb-1">
