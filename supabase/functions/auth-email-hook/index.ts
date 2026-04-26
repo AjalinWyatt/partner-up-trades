@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "partner-up-trades"
+const SITE_NAME = "TradersWorld"
 const SENDER_DOMAIN = "notify.tradersworld.app"
 const ROOT_DOMAIN = "tradersworld.app"
 const FROM_DOMAIN = "notify.tradersworld.app" // Domain shown in From address (may be root or sender subdomain)
