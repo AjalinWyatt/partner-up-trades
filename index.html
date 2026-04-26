@@ -21,8 +21,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TradersWorld" />
 
-    <!-- Preload the auth/landing globe so it's already in cache by the time the screen mounts -->
-    <link rel="preload" as="image" href="/auth-globe.png?v=3" fetchpriority="high" />
+    <!-- Globe image is loaded on demand by Landing/Auth pages only (no global preload) -->
 
     <meta property="og:title" content="TradersWorld" />
     <meta property="og:description" content="The accountability platform for serious traders." />
