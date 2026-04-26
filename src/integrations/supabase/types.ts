@@ -490,6 +490,7 @@ export type Database = {
           mood: string | null
           notes: string | null
           pnl_pips: number | null
+          pnl_unit: string
           result: string | null
           session: string | null
           share_setting: string | null
@@ -504,6 +505,7 @@ export type Database = {
           mood?: string | null
           notes?: string | null
           pnl_pips?: number | null
+          pnl_unit?: string
           result?: string | null
           session?: string | null
           share_setting?: string | null
@@ -518,6 +520,7 @@ export type Database = {
           mood?: string | null
           notes?: string | null
           pnl_pips?: number | null
+          pnl_unit?: string
           result?: string | null
           session?: string | null
           share_setting?: string | null

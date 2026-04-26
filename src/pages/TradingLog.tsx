@@ -20,6 +20,7 @@ interface JournalEntry {
   notes: string | null;
   share_setting: string | null;
   created_at: string;
+  pnl_unit?: string | null;
 }
 
 const MOODS = [
@@ -96,6 +97,7 @@ export default function TradingLog() {
   const [mood, setMood] = useState("");
   const [result, setResult] = useState("");
   const [pnl, setPnl] = useState("");
+  const [pnlUnit, setPnlUnit] = useState<"pips" | "dollars">("pips");
   const [marketName, setMarketName] = useState("");
   const [pairName, setPairName] = useState("");
   const [accountType, setAccountType] = useState("");
@@ -178,11 +180,14 @@ export default function TradingLog() {
     startOfWeek.setDate(today.getDate() - today.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
     const weekEntries = entries.filter((e) => new Date(e.created_at) >= startOfWeek);
-    const totalPips = weekEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
+    const pipsEntries = weekEntries.filter((e) => (e.pnl_unit || "pips") === "pips");
+    const dollarEntries = weekEntries.filter((e) => e.pnl_unit === "dollars");
+    const totalPips = pipsEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
+    const totalDollars = dollarEntries.reduce((sum, e) => sum + (e.pnl_pips || 0), 0);
     const totalTrades = weekEntries.length;
     const wins = weekEntries.filter((e) => e.result === "Win").length;
     const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-    return { totalPips, totalTrades, winRate };
+    return { totalPips, totalDollars, totalTrades, winRate };
   }
 
   async function saveEntry() {
@@ -194,6 +199,7 @@ export default function TradingLog() {
       mood: mood || null,
       result: result || null,
       pnl_pips: pnl ? parseFloat(pnl) : null,
+      pnl_unit: pnlUnit,
       market_pair: marketPairStr || null,
       session: null,
       tags: selectedTags,
@@ -242,6 +248,7 @@ export default function TradingLog() {
   function resetForm() {
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
+    setPnlUnit("pips");
   }
 
   const streak = getStreak();
@@ -315,13 +322,30 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-            <input
-              type="text"
-              value={pnl}
-              onChange={(e) => setPnl(e.target.value)}
-              placeholder="Pips or dollar amount (e.g. +38 pips)"
-              className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={pnl}
+                onChange={(e) => setPnl(e.target.value)}
+                placeholder={pnlUnit === "pips" ? "e.g. +38" : "e.g. +250"}
+                className="flex-1 py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+              />
+              <div className="flex rounded-[10px] border-[1.5px] border-border bg-secondary p-0.5">
+                {(["pips", "dollars"] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setPnlUnit(u)}
+                    className={cn(
+                      "px-3 rounded-[8px] text-[12px] font-bold transition-colors",
+                      pnlUnit === u ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {u === "pips" ? "Pips" : "$"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Market & Pair */}
@@ -485,8 +509,13 @@ export default function TradingLog() {
         <div className="grid grid-cols-3 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
           <div className="bg-card py-2.5 px-2 text-center">
             <div className={cn("text-base font-black", stats.totalPips >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-              {stats.totalPips > 0 ? "+" : ""}{stats.totalPips} pips
+              {stats.totalPips > 0 ? "+" : ""}{stats.totalPips}{stats.totalDollars !== 0 ? "p" : " pips"}
             </div>
+            {stats.totalDollars !== 0 && (
+              <div className={cn("text-[10px] font-bold", stats.totalDollars >= 0 ? "text-accent" : "text-destructive")}>
+                {stats.totalDollars > 0 ? "+$" : "-$"}{Math.abs(stats.totalDollars)}
+              </div>
+            )}
             <div className="text-[9px] text-muted-foreground mt-px">This Week</div>
           </div>
           <div className="bg-card py-2.5 px-2 text-center">
@@ -529,7 +558,9 @@ export default function TradingLog() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
                     <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                      {(entry.pnl_pips || 0) > 0 ? "+" : ""}{entry.pnl_pips ?? 0} pips
+                      {entry.pnl_unit === "dollars"
+                        ? `${(entry.pnl_pips || 0) >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips ?? 0)}`
+                        : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips ?? 0} pips`}
                     </span>
                   </div>
                   {entry.mood && (

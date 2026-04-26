@@ -386,7 +386,11 @@ const ViewProfile = () => {
                       <p className="mt-1 text-[11px] text-muted-foreground">{timeAgo(entry.created_at)}</p>
                     </div>
                     {typeof entry.pnl_pips === "number" && (
-                      <span className="text-sm font-bold text-foreground">{entry.pnl_pips > 0 ? "+" : ""}{entry.pnl_pips} pips</span>
+                      <span className="text-sm font-bold text-foreground">
+                        {(entry as any).pnl_unit === "dollars"
+                          ? `${entry.pnl_pips >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
+                          : `${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips`}
+                      </span>
                     )}
                   </div>
                   {entry.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{entry.notes}</p>}

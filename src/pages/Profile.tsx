@@ -63,6 +63,7 @@ interface JournalEntry {
   tags: string[] | null;
   share_setting: string | null;
   account_type: string | null;
+  pnl_unit?: string | null;
 }
 
 interface ProfilePostItem {
@@ -848,7 +849,11 @@ const JournalList = ({ entries, onOpenLog }: { entries: JournalEntry[]; onOpenLo
               <p className="mt-1 text-[11px] text-muted-foreground">{formatProfileDate(entry.created_at)}</p>
             </div>
             {typeof entry.pnl_pips === "number" && (
-              <span className="text-sm font-bold text-foreground">{entry.pnl_pips > 0 ? "+" : ""}{entry.pnl_pips} pips</span>
+              <span className="text-sm font-bold text-foreground">
+                {entry.pnl_unit === "dollars"
+                  ? `${entry.pnl_pips >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
+                  : `${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips`}
+              </span>
             )}
           </div>
 
