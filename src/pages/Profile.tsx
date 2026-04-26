@@ -783,7 +783,7 @@ const PostList = ({
                 {post.kind === "repost" && (
                   <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
                 )}
-                {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
+                {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[14px] leading-6 text-foreground line-clamp-6">{post.content || post.caption}</p>}
                 {!!post.tags?.length && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {post.tags.map((tag: string) => (
