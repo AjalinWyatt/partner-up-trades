@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X, Lock, Link } from "lucide-react";
+import { Plus, X, Lock, Link, BookOpen, TrendingUp } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import LogoHeader from "@/components/LogoHeader";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ interface JournalEntry {
   share_setting: string | null;
   created_at: string;
   pnl_unit?: string | null;
+  entry_type?: string | null;
 }
 
 const MOODS = [
@@ -94,6 +95,7 @@ export default function TradingLog() {
   const [showForm, setShowForm] = useState(false);
 
   // Form state
+  const [entryType, setEntryType] = useState<"trade" | "study">("trade");
   const [mood, setMood] = useState("");
   const [result, setResult] = useState("");
   const [pnl, setPnl] = useState("");
