@@ -416,7 +416,7 @@ export default function TradingLog() {
     return (
       <div className="flex h-[100dvh] w-full min-w-0 max-w-full flex-col overflow-hidden overscroll-none bg-background touch-pan-y">
         {/* Form header */}
-        <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 pb-2 pt-[max(7rem,calc(env(safe-area-inset-top,0px)+1rem))] lg:pt-3">
+        <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 pb-2 pt-[max(2rem,calc(env(safe-area-inset-top,0px)+1rem))] lg:pt-3">
           <div className="flex min-w-0 items-center gap-2">
             <button onClick={() => setShowForm(false)} className="w-7 h-7 flex items-center justify-center">
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
