@@ -37,6 +37,30 @@ const Onboarding = () => {
   const [direction, setDirection] = useState(1);
   const [traderCount, setTraderCount] = useState(0);
   const [partnershipCount, setPartnershipCount] = useState(0);
+  // Field-level error highlighting so users can see exactly what to fix
+  // instead of being kicked back to a generic state.
+  const [errorField, setErrorField] = useState<
+    null | "username" | "dob" | "city" | "country" | "reach"
+  >(null);
+
+  const flagError = (
+    field: "username" | "dob" | "city" | "country" | "reach",
+    targetStep: number,
+    message: string,
+  ) => {
+    setErrorField(field);
+    if (step !== targetStep) goTo(targetStep);
+    toast.error(message);
+    // Scroll the offending field into view & focus it once the step renders
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-error-field="${field}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const focusable = el.querySelector<HTMLElement>("input, select, button");
+        focusable?.focus({ preventScroll: true });
+      }
+    }, 350);
+  };
 
   useEffect(() => {
     supabase.from("profiles").select("*", { count: "exact", head: true }).then(({ count }) => setTraderCount(count ?? 0));
@@ -245,12 +269,15 @@ const Onboarding = () => {
                 placeholder="Username"
                 value={nickname}
                 onChange={(e) =>
-                  setNickname(
-                    e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9_.]/g, "")
-                      .slice(0, 30)
-                  )
+                  {
+                    setNickname(
+                      e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_.]/g, "")
+                        .slice(0, 30)
+                    );
+                    if (errorField === "username") setErrorField(null);
+                  }
                 }
                 autoCapitalize="none"
                 autoCorrect="off"
@@ -260,7 +287,19 @@ const Onboarding = () => {
                 className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
               />
             </div>
-            <div className="h-px bg-border mb-6" />
+            <div
+              data-error-field="username"
+              className={cn(
+                "h-px mb-1 transition-colors",
+                errorField === "username" ? "bg-destructive h-0.5" : "bg-border",
+              )}
+            />
+            {errorField === "username" && (
+              <p className="text-[12px] text-destructive mb-5">
+                Username must be 3–30 chars: lowercase letters, numbers, _ or .
+              </p>
+            )}
+            {errorField !== "username" && <div className="mb-6" />}
 
             {/* Date of birth underline input */}
             <div className="text-[15px] text-foreground mb-3">When were you born?</div>
@@ -274,11 +313,26 @@ const Onboarding = () => {
               <input
                 type="date"
                 value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
+                onChange={(e) => {
+                  setDateOfBirth(e.target.value);
+                  if (errorField === "dob") setErrorField(null);
+                }}
                 className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none [color-scheme:dark]"
               />
             </div>
-            <div className="h-px bg-border mb-6" />
+            <div
+              data-error-field="dob"
+              className={cn(
+                "h-px mb-1 transition-colors",
+                errorField === "dob" ? "bg-destructive h-0.5" : "bg-border",
+              )}
+            />
+            {errorField === "dob" && (
+              <p className="text-[12px] text-destructive mb-5">
+                You must be 18 or older to use Traders World.
+              </p>
+            )}
+            {errorField !== "dob" && <div className="mb-6" />}
 
             {/* Gender - moved earlier into Profile step per mockup */}
             <div className="text-[15px] text-foreground mb-3">Your Gender</div>
@@ -364,15 +418,23 @@ const Onboarding = () => {
 
             {/* Editable location fields (always visible so users can adjust) */}
             <div className="grid grid-cols-1 gap-2 mb-8">
+              <div
+                data-error-field="city"
+                className={cn(
+                  "rounded-md transition-shadow",
+                  errorField === "city" && "ring-2 ring-destructive ring-offset-2 ring-offset-background",
+                )}
+              >
               <LocationAutocomplete
                 kind="city"
                 placeholder="City"
                 value={city}
-                onChange={setCity}
+                onChange={(v) => { setCity(v); if (errorField === "city") setErrorField(null); }}
                 state={state}
                 country={country}
                 underline
               />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <LocationAutocomplete
                   kind="state"
@@ -382,14 +444,27 @@ const Onboarding = () => {
                   country={country}
                   underline
                 />
+                <div
+                  data-error-field="country"
+                  className={cn(
+                    "rounded-md transition-shadow",
+                    errorField === "country" && "ring-2 ring-destructive ring-offset-2 ring-offset-background",
+                  )}
+                >
                 <LocationAutocomplete
                   kind="country"
                   placeholder="Country"
                   value={country}
-                  onChange={setCountry}
+                  onChange={(v) => { setCountry(v); if (errorField === "country") setErrorField(null); }}
                   underline
                 />
+                </div>
               </div>
+              {(errorField === "city" || errorField === "country") && (
+                <p className="text-[12px] text-destructive">
+                  City and Country are required for Local matching.
+                </p>
+              )}
             </div>
 
             <div className="text-[15px] text-foreground mb-3">What do you look for in charts?</div>
