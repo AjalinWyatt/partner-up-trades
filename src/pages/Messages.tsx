@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, Search, Tag as TagIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -356,7 +356,7 @@ export default function Messages() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
             <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-3">
-              <Globe className="w-7 h-7 text-muted-foreground" />
+              <MessageCircle className="w-7 h-7 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
             <p className="text-xs text-muted-foreground mb-4">Connect with a match to start chatting</p>
