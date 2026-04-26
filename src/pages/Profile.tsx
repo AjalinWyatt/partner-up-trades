@@ -1034,7 +1034,21 @@ const PostList = ({
   );
 };
 
-const PhotoGrid = ({ posts, onOpenPost, onCreate }: { posts: ProfilePostItem[]; onOpenPost: (post: any) => void; onCreate?: () => void }) => {
+const PhotoGrid = ({
+  posts,
+  albums,
+  onOpenPost,
+  onCreate,
+  onCreateAlbum,
+  onOpenAlbum,
+}: {
+  posts: ProfilePostItem[];
+  albums?: Array<{ id: string; title: string; cover_post_id: string | null; coverThumb: string | null; count: number }>;
+  onOpenPost: (post: any) => void;
+  onCreate?: () => void;
+  onCreateAlbum?: () => void;
+  onOpenAlbum?: (id: string) => void;
+}) => {
   const photos = posts.filter((post) => {
     const media = post.media_urls?.[0] || post.media_url || post.image_url;
     if (!media) return false;
@@ -1042,7 +1056,9 @@ const PhotoGrid = ({ posts, onOpenPost, onCreate }: { posts: ProfilePostItem[]; 
     return !type.startsWith("video");
   });
 
-  if (photos.length === 0) {
+  const albumList = albums || [];
+
+  if (photos.length === 0 && albumList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
@@ -1061,17 +1077,50 @@ const PhotoGrid = ({ posts, onOpenPost, onCreate }: { posts: ProfilePostItem[]; 
 
   return (
     <div className="relative">
-      {onCreate && (
-        <div className="flex justify-end px-3 pt-2 pb-1">
-          <button
-            onClick={onCreate}
-            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" /> New
-          </button>
+      {(onCreate || onCreateAlbum) && (
+        <div className="flex justify-end gap-2 px-3 pt-2 pb-1">
+          {onCreateAlbum && (
+            <button
+              onClick={onCreateAlbum}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-bold text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" /> Album
+            </button>
+          )}
+          {onCreate && (
+            <button
+              onClick={onCreate}
+              className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" /> Photo
+            </button>
+          )}
         </div>
       )}
       <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
+      {albumList.map((album) => (
+        <button
+          key={`album-${album.id}`}
+          onClick={() => onOpenAlbum?.(album.id)}
+          className="relative aspect-square overflow-hidden bg-secondary"
+        >
+          {album.coverThumb ? (
+            <img src={album.coverThumb} alt={album.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-muted">
+              <Camera className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
+          <div className="absolute right-1.5 top-1.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-bold text-foreground backdrop-blur">
+            {album.count}
+          </div>
+          <div className="absolute inset-x-0 bottom-0 px-2 py-1.5 text-left">
+            <p className="truncate text-[11px] font-bold text-foreground">{album.title}</p>
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Album</p>
+          </div>
+        </button>
+      ))}
       {photos.map((post) => {
         const media = post.media_urls?.[0] || post.media_url || post.image_url;
         const isMulti = (post.media_urls?.length || 0) > 1;
