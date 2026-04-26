@@ -919,9 +919,10 @@ const DetailsGrid = ({
   ].filter((i) => !!i.value);
 
   const reach = (tradingProfile?.connection_reach || "").toLowerCase();
-  const reachIndex = reach === "local" ? 0 : reach === "global" ? 1 : reach === "both" ? 2 : -1;
+  const reachLabel = reach === "local" ? "Local" : reach === "global" ? "Global" : reach === "both" ? "Local/Global" : "";
+  if (reachLabel) items.push({ value: reachLabel, label: "Connection Reach" });
 
-  if (items.length === 0 && reachIndex < 0) {
+  if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
         <p className="text-base font-bold text-foreground">No details yet</p>
@@ -931,38 +932,7 @@ const DetailsGrid = ({
   }
 
   return (
-    <div className="px-6 pt-6 pb-10 space-y-8">
-      <div className="-mx-6">
-        <DetailCardsGrid items={items} />
-      </div>
-
-      {reachIndex >= 0 && (
-        <div className="px-0">
-          <p className="text-[15px] font-semibold text-foreground">Connection Reach</p>
-          <div className="mt-5 mb-3 h-[6px] w-full rounded-full bg-muted relative">
-            <div
-              className="absolute top-0 left-0 h-[6px] rounded-full bg-primary"
-              style={{ width: reachIndex === 0 ? "0%" : reachIndex === 1 ? "50%" : "100%" }}
-            />
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={cn(
-                  "absolute -top-[5px] h-4 w-4 rounded-full border-2",
-                  i <= reachIndex ? "bg-primary border-primary" : "bg-background border-foreground/40"
-                )}
-                style={{ left: i === 0 ? "0%" : i === 1 ? "calc(50% - 8px)" : "calc(100% - 16px)" }}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between text-[12px]">
-            <span className={cn("font-semibold", reachIndex === 0 ? "text-primary" : "text-muted-foreground")}>Local</span>
-            <span className={cn("font-semibold", reachIndex === 1 ? "text-primary" : "text-muted-foreground")}>Global</span>
-            <span className={cn("font-semibold", reachIndex === 2 ? "text-primary" : "text-muted-foreground")}>Both</span>
-          </div>
-        </div>
-      )}
-    </div>
+    <DetailCardsGrid items={items} />
   );
 };
 
