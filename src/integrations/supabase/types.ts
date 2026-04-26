@@ -873,6 +873,7 @@ export type Database = {
           onboarding_completed: boolean | null
           profile_visibility: string
           state: string | null
+          tour_completed: boolean
           updated_at: string | null
           username: string | null
           username_changes_count: number
@@ -898,6 +899,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           profile_visibility?: string
           state?: string | null
+          tour_completed?: boolean
           updated_at?: string | null
           username?: string | null
           username_changes_count?: number
@@ -923,6 +925,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           profile_visibility?: string
           state?: string | null
+          tour_completed?: boolean
           updated_at?: string | null
           username?: string | null
           username_changes_count?: number
