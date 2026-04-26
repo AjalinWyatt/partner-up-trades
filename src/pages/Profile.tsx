@@ -552,7 +552,7 @@ const Profile = () => {
     return (
       <AppLayout>
         <div className="flex-1 overflow-y-auto pb-8">
-          <div className="flex items-center justify-between border-b border-border px-5 pb-3 pt-4">
+          <div className="flex items-center justify-between border-b border-border px-5 pb-3 pt-safe-4">
             <button onClick={() => setEditing(false)} className="text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">Cancel</button>
             <span className="text-base font-extrabold text-foreground">Edit Profile</span>
             <button onClick={handleSaveProfile} disabled={saving} className="text-sm font-bold text-primary transition-colors hover:text-primary/80">{saving ? "Saving..." : "Done"}</button>
@@ -613,7 +613,7 @@ const Profile = () => {
     <AppLayout>
       <div className="flex-1 overflow-y-auto pb-24">
         {/* Top bar: wordmark + settings */}
-        <div className="relative flex items-center justify-center px-5 pt-5">
+        <div className="relative flex items-center justify-center px-5 pt-safe-5">
           <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
             Traders<span className="text-foreground">World</span>
           </h1>

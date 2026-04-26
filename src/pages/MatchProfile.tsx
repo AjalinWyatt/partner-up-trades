@@ -157,7 +157,7 @@ const MatchProfile = () => {
     <AppLayout>
       <div className="flex-1 flex flex-col pb-[88px]">
         {/* Header */}
-        <div className="px-5 pt-5 flex items-center justify-between">
+        <div className="px-5 pt-safe-5 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center -ml-2"
