@@ -135,6 +135,9 @@ const Profile = () => {
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
+  const [albums, setAlbums] = useState<Array<{ id: string; title: string; cover_post_id: string | null; coverThumb: string | null; count: number }>>([]);
+  const [showCreateAlbum, setShowCreateAlbum] = useState(false);
+  const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
 
   const togglePostLike = async (postId: string) => {
     if (!userId) return;
