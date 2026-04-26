@@ -133,9 +133,6 @@ const Profile = () => {
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [postToShare, setPostToShare] = useState<any>(null);
-  const [albums, setAlbums] = useState<Array<{ id: string; title: string; cover_post_id: string | null; coverThumb: string | null; count: number }>>([]);
-  const [showCreateAlbum, setShowCreateAlbum] = useState(false);
-  const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
 
   const togglePostLike = async (postId: string) => {
     if (!userId) return;
@@ -328,7 +325,6 @@ const Profile = () => {
       }
 
       await loadProfileCollections(user.id, pData?.username);
-      await loadAlbums(user.id);
       setJournalEntries((entries as JournalEntry[]) || []);
       setLoading(false);
     };
@@ -374,46 +370,6 @@ const Profile = () => {
   const refreshPosts = async () => {
     if (!userId) return;
     await loadProfileCollections(userId, profile?.username);
-    await loadAlbums(userId);
-  };
-
-  const loadAlbums = async (uid: string) => {
-    const { data: rows } = await supabase
-      .from("albums")
-      .select("id, title, cover_post_id")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false });
-    if (!rows) { setAlbums([]); return; }
-
-    const albumIds = rows.map((r: any) => r.id);
-    const { data: links } = albumIds.length
-      ? await supabase.from("album_posts").select("album_id, post_id").in("album_id", albumIds)
-      : { data: [] as any[] };
-    const counts = new Map<string, number>();
-    const firstByAlbum = new Map<string, string>();
-    for (const l of (links || []) as any[]) {
-      counts.set(l.album_id, (counts.get(l.album_id) || 0) + 1);
-      if (!firstByAlbum.has(l.album_id)) firstByAlbum.set(l.album_id, l.post_id);
-    }
-
-    const coverIds = Array.from(new Set(
-      (rows as any[]).map((r) => r.cover_post_id || firstByAlbum.get(r.id)).filter(Boolean)
-    )) as string[];
-    const { data: coverPosts } = coverIds.length
-      ? await supabase.from("posts").select("id, media_urls, media_url, image_url").in("id", coverIds)
-      : { data: [] as any[] };
-    const coverMap = new Map((coverPosts || []).map((p: any) => [p.id, p.media_urls?.[0] || p.media_url || p.image_url || null]));
-
-    setAlbums((rows as any[]).map((r) => {
-      const coverId = r.cover_post_id || firstByAlbum.get(r.id) || null;
-      return {
-        id: r.id,
-        title: r.title,
-        cover_post_id: coverId,
-        coverThumb: coverId ? (coverMap.get(coverId) || null) : null,
-        count: counts.get(r.id) || 0,
-      };
-    }));
   };
 
   const handleSaveProfile = async () => {
