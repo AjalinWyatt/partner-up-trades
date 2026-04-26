@@ -590,11 +590,6 @@ const Profile = () => {
                 <div className="flex h-[104px] w-[104px] items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
               )}
             </button>
-            {/* Streak badge - top right */}
-            <div className="absolute -top-1 -right-1 flex items-center gap-1 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-0.5 shadow-md">
-              <Flame className="h-3.5 w-3.5 fill-destructive text-destructive" />
-              <span className="text-[12px] font-extrabold text-foreground leading-none">{journalEntries.length || 0}</span>
-            </div>
             {/* Edit button - bottom center */}
             <button
               onClick={() => setEditing(true)}
