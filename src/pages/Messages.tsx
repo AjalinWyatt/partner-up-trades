@@ -396,7 +396,10 @@ export default function Messages() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5">
+      <div
+        className="flex-1 overflow-y-auto px-5 lg:pb-0"
+        style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
+      >
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
