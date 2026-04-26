@@ -162,17 +162,20 @@ html, body {
 html, body {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
-  /* Reserve space for scrollbar so content doesn't shift left/right
-     when the inner scroll content grows/shrinks */
-  scrollbar-gutter: stable;
 }
-body {
-  /* Stops the whole page from bouncing when you pull down at the top */
-  overflow-x: hidden;
-  /* Lock body width to viewport so headers don't drift horizontally
-     between renders when the scrollbar appears/disappears */
-  width: 100vw;
+
+/* Make the app fit any device: lock width to the actual viewport,
+   prevent horizontal scroll/drift, and respect iOS safe-area insets. */
+html, body {
+  width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+}
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  min-height: 100dvh;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
