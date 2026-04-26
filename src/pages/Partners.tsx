@@ -8,6 +8,7 @@ import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
+import { sendSystemDMOnce, WELCOME_NO_PARTNERS_DM } from "@/lib/systemDM";
 
 type AlertType = "win" | "loss" | "breakeven" | "inactive" | "rough";
 
@@ -98,6 +99,13 @@ const Partners = () => {
       const allIds = [...new Set([...pendingIds, ...acceptedIds])];
 
       if (allIds.length === 0) {
+        // First-time empty state → send the welcome/share DM from TradersWorld.
+        // sendSystemDMOnce is idempotent via system_dm_log.
+        sendSystemDMOnce({
+          userId: user.id,
+          dmKey: "welcome_no_partners_v1",
+          body: WELCOME_NO_PARTNERS_DM,
+        }).catch((e) => console.error("welcome DM failed", e));
         setLoading(false);
         return;
       }
