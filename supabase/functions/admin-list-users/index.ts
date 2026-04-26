@@ -80,6 +80,8 @@ Deno.serve(async (req) => {
     const result = allUsers.map((u) => {
       const p = profileMap.get(u.id) as any;
       const providers = (u.identities ?? []).map((i: any) => i.provider);
+      const bannedUntil = (u as any).banned_until ?? null;
+      const isBanned = bannedUntil ? new Date(bannedUntil).getTime() > Date.now() : false;
       return {
         id: u.id,
         email: u.email ?? null,
@@ -91,6 +93,8 @@ Deno.serve(async (req) => {
         username: p?.username ?? null,
         avatar_url: p?.avatar_url ?? null,
         onboarding_completed: p?.onboarding_completed ?? false,
+        banned_until: bannedUntil,
+        is_banned: isBanned,
       };
     });
 
