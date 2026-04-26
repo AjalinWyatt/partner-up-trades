@@ -41,9 +41,9 @@ export default function AppHeader({ rightSlot }: { rightSlot?: React.ReactNode }
   }, []);
 
   return (
-    <div className="flex items-center justify-between px-5 pt-3 pb-2">
+    <div className="relative flex items-center justify-center px-5 pt-3 pb-2">
       <Wordmark size="text-lg" />
-      <div className="flex items-center gap-2">
+      <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
         {rightSlot}
         <button
           onClick={() => navigate("/profile")}
