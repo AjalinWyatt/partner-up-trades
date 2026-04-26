@@ -517,7 +517,7 @@ export default function TradingLog() {
               {/* Duration */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">⏱️ Time spent</p>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STUDY_DURATIONS.map((d) => {
                     const sel = studyDuration === d;
                     return (
