@@ -1,36 +1,57 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+// Eager: landing/auth (first paint matters most)
 import Landing from "./pages/Landing";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import ResetPassword from "./pages/ResetPassword";
-import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
-import Discover from "./pages/Discover";
-import Partners from "./pages/Partners";
-import WaitingList from "./pages/WaitingList";
-import Feed from "./pages/Feed";
-import Messages from "./pages/Messages";
-import PulseSession from "./pages/PulseSession";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
-import ViewProfile from "./pages/ViewProfile";
-import TradingLog from "./pages/TradingLog";
-import Saved from "./pages/Saved";
-import MatchProfile from "./pages/MatchProfile";
-import Diagnostics from "./pages/Diagnostics";
-import AdminUsers from "./pages/AdminUsers";
-import AdminBroadcast from "./pages/AdminBroadcast";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Install from "./pages/Install";
-import EnableNotifications from "./pages/EnableNotifications";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy: everything else — keeps initial bundle small
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Discover = lazy(() => import("./pages/Discover"));
+const Partners = lazy(() => import("./pages/Partners"));
+const WaitingList = lazy(() => import("./pages/WaitingList"));
+const Feed = lazy(() => import("./pages/Feed"));
+const Messages = lazy(() => import("./pages/Messages"));
+const PulseSession = lazy(() => import("./pages/PulseSession"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Settings = lazy(() => import("./pages/Settings"));
+const ViewProfile = lazy(() => import("./pages/ViewProfile"));
+const TradingLog = lazy(() => import("./pages/TradingLog"));
+const Saved = lazy(() => import("./pages/Saved"));
+const MatchProfile = lazy(() => import("./pages/MatchProfile"));
+const Diagnostics = lazy(() => import("./pages/Diagnostics"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminBroadcast = lazy(() => import("./pages/AdminBroadcast"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Install = lazy(() => import("./pages/Install"));
+const EnableNotifications = lazy(() => import("./pages/EnableNotifications"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,           // 30s — avoid refetching on every remount
+      gcTime: 5 * 60_000,          // keep cached data 5 min after unmount
+      refetchOnWindowFocus: false, // don't re-hit DB every tab focus
+      refetchOnReconnect: true,
+      retry: 1,
+    },
+  },
+});
+
+const PageFallback = () => (
+  <div className="flex-1 min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -38,7 +59,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
@@ -65,8 +87,9 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/install" element={<Install />} />
           <Route path="/enable-notifications" element={<EnableNotifications />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
