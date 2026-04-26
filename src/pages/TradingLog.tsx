@@ -414,29 +414,29 @@ export default function TradingLog() {
   // ─── FORM VIEW ───
   if (showForm) {
     return (
-      <div className="flex flex-col h-screen bg-background">
+      <div className="flex h-[100dvh] w-full min-w-0 max-w-full flex-col overflow-hidden overscroll-none bg-background touch-pan-y">
         {/* Form header */}
-        <div className="flex items-center justify-between px-5 py-2 shrink-0">
-          <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 pb-2 pt-[max(2rem,calc(env(safe-area-inset-top,0px)+1rem))] lg:pt-3">
+          <div className="flex min-w-0 items-center gap-2">
             <button onClick={() => setShowForm(false)} className="w-7 h-7 flex items-center justify-center">
               <X className="w-[22px] h-[22px] text-foreground" strokeWidth={2} />
             </button>
-            <span className="text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+            <span className="min-w-0 truncate text-base font-extrabold text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {editingId ? `Edit ${entryType === "study" ? "Study" : "Trade"}` : (entryType === "study" ? "Log Study" : "Log Trade")}
             </span>
           </div>
           <button
             onClick={saveEntry}
             disabled={saving}
-            className="px-4 py-1.5 rounded-lg bg-accent text-accent-foreground text-[13px] font-bold disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-accent px-4 py-1.5 text-[13px] font-bold text-accent-foreground disabled:opacity-50"
           >
             Save
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3.5" style={{ scrollbarWidth: "none" }}>
+        <div className="min-h-0 w-full min-w-0 max-w-full flex-1 space-y-3.5 overflow-y-auto overflow-x-hidden overscroll-contain px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] touch-pan-y" style={{ scrollbarWidth: "none" }}>
           {/* Entry type toggle */}
-          <div className="flex gap-2 p-1 rounded-2xl bg-secondary border border-border">
+          <div className="flex w-full min-w-0 gap-2 overflow-hidden rounded-2xl border border-border bg-secondary p-1">
             {([
               { value: "trade", label: "Trade Log", icon: TrendingUp, emoji: "📈" },
               { value: "study", label: "Study Log", icon: BookOpen, emoji: "📚" },
@@ -448,14 +448,14 @@ export default function TradingLog() {
                   key={opt.value}
                   onClick={() => setEntryType(opt.value)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[13px] font-bold transition-all",
+                    "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[13px] font-bold transition-all",
                     sel
                       ? "bg-accent text-accent-foreground shadow-[0_2px_10px_hsl(var(--accent)/0.3)]"
                       : "text-muted-foreground"
                   )}
                 >
                   <span className="text-base leading-none">{opt.emoji}</span>
-                  <span>{opt.label}</span>
+                  <span className="min-w-0 truncate">{opt.label}</span>
                 </button>
               );
             })}
@@ -466,20 +466,20 @@ export default function TradingLog() {
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
               How are you feeling? 💭
             </p>
-            <div className="flex gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5">
               {MOODS.map((m) => (
                 <button
                   key={m.value}
                   onClick={() => setMood(m.value)}
                   className={cn(
-                    "flex-1 flex flex-col items-center py-2.5 rounded-[10px] border-[1.5px] transition-colors",
+                    "flex min-w-0 flex-col items-center rounded-[10px] border-[1.5px] py-2.5 transition-colors",
                     mood === m.value
                       ? "border-accent bg-accent/[0.08]"
                       : "border-border bg-secondary"
                   )}
                 >
                   <span className="text-xl">{m.emoji}</span>
-                  <span className="text-[9px] text-muted-foreground mt-0.5">{m.label}</span>
+                  <span className="mt-0.5 max-w-full truncate text-[9px] text-muted-foreground">{m.label}</span>
                 </button>
               ))}
             </div>
@@ -491,7 +491,7 @@ export default function TradingLog() {
               {/* Study type */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What kind of study?</p>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STUDY_TYPES.map((s) => {
                     const sel = studyType === s.value;
                     return (
@@ -500,14 +500,14 @@ export default function TradingLog() {
                         type="button"
                         onClick={() => setStudyType(sel ? "" : s.value)}
                         className={cn(
-                          "flex flex-col items-center gap-0.5 py-2 rounded-[10px] border-[1.5px] transition-colors",
+                          "flex min-w-0 flex-col items-center gap-0.5 rounded-[10px] border-[1.5px] py-2 transition-colors",
                           sel
                             ? "border-accent bg-accent/[0.08]"
                             : "border-border bg-secondary"
                         )}
                       >
                         <span className="text-base leading-none">{s.emoji}</span>
-                        <span className={cn("text-[9px] font-bold", sel ? "text-accent" : "text-muted-foreground")}>{s.label}</span>
+                        <span className={cn("max-w-full truncate text-center text-[9px] font-bold", sel ? "text-accent" : "text-muted-foreground")}>{s.label}</span>
                       </button>
                     );
                   })}
@@ -517,7 +517,7 @@ export default function TradingLog() {
               {/* Duration */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">⏱️ Time spent</p>
-                <div className="flex gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STUDY_DURATIONS.map((d) => {
                     const sel = studyDuration === d;
                     return (
@@ -526,7 +526,7 @@ export default function TradingLog() {
                         type="button"
                         onClick={() => setStudyDuration(sel ? "" : d)}
                         className={cn(
-                          "flex-1 py-2 rounded-[10px] border-[1.5px] text-[12px] font-bold transition-colors",
+                            "min-w-0 rounded-[10px] border-[1.5px] py-2 text-[12px] font-bold transition-colors",
                           sel
                             ? "bg-accent/[0.12] text-accent border-accent"
                             : "border-border bg-secondary text-muted-foreground"
@@ -542,7 +542,7 @@ export default function TradingLog() {
               {/* Confidence */}
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">How well do you get it?</p>
-                <div className="flex gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STUDY_CONFIDENCE.map((c) => {
                     const sel = studyConfidence === c.value;
                     return (
@@ -551,14 +551,14 @@ export default function TradingLog() {
                         type="button"
                         onClick={() => setStudyConfidence(sel ? 0 : c.value)}
                         className={cn(
-                          "flex-1 flex flex-col items-center py-2 rounded-[10px] border-[1.5px] transition-colors",
+                            "flex min-w-0 flex-col items-center rounded-[10px] border-[1.5px] py-2 transition-colors",
                           sel
                             ? "border-accent bg-accent/[0.08]"
                             : "border-border bg-secondary"
                         )}
                       >
                         <span className="text-lg leading-none">{c.emoji}</span>
-                        <span className={cn("text-[9px] font-bold mt-0.5", sel ? "text-accent" : "text-muted-foreground")}>{c.label}</span>
+                        <span className={cn("mt-0.5 max-w-full truncate text-center text-[9px] font-bold", sel ? "text-accent" : "text-muted-foreground")}>{c.label}</span>
                       </button>
                     );
                   })}
@@ -572,7 +572,7 @@ export default function TradingLog() {
                   value={studyTakeaway}
                   onChange={(e) => setStudyTakeaway(e.target.value)}
                   placeholder="One thing you'll actually use…"
-                  className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                  className="w-full min-w-0 rounded-[10px] border-[1.5px] border-border bg-secondary px-3.5 py-2.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground focus:border-accent lg:text-sm"
                 />
               </div>
 
@@ -583,7 +583,7 @@ export default function TradingLog() {
                   value={studyResource}
                   onChange={(e) => setStudyResource(e.target.value)}
                   placeholder="Book title, video URL, course name…"
-                  className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+                  className="w-full min-w-0 rounded-[10px] border-[1.5px] border-border bg-secondary px-3.5 py-2.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground focus:border-accent lg:text-sm"
                 />
               </div>
             </>
@@ -592,13 +592,13 @@ export default function TradingLog() {
           {/* Result */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Result</p>
-            <div className="flex gap-2 mb-2">
+            <div className="grid grid-cols-3 gap-2 mb-2">
               {RESULTS.map((r) => (
                 <button
                   key={r.value}
                   onClick={() => setResult(r.value)}
                   className={cn(
-                    "flex-1 py-2.5 rounded-[10px] border-[1.5px] text-[13px] font-bold transition-colors",
+                    "min-w-0 rounded-[10px] border-[1.5px] py-2.5 text-[13px] font-bold transition-colors",
                     result === r.value
                       ? r.className === "win"
                         ? "bg-accent/[0.12] text-accent border-accent"
@@ -612,9 +612,9 @@ export default function TradingLog() {
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex min-w-0 gap-2">
               <div className={cn(
-                "flex-1 flex items-center rounded-[10px] border-[1.5px] bg-secondary overflow-hidden focus-within:border-accent",
+                "flex min-w-0 flex-1 items-center overflow-hidden rounded-[10px] border-[1.5px] bg-secondary focus-within:border-accent",
                 result === "Win" ? "border-accent" : result === "Loss" ? "border-destructive" : "border-border"
               )}>
                 {result && (
@@ -631,12 +631,12 @@ export default function TradingLog() {
                   onChange={(e) => setPnl(e.target.value.replace(/[+\-−]/g, ""))}
                   placeholder="e.g. 250"
                   className={cn(
-                    "flex-1 py-2.5 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none",
+                    "min-w-0 flex-1 bg-transparent py-2.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground lg:text-sm",
                     result ? "pl-0 pr-3.5" : "px-3.5"
                   )}
                 />
               </div>
-              <div className="flex items-center px-3 rounded-[10px] border-[1.5px] border-border bg-secondary text-[12px] font-bold text-muted-foreground">
+              <div className="flex shrink-0 items-center rounded-[10px] border-[1.5px] border-border bg-secondary px-3 text-[12px] font-bold text-muted-foreground">
                 $
               </div>
             </div>
@@ -645,7 +645,7 @@ export default function TradingLog() {
           {/* Market & Pair */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Market & Pair</p>
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="mb-2 flex max-w-full flex-wrap gap-1.5 overflow-hidden">
               {MARKETS.map((m) => {
                 const sel = marketName === m;
                 return (
@@ -654,7 +654,7 @@ export default function TradingLog() {
                     type="button"
                     onClick={() => setMarketName(sel ? "" : m)}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-[12px] font-bold border-[1.5px] transition-colors",
+                      "max-w-full rounded-full border-[1.5px] px-3 py-1.5 text-[12px] font-bold transition-colors",
                       sel
                         ? "bg-accent/[0.12] text-accent border-accent"
                         : "border-border bg-secondary text-muted-foreground"
@@ -669,12 +669,12 @@ export default function TradingLog() {
               value={pairName}
               onChange={(e) => setPairName(e.target.value)}
               placeholder="Pair (e.g. XAU/USD, NQ, BTC/USD)"
-              className="w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
+              className="w-full min-w-0 rounded-[10px] border-[1.5px] border-border bg-secondary px-3.5 py-2.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground focus:border-accent lg:text-sm"
             />
             {recentPairs.length > 0 && (
               <div className="mt-2">
                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">⭐ Your most-used</p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex max-w-full flex-wrap gap-1.5 overflow-hidden">
                   {recentPairs.map((p) => {
                     const sel = pairName === p;
                     return (
@@ -683,7 +683,7 @@ export default function TradingLog() {
                         type="button"
                         onClick={() => setPairName(sel ? "" : p)}
                         className={cn(
-                          "px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
+                          "max-w-full rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors",
                           sel
                             ? "bg-accent/[0.12] text-accent border-accent"
                             : "border-accent/40 bg-accent/[0.04] text-foreground"
@@ -699,7 +699,7 @@ export default function TradingLog() {
             {marketName && PAIR_SUGGESTIONS[marketName] && (
               <div className="mt-2">
                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Suggestions</p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex max-w-full flex-wrap gap-1.5 overflow-hidden">
                 {PAIR_SUGGESTIONS[marketName].filter((p) => !recentPairs.includes(p)).map((p) => {
                   const sel = pairName === p;
                   return (
@@ -708,7 +708,7 @@ export default function TradingLog() {
                       type="button"
                       onClick={() => setPairName(sel ? "" : p)}
                       className={cn(
-                        "px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
+                        "max-w-full rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors",
                         sel
                           ? "bg-accent/[0.12] text-accent border-accent"
                           : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
@@ -726,13 +726,13 @@ export default function TradingLog() {
           {/* Account Type */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Account Type</p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {ACCOUNT_TYPES.map((a) => (
                 <button
                   key={a}
                   onClick={() => setAccountType(a)}
                   className={cn(
-                    "flex-1 py-2.5 rounded-[10px] border-[1.5px] text-[13px] font-bold transition-colors",
+                    "min-w-0 rounded-[10px] border-[1.5px] py-2.5 text-[13px] font-bold transition-colors",
                     accountType === a
                       ? "bg-accent/[0.12] text-accent border-accent"
                       : "border-border bg-secondary text-muted-foreground"
@@ -747,7 +747,7 @@ export default function TradingLog() {
           {/* Tags */}
           {entryType === "trade" && <div>
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">What went right / wrong?</p>
-             <div className="flex flex-wrap gap-[5px]">
+             <div className="flex max-w-full flex-wrap gap-[5px] overflow-hidden">
               {ALL_TAGS.map((t) => {
                 const sel = selectedTags.includes(t);
                 const type = getTagType(t);
@@ -756,7 +756,7 @@ export default function TradingLog() {
                     key={t}
                     onClick={() => setSelectedTags((prev) => sel ? prev.filter((x) => x !== t) : [...prev, t])}
                     className={cn(
-                      "px-3 py-[5px] rounded-full text-[11px] font-semibold transition-colors bg-transparent border-[1.5px]",
+                      "max-w-full rounded-full border-[1.5px] bg-transparent px-3 py-[5px] text-[11px] font-semibold transition-colors",
                       type === "green"
                         ? sel ? "border-accent text-accent" : "border-accent/50 text-foreground"
                         : type === "red"
@@ -783,7 +783,7 @@ export default function TradingLog() {
                 ? "Write freely about what you learned today…"
                 : "What happened? What did you learn?"}
               className={cn(
-                "w-full py-2.5 px-3.5 rounded-[10px] border-[1.5px] border-border bg-secondary text-[13px] text-foreground placeholder:text-muted-foreground outline-none resize-none focus:border-accent",
+                "w-full min-w-0 resize-none rounded-[10px] border-[1.5px] border-border bg-secondary px-3.5 py-2.5 text-[16px] text-foreground outline-none placeholder:text-muted-foreground focus:border-accent lg:text-[13px]",
                 entryType === "study" ? "min-h-[140px]" : "min-h-[60px]"
               )}
             />
@@ -803,15 +803,15 @@ export default function TradingLog() {
                     key={opt.value}
                     onClick={() => setShareSetting(opt.value)}
                     className={cn(
-                      "flex items-start gap-3 p-3 rounded-[10px] border-[1.5px] transition-colors text-left",
+                      "flex min-w-0 items-start gap-3 rounded-[10px] border-[1.5px] p-3 text-left transition-colors",
                       sel
                         ? "border-accent bg-accent/[0.08]"
                         : "border-border bg-secondary"
                     )}
                   >
-                    <div className="flex flex-col">
+                    <div className="flex min-w-0 flex-col">
                       <span className={cn("text-[12px] font-bold", sel ? "text-accent" : "text-foreground")}>{opt.label}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</span>
+                      <span className="mt-0.5 text-[10px] text-muted-foreground [overflow-wrap:anywhere]">{opt.desc}</span>
                     </div>
                   </button>
                 );
@@ -825,17 +825,17 @@ export default function TradingLog() {
 
   // ─── MAIN LOG VIEW ───
   return (
-    <AppLayout>
+    <AppLayout lockHeight>
       <AppHeader />
 
       {/* Page nav */}
-      <div className="flex items-center justify-between px-5 py-1.5">
-        <h1 className="text-lg font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Trading Log</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 py-1.5">
+        <h1 className="min-w-0 truncate text-lg font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Trading Log</h1>
+        <div className="flex shrink-0 items-center gap-2">
           <div className="relative">
             <button
               onClick={() => setShowRangeMenu((v) => !v)}
-              className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1"
+              className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"
             >
               {statsRange === "daily" ? "Today" : statsRange === "monthly" ? "This Month" : "This Week"}
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -876,11 +876,11 @@ export default function TradingLog() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-16" style={{ scrollbarWidth: "none" }}>
+      <div className="min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-[calc(96px+env(safe-area-inset-bottom,0px))] touch-pan-y" style={{ scrollbarWidth: "none" }}>
         {/* Streak */}
-        <div className="flex items-center gap-2.5 mx-5 my-2 p-2.5 px-3.5 bg-card border border-border rounded-xl">
+        <div className="mx-5 my-2 flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl border border-border bg-card p-2.5 px-3.5">
           <span className="text-2xl">⚡</span>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <div className="text-xl font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {streak} Day Streak
             </div>
@@ -906,7 +906,7 @@ export default function TradingLog() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-px bg-border rounded-[10px] overflow-hidden mx-5 mb-3">
+        <div className="mx-5 mb-3 grid min-w-0 grid-cols-4 gap-px overflow-hidden rounded-[10px] bg-border">
           <div className="bg-card py-2.5 px-1 text-center">
             <div className={cn("text-sm font-black leading-tight", (stats.totalDollars || stats.totalPips) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.totalDollars !== 0
@@ -941,7 +941,7 @@ export default function TradingLog() {
         </div>
 
         {/* Trade / Study view toggle */}
-        <div className="mx-5 mb-2 flex gap-1.5 p-1 rounded-2xl bg-secondary border border-border">
+        <div className="mx-5 mb-2 flex min-w-0 gap-1.5 overflow-hidden rounded-2xl border border-border bg-secondary p-1">
           {([
             { value: "trade", label: "Trade Log", emoji: "📈" },
             { value: "study", label: "Study Log", emoji: "📚" },
@@ -952,7 +952,7 @@ export default function TradingLog() {
                 key={opt.value}
                 onClick={() => setLogView(opt.value)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold transition-all",
+                  "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12px] font-bold transition-all",
                   sel
                     ? opt.value === "study"
                       ? "bg-primary text-primary-foreground shadow-[0_2px_10px_hsl(var(--primary)/0.3)]"
@@ -961,7 +961,7 @@ export default function TradingLog() {
                 )}
               >
                 <span className="text-base leading-none">{opt.emoji}</span>
-                <span>{opt.label}</span>
+                <span className="min-w-0 truncate">{opt.label}</span>
               </button>
             );
           })}
@@ -995,19 +995,19 @@ export default function TradingLog() {
           </div>
         ) : (
           <>
-            <div className="space-y-1.5 mx-5">
+            <div className="mx-5 max-w-full space-y-1.5 overflow-hidden">
               {filteredEntries.map((entry) => (
                 <div
                   key={entry.id}
                   onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
                   className={cn(
-                    "bg-card border rounded-xl p-2.5 px-3 relative cursor-pointer transition-colors hover:bg-card/80",
+                    "relative max-w-full cursor-pointer overflow-hidden rounded-xl border bg-card p-2.5 px-3 transition-colors hover:bg-card/80",
                     entry.entry_type === "study" ? "border-primary/40" : "border-border",
                     expandedId === entry.id && "ring-1 ring-accent/40"
                   )}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5">
+                  <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
                       <span className={cn(
                         "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md flex items-center gap-0.5",
                         entry.entry_type === "study"
@@ -1016,9 +1016,9 @@ export default function TradingLog() {
                       )}>
                         {entry.entry_type === "study" ? "📚 Study" : "📈 Trade"}
                       </span>
-                      <span className="text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
+                      <span className="min-w-0 truncate text-[11px] font-bold text-foreground">{formatEntryDate(entry.created_at)}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       {entry.entry_type !== "study" && entry.pnl_pips != null && (
                         <span className={cn("text-sm font-extrabold", (entry.pnl_pips || 0) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
                           {entry.pnl_unit === "dollars"
@@ -1098,10 +1098,10 @@ export default function TradingLog() {
                     </div>
                   )}
                   {entry.entry_type === "study" && entry.study_data?.takeaway && (
-                    <p className="text-[11px] text-foreground leading-snug mb-1 italic">"{entry.study_data.takeaway}"</p>
+                    <p className="mb-1 text-[11px] italic leading-snug text-foreground [overflow-wrap:anywhere]">"{entry.study_data.takeaway}"</p>
                   )}
                   {entry.notes && (
-                    <p className="text-[11px] text-foreground leading-snug mb-1 whitespace-pre-wrap">{entry.notes}</p>
+                    <p className="mb-1 whitespace-pre-wrap text-[11px] leading-snug text-foreground [overflow-wrap:anywhere]">{entry.notes}</p>
                   )}
                   {entry.entry_type === "study" && entry.study_data?.topics?.length > 0 && (
                     <div className="flex flex-wrap gap-[3px] mb-1">
@@ -1111,7 +1111,7 @@ export default function TradingLog() {
                     </div>
                   )}
                   {entry.entry_type === "study" && entry.study_data?.resource && (
-                    <div className="text-[9px] text-muted-foreground mt-0.5 truncate">🔗 {entry.study_data.resource}</div>
+                    <div className="mt-0.5 truncate text-[9px] text-muted-foreground">🔗 {entry.study_data.resource}</div>
                   )}
                   {entry.tags && entry.tags.length > 0 && (
                     <div className="flex flex-wrap gap-[3px] mb-1">
@@ -1129,12 +1129,12 @@ export default function TradingLog() {
                     </div>
                   )}
                   {(entry.market_pair || entry.session) && (
-                    <div className="text-[9px] text-muted-foreground mt-0.5">
+                    <div className="mt-0.5 text-[9px] text-muted-foreground [overflow-wrap:anywhere]">
                       {[entry.market_pair, entry.session ? `${entry.session} session` : null].filter(Boolean).join(" · ")}
                     </div>
                   )}
                   {entry.account_type && (
-                    <div className="text-[9px] text-muted-foreground mt-0.5">Account: {entry.account_type}</div>
+                    <div className="mt-0.5 text-[9px] text-muted-foreground [overflow-wrap:anywhere]">Account: {entry.account_type}</div>
                   )}
                   </>}
                 </div>
@@ -1144,7 +1144,7 @@ export default function TradingLog() {
             {/* Shared with partner card */}
             {filteredEntries[0]?.share_setting === "partners" && (
               partners.length > 0 ? (
-                <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05]">
+                <div className="mx-5 mt-3 overflow-hidden rounded-xl border-[1.5px] border-accent/40 bg-accent/[0.05] p-3.5">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-1.5">
                     SHARED WITH {partners[0].name.split(" ")[0].toUpperCase()}
                     {partners.length > 1 && ` + ${partners.length - 1} other${partners.length > 2 ? "s" : ""}`}
@@ -1154,7 +1154,7 @@ export default function TradingLog() {
                   </p>
                 </div>
               ) : (
-                <div className="mx-5 mt-3 p-3.5 rounded-xl border-[1.5px] border-primary/30 bg-primary/[0.05]">
+                <div className="mx-5 mt-3 overflow-hidden rounded-xl border-[1.5px] border-primary/30 bg-primary/[0.05] p-3.5">
                   <p className="text-[11px] text-muted-foreground mb-2">Connect with a partner to share your sessions</p>
                   <button
                     onClick={() => navigate("/discover")}
