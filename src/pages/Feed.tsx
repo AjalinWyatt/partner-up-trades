@@ -559,7 +559,6 @@ const Feed = () => {
       return;
     }
     invalidateSessionCache("messages:connections");
-    }
 
     setSendingToId(null);
     setPostToShare(null);
