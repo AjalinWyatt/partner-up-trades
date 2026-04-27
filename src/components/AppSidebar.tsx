@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useNavBadges } from "@/hooks/use-nav-badges";
+import { useQueryClient } from "@tanstack/react-query";
+import { warmRoute } from "@/lib/routePrefetch";
 
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
@@ -26,6 +28,7 @@ export default function AppSidebar() {
   const isAdmin = useIsAdmin();
   const [adminOpen, setAdminOpen] = useState(false);
   const { homeDot, messagesDot, discoverDot } = useNavBadges();
+  const queryClient = useQueryClient();
   const dotForPath: Record<string, boolean> = {
     "/dashboard": homeDot,
     "/messages": messagesDot,
@@ -73,6 +76,9 @@ export default function AppSidebar() {
               key={item.path}
               data-tour={item.tour}
               onClick={() => navigate(item.path)}
+              onMouseEnter={() => warmRoute(item.path, queryClient)}
+              onFocus={() => warmRoute(item.path, queryClient)}
+              onTouchStart={() => warmRoute(item.path, queryClient)}
               className={cn(
                 "w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] transition-all group",
                 active
