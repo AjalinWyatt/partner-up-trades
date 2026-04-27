@@ -55,10 +55,11 @@
         transition: opacity 250ms ease;
       }
       #initial-splash.splash-hide { opacity: 0; pointer-events: none; }
-      #initial-splash img {
+      #initial-splash .splash-logo {
         width: 88px;
         height: 88px;
         border-radius: 20px;
+        background: #0B0F0E url("/app-icon-192.png") center / cover no-repeat;
         box-shadow: 0 10px 40px rgba(0,0,0,0.5);
       }
       #initial-splash .splash-spinner {
@@ -81,7 +82,7 @@
       }
     </style>
     <div id="initial-splash" aria-hidden="true">
-      <img src="/favicon.png?v=3" alt="" />
+      <div class="splash-logo"></div>
       <div class="splash-name">TradersWorld</div>
       <div class="splash-spinner"></div>
     </div>
