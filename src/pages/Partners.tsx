@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { Users, Bell, MessageSquare, Check, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
