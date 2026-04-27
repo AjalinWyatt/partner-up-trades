@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Mic, Loader2, Trash2, Send, Play, Pause } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateSessionCache } from "@/hooks/use-session-cache";
+import { claimPlayback, releasePlayback } from "@/lib/audioCoordinator";
+import { toast } from "sonner";
 
 interface VoiceRecorderProps {
   userId: string;
@@ -23,26 +25,62 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startRecording = async () => {
+    // Pre-flight: surface a clear message when the OS has already denied
+    // mic access, instead of failing silently.
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4" });
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-        if (chunksRef.current.length === 0) return;
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
-        const url = URL.createObjectURL(blob);
-        setPreview({ blob, mimeType: recorder.mimeType, url, duration: elapsed });
-      };
-      recorder.start();
-      recorderRef.current = recorder;
-      setRecording(true);
-      setElapsed(0);
-      timerRef.current = setInterval(() => setElapsed(p => p + 1), 1000);
+      if (navigator.permissions) {
+        const status = await navigator.permissions.query({ name: "microphone" as PermissionName });
+        if (status.state === "denied") {
+          toast.error("Microphone blocked. Enable it in your browser/phone settings.");
+          return;
+        }
+      }
     } catch {
-      console.error("Mic access denied");
+      /* Safari throws on this query — ignore and try getUserMedia directly */
     }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        toast.error("Microphone permission denied. Allow it in settings to send voice notes.");
+      } else if (err?.name === "NotFoundError") {
+        toast.error("No microphone found on this device.");
+      } else if (err?.name === "NotReadableError") {
+        toast.error("Microphone is in use by another app.");
+      } else {
+        toast.error("Could not access microphone.");
+      }
+      console.error("Mic access failed:", err);
+      return;
+    }
+
+    // Pick the best supported mime — Safari/iOS only does mp4, Chrome/Android does webm/opus.
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+          ? "audio/mp4"
+          : "";
+
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    chunksRef.current = [];
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    recorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      if (chunksRef.current.length === 0) return;
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
+      const url = URL.createObjectURL(blob);
+      setPreview({ blob, mimeType: recorder.mimeType, url, duration: elapsed });
+    };
+    // Slice into 250ms chunks so the recorder produces data even on very short notes
+    recorder.start(250);
+    recorderRef.current = recorder;
+    setRecording(true);
+    setElapsed(0);
+    timerRef.current = setInterval(() => setElapsed(p => p + 1), 1000);
   };
 
   const stopRecording = () => {
@@ -59,14 +97,26 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
     audioRef.current?.pause();
   };
 
-  const togglePlay = () => {
-    if (!audioRef.current) return;
+  const togglePlay = async () => {
+    const a = audioRef.current;
+    if (!a) return;
     if (playing) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
+      a.pause();
+      return;
+    }
+    claimPlayback(a);
+    try {
+      await a.play();
+    } catch {
+      /* iOS will reject if not unlocked yet — state stays paused */
     }
   };
+
+  // Release the playback claim when the recorder unmounts.
+  useEffect(() => {
+    const a = audioRef.current;
+    return () => { if (a) releasePlayback(a); };
+  }, []);
 
   const sendPreview = async () => {
     if (!preview) return;
@@ -115,9 +165,15 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
         <audio
           ref={audioRef}
           src={preview.url}
+          preload="metadata"
+          playsInline
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onEnded={() => { setPlaying(false); setPlayPos(0); }}
+          onEnded={() => {
+            setPlaying(false);
+            setPlayPos(0);
+            if (audioRef.current) releasePlayback(audioRef.current);
+          }}
           onTimeUpdate={(e) => setPlayPos((e.target as HTMLAudioElement).currentTime)}
           className="hidden"
         />
