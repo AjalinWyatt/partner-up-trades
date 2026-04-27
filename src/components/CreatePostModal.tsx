@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -184,6 +185,9 @@ export default function CreatePostModal({ open, onClose, onCreated, initialPost 
       }
 
       toast.success(initialPost ? "Post updated" : "Posted");
+      // Cached snapshots of feed/profile lists are now stale — drop them so
+      // the next visit refetches and reflects the new post immediately.
+      invalidateSessionCache("feed:posts", "profile:me:posts");
       reset();
       onCreated();
     } catch (error) {
