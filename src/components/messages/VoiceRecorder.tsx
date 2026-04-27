@@ -165,9 +165,15 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
         <audio
           ref={audioRef}
           src={preview.url}
+          preload="metadata"
+          playsInline
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onEnded={() => { setPlaying(false); setPlayPos(0); }}
+          onEnded={() => {
+            setPlaying(false);
+            setPlayPos(0);
+            if (audioRef.current) releasePlayback(audioRef.current);
+          }}
           onTimeUpdate={(e) => setPlayPos((e.target as HTMLAudioElement).currentTime)}
           className="hidden"
         />
