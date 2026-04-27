@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { claimPlayback, releasePlayback } from "@/lib/audioCoordinator";
 
 interface AudioPlayerProps {
   url: string;
@@ -18,15 +19,38 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
     if (playing) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      claimPlayback(audioRef.current);
+      audioRef.current.play().catch(() => setPlaying(false));
     }
-    setPlaying(!playing);
   };
 
   const formatDur = (s: number) => {
+    if (!Number.isFinite(s) || s <= 0) return "0:00";
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
     return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const syncDuration = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (Number.isFinite(a.duration) && a.duration > 0) setDuration(a.duration);
+  };
+
+  const fixInfiniteDuration = () => {
+    const a = audioRef.current;
+    if (!a || a.dataset.fixingDuration === "true") return;
+    if (a.duration === Infinity || Number.isNaN(a.duration)) {
+      a.dataset.fixingDuration = "true";
+      const restore = () => {
+        a.currentTime = 0;
+        a.dataset.fixingDuration = "false";
+        syncDuration();
+        a.removeEventListener("timeupdate", restore);
+      };
+      a.addEventListener("timeupdate", restore);
+      a.currentTime = 1e7;
+    }
   };
 
   return (
@@ -34,12 +58,19 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
       <audio
         ref={audioRef}
         src={url}
-        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        preload="metadata"
+        playsInline
+        onLoadedMetadata={() => { syncDuration(); fixInfiniteDuration(); }}
+        onDurationChange={syncDuration}
+        onPlay={() => { if (audioRef.current) claimPlayback(audioRef.current); setPlaying(true); }}
+        onPause={() => setPlaying(false)}
         onTimeUpdate={() => {
           const a = audioRef.current;
-          if (a && a.duration) setProgress((a.currentTime / a.duration) * 100);
+          if (a && Number.isFinite(a.duration) && a.duration > 0) {
+            setProgress(Math.min(100, (a.currentTime / a.duration) * 100));
+          }
         }}
-        onEnded={() => { setPlaying(false); setProgress(0); }}
+        onEnded={() => { if (audioRef.current) releasePlayback(audioRef.current); setPlaying(false); setProgress(0); }}
       />
       <button
         onClick={toggle}
