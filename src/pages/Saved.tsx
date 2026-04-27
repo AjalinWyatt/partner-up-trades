@@ -18,8 +18,8 @@ interface SavedRow {
 const Saved = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [items, setItems] = useState<SavedRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems, hadCache] = useSessionCache<SavedRow[]>("saved:items", []);
+  const [loading, setLoading] = useState(!hadCache);
 
   useEffect(() => {
     const load = async () => {
