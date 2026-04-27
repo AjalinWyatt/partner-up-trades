@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { claimPlayback, releasePlayback } from "@/lib/audioCoordinator";
@@ -11,64 +11,17 @@ interface AudioPlayerProps {
 export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  // null until we successfully read a real, finite duration. Prevents the
-  // "Infinity:NaN" label that appears with webm/opus blobs whose container
-  // doesn't include a duration.
-  const [duration, setDuration] = useState<number | null>(null);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Pause this player if some OTHER audio claims playback.
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    return () => releasePlayback(a);
-  }, []);
-
-  const toggle = async () => {
-    const a = audioRef.current;
-    if (!a) return;
+  const toggle = () => {
+    if (!audioRef.current) return;
     if (playing) {
-      a.pause();
-      return;
-    }
-    // Stop any other audio currently playing in the app.
-    claimPlayback(a);
-    try {
-      await a.play();
-    } catch {
-      // iOS will reject if not user-gesture / not unlocked. State stays paused.
-    }
-  };
-
-  /**
-   * webm/opus blobs from MediaRecorder report `duration === Infinity` because
-   * the container has no duration in the header. The well-known fix is to
-   * seek past the end, which forces the browser to compute the real value
-   * and fire `durationchange` with a finite number.
-   */
-  const handleLoadedMetadata = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (a.duration === Infinity || Number.isNaN(a.duration)) {
-      const onSeeked = () => {
-        a.currentTime = 0;
-        a.removeEventListener("seeked", onSeeked);
-      };
-      a.addEventListener("seeked", onSeeked);
-      try {
-        a.currentTime = 1e7; // arbitrary huge value
-      } catch {
-        /* ignore */
-      }
+      audioRef.current.pause();
     } else {
-      setDuration(a.duration);
+      claimPlayback(audioRef.current);
+      audioRef.current.play().catch(() => setPlaying(false));
     }
-  };
-
-  const handleDurationChange = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (Number.isFinite(a.duration) && a.duration > 0) setDuration(a.duration);
   };
 
   const formatDur = (s: number) => {
@@ -78,6 +31,28 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  const syncDuration = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (Number.isFinite(a.duration) && a.duration > 0) setDuration(a.duration);
+  };
+
+  const fixInfiniteDuration = () => {
+    const a = audioRef.current;
+    if (!a || a.dataset.fixingDuration === "true") return;
+    if (a.duration === Infinity || Number.isNaN(a.duration)) {
+      a.dataset.fixingDuration = "true";
+      const restore = () => {
+        a.currentTime = 0;
+        a.dataset.fixingDuration = "false";
+        syncDuration();
+        a.removeEventListener("timeupdate", restore);
+      };
+      a.addEventListener("timeupdate", restore);
+      a.currentTime = 1e7;
+    }
+  };
+
   return (
     <div className="flex w-[min(210px,58vw)] max-w-full min-w-0 items-center gap-2.5 py-0.5 pr-1">
       <audio
@@ -85,21 +60,17 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
         src={url}
         preload="metadata"
         playsInline
-        onLoadedMetadata={handleLoadedMetadata}
-        onDurationChange={handleDurationChange}
-        onPlay={() => setPlaying(true)}
+        onLoadedMetadata={() => { syncDuration(); fixInfiniteDuration(); }}
+        onDurationChange={syncDuration}
+        onPlay={() => { if (audioRef.current) claimPlayback(audioRef.current); setPlaying(true); }}
         onPause={() => setPlaying(false)}
         onTimeUpdate={() => {
           const a = audioRef.current;
           if (a && Number.isFinite(a.duration) && a.duration > 0) {
-            setProgress((a.currentTime / a.duration) * 100);
+            setProgress(Math.min(100, (a.currentTime / a.duration) * 100));
           }
         }}
-        onEnded={() => {
-          setPlaying(false);
-          setProgress(0);
-          if (audioRef.current) releasePlayback(audioRef.current);
-        }}
+        onEnded={() => { if (audioRef.current) releasePlayback(audioRef.current); setPlaying(false); setProgress(0); }}
       />
       <button
         onClick={toggle}
@@ -122,7 +93,7 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
           />
         </div>
         <span className={cn("text-[10px] tabular-nums leading-none", isMine ? "text-primary-foreground/80" : "text-muted-foreground")}>
-          {formatDur(playing ? (audioRef.current?.currentTime || 0) : (duration ?? 0))}
+          {formatDur(playing ? (audioRef.current?.currentTime || 0) : duration || 0)}
         </span>
       </div>
     </div>

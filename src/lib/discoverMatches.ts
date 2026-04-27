@@ -26,8 +26,11 @@ const calcAge = (dob: string | null): number | null => {
   return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
 };
 
+const profileFields = "id, username, full_name, avatar_url, gender, location, city, state, country, hobbies, date_of_birth, created_at";
+const tradingFields = "user_id, markets, sessions, strategies, trading_style, experience_level, primary_goal, struggles, looking_for_gender, connection_reach";
+
 export const getDiscoverMatches = async (userId: string, options?: { joinedAfter?: string }) => {
-  const [{ data: allConnections }, { data: blockedData }, { data: passedData }, { data: me }, { data: myTrading }, { data: myProfile }] = await Promise.all([
+  const [{ data: allConnections }, { data: blockedData }, { data: passedData }, { data: myTrading }, { data: myProfile }] = await Promise.all([
     supabase
       .from("partner_connections")
       .select("requester_id, receiver_id")
@@ -35,9 +38,8 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
       .in("status", ["pending", "accepted"]),
     supabase.from("blocked_users").select("blocked_id").eq("blocker_id", userId),
     supabase.from("passed_profiles").select("passed_id").eq("passer_id", userId),
-    supabase.from("profiles").select("avatar_url, username").eq("id", userId).maybeSingle(),
-    supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
-    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase.from("trading_profiles").select(tradingFields).eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select(profileFields).eq("id", userId).maybeSingle(),
   ]);
 
   const excludedIds = new Set<string>([userId]);
@@ -47,7 +49,7 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
 
   let profilesQuery = supabase
     .from("profiles")
-    .select("*")
+    .select(profileFields)
     .neq("id", userId)
     .eq("onboarding_completed", true);
 
@@ -55,10 +57,12 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
 
   const { data: allProfiles } = await profilesQuery;
   const eligible = (allProfiles || []).filter((p: any) => !excludedIds.has(p.id));
-  if (eligible.length === 0) return { me: me || null, matches: [] as DiscoverMatchCandidate[] };
+  if (eligible.length === 0) {
+    return { me: myProfile ? { avatar_url: myProfile.avatar_url, username: myProfile.username } : null, matches: [] as DiscoverMatchCandidate[] };
+  }
 
   const userIds = eligible.map((p: any) => p.id);
-  const { data: allTrading } = await supabase.from("trading_profiles").select("*").in("user_id", userIds);
+  const { data: allTrading } = await supabase.from("trading_profiles").select(tradingFields).in("user_id", userIds);
   const tradingMap = new Map<string, any>();
   (allTrading || []).forEach((t: any) => tradingMap.set(t.user_id, t));
 
@@ -110,5 +114,5 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
     })
     .sort((a, b) => b.matchPct - a.matchPct);
 
-  return { me: me || null, matches };
+  return { me: myProfile ? { avatar_url: myProfile.avatar_url, username: myProfile.username } : null, matches };
 };

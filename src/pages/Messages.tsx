@@ -111,7 +111,7 @@ export default function Messages() {
   }, [navigate]);
 
   const loadConnections = async (uid: string) => {
-    setLoading(true);
+    if (connections.length === 0) setLoading(true);
     const { data: conns } = await supabase
       .from("partner_connections")
       .select("*")
@@ -120,34 +120,31 @@ export default function Messages() {
 
     const safeConns = conns || [];
     const partnerIds = safeConns.map((c: any) => c.requester_id === uid ? c.receiver_id : c.requester_id);
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, avatar_url")
-      .in("id", partnerIds);
+    const [{ data: profiles }, { data: recentMessages }] = await Promise.all([
+      partnerIds.length > 0
+        ? supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", partnerIds)
+        : Promise.resolve({ data: [] as any[] }),
+      supabase
+        .from("messages")
+        .select("content, created_at, sender_id, receiver_id, read")
+        .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
+        .order("created_at", { ascending: false })
+        .limit(500),
+    ]);
 
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
     const connectionList: Connection[] = [];
+    const messageRows = (recentMessages || []) as any[];
 
     for (const c of safeConns) {
       const partnerId = c.requester_id === uid ? c.receiver_id : c.requester_id;
       const profile = profileMap.get(partnerId);
-      const { data: lastMsgs } = await supabase
-        .from("messages")
-        .select("content, created_at, sender_id, read")
-        .or(`and(sender_id.eq.${uid},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${uid})`)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      // Only count messages the partner sent to me that I haven't read.
-      // This naturally excludes any message I sent (so my last sent message
-      // never inflates the unread badge).
-      const { count } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("sender_id", partnerId)
-        .eq("receiver_id", uid)
-        .eq("read", false);
-
-      const last = lastMsgs?.[0];
+      const threadMessages = messageRows.filter((m) =>
+        (m.sender_id === uid && m.receiver_id === partnerId) ||
+        (m.sender_id === partnerId && m.receiver_id === uid)
+      );
+      const last = threadMessages[0];
+      const unreadCount = threadMessages.filter((m) => m.sender_id === partnerId && m.receiver_id === uid && m.read === false).length;
       // Graceful fallbacks: if sender_id is missing we can't tell direction,
       // so default to "not from me"; if read is missing default to true so
       // we don't incorrectly show "Sent" forever.
@@ -165,28 +162,17 @@ export default function Messages() {
         lastMessageTime: last?.created_at,
         lastMessageFromMe: lastFromMe,
         lastMessageRead: lastRead,
-        unreadCount: count ?? 0,
+        unreadCount,
       });
     }
 
     // Synthesize a "TradersWorld" system conversation if any system DMs exist
     // for this user. This appears alongside real partner conversations and is
     // marked as an official channel.
-    const { data: sysMsgs } = await supabase
-      .from("messages")
-      .select("content, created_at, sender_id, read")
-      .eq("sender_id", TRADERSWORLD_SYSTEM_USER_ID)
-      .eq("receiver_id", uid)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    const sysMsgs = messageRows.filter((m) => m.sender_id === TRADERSWORLD_SYSTEM_USER_ID && m.receiver_id === uid);
     if (sysMsgs && sysMsgs.length > 0) {
       const last = sysMsgs[0];
-      const { count: sysUnread } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("sender_id", TRADERSWORLD_SYSTEM_USER_ID)
-        .eq("receiver_id", uid)
-        .eq("read", false);
+      const sysUnread = sysMsgs.filter((m) => m.read === false).length;
       connectionList.push({
         id: SYSTEM_CONNECTION_ID,
         partnerId: TRADERSWORLD_SYSTEM_USER_ID,
