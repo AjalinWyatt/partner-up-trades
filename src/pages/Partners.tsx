@@ -64,10 +64,11 @@ interface PartnerRow {
 const Partners = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [pending, setPending] = useState<PendingRequest[]>([]);
-  const [partners, setPartners] = useState<PartnerRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hydrate from sessionStorage so revisits paint instantly with last-known data.
+  const [alerts, setAlerts] = useSessionCache<Alert[]>("partners:alerts", []);
+  const [pending, setPending, hadPendingCache] = useSessionCache<PendingRequest[]>("partners:pending", []);
+  const [partners, setPartners, hadPartnersCache] = useSessionCache<PartnerRow[]>("partners:partners", []);
+  const [loading, setLoading] = useState(!(hadPendingCache || hadPartnersCache));
   const [myId, setMyId] = useState<string | null>(null);
 
   useEffect(() => {
