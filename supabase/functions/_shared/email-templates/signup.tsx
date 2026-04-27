@@ -88,15 +88,15 @@ const main = {
 }
 const container = { maxWidth: '560px', margin: '0 auto' }
 const card = {
-  backgroundColor: '#0b1220',
+  backgroundColor: '#ffffff',
   borderRadius: '16px',
   padding: '40px 32px',
-  border: '1px solid #1a2332',
+  border: '1px solid #e2e8f0',
 }
 const brand = {
   fontSize: '13px',
   fontWeight: 700 as const,
-  color: '#00E5E5',
+  color: '#0891a6',
   letterSpacing: '2px',
   textTransform: 'uppercase' as const,
   margin: '0 0 24px',
@@ -104,52 +104,52 @@ const brand = {
 const h1 = {
   fontSize: '28px',
   fontWeight: 800 as const,
-  color: '#ffffff',
+  color: '#0f172a',
   lineHeight: '1.2',
   margin: '0 0 18px',
 }
 const lede = {
   fontSize: '16px',
-  color: '#cbd5e1',
+  color: '#334155',
   lineHeight: '1.6',
   margin: '0 0 16px',
 }
 const text = {
   fontSize: '15px',
-  color: '#94a3b8',
+  color: '#475569',
   lineHeight: '1.6',
   margin: '0 0 28px',
 }
-const emailStrong = { color: '#ffffff' }
-const brandLink = { color: '#00E5E5', textDecoration: 'none', fontWeight: 600 as const }
+const emailStrong = { color: '#0f172a', fontWeight: 600 as const }
+const brandLink = { color: '#0891a6', textDecoration: 'none', fontWeight: 600 as const }
 
 const btnWrap = { width: '100%', borderCollapse: 'collapse' as const, margin: '0 0 28px' }
 const btnCell = { padding: 0 }
 const button = {
   display: 'inline-block',
-  backgroundColor: '#00E5E5',
-  color: '#0b1220',
+  backgroundColor: '#0b1220',
+  color: '#ffffff',
   padding: '16px 32px',
   borderRadius: '12px',
   fontSize: '15px',
   fontWeight: 700 as const,
   textDecoration: 'none',
   letterSpacing: '0.2px',
-  border: '1px solid #00E5E5',
+  border: '1px solid #0b1220',
 }
 
-const small = { fontSize: '13px', color: '#94a3b8', margin: '0 0 8px' }
+const small = { fontSize: '13px', color: '#64748b', margin: '0 0 8px' }
 const linkBox = {
   fontSize: '12px',
-  color: '#64748b',
+  color: '#475569',
   wordBreak: 'break-all' as const,
   margin: '0 0 24px',
   padding: '12px',
-  backgroundColor: '#0a0f1c',
+  backgroundColor: '#f1f5f9',
   borderRadius: '8px',
-  border: '1px solid #1a2332',
+  border: '1px solid #e2e8f0',
 }
-const rawLink = { color: '#00E5E5', textDecoration: 'underline' }
+const rawLink = { color: '#0891a6', textDecoration: 'underline' }
 const footer = {
   fontSize: '12px',
   color: '#64748b',
@@ -158,7 +158,7 @@ const footer = {
 }
 const tagline = {
   fontSize: '12px',
-  color: '#94a3b8',
+  color: '#64748b',
   textAlign: 'center' as const,
   margin: '20px 0 0',
   letterSpacing: '0.3px',
