@@ -24,11 +24,18 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
+  const startedAtRef = useRef(0);
+
+  const pickMimeType = () => {
+    const options = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"];
+    return options.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+  };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4" });
+      const mimeType = pickMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       chunksRef.current = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorder.onstop = () => {
@@ -36,11 +43,13 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
         if (chunksRef.current.length === 0) return;
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
         const url = URL.createObjectURL(blob);
-        setPreview({ blob, mimeType: recorder.mimeType, url, duration: Math.max(1, elapsedRef.current) });
+        const recordedSeconds = Math.max(1, Math.ceil((Date.now() - startedAtRef.current) / 1000));
+        setPreview({ blob, mimeType: recorder.mimeType || blob.type || "audio/mp4", url, duration: recordedSeconds });
       };
       recorder.start();
       recorderRef.current = recorder;
       setRecording(true);
+      startedAtRef.current = Date.now();
       elapsedRef.current = 0;
       setElapsed(0);
       timerRef.current = setInterval(() => {
