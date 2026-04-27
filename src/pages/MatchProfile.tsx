@@ -5,7 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Wordmark from "@/components/Wordmark";
-import { useSessionCache } from "@/hooks/use-session-cache";
+import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface ProfileFull {
   id: string;
@@ -109,6 +109,7 @@ const MatchProfile = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Request sent!", description: "They'll be notified." });
+      invalidateSessionCache("partners:pending", "partners:partners", "dashboard:stats", "dashboard:updates", "discover:matches");
     }
     setBusy(false);
     navigate("/discover");
