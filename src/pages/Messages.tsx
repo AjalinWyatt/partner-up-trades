@@ -36,8 +36,9 @@ export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hydrate the conversation list from sessionStorage so revisits paint instantly.
+  const [connections, setConnections, hadConnsCache] = useSessionCache<Connection[]>("messages:connections", []);
+  const [loading, setLoading] = useState(!hadConnsCache);
   const [search, setSearch] = useState("");
   const [activeChat, setActiveChat] = useState<Connection | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
