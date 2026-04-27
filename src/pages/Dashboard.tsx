@@ -10,6 +10,7 @@ import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
 import { Skeleton } from "@/components/ui/skeleton";
 import Walkthrough from "@/components/Walkthrough";
+import { useSessionCache } from "@/hooks/use-session-cache";
 
 type NotifFilter = "all" | "activity" | "partners" | "streaks";
 
@@ -109,14 +110,18 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { loading: guardLoading } = useOnboardingGuard();
 
-  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
-  const [stats, setStats] = useState({ savedYou: 0, savedTotal: 0, waiting: 0, streak: 0, maxStreak: 0, logs: 0, activeStreaks: 0 });
-  const [updates, setUpdates] = useState<{ id: string; text: string; created_at: string; route: string }[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  // Hydrated synchronously from sessionStorage so revisits paint instantly
+  // and the loading spinner is skipped entirely when we have cached data.
+  const [profile, setProfile, hadProfileCache] = useSessionCache<{ username: string | null; avatar_url: string | null } | null>("dashboard:profile", null);
+  const [stats, setStats, hadStatsCache] = useSessionCache("dashboard:stats", { savedYou: 0, savedTotal: 0, waiting: 0, streak: 0, maxStreak: 0, logs: 0, activeStreaks: 0 });
+  const [updates, setUpdates] = useSessionCache<{ id: string; text: string; created_at: string; route: string }[]>("dashboard:updates", []);
+  const [notifications, setNotifications] = useSessionCache<any[]>("dashboard:notifications", []);
   const [notifFilter, setNotifFilter] = useState<NotifFilter>("all");
-  const [notifLoading, setNotifLoading] = useState(true);
+  const [notifLoading, setNotifLoading] = useState(!hadProfileCache);
   const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // If we already have cached data, skip the blocking spinner — the page paints
+  // immediately and queries refresh in the background.
+  const [loading, setLoading] = useState(!(hadProfileCache && hadStatsCache));
   const [showTour, setShowTour] = useState(false);
 
   const loadNotifications = async (uid: string, filter: NotifFilter) => {

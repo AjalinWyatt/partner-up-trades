@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone } from "lucide-react";
@@ -35,8 +36,9 @@ export default function Messages() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hydrate the conversation list from sessionStorage so revisits paint instantly.
+  const [connections, setConnections, hadConnsCache] = useSessionCache<Connection[]>("messages:connections", []);
+  const [loading, setLoading] = useState(!hadConnsCache);
   const [search, setSearch] = useState("");
   const [activeChat, setActiveChat] = useState<Connection | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);

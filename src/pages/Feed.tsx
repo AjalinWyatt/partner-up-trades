@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight, Activity, MessageSquare, Mic, Coffee } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -69,8 +70,9 @@ const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const isAdmin = useIsAdmin();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hydrate posts from sessionStorage so revisits paint instantly.
+  const [posts, setPosts, hadPostsCache] = useSessionCache<FeedPost[]>("feed:posts", []);
+  const [loading, setLoading] = useState(!hadPostsCache);
   const [myId, setMyId] = useState<string | null>(null);
   const [myMarkets, setMyMarkets] = useState<string[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
