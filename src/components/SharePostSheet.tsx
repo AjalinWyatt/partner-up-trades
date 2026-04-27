@@ -104,6 +104,7 @@ const SharePostSheet = ({ post, myId, onClose }: Props) => {
     } as any);
     setSendingToId(null);
     if (error) { toast.error("Could not send post"); return; }
+    invalidateSessionCache("messages:connections");
     onClose();
     setSearch("");
     toast.success(`Sent to ${target.username}`);
