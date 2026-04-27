@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Mic, Loader2, Trash2, Send, Play, Pause } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateSessionCache } from "@/hooks/use-session-cache";
+import { claimPlayback, releasePlayback } from "@/lib/audioCoordinator";
+import { toast } from "sonner";
 
 interface VoiceRecorderProps {
   userId: string;
@@ -21,6 +23,7 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedRef = useRef(0);
 
   const startRecording = async () => {
     try {
@@ -33,15 +36,20 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
         if (chunksRef.current.length === 0) return;
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
         const url = URL.createObjectURL(blob);
-        setPreview({ blob, mimeType: recorder.mimeType, url, duration: elapsed });
+        setPreview({ blob, mimeType: recorder.mimeType, url, duration: Math.max(1, elapsedRef.current) });
       };
       recorder.start();
       recorderRef.current = recorder;
       setRecording(true);
+      elapsedRef.current = 0;
       setElapsed(0);
-      timerRef.current = setInterval(() => setElapsed(p => p + 1), 1000);
-    } catch {
-      console.error("Mic access denied");
+      timerRef.current = setInterval(() => {
+        elapsedRef.current += 1;
+        setElapsed(elapsedRef.current);
+      }, 1000);
+    } catch (error: any) {
+      const name = error?.name || "";
+      toast.error(name === "NotAllowedError" ? "Microphone permission is blocked in your phone browser settings." : "Couldn't start the microphone.");
     }
   };
 
@@ -64,7 +72,8 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
     if (playing) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      claimPlayback(audioRef.current);
+      audioRef.current.play().catch(() => setPlaying(false));
     }
   };
 
@@ -115,9 +124,11 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
         <audio
           ref={audioRef}
           src={preview.url}
-          onPlay={() => setPlaying(true)}
+          preload="metadata"
+          playsInline
+          onPlay={() => { if (audioRef.current) claimPlayback(audioRef.current); setPlaying(true); }}
           onPause={() => setPlaying(false)}
-          onEnded={() => { setPlaying(false); setPlayPos(0); }}
+          onEnded={() => { if (audioRef.current) releasePlayback(audioRef.current); setPlaying(false); setPlayPos(0); }}
           onTimeUpdate={(e) => setPlayPos((e.target as HTMLAudioElement).currentTime)}
           className="hidden"
         />
