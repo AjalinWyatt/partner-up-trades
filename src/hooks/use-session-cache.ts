@@ -58,3 +58,22 @@ export function useSessionCache<T>(key: string, initial: T) {
 
   return [value, setValue, hadCacheRef.current] as const;
 }
+
+/**
+ * Drop one or more cached page entries. Call this right after a mutation
+ * that would make the cached snapshot stale (e.g. creating a post invalidates
+ * the feed cache so the next visit refetches instead of showing the old list).
+ *
+ * Pass plain keys without the "tw:cache:" prefix:
+ *   invalidateSessionCache("feed:posts", "dashboard:updates")
+ */
+export function invalidateSessionCache(...keys: string[]) {
+  if (typeof window === "undefined") return;
+  for (const key of keys) {
+    try {
+      window.sessionStorage.removeItem(`tw:cache:${key}`);
+    } catch {
+      // ignore
+    }
+  }
+}

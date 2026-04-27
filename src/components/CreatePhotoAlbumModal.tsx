@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface Props {
   open: boolean;
@@ -84,6 +85,7 @@ export default function CreatePhotoAlbumModal({ open, onClose, onCreated }: Prop
       if (insertErr) throw insertErr;
 
       toast.success("Photo shared to your grid");
+      invalidateSessionCache("feed:posts", "profile:me:posts");
       onCreated();
       onClose();
     } catch (err) {

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Mic, Loader2, Trash2, Send, Play, Pause } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface VoiceRecorderProps {
   userId: string;
@@ -92,6 +93,7 @@ export default function VoiceRecorder({ userId, connectionId, partnerId, onSent 
       media_url: urlData.publicUrl,
       media_type: "audio/" + ext,
     } as any);
+    invalidateSessionCache("messages:connections");
     setUploading(false);
     onSent();
   };

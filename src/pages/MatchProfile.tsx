@@ -5,6 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Wordmark from "@/components/Wordmark";
+import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface ProfileFull {
   id: string;
@@ -40,12 +41,14 @@ const MatchProfile = () => {
   const { toast } = useToast();
   const matchPct: number = (location.state as any)?.matchPct ?? 0;
 
-  const [profile, setProfile] = useState<ProfileFull | null>(null);
-  const [trading, setTrading] = useState<any>(null);
+  // Cache per match userId so revisits paint instantly.
+  const cacheKey = userId || "unknown";
+  const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileFull | null>(`matchprofile:${cacheKey}:profile`, null);
+  const [trading, setTrading] = useSessionCache<any>(`matchprofile:${cacheKey}:trading`, null);
   const [myTrading, setMyTrading] = useState<any>(null);
   const [myProfile, setMyProfile] = useState<any>(null);
   const [me, setMe] = useState<{ avatar_url: string | null; username: string | null } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hadProfileCache);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -106,6 +109,7 @@ const MatchProfile = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Request sent!", description: "They'll be notified." });
+      invalidateSessionCache("partners:pending", "partners:partners", "dashboard:stats", "dashboard:updates", "discover:matches");
     }
     setBusy(false);
     navigate("/discover");

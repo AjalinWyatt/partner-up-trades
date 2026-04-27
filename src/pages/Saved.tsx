@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -17,8 +18,8 @@ interface SavedRow {
 const Saved = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [items, setItems] = useState<SavedRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems, hadCache] = useSessionCache<SavedRow[]>("saved:items", []);
+  const [loading, setLoading] = useState(!hadCache);
 
   useEffect(() => {
     const load = async () => {

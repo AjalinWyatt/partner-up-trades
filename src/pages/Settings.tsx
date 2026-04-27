@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, X, AlertCircle, LogOut, Trash2, ShieldOff, Bell, User as UserIcon, Eye, FileText, Sparkles, Smartphone } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -34,10 +35,10 @@ const USERNAME_RE = /^[a-z0-9_.]{3,30}$/;
 export default function Settings() {
   const navigate = useNavigate();
   useOnboardingGuard();
-  const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
-  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileRow | null>("settings:profile", null);
+  const [loading, setLoading] = useState(!hadProfileCache);
   const [fullName, setFullName] = useState("");
   const [savingName, setSavingName] = useState(false);
 

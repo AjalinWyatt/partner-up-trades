@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSessionCache } from "@/hooks/use-session-cache";
+import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone } from "lucide-react";
@@ -319,6 +319,8 @@ export default function Messages() {
       connection_id: activeChat.id,
       content: msgInput.trim(),
     });
+    // Last-message snapshot for the conversation list is now stale.
+    invalidateSessionCache("messages:connections");
     setMsgInput("");
     setSendingMsg(false);
     inputRef.current?.focus();

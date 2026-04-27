@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials } from "@/lib/matchUtils";
 import { toast } from "sonner";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 export interface SharePostInput {
   id: string;
@@ -103,6 +104,7 @@ const SharePostSheet = ({ post, myId, onClose }: Props) => {
     } as any);
     setSendingToId(null);
     if (error) { toast.error("Could not send post"); return; }
+    invalidateSessionCache("messages:connections");
     onClose();
     setSearch("");
     toast.success(`Sent to ${target.username}`);

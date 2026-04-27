@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Image, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface AttachmentButtonProps {
   userId: string;
@@ -32,6 +33,7 @@ export default function AttachmentButton({ userId, connectionId, partnerId, onSe
       media_url: urlData.publicUrl,
       media_type: isImage ? "image" : file.type || "file",
     } as any);
+    invalidateSessionCache("messages:connections");
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
     onSent();

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -104,10 +105,10 @@ const Profile = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [tradingProfile, setTradingProfile] = useState<TradingProfileData | null>(null);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileData | null>("profile:me:profile", null);
+  const [tradingProfile, setTradingProfile] = useSessionCache<TradingProfileData | null>("profile:me:trading", null);
+  const [journalEntries, setJournalEntries] = useSessionCache<JournalEntry[]>("profile:me:journal", []);
+  const [loading, setLoading] = useState(!hadProfileCache);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -126,8 +127,8 @@ const Profile = () => {
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
 
-  const [posts, setPosts] = useState<ProfilePostItem[]>([]);
-  const [savedPosts, setSavedPosts] = useState<ProfilePostItem[]>([]);
+  const [posts, setPosts] = useSessionCache<ProfilePostItem[]>("profile:me:posts", []);
+  const [savedPosts, setSavedPosts] = useSessionCache<ProfilePostItem[]>("profile:me:saved", []);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showCreatePhoto, setShowCreatePhoto] = useState(false);
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
