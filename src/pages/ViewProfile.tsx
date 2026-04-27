@@ -10,7 +10,7 @@ import PostDetailModal from "@/components/PostDetailModal";
 import SharePostSheet from "@/components/SharePostSheet";
 import DetailCardsGrid, { type DetailCardItem } from "@/components/profile/DetailCardsGrid";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
-import { useSessionCache } from "@/hooks/use-session-cache";
+import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface ViewPostItem {
   id: string;
@@ -150,6 +150,8 @@ const ViewProfile = () => {
       toast.error("Could not send request");
     } else {
       toast.success("Match request sent");
+      // Partners list and dashboard pending count are now stale.
+      invalidateSessionCache("partners:pending", "partners:partners", "dashboard:stats", "dashboard:updates");
       setConnectionStatus("pending");
       setIAmRequester(true);
       const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
