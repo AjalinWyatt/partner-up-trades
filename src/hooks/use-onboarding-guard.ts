@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const completedCache = new Map<string, boolean>();
+
 /**
  * Checks if the current user has completed onboarding.
  * If not, shows a message and redirects to /onboarding.
@@ -22,6 +24,12 @@ export function useOnboardingGuard() {
         return;
       }
 
+      if (completedCache.get(user.id) === true) {
+        setOnboardingComplete(true);
+        setLoading(false);
+        return;
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("onboarding_completed")
@@ -36,6 +44,7 @@ export function useOnboardingGuard() {
         return;
       }
 
+      completedCache.set(user.id, true);
       setOnboardingComplete(true);
       setLoading(false);
     };
