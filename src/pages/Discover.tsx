@@ -62,7 +62,7 @@ const Discover = () => {
 
   const activeFilterCount = [filters.market, filters.session, filters.experience].filter(Boolean).length;
 
-  if (guardLoading || loading) {
+  if ((guardLoading || loading) && !hadMatchesCache) {
     return (
       <AppLayout>
         <div className="flex-1 flex items-center justify-center">
