@@ -57,7 +57,9 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
 
   const { data: allProfiles } = await profilesQuery;
   const eligible = (allProfiles || []).filter((p: any) => !excludedIds.has(p.id));
-  if (eligible.length === 0) return { me: me || null, matches: [] as DiscoverMatchCandidate[] };
+  if (eligible.length === 0) {
+    return { me: myProfile ? { avatar_url: myProfile.avatar_url, username: myProfile.username } : null, matches: [] as DiscoverMatchCandidate[] };
+  }
 
   const userIds = eligible.map((p: any) => p.id);
   const { data: allTrading } = await supabase.from("trading_profiles").select(tradingFields).in("user_id", userIds);
