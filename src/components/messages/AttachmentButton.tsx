@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Image, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 interface AttachmentButtonProps {
   userId: string;
