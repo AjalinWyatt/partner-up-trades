@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials } from "@/lib/matchUtils";
 import { toast } from "sonner";
+import { invalidateSessionCache } from "@/hooks/use-session-cache";
 
 export interface SharePostInput {
   id: string;
