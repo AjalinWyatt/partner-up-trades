@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { claimPlayback, releasePlayback } from "@/lib/audioCoordinator";
 
 interface AudioPlayerProps {
   url: string;
@@ -10,20 +11,68 @@ interface AudioPlayerProps {
 export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
+  // null until we successfully read a real, finite duration. Prevents the
+  // "Infinity:NaN" label that appears with webm/opus blobs whose container
+  // doesn't include a duration.
+  const [duration, setDuration] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const toggle = () => {
-    if (!audioRef.current) return;
+  // Pause this player if some OTHER audio claims playback.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    return () => releasePlayback(a);
+  }, []);
+
+  const toggle = async () => {
+    const a = audioRef.current;
+    if (!a) return;
     if (playing) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
+      a.pause();
+      return;
     }
-    setPlaying(!playing);
+    // Stop any other audio currently playing in the app.
+    claimPlayback(a);
+    try {
+      await a.play();
+    } catch {
+      // iOS will reject if not user-gesture / not unlocked. State stays paused.
+    }
+  };
+
+  /**
+   * webm/opus blobs from MediaRecorder report `duration === Infinity` because
+   * the container has no duration in the header. The well-known fix is to
+   * seek past the end, which forces the browser to compute the real value
+   * and fire `durationchange` with a finite number.
+   */
+  const handleLoadedMetadata = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.duration === Infinity || Number.isNaN(a.duration)) {
+      const onSeeked = () => {
+        a.currentTime = 0;
+        a.removeEventListener("seeked", onSeeked);
+      };
+      a.addEventListener("seeked", onSeeked);
+      try {
+        a.currentTime = 1e7; // arbitrary huge value
+      } catch {
+        /* ignore */
+      }
+    } else {
+      setDuration(a.duration);
+    }
+  };
+
+  const handleDurationChange = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (Number.isFinite(a.duration) && a.duration > 0) setDuration(a.duration);
   };
 
   const formatDur = (s: number) => {
+    if (!Number.isFinite(s) || s <= 0) return "0:00";
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
     return `${m}:${sec.toString().padStart(2, "0")}`;
@@ -34,12 +83,23 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
       <audio
         ref={audioRef}
         src={url}
-        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        preload="metadata"
+        playsInline
+        onLoadedMetadata={handleLoadedMetadata}
+        onDurationChange={handleDurationChange}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         onTimeUpdate={() => {
           const a = audioRef.current;
-          if (a && a.duration) setProgress((a.currentTime / a.duration) * 100);
+          if (a && Number.isFinite(a.duration) && a.duration > 0) {
+            setProgress((a.currentTime / a.duration) * 100);
+          }
         }}
-        onEnded={() => { setPlaying(false); setProgress(0); }}
+        onEnded={() => {
+          setPlaying(false);
+          setProgress(0);
+          if (audioRef.current) releasePlayback(audioRef.current);
+        }}
       />
       <button
         onClick={toggle}
@@ -62,7 +122,7 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
           />
         </div>
         <span className={cn("text-[10px] tabular-nums leading-none", isMine ? "text-primary-foreground/80" : "text-muted-foreground")}>
-          {formatDur(playing ? (audioRef.current?.currentTime || 0) : duration || 0)}
+          {formatDur(playing ? (audioRef.current?.currentTime || 0) : (duration ?? 0))}
         </span>
       </div>
     </div>
