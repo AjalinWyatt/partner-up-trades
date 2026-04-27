@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSessionCache } from "@/hooks/use-session-cache";
+import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight, Activity, MessageSquare, Mic, Coffee } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -557,6 +557,8 @@ const Feed = () => {
       toast.error("Could not send post");
       setSendingToId(null);
       return;
+    }
+    invalidateSessionCache("messages:connections");
     }
 
     setSendingToId(null);
