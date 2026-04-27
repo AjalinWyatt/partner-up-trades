@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2, ChevronDown } from "lucide-react";
@@ -129,8 +130,8 @@ export default function TradingLog() {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [entries, setEntries, hadEntriesCache] = useSessionCache<JournalEntry[]>("tradinglog:entries", []);
+  const [loading, setLoading] = useState(!hadEntriesCache);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
