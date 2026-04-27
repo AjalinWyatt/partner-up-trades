@@ -127,8 +127,8 @@ const Profile = () => {
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
 
-  const [posts, setPosts] = useState<ProfilePostItem[]>([]);
-  const [savedPosts, setSavedPosts] = useState<ProfilePostItem[]>([]);
+  const [posts, setPosts] = useSessionCache<ProfilePostItem[]>("profile:me:posts", []);
+  const [savedPosts, setSavedPosts] = useSessionCache<ProfilePostItem[]>("profile:me:saved", []);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showCreatePhoto, setShowCreatePhoto] = useState(false);
   const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
