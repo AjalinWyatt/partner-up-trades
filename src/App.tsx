@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import RouteSkeleton from "@/components/RouteSkeleton";
 
 // Eager: landing/auth (first paint matters most)
 import Landing from "./pages/Landing";
@@ -47,11 +48,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageFallback = () => (
-  <div className="flex-1 min-h-screen flex items-center justify-center bg-background">
-    <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-  </div>
-);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -59,7 +55,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Suspense fallback={<PageFallback />}>
+        <Suspense fallback={<RouteSkeleton />}>
           <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/sign-in" element={<SignIn />} />

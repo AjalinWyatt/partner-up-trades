@@ -2,6 +2,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Earth, MessagesSquare, BookOpen, Users } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
 import { useNavBadges } from "@/hooks/use-nav-badges";
+import { useQueryClient } from "@tanstack/react-query";
+import { warmRoute } from "@/lib/routePrefetch";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
@@ -16,6 +18,7 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { homeDot, messagesDot, discoverDot, partnersDot } = useNavBadges();
+  const queryClient = useQueryClient();
 
   const dotForPath: Record<string, boolean> = {
     "/dashboard": homeDot,
@@ -41,6 +44,8 @@ const BottomNav = () => {
             key={tab.path}
             data-tour={tab.tour}
             onClick={() => navigate(tab.path)}
+            onTouchStart={() => warmRoute(tab.path, queryClient)}
+            onMouseEnter={() => warmRoute(tab.path, queryClient)}
             className="relative flex items-center justify-center"
             aria-label={tab.label}
           >
