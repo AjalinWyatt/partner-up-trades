@@ -51,7 +51,9 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
     .from("profiles")
     .select(profileFields)
     .neq("id", userId)
-    .eq("onboarding_completed", true);
+    .eq("onboarding_completed", true)
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (options?.joinedAfter) profilesQuery = profilesQuery.gte("created_at", options.joinedAfter);
 
