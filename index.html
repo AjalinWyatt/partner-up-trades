@@ -39,53 +39,6 @@
   </head>
 
   <body>
-    <style>
-      #initial-splash {
-        position: fixed;
-        inset: 0;
-        z-index: 2147483647;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 24px;
-        background: #0B0F0E;
-        color: #E5E7EB;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        transition: opacity 250ms ease;
-      }
-      #initial-splash.splash-hide { opacity: 0; pointer-events: none; }
-      #initial-splash .splash-logo {
-        width: 88px;
-        height: 88px;
-        border-radius: 20px;
-        background: #0B0F0E url("/app-icon-192.png") center / cover no-repeat;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-      }
-      #initial-splash .splash-spinner {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 2px solid rgba(255,255,255,0.15);
-        border-top-color: #22c55e;
-        animation: splash-spin 0.8s linear infinite;
-      }
-      #initial-splash .splash-name {
-        font-size: 15px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #9CA3AF;
-      }
-      @keyframes splash-spin { to { transform: rotate(360deg); } }
-      @media (prefers-reduced-motion: reduce) {
-        #initial-splash .splash-spinner { animation: none; }
-      }
-    </style>
-    <div id="initial-splash" aria-hidden="true">
-      <div class="splash-logo"></div>
-      <div class="splash-name">TradersWorld</div>
-      <div class="splash-spinner"></div>
-    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

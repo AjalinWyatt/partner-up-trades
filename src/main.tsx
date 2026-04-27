@@ -30,15 +30,3 @@ function installIOSAudioUnlock() {
 installIOSAudioUnlock();
 
 createRoot(document.getElementById("root")!).render(<App />);
-
-// Remove the index.html splash once React has mounted its first paint.
-if (typeof window !== "undefined") {
-  const removeSplash = () => {
-    const el = document.getElementById("initial-splash");
-    if (!el) return;
-    el.classList.add("splash-hide");
-    setTimeout(() => el.remove(), 280);
-  };
-  // Wait one frame after mount so React has painted something.
-  requestAnimationFrame(() => requestAnimationFrame(removeSplash));
-}
