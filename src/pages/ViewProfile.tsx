@@ -10,6 +10,7 @@ import PostDetailModal from "@/components/PostDetailModal";
 import SharePostSheet from "@/components/SharePostSheet";
 import DetailCardsGrid, { type DetailCardItem } from "@/components/profile/DetailCardsGrid";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
+import { useSessionCache } from "@/hooks/use-session-cache";
 
 interface ViewPostItem {
   id: string;
@@ -29,11 +30,13 @@ const ViewProfile = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [tradingProfile, setTradingProfile] = useState<any>(null);
-  const [posts, setPosts] = useState<ViewPostItem[]>([]);
-  const [journalEntries, setJournalEntries] = useState<any[]>([]);
+  // Cache per-userId so revisiting the same profile is instant.
+  const cacheKey = userId || "unknown";
+  const [profile, setProfile, hadProfileCache] = useSessionCache<any>(`viewprofile:${cacheKey}:profile`, null);
+  const [tradingProfile, setTradingProfile] = useSessionCache<any>(`viewprofile:${cacheKey}:trading`, null);
+  const [posts, setPosts] = useSessionCache<ViewPostItem[]>(`viewprofile:${cacheKey}:posts`, []);
+  const [journalEntries, setJournalEntries] = useSessionCache<any[]>(`viewprofile:${cacheKey}:journal`, []);
+  const [loading, setLoading] = useState(!hadProfileCache);
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [iAmRequester, setIAmRequester] = useState(false);
