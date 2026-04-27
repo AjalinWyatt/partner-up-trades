@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Bookmark } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
