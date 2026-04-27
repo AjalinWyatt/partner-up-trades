@@ -30,11 +30,3 @@ function installIOSAudioUnlock() {
 installIOSAudioUnlock();
 
 createRoot(document.getElementById("root")!).render(<App />);
-
-const splash = document.getElementById("tw-splash");
-if (splash) {
-  requestAnimationFrame(() => {
-    splash.classList.add("tw-hide");
-    window.setTimeout(() => splash.remove(), 300);
-  });
-}
