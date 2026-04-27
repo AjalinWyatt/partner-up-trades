@@ -6,6 +6,7 @@ import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { DiscoverMatchCandidate, getDiscoverMatches } from "@/lib/discoverMatches";
+import { useSessionCache } from "@/hooks/use-session-cache";
 
 type MatchCandidate = DiscoverMatchCandidate;
 
@@ -18,9 +19,10 @@ const FILTER_OPTIONS = {
 const Discover = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [matches, setMatches] = useState<MatchCandidate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [me, setMe] = useState<{ avatar_url: string | null; username: string | null } | null>(null);
+  // Hydrate from sessionStorage so revisits paint instantly with last-known matches.
+  const [matches, setMatches, hadMatchesCache] = useSessionCache<MatchCandidate[]>("discover:matches", []);
+  const [me, setMe] = useSessionCache<{ avatar_url: string | null; username: string | null } | null>("discover:me", null);
+  const [loading, setLoading] = useState(!hadMatchesCache);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<{ market: string | null; session: string | null; experience: string | null }>({
