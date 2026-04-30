@@ -175,8 +175,6 @@ html, body {
 #root {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
-  overflow-y: visible;
   min-height: 100dvh;
 }
 
