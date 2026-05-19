@@ -59,6 +59,8 @@ interface PartnerRow {
   streak: number;
   lastActive: string;
   loggedToday: boolean;
+  partnerStreak: number;
+  exchangedToday: boolean;
 }
 
 const Partners = () => {
@@ -162,6 +164,23 @@ const Partners = () => {
           .order("created_at", { ascending: false })
           .limit(30);
 
+        // Shared partner check-in streak (consecutive days both sides messaged)
+        const { data: streakRpc } = await supabase.rpc("get_partner_checkin_streak", {
+          user_a: user.id,
+          user_b: id,
+        });
+        const partnerStreak = (streakRpc as number) || 0;
+
+        // Did we exchange today?
+        const todayISO = new Date().toISOString().slice(0, 10) + "T00:00:00Z";
+        const [{ count: outCount }, { count: inCount }] = await Promise.all([
+          supabase.from("messages").select("id", { count: "exact", head: true })
+            .eq("sender_id", user.id).eq("receiver_id", id).gte("created_at", todayISO),
+          supabase.from("messages").select("id", { count: "exact", head: true })
+            .eq("sender_id", id).eq("receiver_id", user.id).gte("created_at", todayISO),
+        ]);
+        const exchangedToday = (outCount || 0) > 0 && (inCount || 0) > 0;
+
         const lastEntry = entries?.[0];
         const lastActive = lastEntry ? timeAgo(lastEntry.created_at) : "No activity";
         const loggedToday = lastEntry ? lastEntry.created_at.slice(0, 10) === today : false;
@@ -242,6 +261,8 @@ const Partners = () => {
           streak,
           lastActive: lastEntry ? `Logged ${timeAgo(lastEntry.created_at)}` : "No logs yet",
           loggedToday,
+          partnerStreak,
+          exchangedToday,
         });
       }
 
@@ -482,10 +503,21 @@ const Partners = () => {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="text-right">
-                        <div className={`flex items-center gap-1 text-sm font-extrabold ${p.loggedToday ? "text-success" : "text-muted-foreground"}`}>
-                          ⚡ {p.streak}
+                        <div
+                          className={`flex items-center gap-1 text-sm font-extrabold ${
+                            p.partnerStreak === 0
+                              ? "text-muted-foreground"
+                              : p.exchangedToday
+                              ? "text-success"
+                              : "text-orange-400"
+                          }`}
+                          title={p.partnerStreak > 0 && !p.exchangedToday ? "Streak at risk — check in today" : "Partner check-in streak"}
+                        >
+                          🤝 {p.partnerStreak}
                         </div>
-                        <div className="text-[9px] text-muted-foreground mt-0.5">{p.lastActive}</div>
+                        <div className="text-[9px] text-muted-foreground mt-0.5">
+                          {p.partnerStreak > 0 && !p.exchangedToday ? "At risk" : p.lastActive}
+                        </div>
                       </div>
                       <button
                         onClick={(e) => {
