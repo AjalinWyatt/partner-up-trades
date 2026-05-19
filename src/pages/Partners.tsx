@@ -503,10 +503,21 @@ const Partners = () => {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="text-right">
-                        <div className={`flex items-center gap-1 text-sm font-extrabold ${p.loggedToday ? "text-success" : "text-muted-foreground"}`}>
-                          ⚡ {p.streak}
+                        <div
+                          className={`flex items-center gap-1 text-sm font-extrabold ${
+                            p.partnerStreak === 0
+                              ? "text-muted-foreground"
+                              : p.exchangedToday
+                              ? "text-success"
+                              : "text-orange-400"
+                          }`}
+                          title={p.partnerStreak > 0 && !p.exchangedToday ? "Streak at risk — check in today" : "Partner check-in streak"}
+                        >
+                          🤝 {p.partnerStreak}
                         </div>
-                        <div className="text-[9px] text-muted-foreground mt-0.5">{p.lastActive}</div>
+                        <div className="text-[9px] text-muted-foreground mt-0.5">
+                          {p.partnerStreak > 0 && !p.exchangedToday ? "At risk" : p.lastActive}
+                        </div>
                       </div>
                       <button
                         onClick={(e) => {
