@@ -59,6 +59,8 @@ interface PartnerRow {
   streak: number;
   lastActive: string;
   loggedToday: boolean;
+  partnerStreak: number;
+  exchangedToday: boolean;
 }
 
 const Partners = () => {
