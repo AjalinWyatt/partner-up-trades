@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -578,6 +578,7 @@ const MatchProfileMock = () => {
 /* ───────────────── Page ───────────────── */
 const Landing = () => {
   const navigate = useNavigate();
+  const pageRef = useRef<HTMLDivElement>(null);
   const [betaOpen, setBetaOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
@@ -605,16 +606,23 @@ const Landing = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const onScroll = () => setNavShadow(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const scroller = pageRef.current;
+    if (!scroller) return;
+    const onScroll = () => setNavShadow(scroller.scrollTop > 20);
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => scroller.removeEventListener("scroll", onScroll);
   }, []);
 
   const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div
+      ref={pageRef}
+      className="landing-scroll dark h-[100dvh] min-h-screen overflow-y-auto overflow-x-hidden overscroll-y-auto touch-pan-y scroll-smooth bg-background text-foreground"
+      style={{ WebkitOverflowScrolling: "touch" }}
+    >
       <InstallAppBanner />
       {/* ─── NAV ─── */}
       <nav
