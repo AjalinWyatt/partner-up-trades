@@ -157,20 +157,12 @@ html, body {
   -ms-overflow-style: none;       /* IE/Edge */
 }
 
-/* Prevent iOS standalone (Add to Home Screen) rubber-band scroll
-   from pulling fixed elements like the bottom nav off-screen */
-html, body {
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: none;
-}
-
 /* Make the app fit any device: lock width to the actual viewport,
    prevent horizontal scroll/drift, and respect iOS safe-area insets. */
 html, body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
   scroll-behavior: smooth;
 }
 #root {
