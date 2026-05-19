@@ -171,6 +171,19 @@ html, body {
   min-height: 100dvh;
 }
 
+.landing-scroll {
+  overflow-y: auto !important;
+  scroll-snap-type: none !important;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.landing-scroll * {
+  scroll-snap-align: none !important;
+  scroll-snap-stop: normal !important;
+}
+
 /* ---------------------------------------------------------------
    Safe-area utilities
    Use these on any element that touches the screen edges so content
