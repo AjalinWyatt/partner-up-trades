@@ -49,7 +49,7 @@ export default function Threads() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [newForum, setNewForum] = useState("forex");
+  const [newForum, setNewForum] = useState("Forex");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
