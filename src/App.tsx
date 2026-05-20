@@ -35,6 +35,9 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Install = lazy(() => import("./pages/Install"));
 const EnableNotifications = lazy(() => import("./pages/EnableNotifications"));
+const Threads = lazy(() => import("./pages/Threads"));
+const Rooms = lazy(() => import("./pages/Rooms"));
+const Room = lazy(() => import("./pages/Room"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +86,9 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/install" element={<Install />} />
           <Route path="/enable-notifications" element={<EnableNotifications />} />
+          <Route path="/threads" element={<Threads />} />
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/rooms/:id" element={<Room />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
