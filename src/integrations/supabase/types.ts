@@ -1195,6 +1195,77 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_room_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          media_type: string | null
+          media_url: string | null
+          room_id: string
+          sender_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          room_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          room_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_room_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "voice_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_rooms: {
+        Row: {
+          created_at: string
+          host_id: string
+          id: string
+          is_active: boolean
+          market: string | null
+          title: string
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          host_id: string
+          id?: string
+          is_active?: boolean
+          market?: string | null
+          title: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          market?: string | null
+          title?: string
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           created_at: string
