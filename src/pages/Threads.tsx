@@ -32,9 +32,9 @@ type Reply = {
 
 const FORUM_OPTIONS = [
   { key: "all", label: "All" },
-  { key: "forex", label: "FX" },
-  { key: "futures", label: "Futures" },
-  { key: "options", label: "Options" },
+  { key: "Forex", label: "FX" },
+  { key: "Futures", label: "Futures" },
+  { key: "Options", label: "Options" },
 ];
 
 export default function Threads() {

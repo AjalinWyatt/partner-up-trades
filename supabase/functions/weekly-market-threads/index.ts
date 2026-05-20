@@ -20,19 +20,19 @@ function isoWeek(d = new Date()): { year: number; week: number } {
 
 const THREADS = [
   {
-    forum: "forex",
+    forum: "Forex",
     title: (w: string) => `FX Majors — Week ${w} outlook`,
     content: () =>
       `📊 Weekly FX Majors thread.\n\nDrop your bias for the week on EURUSD, GBPUSD, USDJPY, AUDUSD, USDCHF, USDCAD, NZDUSD.\n\nThings to cover:\n• Higher-timeframe structure\n• Key levels you're watching\n• High-impact news on the calendar\n• Your A+ setup of the week\n\nReply below — keep it short, charts welcome.`,
   },
   {
-    forum: "futures",
+    forum: "Futures",
     title: (w: string) => `ES & NQ — Week ${w} outlook`,
     content: () =>
       `📈 Weekly Index Futures thread.\n\nWhat's your read on /ES and /NQ this week?\n\nThings to cover:\n• HTF trend + key liquidity\n• Open range / overnight inventory plan\n• Catalysts (CPI, FOMC, earnings)\n• Your bias and invalidation\n\nDrop your levels.`,
   },
   {
-    forum: "options",
+    forum: "Options",
     title: (w: string) => `Options Flow — Week ${w} recap`,
     content: () =>
       `🎯 Weekly Options Flow thread.\n\nShare unusual activity, sweeps, and notable positioning from last week.\n\nThings to cover:\n• Tickers with the loudest flow\n• Bullish vs bearish skew\n• Vol setups you're stalking\n• 0DTE / weekly plays you're eyeing\n\nWhat's on your radar?`,
