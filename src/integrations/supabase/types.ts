@@ -1239,6 +1239,7 @@ export type Database = {
           host_id: string
           id: string
           is_active: boolean
+          last_activity_at: string
           market: string | null
           title: string
           topic: string | null
@@ -1249,6 +1250,7 @@ export type Database = {
           host_id: string
           id?: string
           is_active?: boolean
+          last_activity_at?: string
           market?: string | null
           title: string
           topic?: string | null
@@ -1259,6 +1261,7 @@ export type Database = {
           host_id?: string
           id?: string
           is_active?: boolean
+          last_activity_at?: string
           market?: string | null
           title?: string
           topic?: string | null
@@ -1304,6 +1307,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_inactive_voice_rooms: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
