@@ -15,6 +15,7 @@ import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
 import Wordmark from "@/components/Wordmark";
 import pulseGlobe from "@/assets/pulse-globe.svg";
+import RoomsPane from "@/components/RoomsPane";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
