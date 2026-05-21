@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, LogOut, Shield, Megaphone, UsersRound, MessageSquareText, Radio } from "lucide-react";
+import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, LogOut, Shield, Megaphone, UsersRound } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,8 +14,6 @@ const navItems = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
   { path: "/discover", icon: Earth, label: "Discover", tour: "nav-discover" },
   { path: "/feed", icon: FeedNavIcon, label: "Feed", tour: "nav-feed" },
-  { path: "/threads", icon: MessageSquareText, label: "Threads", tour: "nav-threads" },
-  { path: "/rooms", icon: Radio, label: "Rooms", tour: "nav-rooms" },
   { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log", tour: "nav-log" },
   { path: "/partners", icon: Users, label: "Partners", tour: "nav-partners" },
