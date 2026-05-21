@@ -35,7 +35,6 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Install = lazy(() => import("./pages/Install"));
 const EnableNotifications = lazy(() => import("./pages/EnableNotifications"));
-const Rooms = lazy(() => import("./pages/Rooms"));
 const Room = lazy(() => import("./pages/Room"));
 
 const queryClient = new QueryClient({
