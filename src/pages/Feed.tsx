@@ -64,7 +64,7 @@ interface StoryProfileRow {
 }
 
 const FEED_FILTERS = ["All", "Crypto", "Forex", "Indices", "Futures", "Options", "Commodities"] as const;
-const FEED_MODES = ["Feed", "Pulse"] as const;
+const FEED_MODES = ["Feed", "Rooms", "Pulse"] as const;
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
@@ -638,7 +638,7 @@ const Feed = () => {
             </div>
 
             <div className="flex justify-center">
-              <div className="grid h-10 w-full max-w-[260px] grid-cols-2 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
+              <div className="grid h-10 w-full max-w-[320px] grid-cols-3 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
                 {FEED_MODES.map((mode) => {
                   const active = activeMode === mode;
                   const isPulse = mode === "Pulse";
@@ -696,7 +696,9 @@ const Feed = () => {
             if (myId) await loadStories(myId);
           }}
         >
-        {activeMode === "Pulse" ? (
+        {activeMode === "Rooms" ? (
+          <RoomsPane />
+        ) : activeMode === "Pulse" ? (
           <div className="space-y-3 px-4 py-3">
             {/* Pulse hero header */}
             <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
