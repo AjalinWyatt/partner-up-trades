@@ -886,15 +886,27 @@ const Feed = () => {
                   {/* Single Send Pulse - sessions support both chat + voice notes */}
                   <div className="mt-4">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!myId) { toast.error("Sign in to send a Pulse."); return; }
                         if (supportContext.length === 0) {
                           toast.error("Tap what you need help with first so a trader knows how to show up for you.");
                           return;
                         }
+                        const { data, error } = await supabase
+                          .from("pulse_requests" as any)
+                          .insert({ requester_id: myId, context: supportContext })
+                          .select("id")
+                          .single();
+                        if (error || !data) {
+                          toast.error("Couldn't send Pulse. Try again.");
+                          return;
+                        }
                         toast.success("Pulse sent - waiting for a trader to answer…");
-                      import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_sent", { context: supportContext }));
+                        import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_sent", { context: supportContext }));
+                        const newId = (data as any).id;
                         setSupportContext([]);
                         setNeedHelpOpen(false);
+                        navigate(`/pulse/session/${newId}`);
                       }}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
                     >
