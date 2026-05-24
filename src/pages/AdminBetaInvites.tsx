@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Mail, Send, Eye, Users } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export default function AdminBetaInvites() {
   const navigate = useNavigate();
@@ -39,8 +40,16 @@ export default function AdminBetaInvites() {
       if (data?.count != null) setCount(data.count);
       // preview HTML
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token ?? SUPABASE_PUBLISHABLE_KEY;
         const res = await fetch(
           `${SUPABASE_URL}/functions/v1/preview-transactional-email?template=beta-invite`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              apikey: SUPABASE_PUBLISHABLE_KEY,
+            },
+          },
         );
         if (res.ok) setPreviewHtml(await res.text());
       } catch {}
