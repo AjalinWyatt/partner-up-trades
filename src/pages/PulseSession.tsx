@@ -202,7 +202,7 @@ export default function PulseSession() {
         .from("pulse_messages" as any)
         .insert({
           session_id: id, sender_id: myId,
-          content: "🎤 Voice note", media_url: path, media_type: `audio/${ext}`,
+          content: "🎤 Voice note", media_url: `audio-messages/${path}`, media_type: `audio/${ext}`,
         })
         .select("id, sender_id, content, media_url, media_type, created_at")
         .single();
