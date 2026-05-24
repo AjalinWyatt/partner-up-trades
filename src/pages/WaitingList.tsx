@@ -143,19 +143,13 @@ const WaitingList = () => {
             <div className="rounded-2xl border border-accent/40 bg-gradient-to-br from-accent/15 to-primary/10 p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-5 h-5 text-accent" />
-                <h2 className="text-[16px] font-black text-foreground">Unlock the Waiting List</h2>
+                <h2 className="text-[16px] font-black text-foreground">Pro tier coming soon</h2>
               </div>
-              <p className="text-[13px] text-muted-foreground mb-3">
+              <p className="text-[13px] text-muted-foreground">
                 Free traders can keep up to <b className="text-foreground">{FREE_PARTNER_LIMIT} partners</b>.
-                Upgrade to Pro for <b className="text-foreground">${PRO_PRICE_USD}/mo</b> and grow your circle to{" "}
-                <b className="text-foreground">{PRO_PARTNER_LIMIT} partners</b>.
+                Pro will raise this cap to <b className="text-foreground">{PRO_PARTNER_LIMIT} partners</b> for{" "}
+                <b className="text-foreground">${PRO_PRICE_USD}/mo</b>. We'll notify you when it launches.
               </p>
-              <button
-                onClick={upgrade}
-                className="w-full rounded-xl bg-accent text-accent-foreground font-bold py-3 text-[14px] hover:opacity-90 transition-opacity"
-              >
-                Upgrade to Pro - ${PRO_PRICE_USD}/mo
-              </button>
             </div>
           )}
 
