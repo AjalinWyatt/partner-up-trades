@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import AppSidebar from "./AppSidebar";
 import BottomNav from "./BottomNav";
+import { usePresenceHeartbeat } from "@/hooks/use-presence-heartbeat";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children, hideBottomNav, lockHeight }: AppLayoutProps) {
+  usePresenceHeartbeat();
   return (
     <div className={`flex w-full overflow-x-hidden bg-background ${lockHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop sidebar */}
