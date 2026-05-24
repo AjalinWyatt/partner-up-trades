@@ -1,6 +1,9 @@
 // Admin-only: sends the beta-invite template to every waitlist row with
 // wants_beta = true. Uses idempotencyKey per email so reruns won't duplicate.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import * as React from 'npm:react@18.3.1'
+import { renderAsync } from 'npm:@react-email/components@0.0.22'
+import { template as betaInviteTemplate } from '../_shared/transactional-email-templates/beta-invite.tsx'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +41,26 @@ Deno.serve(async (req) => {
   try { body = await req.json() } catch {}
   const dryRun: boolean = !!body.dryRun
   const testEmail: string | undefined = body.testEmail
+  const preview: boolean = !!body.preview
+
+  if (preview) {
+    try {
+      const html = await renderAsync(
+        React.createElement(betaInviteTemplate.component, {
+          firstName: 'Nilaja',
+          betaKey: BETA_KEY || 'TW-BETA-2026',
+        }),
+      )
+      return new Response(JSON.stringify({ html }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    } catch (e) {
+      return new Response(JSON.stringify({ error: String(e) }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
 
   let recipients: { email: string; name: string | null }[] = []
   if (testEmail) {
