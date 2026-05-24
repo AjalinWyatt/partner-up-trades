@@ -31,6 +31,8 @@ const MatchProfile = lazy(() => import("./pages/MatchProfile"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminBroadcast = lazy(() => import("./pages/AdminBroadcast"));
+const AdminBetaInvites = lazy(() => import("./pages/AdminBetaInvites"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Install = lazy(() => import("./pages/Install"));
@@ -80,6 +82,8 @@ const App = () => (
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/broadcast" element={<AdminBroadcast />} />
+          <Route path="/admin/beta-invites" element={<AdminBetaInvites />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/install" element={<Install />} />
