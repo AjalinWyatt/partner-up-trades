@@ -155,7 +155,7 @@ export default function PulseSession() {
       toast.error("Couldn't send. Try again.");
       return;
     }
-    setMessages((m) => m.map((x) => (x.id === tempId ? (data as PulseMessage) : x)));
+    setMessages((m) => m.map((x) => (x.id === tempId ? (data as any as PulseMessage) : x)));
   };
 
   const startRecording = async () => {
@@ -207,7 +207,7 @@ export default function PulseSession() {
         .select("id, sender_id, content, media_url, media_type, created_at")
         .single();
       if (error || !data) throw error;
-      setMessages((m) => (m.some((x) => x.id === (data as any).id) ? m : [...m, data as PulseMessage]));
+      setMessages((m) => (m.some((x) => x.id === (data as any).id) ? m : [...m, data as any as PulseMessage]));
     } catch (e: any) {
       toast.error(e?.message || "Couldn't send voice note");
     } finally {
