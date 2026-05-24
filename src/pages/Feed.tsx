@@ -457,6 +457,85 @@ const Feed = () => {
     return () => { cancelled = true; };
   }, []);
 
+  // Live incoming Pulse requests when "Available to Help" is on.
+  useEffect(() => {
+    if (!availableToConnect || !myId) {
+      setIncomingRequests([]);
+      return;
+    }
+    let cancelled = false;
+
+    const mapRow = async (
+      row: { id: string; requester_id: string; context: string[]; note: string | null; created_at: string }
+    ) => {
+      const [{ data: prof }, { data: tp }] = await Promise.all([
+        supabase.from("profiles").select("id, username, full_name, avatar_url, bio").eq("id", row.requester_id).maybeSingle(),
+        supabase.from("trading_profiles").select("experience_level, markets, trading_style").eq("user_id", row.requester_id).maybeSingle(),
+      ]);
+      return {
+        id: row.id,
+        userId: row.requester_id,
+        name: prof?.full_name || prof?.username || "Trader",
+        username: prof?.username || "trader",
+        avatarUrl: prof?.avatar_url || null,
+        context: row.context || [],
+        note: row.note || undefined,
+        ago: timeAgo(row.created_at),
+        insight: {
+          experience: tp?.experience_level || "—",
+          markets: tp?.markets || [],
+          style: (tp?.trading_style || []).join(", ") || "—",
+          bio: prof?.bio || "—",
+        },
+      };
+    };
+
+    (async () => {
+      // Opportunistic cleanup of stale opens
+      await supabase.rpc("expire_stale_pulse_requests" as any);
+      const { data, error } = await supabase
+        .from("pulse_requests" as any)
+        .select("id, requester_id, context, note, created_at")
+        .eq("status", "open")
+        .neq("requester_id", myId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error || cancelled) return;
+      const mapped = await Promise.all(((data as any[]) || []).map(mapRow));
+      if (!cancelled) setIncomingRequests(mapped);
+    })();
+
+    const channel = supabase
+      .channel("pulse-requests-incoming")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pulse_requests" },
+        async (payload) => {
+          const row: any = payload.new;
+          if (!row || row.status !== "open" || row.requester_id === myId) return;
+          const mapped = await mapRow(row);
+          if (!cancelled) setIncomingRequests((prev) => [mapped, ...prev.filter((r) => r.id !== mapped.id)]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "pulse_requests" },
+        (payload) => {
+          const row: any = payload.new;
+          if (!row) return;
+          if (row.status !== "open") {
+            setIncomingRequests((prev) => prev.filter((r) => r.id !== row.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [availableToConnect, myId]);
+
   const filteredShareTargets = useMemo(() => {
     const query = shareSearch.trim().toLowerCase();
     if (!query) return shareTargets;
