@@ -4,6 +4,7 @@ import { FileText, MoreVertical, Pencil, Trash2, Check, X } from "lucide-react";
 import type { Message } from "./types";
 import AudioPlayer from "./AudioPlayer";
 import { supabase } from "@/integrations/supabase/client";
+import { useSignedMediaUrl } from "@/hooks/use-signed-media-url";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +35,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
   const hasMedia = !!msg.media_url;
   const isAudio = msg.media_type?.startsWith("audio/") || msg.media_type === "audio";
   const isImage = isImageType(msg.media_type);
+  const signedMediaUrl = useSignedMediaUrl(hasMedia ? msg.media_url : null);
   const isSharedPost = (msg.content || "").startsWith("Shared a post from ");
   const time = new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toLowerCase();
   const [editing, setEditing] = useState(false);
@@ -117,7 +119,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
         )}
       >
         {hasMedia && isAudio && (
-          <AudioPlayer url={msg.media_url!} isMine={isMine} />
+          <AudioPlayer url={signedMediaUrl} isMine={isMine} />
         )}
         {hasMedia && isImage && (
           <>
@@ -128,7 +130,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
               aria-label="Open image"
             >
               <img
-                src={msg.media_url!}
+                src={signedMediaUrl}
                 alt={isSharedPost ? "Shared post" : "Shared image"}
                 className={cn("rounded-lg w-auto mb-1 cursor-pointer", isSharedPost ? "max-h-64" : "max-h-48")}
               />
@@ -138,7 +140,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
                 className="max-w-[100vw] sm:max-w-[95vw] w-screen h-[100dvh] sm:h-[95vh] p-0 bg-black/95 border-0 flex items-center justify-center overflow-hidden"
               >
                 <img
-                  src={msg.media_url!}
+                  src={signedMediaUrl}
                   alt={isSharedPost ? "Shared post" : "Shared image"}
                   className="max-w-full max-h-full object-contain select-none"
                   draggable={false}
@@ -150,7 +152,7 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
         )}
         {hasMedia && !isAudio && !isImage && (
           <a
-            href={msg.media_url!}
+            href={signedMediaUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
