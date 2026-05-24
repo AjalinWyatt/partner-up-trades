@@ -13,7 +13,8 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 export default function AdminBetaInvites() {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useIsAdmin();
+  const isAdmin = useIsAdmin();
+  const [checked, setChecked] = useState(false);
   const [count, setCount] = useState<number | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [testEmail, setTestEmail] = useState("");
@@ -21,8 +22,12 @@ export default function AdminBetaInvites() {
   const [result, setResult] = useState<any>(null);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate("/dashboard", { replace: true });
-  }, [loading, isAdmin, navigate]);
+    const t = setTimeout(() => setChecked(true), 800);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (checked && !isAdmin) navigate("/dashboard", { replace: true });
+  }, [checked, isAdmin, navigate]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -66,7 +71,7 @@ export default function AdminBetaInvites() {
     toast.success(`Sent ${data?.sent ?? 0} / ${data?.total ?? 0} invites`);
   };
 
-  if (loading || !isAdmin) return null;
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background p-6">
