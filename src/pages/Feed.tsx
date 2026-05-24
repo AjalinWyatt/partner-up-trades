@@ -1077,10 +1077,24 @@ const Feed = () => {
                                   Pass
                                 </button>
                                 <button
-                                  onClick={() => {
+                                  onClick={async () => {
+                                    if (!myId) return;
+                                    // Atomic claim: only succeeds if still open
+                                    const { data, error } = await supabase
+                                      .from("pulse_requests" as any)
+                                      .update({ status: "accepted", accepted_by: myId, accepted_at: new Date().toISOString() })
+                                      .eq("id", req.id)
+                                      .eq("status", "open")
+                                      .select("id")
+                                      .maybeSingle();
+                                    if (error || !data) {
+                                      toast.error("This Pulse has already been answered.");
+                                      setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                      if (insightFor === req.id) setInsightFor(null);
+                                      return;
+                                    }
                                     setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
                                     if (insightFor === req.id) setInsightFor(null);
-                                    // Per spec: helper's availability auto-turns OFF after accepting.
                                     setAvailableToConnect(false);
                                     toast.success(`Connected with ${req.name} - opening Pulse session.`);
                                     import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_accepted", { request_id: req.id }));
