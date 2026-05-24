@@ -1304,21 +1304,7 @@ export type Database = {
       }
     }
     Views: {
-      profile_ages: {
-        Row: {
-          age: number | null
-          id: string | null
-        }
-        Insert: {
-          age?: never
-          id?: string | null
-        }
-        Update: {
-          age?: never
-          id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       cleanup_inactive_voice_rooms: { Args: never; Returns: undefined }
@@ -1329,17 +1315,6 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
-      }
-      get_my_private_profile: {
-        Args: never
-        Returns: {
-          date_of_birth: string
-          notify_email: boolean
-          notify_messages: boolean
-          notify_new_matches: boolean
-          notify_partner_activity: boolean
-          username_changes_count: number
-        }[]
       }
       get_partner_checkin_streak: {
         Args: { user_a: string; user_b: string }
