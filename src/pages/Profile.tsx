@@ -247,7 +247,7 @@ const Profile = () => {
       setUserId(user.id);
 
       const [{ data: pData }, { data: tData }, { data: entries }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("profiles").select("id, username, full_name, avatar_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, tour_completed, username_changes_count, notify_email, notify_messages, notify_new_matches, notify_partner_activity, created_at, updated_at").eq("id", user.id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("journal_entries").select("*").eq("user_id", user.id).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(50),
       ]);

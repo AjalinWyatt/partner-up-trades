@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { claimPlayback, releasePlayback } from "@/lib/audioCoordinator";
+import { useSignedMediaUrl } from "@/hooks/use-signed-media-url";
 
 interface AudioPlayerProps {
   url: string;
@@ -9,6 +10,7 @@ interface AudioPlayerProps {
 }
 
 export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
+  const signedUrl = useSignedMediaUrl(url);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -57,7 +59,7 @@ export default function AudioPlayer({ url, isMine }: AudioPlayerProps) {
     <div className="flex w-[min(210px,58vw)] max-w-full min-w-0 items-center gap-2.5 py-0.5 pr-1">
       <audio
         ref={audioRef}
-        src={url}
+        src={signedUrl || url}
         preload="metadata"
         playsInline
         onLoadedMetadata={() => { syncDuration(); fixInfiniteDuration(); }}

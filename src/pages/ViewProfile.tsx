@@ -68,7 +68,7 @@ const ViewProfile = () => {
       if (user) setMyId(user.id);
 
       const [{ data: prof }, { data: tp }, journalResponse, { data: repostRows }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("profiles").select("id, username, full_name, avatar_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, tour_completed, username_changes_count, created_at, updated_at").eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("journal_entries").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
         supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", userId).order("created_at", { ascending: false }),

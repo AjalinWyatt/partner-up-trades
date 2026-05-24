@@ -26,7 +26,7 @@ const calcAge = (dob: string | null): number | null => {
   return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
 };
 
-const profileFields = "id, username, full_name, avatar_url, gender, location, city, state, country, hobbies, date_of_birth, created_at";
+const profileFields = "id, username, full_name, avatar_url, gender, location, city, state, country, hobbies, birth_year, created_at";
 const tradingFields = "user_id, markets, sessions, strategies, trading_style, experience_level, primary_goal, struggles, looking_for_gender, connection_reach";
 
 export const getDiscoverMatches = async (userId: string, options?: { joinedAfter?: string }) => {
@@ -94,7 +94,7 @@ export const getDiscoverMatches = async (userId: string, options?: { joinedAfter
         username: p.username,
         full_name: p.full_name,
         avatar_url: p.avatar_url,
-        age: calcAge(p.date_of_birth),
+        age: p.birth_year ? new Date().getFullYear() - p.birth_year : null,
         location: displayLoc,
         city: p.city,
         state: p.state,

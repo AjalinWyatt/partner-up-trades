@@ -13,7 +13,7 @@ interface ProfileFull {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
-  date_of_birth: string | null;
+  birth_year: number | null;
   gender: string | null;
   city: string | null;
   state: string | null;
@@ -29,10 +29,9 @@ interface TradingFull {
   experience_level: string | null;
 }
 
-const calcAge = (dob: string | null) => {
-  if (!dob) return null;
-  return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-};
+const calcAge = (birthYear: number | null) => (birthYear ? new Date().getFullYear() - birthYear : null);
+
+const PROFILE_FIELDS = "id, username, full_name, avatar_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, tour_completed, username_changes_count, created_at, updated_at";
 
 const MatchProfile = () => {
   const { userId = "" } = useParams();
@@ -56,10 +55,10 @@ const MatchProfile = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const meUser = session?.user;
       const [{ data: p }, { data: t }, { data: mt }, { data: mp }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("profiles").select(PROFILE_FIELDS).eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
         meUser ? supabase.from("trading_profiles").select("*").eq("user_id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
-        meUser ? supabase.from("profiles").select("*").eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        meUser ? supabase.from("profiles").select(PROFILE_FIELDS).eq("id", meUser.id).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
       setProfile(p as any);
       setTrading(t);
@@ -115,7 +114,7 @@ const MatchProfile = () => {
     navigate("/discover");
   };
 
-  const age = calcAge(profile?.date_of_birth ?? null);
+  const age = calcAge(profile?.birth_year ?? null);
   const loc = [profile?.city, profile?.state].filter(Boolean).join(", ") || profile?.country || "";
   const isPro = trading?.experience_level === "Profitable trader";
   const dasharray = `${(matchPct / 100) * 100.53} 100.53`;
