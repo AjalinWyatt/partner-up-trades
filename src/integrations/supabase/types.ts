@@ -886,6 +886,7 @@ export type Database = {
           gender: string | null
           hobbies: string[] | null
           id: string
+          last_seen_at: string | null
           location: string | null
           notify_email: boolean
           notify_messages: boolean
@@ -913,6 +914,7 @@ export type Database = {
           gender?: string | null
           hobbies?: string[] | null
           id: string
+          last_seen_at?: string | null
           location?: string | null
           notify_email?: boolean
           notify_messages?: boolean
@@ -940,6 +942,7 @@ export type Database = {
           gender?: string | null
           hobbies?: string[] | null
           id?: string
+          last_seen_at?: string | null
           location?: string | null
           notify_email?: boolean
           notify_messages?: boolean
@@ -1426,6 +1429,7 @@ export type Database = {
         Args: { new_key: string; new_label?: string }
         Returns: undefined
       }
+      touch_presence: { Args: never; Returns: undefined }
       verify_beta_key: { Args: { submitted_key: string }; Returns: boolean }
     }
     Enums: {

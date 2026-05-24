@@ -445,16 +445,20 @@ const Feed = () => {
     if (postToShare) loadShareTargets();
   }, [postToShare, loadShareTargets]);
 
-  // Fetch real trader count for the Pulse globe (no mock data).
+  // Live online trader count for the Pulse globe (active in last 5 minutes).
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const fetchCount = async () => {
+      const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { count } = await supabase
         .from("profiles")
-        .select("id", { count: "exact", head: true });
+        .select("id", { count: "exact", head: true })
+        .gte("last_seen_at", since);
       if (!cancelled) setOnlineCount(count ?? 0);
-    })();
-    return () => { cancelled = true; };
+    };
+    fetchCount();
+    const i = setInterval(fetchCount, 30_000);
+    return () => { cancelled = true; clearInterval(i); };
   }, []);
 
   // Live incoming Pulse requests when "Available to Help" is on.
