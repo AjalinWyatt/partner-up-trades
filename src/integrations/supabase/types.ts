@@ -956,6 +956,80 @@ export type Database = {
         }
         Relationships: []
       }
+      pulse_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          media_type: string | null
+          media_url: string | null
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pulse_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pulse_requests: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          context: string[]
+          created_at: string
+          expires_at: string
+          id: string
+          note: string | null
+          requester_id: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          context?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          note?: string | null
+          requester_id: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          context?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          note?: string | null
+          requester_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       saved_posts: {
         Row: {
           created_at: string
@@ -1319,6 +1393,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_stale_pulse_requests: { Args: never; Returns: undefined }
       get_partner_checkin_streak: {
         Args: { user_a: string; user_b: string }
         Returns: number

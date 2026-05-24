@@ -457,6 +457,85 @@ const Feed = () => {
     return () => { cancelled = true; };
   }, []);
 
+  // Live incoming Pulse requests when "Available to Help" is on.
+  useEffect(() => {
+    if (!availableToConnect || !myId) {
+      setIncomingRequests([]);
+      return;
+    }
+    let cancelled = false;
+
+    const mapRow = async (
+      row: { id: string; requester_id: string; context: string[]; note: string | null; created_at: string }
+    ) => {
+      const [{ data: prof }, { data: tp }] = await Promise.all([
+        supabase.from("profiles").select("id, username, full_name, avatar_url, bio").eq("id", row.requester_id).maybeSingle(),
+        supabase.from("trading_profiles").select("experience_level, markets, trading_style").eq("user_id", row.requester_id).maybeSingle(),
+      ]);
+      return {
+        id: row.id,
+        userId: row.requester_id,
+        name: prof?.full_name || prof?.username || "Trader",
+        username: prof?.username || "trader",
+        avatarUrl: prof?.avatar_url || null,
+        context: row.context || [],
+        note: row.note || undefined,
+        ago: timeAgo(row.created_at),
+        insight: {
+          experience: tp?.experience_level || "—",
+          markets: tp?.markets || [],
+          style: (tp?.trading_style || []).join(", ") || "—",
+          bio: prof?.bio || "—",
+        },
+      };
+    };
+
+    (async () => {
+      // Opportunistic cleanup of stale opens
+      await supabase.rpc("expire_stale_pulse_requests" as any);
+      const { data, error } = await supabase
+        .from("pulse_requests" as any)
+        .select("id, requester_id, context, note, created_at")
+        .eq("status", "open")
+        .neq("requester_id", myId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error || cancelled) return;
+      const mapped = await Promise.all(((data as any[]) || []).map(mapRow));
+      if (!cancelled) setIncomingRequests(mapped);
+    })();
+
+    const channel = supabase
+      .channel("pulse-requests-incoming")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pulse_requests" },
+        async (payload) => {
+          const row: any = payload.new;
+          if (!row || row.status !== "open" || row.requester_id === myId) return;
+          const mapped = await mapRow(row);
+          if (!cancelled) setIncomingRequests((prev) => [mapped, ...prev.filter((r) => r.id !== mapped.id)]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "pulse_requests" },
+        (payload) => {
+          const row: any = payload.new;
+          if (!row) return;
+          if (row.status !== "open") {
+            setIncomingRequests((prev) => prev.filter((r) => r.id !== row.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [availableToConnect, myId]);
+
   const filteredShareTargets = useMemo(() => {
     const query = shareSearch.trim().toLowerCase();
     if (!query) return shareTargets;
@@ -807,15 +886,27 @@ const Feed = () => {
                   {/* Single Send Pulse - sessions support both chat + voice notes */}
                   <div className="mt-4">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!myId) { toast.error("Sign in to send a Pulse."); return; }
                         if (supportContext.length === 0) {
                           toast.error("Tap what you need help with first so a trader knows how to show up for you.");
                           return;
                         }
+                        const { data, error } = await supabase
+                          .from("pulse_requests" as any)
+                          .insert({ requester_id: myId, context: supportContext })
+                          .select("id")
+                          .single();
+                        if (error || !data) {
+                          toast.error("Couldn't send Pulse. Try again.");
+                          return;
+                        }
                         toast.success("Pulse sent - waiting for a trader to answer…");
-                      import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_sent", { context: supportContext }));
+                        import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_sent", { context: supportContext }));
+                        const newId = (data as any).id;
                         setSupportContext([]);
                         setNeedHelpOpen(false);
+                        navigate(`/pulse/session/${newId}`);
                       }}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.35)] transition-transform active:scale-[0.98]"
                     >
@@ -986,10 +1077,24 @@ const Feed = () => {
                                   Pass
                                 </button>
                                 <button
-                                  onClick={() => {
+                                  onClick={async () => {
+                                    if (!myId) return;
+                                    // Atomic claim: only succeeds if still open
+                                    const { data, error } = await supabase
+                                      .from("pulse_requests" as any)
+                                      .update({ status: "accepted", accepted_by: myId, accepted_at: new Date().toISOString() })
+                                      .eq("id", req.id)
+                                      .eq("status", "open")
+                                      .select("id")
+                                      .maybeSingle();
+                                    if (error || !data) {
+                                      toast.error("This Pulse has already been answered.");
+                                      setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                      if (insightFor === req.id) setInsightFor(null);
+                                      return;
+                                    }
                                     setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
                                     if (insightFor === req.id) setInsightFor(null);
-                                    // Per spec: helper's availability auto-turns OFF after accepting.
                                     setAvailableToConnect(false);
                                     toast.success(`Connected with ${req.name} - opening Pulse session.`);
                                     import("@/lib/analytics").then(({ trackEvent }) => trackEvent("pulse_request_accepted", { request_id: req.id }));
