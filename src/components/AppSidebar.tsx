@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, LogOut, Shield, Megaphone, UsersRound } from "lucide-react";
+import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, LogOut, Shield, Megaphone, UsersRound, Mail } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,6 +151,18 @@ export default function AppSidebar() {
                 >
                   <Megaphone className="w-[18px] h-[18px]" strokeWidth={1.8} />
                   <span>Broadcast</span>
+                </button>
+                <button
+                  onClick={() => navigate("/admin/beta-invites")}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14px] transition-all",
+                    location.pathname === "/admin/beta-invites"
+                      ? "font-semibold text-foreground bg-secondary"
+                      : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  )}
+                >
+                  <Mail className="w-[18px] h-[18px]" strokeWidth={1.8} />
+                  <span>Beta Invites</span>
                 </button>
               </div>
             )}
