@@ -16,6 +16,8 @@ Deno.serve(async (req) => {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+  // Legacy JWT-format publishable key required by Lovable email API gateway.
+  const PUBLISHABLE_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraGxlb3Nyc3B4eGRodGd3YXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Mzg0NTgsImV4cCI6MjA5MDIxNDQ1OH0.SPnUlPA7Ewg9hxKcq0yDNDA6kOUDVxs6K1rN6W-hshg'
   const BETA_KEY = Deno.env.get('BETA_ACCESS_KEY') || ''
 
   const authHeader = req.headers.get('Authorization') || ''
@@ -99,8 +101,8 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${PUBLISHABLE_JWT}`,
+          apikey: PUBLISHABLE_JWT,
         },
         body: JSON.stringify({
           templateName: 'beta-invite',
