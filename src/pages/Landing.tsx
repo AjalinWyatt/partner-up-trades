@@ -593,6 +593,7 @@ const Landing = () => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [betaOpen, setBetaOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedBeta, setSubmittedBeta] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
