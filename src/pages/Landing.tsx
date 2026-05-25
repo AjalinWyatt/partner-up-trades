@@ -91,7 +91,7 @@ const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 };
 
 /* ───────────────── Waitlist form (simplified) ───────────────── */
-const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
+const WaitlistForm = ({ onSuccess }: { onSuccess: (wantsBeta: boolean) => void }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
