@@ -99,8 +99,8 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${ANON_KEY}`,
+          apikey: ANON_KEY,
         },
         body: JSON.stringify({
           templateName: 'beta-invite',
