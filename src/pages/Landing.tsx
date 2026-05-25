@@ -137,7 +137,7 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: (wantsBeta: boolean) => void }
     if (wantsBeta) {
       try {
         await supabase.functions.invoke("send-beta-invites", {
-          body: { testEmail: cleanEmail },
+          body: { selfSignup: true, email: cleanEmail },
         });
       } catch (err) {
         console.error("beta invite send failed", err);
