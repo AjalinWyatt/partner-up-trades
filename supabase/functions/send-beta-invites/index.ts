@@ -20,30 +20,74 @@ Deno.serve(async (req) => {
   const PUBLISHABLE_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraGxlb3Nyc3B4eGRodGd3YXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Mzg0NTgsImV4cCI6MjA5MDIxNDQ1OH0.SPnUlPA7Ewg9hxKcq0yDNDA6kOUDVxs6K1rN6W-hshg'
   const BETA_KEY = Deno.env.get('BETA_ACCESS_KEY') || ''
 
+  let body: any = {}
+  try { body = await req.json() } catch {}
+  const dryRun: boolean = !!body.dryRun
+  const testEmail: string | undefined = body.testEmail
+  const preview: boolean = !!body.preview
+  const selfSignup: boolean = !!body.selfSignup
+
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY)
+
+  // SELF-SIGNUP MODE: public path used by the landing page after waitlist
+  // submission. Only sends to an email that exists in waitlist with
+  // wants_beta=true, so this can't be abused as an open relay.
+  if (selfSignup) {
+    const target = (body.email || '').toString().trim().toLowerCase()
+    if (!target) {
+      return new Response(JSON.stringify({ error: 'Missing email' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const { data: row } = await admin
+      .from('waitlist')
+      .select('email, name, wants_beta')
+      .eq('email', target)
+      .eq('wants_beta', true)
+      .maybeSingle()
+    if (!row) {
+      return new Response(JSON.stringify({ error: 'Not on beta list' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const firstName = ((row.name as string) || '').trim().split(/\s+/)[0] || null
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${PUBLISHABLE_JWT}`,
+          apikey: PUBLISHABLE_JWT,
+        },
+        body: JSON.stringify({
+          templateName: 'beta-invite',
+          recipientEmail: target,
+          idempotencyKey: `beta-invite-v1-${target}`,
+          templateData: { firstName, betaKey: BETA_KEY },
+        }),
+      })
+      if (!res.ok) {
+        const t = await res.text()
+        return new Response(JSON.stringify({ ok: false, error: t.slice(0, 200) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ ok: true, sent: 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    } catch (e) {
+      return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+  }
+
+  // All other modes require admin auth.
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace('Bearer ', '')
   if (!token) {
     return new Response(JSON.stringify({ error: 'Missing auth' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
-
   const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: authHeader } } })
   const { data: userData } = await userClient.auth.getUser()
   const callerId = userData?.user?.id
   if (!callerId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
-
-  const admin = createClient(SUPABASE_URL, SERVICE_KEY)
   const { data: isAdmin } = await admin.rpc('has_role', { _user_id: callerId, _role: 'admin' })
   if (!isAdmin) {
     return new Response(JSON.stringify({ error: 'Admin only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
-
-  let body: any = {}
-  try { body = await req.json() } catch {}
-  const dryRun: boolean = !!body.dryRun
-  const testEmail: string | undefined = body.testEmail
-  const preview: boolean = !!body.preview
 
   if (preview) {
     try {
