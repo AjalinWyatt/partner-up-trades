@@ -930,13 +930,31 @@ const Landing = () => {
               <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-[22px] font-black text-foreground mb-2">You're on the list.</h3>
+              <h3 className="text-[22px] font-black text-foreground mb-2">
+                {submittedBeta ? "Check your inbox 📬" : "You're on the list."}
+              </h3>
               <p className="text-muted-foreground text-[14px]">
-                We'll email you the moment a spot opens. If you opted in for the beta, expect an invite soon.
+                {submittedBeta ? (
+                  <>
+                    Your beta invite + access key was just sent to your email.{" "}
+                    <span className="text-foreground font-semibold">
+                      Check your junk/spam folder
+                    </span>{" "}
+                    if you don't see it in a minute — and mark it "Not spam" so future
+                    messages land in your inbox.
+                  </>
+                ) : (
+                  <>We'll email you the moment a spot opens.</>
+                )}
               </p>
             </div>
           ) : (
-            <WaitlistForm onSuccess={() => setSubmitted(true)} />
+            <WaitlistForm
+              onSuccess={(wantsBeta) => {
+                setSubmittedBeta(wantsBeta);
+                setSubmitted(true);
+              }}
+            />
           )}
         </div>
       </section>
