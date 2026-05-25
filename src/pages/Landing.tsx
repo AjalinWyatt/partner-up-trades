@@ -118,21 +118,33 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
       toast.error("Pick at least one market you trade"); return;
     }
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.from("waitlist" as any).insert({
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       phone: phone.trim(),
       wants_beta: wantsBeta,
       markets,
       market: markets[0],
     } as any);
-    setLoading(false);
     if (error) {
+      setLoading(false);
       console.error(error);
       toast.error("Something went wrong. Try again.");
       return;
     }
-    onSuccess();
+    // If they opted in for beta, immediately send the invite email.
+    if (wantsBeta) {
+      try {
+        await supabase.functions.invoke("send-beta-invites", {
+          body: { testEmail: cleanEmail },
+        });
+      } catch (err) {
+        console.error("beta invite send failed", err);
+      }
+    }
+    setLoading(false);
+    onSuccess(wantsBeta);
   };
 
   return (
