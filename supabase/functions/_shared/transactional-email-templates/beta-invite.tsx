@@ -17,7 +17,7 @@ const BetaInviteEmail = ({ firstName, betaKey }: BetaInviteProps) => (
     <Body style={main}>
       <Container style={container}>
         <Text style={kicker}>TRADERS WORLD · PRIVATE BETA</Text>
-        <Heading style={h1}>You're 1 of 48.</Heading>
+        <Heading style={h1}>Welcome to the beta.</Heading>
 
         <Text style={text}>Hey {firstName || 'there'},</Text>
         <Text style={text}>
@@ -54,7 +54,7 @@ const BetaInviteEmail = ({ firstName, betaKey }: BetaInviteProps) => (
           We are about <strong>90% done</strong>. And that's exactly why I need you.
         </Text>
         <Text style={text}>
-          You are one of 48 people I'm trusting with this before it goes public. I don't need
+          You're one of the people I'm trusting with this before it goes public. I don't need
           you to be nice. I don't need you to protect my feelings. I need you to use it like a
           real user and tell me everything that's wrong, confusing, slow, missing, or just
           doesn't feel right.
