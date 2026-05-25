@@ -13,7 +13,7 @@ interface BetaInviteProps {
 const BetaInviteEmail = ({ firstName, betaKey }: BetaInviteProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You're 1 of 48 — early access to Traders World</Preview>
+    <Preview>You're Personal Invite Into TradersWorld</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={kicker}>TRADERS WORLD · PRIVATE BETA</Text>
@@ -101,7 +101,7 @@ const BetaInviteEmail = ({ firstName, betaKey }: BetaInviteProps) => (
 
 export const template = {
   component: BetaInviteEmail,
-  subject: "You're 1 of 48 — early access to Traders World",
+  subject: "You're Personal Invite Into TradersWorld",
   displayName: 'Beta invite',
   previewData: { firstName: 'Alex', betaKey: 'TRADERSWORLD-BETA-2026' },
 } satisfies TemplateEntry
