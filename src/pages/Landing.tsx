@@ -91,7 +91,7 @@ const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 };
 
 /* ───────────────── Waitlist form (simplified) ───────────────── */
-const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
+const WaitlistForm = ({ onSuccess }: { onSuccess: (wantsBeta: boolean) => void }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -118,21 +118,33 @@ const WaitlistForm = ({ onSuccess }: { onSuccess: () => void }) => {
       toast.error("Pick at least one market you trade"); return;
     }
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.from("waitlist" as any).insert({
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       phone: phone.trim(),
       wants_beta: wantsBeta,
       markets,
       market: markets[0],
     } as any);
-    setLoading(false);
     if (error) {
+      setLoading(false);
       console.error(error);
       toast.error("Something went wrong. Try again.");
       return;
     }
-    onSuccess();
+    // If they opted in for beta, immediately send the invite email.
+    if (wantsBeta) {
+      try {
+        await supabase.functions.invoke("send-beta-invites", {
+          body: { selfSignup: true, email: cleanEmail },
+        });
+      } catch (err) {
+        console.error("beta invite send failed", err);
+      }
+    }
+    setLoading(false);
+    onSuccess(wantsBeta);
   };
 
   return (
@@ -581,6 +593,7 @@ const Landing = () => {
   const pageRef = useRef<HTMLDivElement>(null);
   const [betaOpen, setBetaOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedBeta, setSubmittedBeta] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -917,13 +930,31 @@ const Landing = () => {
               <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-[22px] font-black text-foreground mb-2">You're on the list.</h3>
+              <h3 className="text-[22px] font-black text-foreground mb-2">
+                {submittedBeta ? "Check your inbox 📬" : "You're on the list."}
+              </h3>
               <p className="text-muted-foreground text-[14px]">
-                We'll email you the moment a spot opens. If you opted in for the beta, expect an invite soon.
+                {submittedBeta ? (
+                  <>
+                    Your beta invite + access key was just sent to your email.{" "}
+                    <span className="text-foreground font-semibold">
+                      Check your junk/spam folder
+                    </span>{" "}
+                    if you don't see it in a minute — and mark it "Not spam" so future
+                    messages land in your inbox.
+                  </>
+                ) : (
+                  <>We'll email you the moment a spot opens.</>
+                )}
               </p>
             </div>
           ) : (
-            <WaitlistForm onSuccess={() => setSubmitted(true)} />
+            <WaitlistForm
+              onSuccess={(wantsBeta) => {
+                setSubmittedBeta(wantsBeta);
+                setSubmitted(true);
+              }}
+            />
           )}
         </div>
       </section>
