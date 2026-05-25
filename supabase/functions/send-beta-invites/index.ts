@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+  const PUBLISHABLE_KEY = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || ANON_KEY
   const BETA_KEY = Deno.env.get('BETA_ACCESS_KEY') || ''
 
   const authHeader = req.headers.get('Authorization') || ''
@@ -99,6 +100,8 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${PUBLISHABLE_KEY}`,
+          apikey: PUBLISHABLE_KEY,
         },
         body: JSON.stringify({
           templateName: 'beta-invite',
