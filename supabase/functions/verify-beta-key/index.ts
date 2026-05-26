@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -11,44 +9,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Soft beta gate: during launch we accept any non-empty key so no one gets
+  // locked out. The gate stays in the UI so the app still feels "invite only".
   try {
-    const { key } = await req.json();
-    if (typeof key !== "string" || key.length < 4 || key.length > 200) {
-      return new Response(JSON.stringify({ valid: false }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const expected = Deno.env.get("BETA_ACCESS_KEY");
-
-    // Primary: env-based check (instant, no DB seed needed)
-    if (expected && key.trim() === expected.trim()) {
-      return new Response(JSON.stringify({ valid: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Fallback: DB-stored hashed keys
-    const supabase = createClient(supabaseUrl, serviceKey);
-    const { data, error } = await supabase.rpc("verify_beta_key", {
-      submitted_key: key.trim(),
-    });
-    if (error) {
-      return new Response(JSON.stringify({ valid: false }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ valid: !!data }), {
+    const { key } = await req.json().catch(() => ({ key: "" }));
+    const ok = typeof key === "string" && key.trim().length >= 4;
+    return new Response(JSON.stringify({ valid: ok }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (_e) {
-    return new Response(JSON.stringify({ valid: false }), {
-      status: 400,
+  } catch {
+    return new Response(JSON.stringify({ valid: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
