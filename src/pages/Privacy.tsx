@@ -49,7 +49,7 @@ export default function Privacy() {
             <h2 className="text-lg font-bold">4. Storage & Security</h2>
             <p>
               Data is stored on Supabase infrastructure with row-level security and encryption in transit. No system
-              is 100% secure; report any suspected breach to <a className="text-primary underline" href="mailto:security@tradersworld.app">security@tradersworld.app</a>.
+              is 100% secure; report any suspected breach to <a className="text-primary underline" href="mailto:support@tradersworld.app">support@tradersworld.app</a>.
             </p>
           </section>
 
@@ -60,7 +60,7 @@ export default function Privacy() {
               <li>Access and update your profile from <span className="font-semibold">Profile → Edit</span>.</li>
               <li>Export your trading log via <span className="font-semibold">Trading Log → Export</span>.</li>
               <li>Delete your account at any time from <span className="font-semibold">Profile → Settings → Delete Account</span>. This permanently removes your profile, posts, messages, and journal entries.</li>
-              <li>Request a copy of your data by emailing <a className="text-primary underline" href="mailto:privacy@tradersworld.app">privacy@tradersworld.app</a>.</li>
+              <li>Request a copy of your data by emailing <a className="text-primary underline" href="mailto:support@tradersworld.app">support@tradersworld.app</a>.</li>
             </ul>
             <p className="mt-2">
               EU/UK users have rights under GDPR; California users have rights under CCPA. We honor verified requests
@@ -93,7 +93,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-lg font-bold">9. Contact</h2>
             <p>
-              <a className="text-primary underline" href="mailto:privacy@tradersworld.app">privacy@tradersworld.app</a>
+              <a className="text-primary underline" href="mailto:support@tradersworld.app">support@tradersworld.app</a>
             </p>
           </section>
         </div>
