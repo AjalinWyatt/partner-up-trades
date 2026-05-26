@@ -1397,6 +1397,7 @@ export type Database = {
         Returns: number
       }
       expire_stale_pulse_requests: { Args: never; Returns: undefined }
+      get_own_date_of_birth: { Args: never; Returns: string }
       get_partner_checkin_streak: {
         Args: { user_a: string; user_b: string }
         Returns: number
