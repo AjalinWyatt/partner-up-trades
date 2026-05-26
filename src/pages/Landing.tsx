@@ -651,6 +651,12 @@ const Landing = () => {
             <button onClick={() => scrollTo("waitlist")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Waitlist</button>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href="/sign-in"
+              className="hidden sm:inline-flex items-center px-3 py-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign in
+            </a>
             <button
               onClick={() => setBetaOpen(true)}
               className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-border text-[13px] font-semibold text-foreground hover:border-accent hover:text-accent transition-all"
@@ -697,6 +703,12 @@ const Landing = () => {
               >
                 <KeyRound className="w-3.5 h-3.5" /> I have a beta key
               </button>
+              <a
+                href="/sign-in"
+                className="mt-2 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
+              >
+                Sign in to your account
+              </a>
             </div>
           </div>
         )}
