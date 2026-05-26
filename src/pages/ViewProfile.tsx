@@ -235,6 +235,7 @@ const ViewProfile = () => {
 
   const displayName = profile?.full_name || `@${profile?.username || "trader"}`;
   const displayUsername = profile?.username ? `@${profile.username}` : "@trader";
+  const age = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
   const first = (arr?: any): string | null => (Array.isArray(arr) && arr.length > 0 ? String(arr[0]) : null);
   const detailItems: DetailCardItem[] = ([
     { label: "Session", value: first(tradingProfile?.sessions) },
@@ -304,7 +305,10 @@ const ViewProfile = () => {
               </div>
             )}
             <div className="min-w-0 flex-1 pt-1">
-              <h1 className="text-[18px] font-extrabold leading-tight text-foreground truncate">{displayName}</h1>
+              <h1 className="text-[18px] font-extrabold leading-tight text-foreground truncate">
+                {displayName}
+                {age ? <span className="ml-1.5 font-black text-foreground">{age}</span> : null}
+              </h1>
               <p className="mt-0.5 text-[12px] font-medium text-muted-foreground truncate">{displayUsername}</p>
               {(() => {
                 const market = tradingProfile?.markets?.[0];
