@@ -699,16 +699,26 @@ const Onboarding = () => {
 
                   let avatarUrl: string | null = null;
                   if (avatarFile) {
-                    const ext = avatarFile.name.split(".").pop() || "jpg";
-                    const filePath = `${user.id}/avatar.${ext}`;
-                    const { error: uploadError } = await supabase.storage
-                      .from("avatars")
-                      .upload(filePath, avatarFile, { upsert: true });
-                    if (uploadError) throw uploadError;
-                    const { data: urlData } = supabase.storage
-                      .from("avatars")
-                      .getPublicUrl(filePath);
-                    avatarUrl = urlData.publicUrl;
+                    try {
+                      const rawExt = (avatarFile.name.split(".").pop() || "jpg").toLowerCase();
+                      const ext = ["jpg", "jpeg", "png", "webp", "gif"].includes(rawExt) ? rawExt : "jpg";
+                      const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
+                      const contentType = avatarFile.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
+                      const { error: uploadError } = await supabase.storage
+                        .from("avatars")
+                        .upload(filePath, avatarFile, { upsert: true, contentType });
+                      if (uploadError) {
+                        console.warn("Avatar upload failed, continuing without it:", uploadError);
+                        toast.message("We couldn't upload your photo right now — you can add it later from your profile.");
+                      } else {
+                        const { data: urlData } = supabase.storage
+                          .from("avatars")
+                          .getPublicUrl(filePath);
+                        avatarUrl = urlData.publicUrl;
+                      }
+                    } catch (e) {
+                      console.warn("Avatar upload threw, continuing without it:", e);
+                    }
                   }
 
                   const locationParts = [city, state, country].filter(Boolean);
