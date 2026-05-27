@@ -1387,6 +1387,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_notify: {
+        Args: { _actor: string; _recipient: string }
+        Returns: boolean
+      }
       cleanup_inactive_voice_rooms: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
