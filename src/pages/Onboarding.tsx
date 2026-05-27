@@ -690,10 +690,6 @@ const Onboarding = () => {
                   );
                   return;
                 }
-                if (!avatarFile) {
-                  flagError("avatar", 1, "Please add a profile photo to continue");
-                  return;
-                }
                 setErrorField(null);
                 goTo(6);
                 try {
@@ -702,7 +698,7 @@ const Onboarding = () => {
                   if (!user) throw new Error("Not authenticated");
 
                   let avatarUrl: string | null = null;
-                  {
+                  if (avatarFile) {
                     const rawExt = (avatarFile.name.split(".").pop() || "jpg").toLowerCase();
                     const ext = ["jpg", "jpeg", "png", "webp", "gif"].includes(rawExt) ? rawExt : "jpg";
                     const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
@@ -718,15 +714,13 @@ const Onboarding = () => {
                     }
                     if (uploadError) {
                       console.error("Avatar upload failed:", uploadError);
-                      toast.error("We couldn't upload your photo. Please try again.");
-                      flagError("avatar", 1, "Photo upload failed — please try a different image");
-                      goTo(1);
-                      return;
+                      toast.warning("We couldn't upload your photo, so your profile will continue without one.");
+                    } else {
+                      const { data: urlData } = supabase.storage
+                        .from("avatars")
+                        .getPublicUrl(filePath);
+                      avatarUrl = urlData.publicUrl;
                     }
-                    const { data: urlData } = supabase.storage
-                      .from("avatars")
-                      .getPublicUrl(filePath);
-                    avatarUrl = urlData.publicUrl;
                   }
 
                   const locationParts = [city, state, country].filter(Boolean);
@@ -798,11 +792,6 @@ const Onboarding = () => {
                   }
                 }
               } else {
-                if (step === 1 && !avatarFile) {
-                  flagError("avatar", 1, "Please add a profile photo to continue");
-                  toast.error("A profile photo is required to continue");
-                  return;
-                }
                 goTo(step + 1);
               }
             }}
