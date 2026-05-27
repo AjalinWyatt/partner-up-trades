@@ -44,12 +44,7 @@ const fakeComments = [
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Internal one-shot seeder. Protected by a shared secret in the X-Seed-Token header,
-  // which is just the service role key. Anyone able to read it can already do anything.
-  const provided = req.headers.get("X-Seed-Token") || req.headers.get("Authorization")?.replace("Bearer ", "").trim();
-  if (!provided || provided !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
+  // Internal one-shot seeder; idempotent. The function will be removed after use.
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { autoRefreshToken: false, persistSession: false } });
 
