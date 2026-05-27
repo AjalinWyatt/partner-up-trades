@@ -40,11 +40,11 @@ const Onboarding = () => {
   // Field-level error highlighting so users can see exactly what to fix
   // instead of being kicked back to a generic state.
   const [errorField, setErrorField] = useState<
-    null | "username" | "dob" | "city" | "country" | "reach"
+    null | "username" | "dob" | "city" | "country" | "reach" | "avatar"
   >(null);
 
   const flagError = (
-    field: "username" | "dob" | "city" | "country" | "reach",
+    field: "username" | "dob" | "city" | "country" | "reach" | "avatar",
     targetStep: number,
     message: string,
   ) => {
