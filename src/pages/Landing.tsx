@@ -27,143 +27,6 @@ const XIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-/* ───────────────── Waitlist form (simplified) ───────────────── */
-const WaitlistForm = ({ onSuccess }: { onSuccess: (wantsBeta: boolean) => void }) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [markets, setMarkets] = useState<string[]>([]);
-  const [wantsBeta, setWantsBeta] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const MARKET_OPTIONS = ["Forex", "Futures", "Options"];
-  const toggleMarket = (m: string) =>
-    setMarkets(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || name.trim().length < 2) {
-      toast.error("Please enter your name"); return;
-    }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Please enter a valid email"); return;
-    }
-    if (!phone.trim() || phone.replace(/\D/g, "").length < 7) {
-      toast.error("Please enter a valid phone number"); return;
-    }
-    if (markets.length === 0) {
-      toast.error("Pick at least one market you trade"); return;
-    }
-    setLoading(true);
-    const cleanEmail = email.trim().toLowerCase();
-    const { error } = await supabase.from("waitlist" as any).insert({
-      name: name.trim(),
-      email: cleanEmail,
-      phone: phone.trim(),
-      wants_beta: wantsBeta,
-      markets,
-      market: markets[0],
-    } as any);
-    if (error) {
-      setLoading(false);
-      console.error(error);
-      toast.error("Something went wrong. Try again.");
-      return;
-    }
-    // If they opted in for beta, immediately send the invite email.
-    if (wantsBeta) {
-      try {
-        await supabase.functions.invoke("send-beta-invites", {
-          body: { selfSignup: true, email: cleanEmail },
-        });
-      } catch (err) {
-        console.error("beta invite send failed", err);
-      }
-    }
-    setLoading(false);
-    onSuccess(wantsBeta);
-  };
-
-  return (
-    <form onSubmit={submit} className="bg-card border border-border rounded-3xl p-6 sm:p-7 space-y-4" autoComplete="on" name="waitlist">
-      <div>
-        <label htmlFor="waitlist-name" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Name *</label>
-        <input
-          type="text" value={name} onChange={e => setName(e.target.value)}
-          placeholder="Your name" required maxLength={80}
-          name="name" id="waitlist-name" autoComplete="name"
-          className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
-        />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="waitlist-email" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Email *</label>
-          <input
-            type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="you@email.com" required
-            name="email" id="waitlist-email" autoComplete="email" inputMode="email" autoCapitalize="off" autoCorrect="off" spellCheck={false}
-            className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
-          />
-        </div>
-        <div>
-          <label htmlFor="waitlist-phone" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Phone *</label>
-          <input
-            type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-            placeholder="+1 555 000 0000" required
-            name="phone" id="waitlist-phone" autoComplete="tel" inputMode="tel"
-            className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent transition-colors"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-          Which markets do you trade? * <span className="text-muted-foreground/70 normal-case tracking-normal font-medium">(select all that apply)</span>
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {MARKET_OPTIONS.map(m => {
-            const active = markets.includes(m);
-            return (
-              <button
-                key={m} type="button" onClick={() => toggleMarket(m)}
-                className={`px-4 py-2 rounded-full border text-[13px] font-semibold transition-all ${
-                  active
-                    ? "bg-accent/15 border-accent text-accent"
-                    : "bg-secondary border-border text-muted-foreground hover:border-accent/50 hover:text-foreground"
-                }`}
-              >
-                {m}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <label className="flex items-start gap-3 cursor-pointer select-none rounded-xl border border-border bg-secondary hover:border-accent/40 px-4 py-3 transition-colors">
-        <input
-          type="checkbox" checked={wantsBeta} onChange={e => setWantsBeta(e.target.checked)}
-          className="mt-0.5 w-4 h-4 rounded accent-[hsl(var(--accent))]"
-        />
-        <span className="flex-1">
-          <span className="block text-[13px] font-bold text-foreground">I want to be an early beta tester</span>
-          <span className="block text-[11px] text-muted-foreground mt-0.5">Get access before public launch + help shape the platform.</span>
-        </span>
-        <Sparkles className="w-4 h-4 text-accent" />
-      </label>
-
-      <button
-        type="submit" disabled={loading}
-        className="w-full py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm disabled:opacity-50 hover:opacity-90 active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2"
-      >
-        {loading ? "Joining…" : <>Join the waitlist <ArrowRight className="w-4 h-4" /></>}
-      </button>
-      <p className="text-[11px] text-muted-foreground text-center">
-        We'll only use your contact info to notify you about launch.
-      </p>
-    </form>
-  );
-};
-
 /* ───────────────── In-app mock screens ───────────────── */
 
 // FEED - Feed/Pulse tabs, market filter pills, post cards
@@ -528,8 +391,6 @@ const MatchProfileMock = () => {
 const Landing = () => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [submittedBeta, setSubmittedBeta] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -584,7 +445,6 @@ const Landing = () => {
             <button onClick={() => scrollTo("preview")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Inside the app</button>
             <button onClick={() => scrollTo("manifesto")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Why us</button>
             <button onClick={() => scrollTo("features")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
-            <button onClick={() => scrollTo("waitlist")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Waitlist</button>
           </div>
           <div className="flex items-center gap-2">
             <a
@@ -617,7 +477,6 @@ const Landing = () => {
                 { id: "preview", label: "Inside the app" },
                 { id: "manifesto", label: "Why us" },
                 { id: "features", label: "Features" },
-                { id: "waitlist", label: "Waitlist" },
               ].map(item => (
                 <button
                   key={item.id}
@@ -662,17 +521,17 @@ const Landing = () => {
                 Real peer accountability. No mentors selling you their dream. No course funnels. No AI pretending to care. Just a human partner who trades like you and shows up when it counts.
               </p>
               <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => scrollTo("waitlist")}
-                  className="px-6 py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
-                >
-                  Join the waitlist <ArrowRight className="w-4 h-4" />
-                </button>
                 <a
                   href="/sign-up"
-                  className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
+                  className="px-6 py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
                 >
                   Sign up <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="/sign-in"
+                  className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
+                >
+                  Sign in
                 </a>
                 <button
                   onClick={() => scrollTo("preview")}
@@ -852,52 +711,33 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ─── WAITLIST ─── */}
-      <section id="waitlist" className="py-24 px-6 sm:px-8 relative">
+      {/* ─── CTA ─── */}
+      <section className="py-24 px-6 sm:px-8 relative">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-accent/10 blur-[120px]" />
         </div>
-        <div className="max-w-[640px] mx-auto relative">
-          <div className="text-center mb-8">
-            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Join the waitlist</div>
-            <h2 className="text-[34px] sm:text-[40px] font-black tracking-tight text-foreground mb-3">
-              Be first when we <span className="text-accent">go live.</span>
-            </h2>
-            <p className="text-muted-foreground text-[15px] max-w-[440px] mx-auto">
-              We're rolling out access in waves. Drop your details and we'll let you know the moment your spot opens. Want in early? Tick the beta box.
-            </p>
+        <div className="max-w-[640px] mx-auto relative text-center">
+          <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Get started</div>
+          <h2 className="text-[34px] sm:text-[40px] font-black tracking-tight text-foreground mb-3">
+            Find your trading <span className="text-accent">partner.</span>
+          </h2>
+          <p className="text-muted-foreground text-[15px] max-w-[440px] mx-auto mb-7">
+            Free for traders. Create your account and get matched with a 1-on-1 accountability partner.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a
+              href="/sign-up"
+              className="px-6 py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              Sign up <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="/sign-in"
+              className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center hover:border-accent hover:text-accent transition-all"
+            >
+              Sign in
+            </a>
           </div>
-          {submitted ? (
-            <div className="bg-card border border-accent/40 rounded-3xl p-8 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-7 h-7 text-accent" />
-              </div>
-              <h3 className="text-[22px] font-black text-foreground mb-2">
-                {submittedBeta ? "Check your inbox 📬" : "You're on the list."}
-              </h3>
-              <p className="text-muted-foreground text-[14px]">
-                {submittedBeta ? (
-                  <>
-                    Your beta invite + access key was just sent to your email.{" "}
-                    <span className="text-foreground font-semibold">
-                      Check your junk/spam folder
-                    </span>{" "}
-                    if you don't see it in a minute — and mark it "Not spam" so future
-                    messages land in your inbox.
-                  </>
-                ) : (
-                  <>We'll email you the moment a spot opens.</>
-                )}
-              </p>
-            </div>
-          ) : (
-            <WaitlistForm
-              onSuccess={(wantsBeta) => {
-                setSubmittedBeta(wantsBeta);
-                setSubmitted(true);
-              }}
-            />
-          )}
         </div>
       </section>
 
