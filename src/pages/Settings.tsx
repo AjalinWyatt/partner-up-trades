@@ -208,7 +208,7 @@ export default function Settings() {
     }
   }
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <AppLayout>
         <div className="flex-1 flex items-center justify-center">
