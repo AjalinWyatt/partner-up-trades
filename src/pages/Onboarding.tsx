@@ -690,6 +690,10 @@ const Onboarding = () => {
                   );
                   return;
                 }
+                if (!avatarFile) {
+                  flagError("avatar", 1, "Please add a profile photo to continue");
+                  return;
+                }
                 setErrorField(null);
                 goTo(6);
                 try {
@@ -698,27 +702,23 @@ const Onboarding = () => {
                   if (!user) throw new Error("Not authenticated");
 
                   let avatarUrl: string | null = null;
-                  if (avatarFile) {
-                    try {
-                      const rawExt = (avatarFile.name.split(".").pop() || "jpg").toLowerCase();
-                      const ext = ["jpg", "jpeg", "png", "webp", "gif"].includes(rawExt) ? rawExt : "jpg";
-                      const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
-                      const contentType = avatarFile.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
-                      const { error: uploadError } = await supabase.storage
-                        .from("avatars")
-                        .upload(filePath, avatarFile, { upsert: true, contentType });
-                      if (uploadError) {
-                        console.warn("Avatar upload failed, continuing without it:", uploadError);
-                        toast.message("We couldn't upload your photo right now — you can add it later from your profile.");
-                      } else {
-                        const { data: urlData } = supabase.storage
-                          .from("avatars")
-                          .getPublicUrl(filePath);
-                        avatarUrl = urlData.publicUrl;
-                      }
-                    } catch (e) {
-                      console.warn("Avatar upload threw, continuing without it:", e);
+                  {
+                    const rawExt = (avatarFile.name.split(".").pop() || "jpg").toLowerCase();
+                    const ext = ["jpg", "jpeg", "png", "webp", "gif"].includes(rawExt) ? rawExt : "jpg";
+                    const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
+                    const contentType = avatarFile.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from("avatars")
+                      .upload(filePath, avatarFile, { upsert: true, contentType });
+                    if (uploadError) {
+                      toast.error("We couldn't upload your photo. Please try again.");
+                      flagError("avatar", 1, "Photo upload failed — please try a different image");
+                      return;
                     }
+                    const { data: urlData } = supabase.storage
+                      .from("avatars")
+                      .getPublicUrl(filePath);
+                    avatarUrl = urlData.publicUrl;
                   }
 
                   const locationParts = [city, state, country].filter(Boolean);
