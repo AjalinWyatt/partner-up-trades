@@ -7,7 +7,6 @@ import {
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
   Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
 import InstallAppBanner from "@/components/InstallAppBanner";
