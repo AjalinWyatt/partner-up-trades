@@ -707,12 +707,20 @@ const Onboarding = () => {
                     const ext = ["jpg", "jpeg", "png", "webp", "gif"].includes(rawExt) ? rawExt : "jpg";
                     const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
                     const contentType = avatarFile.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
-                    const { error: uploadError } = await supabase.storage
-                      .from("avatars")
-                      .upload(filePath, avatarFile, { upsert: true, contentType });
+                    let uploadError: any = null;
+                    for (let attempt = 0; attempt < 2; attempt++) {
+                      const { error } = await supabase.storage
+                        .from("avatars")
+                        .upload(filePath, avatarFile, { upsert: true, contentType });
+                      uploadError = error;
+                      if (!error) break;
+                      await new Promise((r) => setTimeout(r, 500));
+                    }
                     if (uploadError) {
+                      console.error("Avatar upload failed:", uploadError);
                       toast.error("We couldn't upload your photo. Please try again.");
                       flagError("avatar", 1, "Photo upload failed — please try a different image");
+                      goTo(1);
                       return;
                     }
                     const { data: urlData } = supabase.storage
