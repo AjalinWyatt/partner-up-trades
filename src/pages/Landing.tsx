@@ -391,8 +391,6 @@ const MatchProfileMock = () => {
 const Landing = () => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [submittedBeta, setSubmittedBeta] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -447,7 +445,6 @@ const Landing = () => {
             <button onClick={() => scrollTo("preview")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Inside the app</button>
             <button onClick={() => scrollTo("manifesto")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Why us</button>
             <button onClick={() => scrollTo("features")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
-            <button onClick={() => scrollTo("waitlist")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Waitlist</button>
           </div>
           <div className="flex items-center gap-2">
             <a
@@ -480,7 +477,6 @@ const Landing = () => {
                 { id: "preview", label: "Inside the app" },
                 { id: "manifesto", label: "Why us" },
                 { id: "features", label: "Features" },
-                { id: "waitlist", label: "Waitlist" },
               ].map(item => (
                 <button
                   key={item.id}
@@ -525,17 +521,17 @@ const Landing = () => {
                 Real peer accountability. No mentors selling you their dream. No course funnels. No AI pretending to care. Just a human partner who trades like you and shows up when it counts.
               </p>
               <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => scrollTo("waitlist")}
-                  className="px-6 py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
-                >
-                  Join the waitlist <ArrowRight className="w-4 h-4" />
-                </button>
                 <a
                   href="/sign-up"
-                  className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
+                  className="px-6 py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
                 >
                   Sign up <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="/sign-in"
+                  className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
+                >
+                  Sign in
                 </a>
                 <button
                   onClick={() => scrollTo("preview")}
