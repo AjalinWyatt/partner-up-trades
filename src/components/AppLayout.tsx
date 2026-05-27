@@ -1,7 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import AppSidebar from "./AppSidebar";
 import BottomNav from "./BottomNav";
 import { usePresenceHeartbeat } from "@/hooks/use-presence-heartbeat";
+import Walkthrough from "./Walkthrough";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -18,6 +19,17 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children, hideBottomNav, lockHeight }: AppLayoutProps) {
   usePresenceHeartbeat();
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      if (sessionStorage.getItem("tw:tour-active") === "1") setShowTour(true);
+    };
+    check();
+    window.addEventListener("tw:start-tour", check);
+    return () => window.removeEventListener("tw:start-tour", check);
+  }, []);
+
   return (
     <div className={`flex w-full overflow-x-hidden bg-background ${lockHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop sidebar */}
@@ -45,6 +57,15 @@ export default function AppLayout({ children, hideBottomNav, lockHeight }: AppLa
         <div className="lg:hidden">
           <BottomNav />
         </div>
+      )}
+
+      {showTour && (
+        <Walkthrough
+          onClose={() => {
+            sessionStorage.removeItem("tw:tour-active");
+            setShowTour(false);
+          }}
+        />
       )}
     </div>
   );

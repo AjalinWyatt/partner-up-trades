@@ -45,7 +45,17 @@ const STEPS: Step[] = [
 const PADDING = 8;
 
 export default function Walkthrough({ onClose }: { onClose: () => void }) {
-  const [stepIdx, setStepIdx] = useState(0);
+  const [stepIdx, setStepIdxState] = useState(() => {
+    const saved = parseInt(sessionStorage.getItem("tw:tour-step") || "0", 10);
+    return Number.isFinite(saved) && saved >= 0 && saved < STEPS.length ? saved : 0;
+  });
+  const setStepIdx: typeof setStepIdxState = (v) => {
+    setStepIdxState((prev) => {
+      const next = typeof v === "function" ? (v as (p: number) => number)(prev) : v;
+      sessionStorage.setItem("tw:tour-step", String(next));
+      return next;
+    });
+  };
   const [rect, setRect] = useState<DOMRect | null>(null);
   const navigate = useNavigate();
   const step = STEPS[stepIdx];
@@ -99,6 +109,7 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
     if (session?.user) {
       await supabase.from("profiles").update({ tour_completed: true }).eq("id", session.user.id);
     }
+    sessionStorage.removeItem("tw:tour-step");
     onClose();
   };
 
