@@ -884,6 +884,7 @@ export type Database = {
           date_of_birth: string | null
           full_name: string | null
           gender: string | null
+          hidden_from_discover: boolean
           hobbies: string[] | null
           id: string
           last_seen_at: string | null
@@ -912,6 +913,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name?: string | null
           gender?: string | null
+          hidden_from_discover?: boolean
           hobbies?: string[] | null
           id: string
           last_seen_at?: string | null
@@ -940,6 +942,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name?: string | null
           gender?: string | null
+          hidden_from_discover?: boolean
           hobbies?: string[] | null
           id?: string
           last_seen_at?: string | null
