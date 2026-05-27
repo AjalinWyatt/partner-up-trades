@@ -512,7 +512,7 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-[11px] font-bold text-accent uppercase tracking-wider mb-6">
-                <Sparkles className="w-3 h-3" /> Closed beta · launching soon
+                <Sparkles className="w-3 h-3" /> Opened Beta · Join Early
               </div>
               <h1 className="text-[44px] sm:text-[56px] lg:text-[64px] font-black leading-[1.02] tracking-tight text-foreground mb-6">
                 You're not <br/>trading <span className="text-accent">alone.</span>
