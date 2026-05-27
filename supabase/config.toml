@@ -15,5 +15,3 @@ project_id = "xkhleosrspxxdhtgwaqg"
     verify_jwt = false
   [functions.send-beta-invites]
     verify_jwt = true
-  [functions.seed-feed-personas]
-    verify_jwt = false
