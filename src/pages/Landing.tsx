@@ -711,52 +711,33 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ─── WAITLIST ─── */}
-      <section id="waitlist" className="py-24 px-6 sm:px-8 relative">
+      {/* ─── CTA ─── */}
+      <section className="py-24 px-6 sm:px-8 relative">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-accent/10 blur-[120px]" />
         </div>
-        <div className="max-w-[640px] mx-auto relative">
-          <div className="text-center mb-8">
-            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Join the waitlist</div>
-            <h2 className="text-[34px] sm:text-[40px] font-black tracking-tight text-foreground mb-3">
-              Be first when we <span className="text-accent">go live.</span>
-            </h2>
-            <p className="text-muted-foreground text-[15px] max-w-[440px] mx-auto">
-              We're rolling out access in waves. Drop your details and we'll let you know the moment your spot opens. Want in early? Tick the beta box.
-            </p>
+        <div className="max-w-[640px] mx-auto relative text-center">
+          <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Get started</div>
+          <h2 className="text-[34px] sm:text-[40px] font-black tracking-tight text-foreground mb-3">
+            Find your trading <span className="text-accent">partner.</span>
+          </h2>
+          <p className="text-muted-foreground text-[15px] max-w-[440px] mx-auto mb-7">
+            Free for traders. Create your account and get matched with a 1-on-1 accountability partner.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a
+              href="/sign-up"
+              className="px-6 py-3.5 rounded-full bg-accent text-accent-foreground font-bold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              Sign up <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="/sign-in"
+              className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center hover:border-accent hover:text-accent transition-all"
+            >
+              Sign in
+            </a>
           </div>
-          {submitted ? (
-            <div className="bg-card border border-accent/40 rounded-3xl p-8 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-7 h-7 text-accent" />
-              </div>
-              <h3 className="text-[22px] font-black text-foreground mb-2">
-                {submittedBeta ? "Check your inbox 📬" : "You're on the list."}
-              </h3>
-              <p className="text-muted-foreground text-[14px]">
-                {submittedBeta ? (
-                  <>
-                    Your beta invite + access key was just sent to your email.{" "}
-                    <span className="text-foreground font-semibold">
-                      Check your junk/spam folder
-                    </span>{" "}
-                    if you don't see it in a minute — and mark it "Not spam" so future
-                    messages land in your inbox.
-                  </>
-                ) : (
-                  <>We'll email you the moment a spot opens.</>
-                )}
-              </p>
-            </div>
-          ) : (
-            <WaitlistForm
-              onSuccess={(wantsBeta) => {
-                setSubmittedBeta(wantsBeta);
-                setSubmitted(true);
-              }}
-            />
-          )}
         </div>
       </section>
 
