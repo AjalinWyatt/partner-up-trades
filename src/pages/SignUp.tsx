@@ -12,12 +12,6 @@ import { trackEvent } from "@/lib/analytics";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  // Beta gate - only allow sign-up for testers who unlocked it on the landing page
-  useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("beta_unlocked") !== "1") {
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

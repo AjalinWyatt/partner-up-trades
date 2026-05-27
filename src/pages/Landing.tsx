@@ -2,12 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ArrowRight, KeyRound, Sparkles, Zap, Users, MessageSquare,
+  ArrowRight, Sparkles, Zap, Users, MessageSquare,
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
   Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
 import InstallAppBanner from "@/components/InstallAppBanner";
@@ -27,68 +26,6 @@ const XIcon = ({ className }: { className?: string }) => (
     <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
   </svg>
 );
-
-/* ───────────────── Beta key modal ───────────────── */
-const BetaKeyModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  const navigate = useNavigate();
-  const [key, setKey] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => { if (!open) setKey(""); }, [open]);
-
-  const submit = async () => {
-    if (!key.trim()) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-beta-key", { body: { key: key.trim() } });
-      if (error) throw error;
-      if (data?.valid) {
-        sessionStorage.setItem("beta_unlocked", "1");
-        toast.success("Beta access unlocked");
-        onClose();
-        navigate("/sign-up");
-      } else {
-        toast.error("Invalid beta key");
-      }
-    } catch {
-      toast.error("Could not verify key");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-card border-border text-foreground max-w-sm">
-        <DialogTitle className="sr-only">Enter beta access key</DialogTitle>
-        <div className="py-2">
-          <div className="w-12 h-12 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mb-4">
-            <KeyRound className="w-5 h-5 text-accent" />
-          </div>
-          <p className="text-lg font-bold mb-1 text-foreground">Enter your beta key</p>
-          <p className="text-sm text-muted-foreground mb-5">
-            Beta testers were sent a private access key. Paste it below to unlock sign-up.
-          </p>
-          <input
-            type="text" value={key} onChange={e => setKey(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && submit()}
-            placeholder="xxxx-xxxx-xxxx" autoFocus
-            className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-accent mb-3 font-mono tracking-wider"
-          />
-          <button
-            onClick={submit} disabled={loading || !key.trim()}
-            className="w-full py-3 rounded-full bg-accent text-accent-foreground font-bold text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
-          >
-            {loading ? "Verifying…" : "Unlock sign-up"}
-          </button>
-          <p className="text-[11px] text-muted-foreground text-center mt-3">
-            No key? Join the waitlist below to get notified at launch.
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 /* ───────────────── Waitlist form (simplified) ───────────────── */
 const WaitlistForm = ({ onSuccess }: { onSuccess: (wantsBeta: boolean) => void }) => {
@@ -591,7 +528,6 @@ const MatchProfileMock = () => {
 const Landing = () => {
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
-  const [betaOpen, setBetaOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedBeta, setSubmittedBeta] = useState(false);
   const [navShadow, setNavShadow] = useState(false);
@@ -657,18 +593,12 @@ const Landing = () => {
             >
               Sign in
             </a>
-            <button
-              onClick={() => setBetaOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-border text-[13px] font-semibold text-foreground hover:border-accent hover:text-accent transition-all"
-            >
-              <KeyRound className="w-3.5 h-3.5" /> Beta key
-            </button>
-            <button
-              onClick={() => scrollTo("waitlist")}
+            <a
+              href="/sign-up"
               className="px-4 py-2 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
             >
-              Join waitlist
-            </button>
+              Sign up
+            </a>
             <button
               type="button"
               aria-label="Open menu"
@@ -697,12 +627,12 @@ const Landing = () => {
                   {item.label}
                 </button>
               ))}
-              <button
-                onClick={() => { setMobileNavOpen(false); setBetaOpen(true); }}
-                className="mt-3 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-border text-[13px] font-semibold text-foreground hover:border-accent hover:text-accent transition-all"
+              <a
+                href="/sign-up"
+                className="mt-3 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
               >
-                <KeyRound className="w-3.5 h-3.5" /> I have a beta key
-              </button>
+                Sign up
+              </a>
               <a
                 href="/sign-in"
                 className="mt-2 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
@@ -738,12 +668,12 @@ const Landing = () => {
                 >
                   Join the waitlist <ArrowRight className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setBetaOpen(true)}
+                <a
+                  href="/sign-up"
                   className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
                 >
-                  <KeyRound className="w-4 h-4" /> I have a beta key
-                </button>
+                  Sign up <ArrowRight className="w-4 h-4" />
+                </a>
                 <button
                   onClick={() => scrollTo("preview")}
                   className="px-6 py-3.5 rounded-full text-foreground font-bold text-sm inline-flex items-center gap-2 hover:text-accent transition-colors"
@@ -988,7 +918,6 @@ const Landing = () => {
         </div>
       </footer>
 
-      <BetaKeyModal open={betaOpen} onClose={() => setBetaOpen(false)} />
     </div>
   );
 };
