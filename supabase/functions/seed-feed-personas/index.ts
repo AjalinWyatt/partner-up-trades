@@ -44,26 +44,14 @@ const fakeComments = [
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
+  // Internal one-shot seeder. Protected by a shared secret in the X-Seed-Token header,
+  // which is just the service role key. Anyone able to read it can already do anything.
+  const provided = req.headers.get("X-Seed-Token") || req.headers.get("Authorization")?.replace("Bearer ", "").trim();
+  if (!provided || provided !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { autoRefreshToken: false, persistSession: false } });
-
-  const token = authHeader.replace("Bearer ", "").trim();
-  // Allow service-role calls directly; otherwise require an admin user JWT.
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  if (token !== serviceKey) {
-    const { data: { user }, error: authErr } = await admin.auth.getUser(token);
-    if (authErr || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!roleRow) {
-      return new Response(JSON.stringify({ error: "Admin only" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-  }
 
   const created: { id: string; posts: string[] }[] = [];
   const summary: any[] = [];
