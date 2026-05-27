@@ -790,6 +790,11 @@ const Onboarding = () => {
                   }
                 }
               } else {
+                if (step === 1 && !avatarFile) {
+                  flagError("avatar", 1, "Please add a profile photo to continue");
+                  toast.error("A profile photo is required to continue");
+                  return;
+                }
                 goTo(step + 1);
               }
             }}
