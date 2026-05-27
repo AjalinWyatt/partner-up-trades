@@ -657,18 +657,12 @@ const Landing = () => {
             >
               Sign in
             </a>
-            <button
-              onClick={() => setBetaOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-border text-[13px] font-semibold text-foreground hover:border-accent hover:text-accent transition-all"
-            >
-              <KeyRound className="w-3.5 h-3.5" /> Beta key
-            </button>
-            <button
-              onClick={() => scrollTo("waitlist")}
+            <a
+              href="/sign-up"
               className="px-4 py-2 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
             >
-              Join waitlist
-            </button>
+              Sign up
+            </a>
             <button
               type="button"
               aria-label="Open menu"
@@ -697,12 +691,12 @@ const Landing = () => {
                   {item.label}
                 </button>
               ))}
-              <button
-                onClick={() => { setMobileNavOpen(false); setBetaOpen(true); }}
-                className="mt-3 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-border text-[13px] font-semibold text-foreground hover:border-accent hover:text-accent transition-all"
+              <a
+                href="/sign-up"
+                className="mt-3 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
               >
-                <KeyRound className="w-3.5 h-3.5" /> I have a beta key
-              </button>
+                Sign up
+              </a>
               <a
                 href="/sign-in"
                 className="mt-2 inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-accent text-accent-foreground text-[13px] font-bold hover:opacity-90 transition-opacity"
@@ -738,12 +732,12 @@ const Landing = () => {
                 >
                   Join the waitlist <ArrowRight className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setBetaOpen(true)}
+                <a
+                  href="/sign-up"
                   className="px-6 py-3.5 rounded-full border border-border text-foreground font-bold text-sm inline-flex items-center gap-2 hover:border-accent hover:text-accent transition-all"
                 >
-                  <KeyRound className="w-4 h-4" /> I have a beta key
-                </button>
+                  Sign up <ArrowRight className="w-4 h-4" />
+                </a>
                 <button
                   onClick={() => scrollTo("preview")}
                   className="px-6 py-3.5 rounded-full text-foreground font-bold text-sm inline-flex items-center gap-2 hover:text-accent transition-colors"
@@ -988,7 +982,6 @@ const Landing = () => {
         </div>
       </footer>
 
-      <BetaKeyModal open={betaOpen} onClose={() => setBetaOpen(false)} />
     </div>
   );
 };
