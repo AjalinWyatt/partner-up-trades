@@ -9,7 +9,6 @@ import { timeAgo } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
 import { Skeleton } from "@/components/ui/skeleton";
-import Walkthrough from "@/components/Walkthrough";
 import { useSessionCache } from "@/hooks/use-session-cache";
 
 type NotifFilter = "all" | "activity" | "partners" | "streaks";
@@ -122,8 +121,6 @@ const Dashboard = () => {
   // If we already have cached data, skip the blocking spinner — the page paints
   // immediately and queries refresh in the background.
   const [loading, setLoading] = useState(!(hadProfileCache && hadStatsCache));
-  const [showTour, setShowTour] = useState(false);
-
   const loadNotifications = async (uid: string, filter: NotifFilter) => {
     setNotifLoading(true);
     let query = supabase
@@ -217,12 +214,15 @@ const Dashboard = () => {
       ]);
 
       setProfile(prof || null);
-      // Trigger first-time walkthrough or replay flag from Settings
+      // Trigger first-time walkthrough or replay flag from Settings.
+      // Walkthrough is mounted in AppLayout so it survives route changes.
       const replay = sessionStorage.getItem("tw:replay-tour") === "1";
       if (replay || (prof && (prof as any).tour_completed === false)) {
         sessionStorage.removeItem("tw:replay-tour");
-        // Small delay so the layout settles before we measure nav items
-        setTimeout(() => setShowTour(true), 300);
+        setTimeout(() => {
+          sessionStorage.setItem("tw:tour-active", "1");
+          window.dispatchEvent(new Event("tw:start-tour"));
+        }, 300);
       }
 
       // Waiting list count: pending requests that overflow the user's partner cap
@@ -508,7 +508,6 @@ const Dashboard = () => {
           )}
         </div>
       </div>
-      {showTour && <Walkthrough onClose={() => setShowTour(false)} />}
     </AppLayout>
   );
 };
