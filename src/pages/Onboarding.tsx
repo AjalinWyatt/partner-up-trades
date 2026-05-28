@@ -817,6 +817,7 @@ const Onboarding = () => {
                   if (tradingError) throw tradingError;
 
                   import("@/lib/analytics").then(({ trackEvent }) => trackEvent("onboarding_completed"));
+                  try { localStorage.removeItem(DRAFT_KEY); } catch {}
                   setTimeout(() => navigate("/discover", { replace: true }), 2500);
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
