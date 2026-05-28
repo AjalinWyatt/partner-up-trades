@@ -19,6 +19,19 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 
+const DRAFT_KEY = "tw:onboarding-draft";
+const loadDraft = (): Record<string, any> => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+const draft = loadDraft();
+const d = <T,>(k: string, fallback: T): T =>
+  (draft[k] === undefined ? fallback : (draft[k] as T));
+
 /** Header used on steps 1-6 - large title on the left, stepper-globe on the right */
 const StepHeader = ({ title, accent, step, total }: { title: string; accent: string; step: number; total: number }) => (
   <div className="flex items-end justify-between mb-8">
@@ -33,7 +46,7 @@ const StepHeader = ({ title, accent, step, total }: { title: string; accent: str
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<number>(() => d("step", 0));
   const [direction, setDirection] = useState(1);
   const [traderCount, setTraderCount] = useState(0);
   const [partnershipCount, setPartnershipCount] = useState(0);
@@ -68,50 +81,78 @@ const Onboarding = () => {
   }, []);
 
   // Step 1
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState<string>(() => d("nickname", ""));
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(() => d("avatarPreview", null));
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const [chartPrompts, setChartPrompts] = useState<string[]>([]);
-  const [offChartPrompts, setOffChartPrompts] = useState<string[]>([]);
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [chartPrompts, setChartPrompts] = useState<string[]>(() => d("chartPrompts", []));
+  const [offChartPrompts, setOffChartPrompts] = useState<string[]>(() => d("offChartPrompts", []));
+  const [dateOfBirth, setDateOfBirth] = useState<string>(() => d("dateOfBirth", ""));
 
   // Step 2
-  const [markets, setMarkets] = useState<string[]>([]);
-  const [instruments, setInstruments] = useState<string[]>([]);
-  const [sessions, setSessions] = useState<string[]>([]);
-  const [tradeTimes, setTradeTimes] = useState<string[]>([]);
+  const [markets, setMarkets] = useState<string[]>(() => d("markets", []));
+  const [instruments, setInstruments] = useState<string[]>(() => d("instruments", []));
+  const [sessions, setSessions] = useState<string[]>(() => d("sessions", []));
+  const [tradeTimes, setTradeTimes] = useState<string[]>(() => d("tradeTimes", []));
 
   // Step 3
-  const [styles, setStyles] = useState<string[]>([]);
-  const [strategies, setStrategies] = useState<string[]>([]);
-  const [timeframes, setTimeframes] = useState<string[]>([]);
-  const [frequency, setFrequency] = useState<string[]>([]);
+  const [styles, setStyles] = useState<string[]>(() => d("styles", []));
+  const [strategies, setStrategies] = useState<string[]>(() => d("strategies", []));
+  const [timeframes, setTimeframes] = useState<string[]>(() => d("timeframes", []));
+  const [frequency, setFrequency] = useState<string[]>(() => d("frequency", []));
 
   // Step 4
-  const [experience, setExperience] = useState<string | null>(null);
-  const [goals, setGoals] = useState<string[]>([]);
-  const [lossResponse, setLossResponse] = useState<string[]>([]);
+  const [experience, setExperience] = useState<string | null>(() => d("experience", null));
+  const [goals, setGoals] = useState<string[]>(() => d("goals", []));
+  const [lossResponse, setLossResponse] = useState<string[]>(() => d("lossResponse", []));
 
   // Step 5
-  const [struggles, setStruggles] = useState<string[]>([]);
-  const [journaling, setJournaling] = useState<string[]>([]);
-  const [tradingPlan, setTradingPlan] = useState<string[]>([]);
+  const [struggles, setStruggles] = useState<string[]>(() => d("struggles", []));
+  const [journaling, setJournaling] = useState<string[]>(() => d("journaling", []));
+  const [tradingPlan, setTradingPlan] = useState<string[]>(() => d("tradingPlan", []));
 
   // Step 6
-  const [gender, setGender] = useState<string | null>(null);
-  const [lookingFor, setLookingFor] = useState<string | null>(null);
-  const [reach, setReach] = useState<string | null>(null);
-  const [connectionTypes, setConnectionTypes] = useState<string[]>([]);
-  const [connectFreq, setConnectFreq] = useState<string[]>([]);
-  const [matchPriorities, setMatchPriorities] = useState<string[]>([]);
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [country, setCountry] = useState("");
+  const [gender, setGender] = useState<string | null>(() => d("gender", null));
+  const [lookingFor, setLookingFor] = useState<string | null>(() => d("lookingFor", null));
+  const [reach, setReach] = useState<string | null>(() => d("reach", null));
+  const [connectionTypes, setConnectionTypes] = useState<string[]>(() => d("connectionTypes", []));
+  const [connectFreq, setConnectFreq] = useState<string[]>(() => d("connectFreq", []));
+  const [matchPriorities, setMatchPriorities] = useState<string[]>(() => d("matchPriorities", []));
+  const [city, setCity] = useState<string>(() => d("city", ""));
+  const [state, setState] = useState<string>(() => d("state", ""));
+  const [country, setCountry] = useState<string>(() => d("country", ""));
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [locating, setLocating] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
+
+  // Persist draft so a refresh, crash, or accidental nav doesn't wipe progress.
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          step, nickname, avatarPreview, chartPrompts, offChartPrompts, dateOfBirth,
+          markets, instruments, sessions, tradeTimes,
+          styles, strategies, timeframes, frequency,
+          experience, goals, lossResponse,
+          struggles, journaling, tradingPlan,
+          gender, lookingFor, reach, connectionTypes, connectFreq, matchPriorities,
+          city, state, country,
+        }),
+      );
+    } catch {
+      // ignore quota/private-mode errors
+    }
+  }, [
+    step, nickname, avatarPreview, chartPrompts, offChartPrompts, dateOfBirth,
+    markets, instruments, sessions, tradeTimes,
+    styles, strategies, timeframes, frequency,
+    experience, goals, lossResponse,
+    struggles, journaling, tradingPlan,
+    gender, lookingFor, reach, connectionTypes, connectFreq, matchPriorities,
+    city, state, country,
+  ]);
 
   // Best-effort IP-based fallback when the user denies geolocation
   const fillFromIP = useCallback(async () => {
@@ -776,6 +817,7 @@ const Onboarding = () => {
                   if (tradingError) throw tradingError;
 
                   import("@/lib/analytics").then(({ trackEvent }) => trackEvent("onboarding_completed"));
+                  try { localStorage.removeItem(DRAFT_KEY); } catch {}
                   setTimeout(() => navigate("/discover", { replace: true }), 2500);
                 } catch (err: any) {
                   console.error("Onboarding save error:", err);
