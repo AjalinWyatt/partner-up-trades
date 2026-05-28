@@ -35,6 +35,12 @@ const STEPS: Step[] = [
   { target: "nav-partners", title: "Partners", body: "Send & manage partner requests here. Up to 3 active partners on free.", route: "/partners" },
   { target: "nav-profile", title: "Profile", body: "That's you. Customise it so the right traders save you back.", route: "/profile" },
   {
+    target: "profile-avatar",
+    title: "Add your profile photo 📸",
+    body: "Tap your avatar to upload a picture. Profiles with photos get 3x more partner requests — takes 10 seconds.",
+    route: "/profile",
+  },
+  {
     install: true,
     title: "One last thing — install the app 📲",
     body:
@@ -57,11 +63,29 @@ export default function Walkthrough({ onClose }: { onClose: () => void }) {
     });
   };
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const step = STEPS[stepIdx];
   const isInstall = !!step.install;
   const isWelcome = !step.target && !isInstall;
   const isFullScreenSlide = isWelcome || isInstall;
+
+  // Load avatar state once to know whether to skip the "add photo" step.
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setHasAvatar(true); return; }
+      const { data } = await supabase.from("profiles").select("avatar_url").eq("id", session.user.id).maybeSingle();
+      setHasAvatar(!!data?.avatar_url);
+    })();
+  }, []);
+
+  // Skip the profile-avatar step when the user already uploaded one.
+  useEffect(() => {
+    if (hasAvatar === true && step.target === "profile-avatar") {
+      setStepIdx((i) => (i < STEPS.length - 1 ? i + 1 : i));
+    }
+  }, [hasAvatar, stepIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Navigate to the step's route before measuring
   useEffect(() => {
