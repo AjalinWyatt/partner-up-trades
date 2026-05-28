@@ -644,7 +644,7 @@ const Profile = () => {
         {/* Hero: avatar on the left, name + bio on the right */}
         <div className="flex items-start gap-4 px-5 pt-6">
           <div className="relative shrink-0">
-            <button onClick={() => avatarInputRef.current?.click()} className="block">
+            <button data-tour="profile-avatar" onClick={() => avatarInputRef.current?.click()} className="block">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="Profile photo" className="h-[104px] w-[104px] rounded-full object-cover ring-2 ring-primary/60" />
               ) : (
