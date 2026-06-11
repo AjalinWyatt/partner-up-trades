@@ -82,11 +82,6 @@ const SignIn = () => {
     }
 
     if (data.session?.user) {
-      void supabase.from("analytics_events").insert({
-        event: "signin_success",
-        user_id: data.session.user.id,
-        properties: { method: "password" },
-      });
       void redirectAfterAuth(data.session.user.id);
       return;
     }
