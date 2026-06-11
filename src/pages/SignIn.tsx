@@ -58,8 +58,13 @@ const SignIn = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    void supabase.from("analytics_events").insert({ event: "signin_attempt", properties: { method: "password" } });
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      void supabase.from("analytics_events").insert({
+        event: "signin_failed",
+        properties: { method: "password", reason: error.message },
+      });
       if (error.message.toLowerCase().includes("email not confirmed")) {
         toast.error("Please verify your email first. Check your inbox for a confirmation link.");
       } else {
@@ -70,6 +75,11 @@ const SignIn = () => {
     }
 
     if (data.session?.user) {
+      void supabase.from("analytics_events").insert({
+        event: "signin_success",
+        user_id: data.session.user.id,
+        properties: { method: "password" },
+      });
       void redirectAfterAuth(data.session.user.id);
       return;
     }
@@ -93,10 +103,20 @@ const SignIn = () => {
   };
 
   const handleOAuth = async (provider: "google" | "apple") => {
+    void supabase.from("analytics_events").insert({
+      event: "signin_attempt",
+      properties: { method: provider },
+    });
     const { error } = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });
-    if (error) toast.error(error.message);
+    if (error) {
+      void supabase.from("analytics_events").insert({
+        event: "signin_failed",
+        properties: { method: provider, reason: error.message },
+      });
+      toast.error(error.message);
+    }
   };
 
   return (
