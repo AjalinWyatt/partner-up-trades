@@ -46,8 +46,15 @@ const SignIn = () => {
       if (!mounted || !session) return;
       void redirectAfterAuth(session.user.id);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted || !session) return;
+      if (event === "SIGNED_IN") {
+        void supabase.from("analytics_events").insert({
+          event: "signin_success",
+          user_id: session.user.id,
+          properties: { method: session.user.app_metadata?.provider ?? "unknown" },
+        });
+      }
       setTimeout(() => {
         if (mounted) void redirectAfterAuth(session.user.id);
       }, 0);
