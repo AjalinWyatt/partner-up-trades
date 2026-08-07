@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, User, Mail, Lock, ChevronLeft } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, ChevronLeft, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LogoHeader from "@/components/LogoHeader";
 import AuthGlobeBackground from "@/components/AuthGlobeBackground";
@@ -13,6 +13,13 @@ import { trackEvent } from "@/lib/analytics";
 const SignUp = () => {
   const navigate = useNavigate();
 
+  const BETA_KEY = "TradersWorldxBeta";
+  const [betaUnlocked, setBetaUnlocked] = useState(
+    () => localStorage.getItem("tw:beta-unlocked") === "1"
+  );
+  const [betaInput, setBetaInput] = useState("");
+  const [betaError, setBetaError] = useState("");
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,6 +30,17 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [traderCount, setTraderCount] = useState(0);
   const [emailSent, setEmailSent] = useState(false);
+
+  const handleBetaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (betaInput.trim() === BETA_KEY) {
+      localStorage.setItem("tw:beta-unlocked", "1");
+      setBetaUnlocked(true);
+      setBetaError("");
+    } else {
+      setBetaError("That beta key isn't valid.");
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -129,6 +147,64 @@ const SignUp = () => {
           <button onClick={handleResendCode} className="text-sm text-accent hover:underline mt-4">
             Didn't get the email? Resend
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!betaUnlocked) {
+    return (
+      <div className="relative flex flex-col min-h-screen bg-background overflow-hidden">
+        <AuthGlobeBackground height={340} />
+        <button
+          onClick={() => navigate("/")}
+          className="absolute left-5 z-20 w-10 h-10 flex items-center justify-center text-foreground"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 1.5rem)" }}
+        >
+          <ChevronLeft className="w-7 h-7" />
+        </button>
+
+        <div
+          className="relative z-10 flex-1 flex flex-col px-7 pb-8 max-w-md mx-auto w-full"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 200px)" }}
+        >
+          <div className="flex justify-center"><Wordmark size="text-3xl" /></div>
+          <p className="text-[18px] text-foreground text-center mt-4">Private beta access</p>
+          <p className="text-sm text-muted-foreground text-center mt-2">
+            Enter your beta key to create an account.
+          </p>
+
+          <form onSubmit={handleBetaSubmit} className="flex flex-col gap-6 mt-8">
+            <div>
+              <div className="flex items-center gap-3 pb-2">
+                <KeyRound className="w-5 h-5 text-accent shrink-0" strokeWidth={1.8} />
+                <input
+                  placeholder="Beta Key"
+                  value={betaInput}
+                  onChange={(e) => { setBetaInput(e.target.value); setBetaError(""); }}
+                  className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-foreground/80 outline-none"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="h-px bg-border" />
+              {betaError && <p className="text-xs text-destructive mt-2">{betaError}</p>}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-14 bg-accent hover:bg-accent/90 text-accent-foreground text-[16px] font-bold rounded-2xl border-none shadow-none"
+            >
+              Unlock Sign Up
+            </Button>
+          </form>
+
+          <p className="text-sm text-muted-foreground text-center mt-6">
+            Already have an account?{" "}
+            <button onClick={() => navigate("/sign-in")} className="text-accent font-semibold hover:underline">
+              Sign In
+            </button>
+          </p>
         </div>
       </div>
     );
