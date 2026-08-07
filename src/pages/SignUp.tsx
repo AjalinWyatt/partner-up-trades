@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, User, Mail, Lock, ChevronLeft } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, ChevronLeft, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LogoHeader from "@/components/LogoHeader";
 import AuthGlobeBackground from "@/components/AuthGlobeBackground";
@@ -13,6 +13,13 @@ import { trackEvent } from "@/lib/analytics";
 const SignUp = () => {
   const navigate = useNavigate();
 
+  const BETA_KEY = "TradersWorldxBeta";
+  const [betaUnlocked, setBetaUnlocked] = useState(
+    () => localStorage.getItem("tw:beta-unlocked") === "1"
+  );
+  const [betaInput, setBetaInput] = useState("");
+  const [betaError, setBetaError] = useState("");
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,6 +30,17 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [traderCount, setTraderCount] = useState(0);
   const [emailSent, setEmailSent] = useState(false);
+
+  const handleBetaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (betaInput.trim() === BETA_KEY) {
+      localStorage.setItem("tw:beta-unlocked", "1");
+      setBetaUnlocked(true);
+      setBetaError("");
+    } else {
+      setBetaError("That beta key isn't valid.");
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
