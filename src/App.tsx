@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RouteSkeleton from "@/components/RouteSkeleton";
+import BetaGate from "@/components/BetaGate";
 
 // Eager: landing/auth (first paint matters most)
 import Landing from "./pages/Landing";
@@ -60,7 +61,7 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<RouteSkeleton />}>
           <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<BetaGate><Landing /></BetaGate>} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
