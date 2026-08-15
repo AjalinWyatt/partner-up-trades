@@ -13,9 +13,9 @@ import { trackEvent } from "@/lib/analytics";
 const SignUp = () => {
   const navigate = useNavigate();
 
-  const BETA_KEY = "TradersWorldxBeta";
+  const BETA_KEY = "WorldTradersxxKey";
   const [betaUnlocked, setBetaUnlocked] = useState(
-    () => localStorage.getItem("tw:beta-unlocked") === "1"
+    () => localStorage.getItem("tw:beta-unlocked:v2") === "1"
   );
   const [betaInput, setBetaInput] = useState("");
   const [betaError, setBetaError] = useState("");
@@ -34,7 +34,8 @@ const SignUp = () => {
   const handleBetaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (betaInput.trim() === BETA_KEY) {
-      localStorage.setItem("tw:beta-unlocked", "1");
+      localStorage.removeItem("tw:beta-unlocked");
+      localStorage.setItem("tw:beta-unlocked:v2", "1");
       setBetaUnlocked(true);
       setBetaError("");
     } else {
