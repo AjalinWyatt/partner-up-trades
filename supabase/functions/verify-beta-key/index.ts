@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   // Single valid beta key.
-  const VALID_KEY = "WorldTradersxxKey";
+  const VALID_KEY = "KeyxxTWPB";
   try {
     const { key } = await req.json().catch(() => ({ key: "" }));
     const ok = typeof key === "string" && key.trim() === VALID_KEY;

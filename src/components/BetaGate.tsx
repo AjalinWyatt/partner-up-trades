@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import Wordmark from "@/components/Wordmark";
 import AuthGlobeBackground from "@/components/AuthGlobeBackground";
 
-const BETA_KEY = "WorldTradersxxKey";
-const STORAGE_KEY = "tw:beta-unlocked:v2";
+const BETA_KEY = "KeyxxTWPB";
+const STORAGE_KEY = "tw:beta-unlocked:v3";
 
 const BetaGate = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() === BETA_KEY) {
-      localStorage.removeItem("tw:beta-unlocked");
+      localStorage.removeItem("tw:beta-unlocked"); localStorage.removeItem("tw:beta-unlocked:v2");
       localStorage.setItem(STORAGE_KEY, "1");
       setUnlocked(true);
       setError("");
