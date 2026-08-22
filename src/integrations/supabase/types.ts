@@ -896,6 +896,7 @@ export type Database = {
           off_chart_prompts: string[] | null
           onboarding_completed: boolean | null
           profile_visibility: string
+          show_on_map: boolean
           state: string | null
           tour_completed: boolean
           updated_at: string | null
@@ -925,6 +926,7 @@ export type Database = {
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
           profile_visibility?: string
+          show_on_map?: boolean
           state?: string | null
           tour_completed?: boolean
           updated_at?: string | null
@@ -954,6 +956,7 @@ export type Database = {
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
           profile_visibility?: string
+          show_on_map?: boolean
           state?: string | null
           tour_completed?: boolean
           updated_at?: string | null
