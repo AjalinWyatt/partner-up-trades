@@ -725,6 +725,26 @@ const Landing = () => {
                 <MatchProfileMock />
               </div>
             </div>
+
+            {/* TRADERS NEAR ME */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1"><MapMock /></div>
+              <div className="order-1 lg:order-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-[11px] font-bold text-accent uppercase tracking-wider mb-4">
+                  <MapPin className="w-3 h-3" /> New
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Traders Near Me</div>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Find traders in your city on a live world map.</h3>
+                <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
+                  Zoom out to see the whole world, zoom in to your city. Pins are colored by match score - and your exact address is never shown. Locations are approximated within about a mile, always.
+                </p>
+                <ul className="space-y-2 text-[13px] text-foreground/90">
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> World view, country clusters, and city-level pins</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Filter by market, style, and minimum match %</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Approximate location only - hide yourself anytime in Settings</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
