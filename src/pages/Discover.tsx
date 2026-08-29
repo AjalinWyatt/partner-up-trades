@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { Map as MapIcon, Zap } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,7 +77,13 @@ const Discover = () => {
       <div className="flex-1 overflow-y-auto pb-20">
         {/* Header */}
         <div className="px-5 pt-safe-5 flex items-center justify-between">
-          <div className="w-12" />
+          <button
+            onClick={() => navigate("/map")}
+            aria-label="Traders near me"
+            className="w-12 h-12 rounded-full border border-border bg-secondary flex items-center justify-center shrink-0 text-accent"
+          >
+            <MapIcon className="w-5 h-5" />
+          </button>
           <h1 className="text-[24px] font-black tracking-tight">
             <span className="text-foreground">Traders</span><span className="text-foreground">World</span>
           </h1>
