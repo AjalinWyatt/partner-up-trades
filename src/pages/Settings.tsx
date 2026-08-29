@@ -20,6 +20,7 @@ interface ProfileRow {
   notify_messages: boolean;
   notify_email: boolean;
   profile_visibility: string;
+  show_on_map: boolean;
 }
 
 interface BlockedRow {
@@ -60,7 +61,7 @@ export default function Settings() {
       setEmail(user.email || "");
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, username, full_name, username_changes_count, notify_partner_activity, notify_new_matches, notify_messages, notify_email, profile_visibility")
+        .select("id, username, full_name, username_changes_count, notify_partner_activity, notify_new_matches, notify_messages, notify_email, profile_visibility, show_on_map")
         .eq("id", user.id)
         .maybeSingle();
       if (p) {
@@ -314,6 +315,13 @@ export default function Settings() {
 
         {/* Privacy */}
         <Section icon={<Eye className="w-4 h-4" />} title="Privacy">
+          <Toggle
+            label="Show me on the map"
+            desc="Appear on Traders Near Me at approximate city level only"
+            value={profile!.show_on_map ?? true}
+            onChange={(v) => toggleNotif("show_on_map" as any, v)}
+          />
+
           <Field label="Profile visibility">
             <div className="flex gap-2">
               {([

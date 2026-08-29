@@ -39,6 +39,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Install = lazy(() => import("./pages/Install"));
 const EnableNotifications = lazy(() => import("./pages/EnableNotifications"));
 const Room = lazy(() => import("./pages/Room"));
+const TradersMap = lazy(() => import("./pages/TradersMap"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/discover" element={<Discover />} />
+          <Route path="/map" element={<TradersMap />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/waiting-list" element={<WaitingList />} />
           <Route path="/feed" element={<Feed />} />

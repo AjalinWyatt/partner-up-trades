@@ -5,7 +5,7 @@ import {
   ArrowRight, Sparkles, Zap, Users, MessageSquare,
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
-  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu,
+  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
@@ -689,7 +689,9 @@ const Landing = () => {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
+              { icon: MapPin, title: "Traders Near Me", body: "Spin the world map and find traders in your city - approximate location only, never your exact address." },
               { icon: Users, title: "1-on-1 Partnerships", body: "Match, request, accept - and grow together. Unmatch or block any time." },
+
               { icon: Zap, title: "100-Point Match Algorithm", body: "Markets, sessions, style, experience, goals - weighted to surface real fits." },
               { icon: MessageSquare, title: "Pulse Sessions", body: "Async chat and voice notes for partners across any timezone." },
               { icon: BookOpen, title: "Trading Log", body: "Track every entry with green/red/break-even tags. Build your edge in public - or in private." },
