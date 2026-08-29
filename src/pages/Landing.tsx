@@ -387,6 +387,57 @@ const MatchProfileMock = () => {
   );
 };
 
+// TRADERS NEAR ME - dark world map with match pins
+const MapMock = () => {
+  const pins = [
+    { name: "Marcus", pct: 94, photo: mockMarcus, top: "26%", left: "72%", color: "hsl(var(--accent))" },
+    { name: "Aaliyah", pct: 87, photo: mockAaliyah, top: "20%", left: "46%", color: "hsl(var(--accent))" },
+    { name: "Diego", pct: 72, photo: mockDiego, top: "34%", left: "44%", color: "hsl(45 93% 55%)" },
+    { name: "JT", pct: 64, photo: mockJt, top: "30%", left: "18%", color: "hsl(45 93% 55%)" },
+    { name: "KW", pct: 41, photo: mockKw, top: "58%", left: "60%", color: "hsl(0 72% 55%)" },
+  ];
+  return (
+    <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
+      <div className="px-4 pt-4 flex items-center justify-between">
+        <ChevronLeft className="w-5 h-5 text-foreground" />
+        <span className="text-[16px] font-black tracking-tight text-foreground">Traders Near Me</span>
+        <MapPin className="w-5 h-5 text-accent" />
+      </div>
+      <div className="relative mx-4 mt-3 h-[240px] rounded-2xl overflow-hidden border border-border bg-secondary/60">
+        {/* dot-grid "world" */}
+        <div className="absolute inset-0 opacity-40"
+          style={{ backgroundImage: "radial-gradient(hsl(var(--muted-foreground) / 0.35) 1px, transparent 1px)", backgroundSize: "14px 14px" }} />
+        <div className="absolute -top-8 -left-10 w-[180px] h-[120px] rounded-[50%] bg-accent/5 blur-sm" />
+        <div className="absolute top-16 right-4 w-[140px] h-[100px] rounded-[50%] bg-accent/5 blur-sm" />
+        {pins.map((p, i) => (
+          <div key={i} className="absolute -translate-x-1/2 -translate-y-full" style={{ top: p.top, left: p.left }}>
+            {p.pct >= 80 && (
+              <span className="absolute -inset-2 rounded-full animate-ping motion-reduce:animate-none" style={{ background: p.color, opacity: 0.25 }} />
+            )}
+            <div className="relative flex flex-col items-center">
+              <div className="rounded-full border-2 p-0.5 bg-background" style={{ borderColor: p.color }}>
+                <img src={p.photo} alt={p.name} className="w-7 h-7 rounded-full object-cover" />
+              </div>
+              <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-l-transparent border-r-transparent" style={{ borderTopColor: p.color }} />
+              <span className="mt-0.5 px-1.5 py-px rounded-full bg-background/90 border border-border text-[8px] font-black" style={{ color: p.color }}>{p.pct}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* bottom sheet */}
+      <div className="mx-4 mt-3 mb-5 bg-card border border-border rounded-2xl p-3 flex items-center gap-3">
+        <img src={mockMarcus} alt="Marcus Chen" className="w-12 h-12 rounded-xl object-cover" />
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-bold text-foreground truncate">Marcus Chen · 28</div>
+          <div className="text-[11px] text-muted-foreground truncate">~2 mi away · Futures · Asian session</div>
+          <div className="text-[10px] text-accent font-bold mt-0.5">94% Match</div>
+        </div>
+        <div className="shrink-0 px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">View</div>
+      </div>
+    </div>
+  );
+};
+
 /* ───────────────── Page ───────────────── */
 const Landing = () => {
   const navigate = useNavigate();
@@ -672,6 +723,26 @@ const Landing = () => {
               <div className="grid lg:grid-cols-2 gap-8 items-start">
                 <DiscoverMock />
                 <MatchProfileMock />
+              </div>
+            </div>
+
+            {/* TRADERS NEAR ME */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1"><MapMock /></div>
+              <div className="order-1 lg:order-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-[11px] font-bold text-accent uppercase tracking-wider mb-4">
+                  <MapPin className="w-3 h-3" /> New
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Traders Near Me</div>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Find traders in your city on a live world map.</h3>
+                <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
+                  Zoom out to see the whole world, zoom in to your city. Pins are colored by match score - and your exact address is never shown. Locations are approximated within about a mile, always.
+                </p>
+                <ul className="space-y-2 text-[13px] text-foreground/90">
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> World view, country clusters, and city-level pins</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Filter by market, style, and minimum match %</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Approximate location only - hide yourself anytime in Settings</li>
+                </ul>
               </div>
             </div>
           </div>
