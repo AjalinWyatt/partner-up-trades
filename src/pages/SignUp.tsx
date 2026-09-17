@@ -13,9 +13,9 @@ import { trackEvent } from "@/lib/analytics";
 const SignUp = () => {
   const navigate = useNavigate();
 
-  const BETA_KEY = "BetaKeyxTWxSecret";
+  const BETA_KEY = "MYOBxTWapp";
   const [betaUnlocked, setBetaUnlocked] = useState(
-    () => localStorage.getItem("tw:beta-unlocked:v4") === "1"
+    () => localStorage.getItem("tw:beta-unlocked:v5") === "1"
   );
   const [betaInput, setBetaInput] = useState("");
   const [betaError, setBetaError] = useState("");
@@ -34,8 +34,8 @@ const SignUp = () => {
   const handleBetaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (betaInput.trim() === BETA_KEY) {
-      localStorage.removeItem("tw:beta-unlocked"); localStorage.removeItem("tw:beta-unlocked:v2"); localStorage.removeItem("tw:beta-unlocked:v3");
-      localStorage.setItem("tw:beta-unlocked:v4", "1");
+      localStorage.removeItem("tw:beta-unlocked"); localStorage.removeItem("tw:beta-unlocked:v2"); localStorage.removeItem("tw:beta-unlocked:v3"); localStorage.removeItem("tw:beta-unlocked:v4");
+      localStorage.setItem("tw:beta-unlocked:v5", "1");
       setBetaUnlocked(true);
       setBetaError("");
     } else {
