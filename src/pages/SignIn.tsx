@@ -20,14 +20,7 @@ const SignIn = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const redirectAfterAuth = useCallback(async (userId: string) => {
-    const rawNext = new URLSearchParams(window.location.search).get("next") ?? sessionStorage.getItem("tw:auth-next");
-    if (rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//")) {
-      sessionStorage.removeItem("tw:auth-next");
-      window.location.href = rawNext;
-      return;
-    }
     let destination = "/feed";
-
 
     try {
       const profileResult = await Promise.race([
@@ -116,10 +109,8 @@ const SignIn = () => {
       event: "signin_attempt",
       properties: { method: provider },
     });
-    const next = new URLSearchParams(window.location.search).get("next");
-    if (next && next.startsWith("/") && !next.startsWith("//")) sessionStorage.setItem("tw:auth-next", next);
     const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: next ? `${window.location.origin}/sign-in` : window.location.origin,
+      redirect_uri: window.location.origin,
     });
     if (error) {
       void supabase.from("analytics_events").insert({

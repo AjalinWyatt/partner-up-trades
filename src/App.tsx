@@ -40,7 +40,6 @@ const Install = lazy(() => import("./pages/Install"));
 const EnableNotifications = lazy(() => import("./pages/EnableNotifications"));
 const Room = lazy(() => import("./pages/Room"));
 const TradersMap = lazy(() => import("./pages/TradersMap"));
-const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,7 +94,6 @@ const App = () => (
           <Route path="/threads" element={<Navigate to="/feed" replace />} />
           <Route path="/rooms" element={<Navigate to="/feed" replace />} />
           <Route path="/rooms/:id" element={<Room />} />
-          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
