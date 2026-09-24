@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import SafetyMenu from "@/components/safety/SafetyMenu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useNavigate, useParams } from "react-router-dom";
 import { Check, ChevronLeft, MessageSquare, MoreVertical, ShieldOff, UserPlus, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
@@ -158,10 +160,15 @@ export default function ViewProfile() {
   const roundBtn = "h-10 w-10 rounded-full border-surface-line bg-background/80 shadow-md backdrop-blur-md";
   const back = <Button variant="outline" size="icon" className={roundBtn} onClick={handleBack} aria-label="Back"><ChevronLeft className="h-5 w-5" /></Button>;
   const options = (
-    <div className="relative">
-      <Button variant="outline" size="icon" className={roundBtn} onClick={() => setShowMenu((v) => !v)} aria-label="Profile options"><MoreVertical className="h-4 w-4" /></Button>
-      {showMenu && <div className="absolute right-0 top-11 z-30 min-w-[160px] overflow-hidden rounded-md border border-surface-line bg-surface-raised shadow-lg">{accepted && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={unmatch}>Unmatch</Button>}<Button variant="ghost" className={cn("w-full justify-start rounded-none text-xs", !isBlocked && "text-destructive")} onClick={toggleBlock}>{isBlocked ? "Unblock" : "Block"}</Button></div>}
-    </div>
+    <SafetyMenu
+      targetId={userId!}
+      username={profile?.username}
+      context="profile"
+      isBlocked={isBlocked}
+      onBlockedChange={(b) => { setIsBlocked(b); if (b) setConnection(null); refreshCaches(); }}
+      trigger={<Button variant="outline" size="icon" className={roundBtn} aria-label="Profile options"><MoreVertical className="h-4 w-4" /></Button>}
+      extraItems={accepted ? <DropdownMenuItem onSelect={unmatch}>Unmatch</DropdownMenuItem> : undefined}
+    />
   );
   const ctaCls = "h-10 flex-1 rounded-full text-[14px] font-semibold";
   const primaryAction = isBlocked ? <Button variant="secondary" className={ctaCls} onClick={toggleBlock}><ShieldOff />Unblock</Button>

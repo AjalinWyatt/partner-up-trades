@@ -29,6 +29,20 @@
       "when": 1790235275914,
       "tag": "0003_avatars_owner_select",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790240560722,
+      "tag": "0004_reports_and_mutes",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790240635759,
+      "tag": "0005_drop_notifications_from_muted",
+      "breakpoints": true
     }
   ]
 }

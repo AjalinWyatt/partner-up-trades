@@ -1,3 +1,4 @@
+import { Flag } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Globe, Earth, MessagesSquare, BookOpen, Users, UserRound, LogOut, Shield, Megaphone, UsersRound, Mail } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
@@ -139,6 +140,18 @@ export default function AppSidebar() {
                 >
                   <UsersRound className="w-[18px] h-[18px]" strokeWidth={1.8} />
                   <span>Users</span>
+                </button>
+                <button
+                  onClick={() => navigate("/admin/reports")}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14px] transition-all",
+                    location.pathname === "/admin/reports"
+                      ? "font-semibold text-foreground bg-secondary"
+                      : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  )}
+                >
+                  <Flag className="w-[18px] h-[18px]" strokeWidth={1.8} />
+                  <span>Reports</span>
                 </button>
                 <button
                   onClick={() => navigate("/admin/broadcast")}
