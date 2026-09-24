@@ -57,6 +57,13 @@
       "when": 1790241295679,
       "tag": "0007_approx_location",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790242426933,
+      "tag": "0008_core_feature_integrity_fixes",
+      "breakpoints": true
     }
   ]
 }
