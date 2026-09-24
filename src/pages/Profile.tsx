@@ -539,7 +539,7 @@ const Profile = () => {
                aria-label={tab}
                title={tab}
               className={cn(
-                 "relative h-12 flex-col gap-0.5 rounded-none text-[10px] font-bold transition-colors",
+                 "relative h-12 flex-col gap-0.5 rounded-none text-[10px] font-bold transition-colors hover:bg-transparent",
                  activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >

@@ -185,7 +185,7 @@ export default function ViewProfile() {
            </div>}
 
             <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
-              {(["details", "journal"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-12 flex-col gap-0.5 rounded-none capitalize text-[10px]", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab === "details" ? <UserRound className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
+              {(["details", "journal"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-12 flex-col gap-0.5 rounded-none capitalize text-[10px] hover:bg-transparent", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab === "details" ? <UserRound className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
           </nav>
         </header>
 
