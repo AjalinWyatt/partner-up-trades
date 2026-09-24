@@ -3,7 +3,6 @@ import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cac
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone, SquarePen, Phone, MoreVertical } from "lucide-react";
-import brandGlobe from "@/assets/pulse-globe.svg";
 import tradersworldGlobe from "@/assets/tradersworld-globe.png";
 import { Input } from "@/components/ui/input";
 import AppLayout from "@/components/AppLayout";
