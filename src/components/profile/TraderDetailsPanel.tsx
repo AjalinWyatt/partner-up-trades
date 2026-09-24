@@ -159,7 +159,7 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       <Dialog open={showTrading} onOpenChange={setShowTrading}>
         <DialogContent className="top-[max(env(safe-area-inset-top),0.5rem)] bottom-[max(env(safe-area-inset-bottom),0.5rem)] flex w-[calc(100%-1rem)] max-w-sm translate-y-0 flex-col gap-2 overflow-hidden rounded-[22px] border-surface-line bg-background p-3 shadow-2xl">
           <DialogHeader className="shrink-0 pb-1"><DialogTitle className="text-center text-[20px] font-semibold leading-7">Trading details</DialogTitle></DialogHeader>
-          <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">
             {sections.map(({ title, subtitle, Icon, items }, sectionIndex) => {
               const tiles = items.filter((t) => t.values.length > 0);
               if (!tiles.length) return null;
