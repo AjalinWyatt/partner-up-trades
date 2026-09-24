@@ -29,71 +29,46 @@ const XIcon = ({ className }: { className?: string }) => (
 
 /* ───────────────── In-app mock screens ───────────────── */
 
-// FEED - Feed/Pulse tabs, market filter pills, post cards
-const FeedMock = () => {
-  const posts = [
-    { name: "@Nilaja - CEO | FOUNDER", photo: mockNilaja, time: "1d ago", tags: ["Forex", "Advanced"],
-      body: "Any feedback thus far? Whoever has access to this, please go through as much as you can and if anything ANYTHING messes up - tell me asap! I don't care how much you critique me. I need every little issue reported please <3",
-      hashtags: ["#Forex", "#Rant"], comments: 1 },
-    { name: "marcus.chen", photo: mockMarcus, time: "2h", tags: ["Futures", "Day"],
-      body: "Clean breakout on ES at 5240. Took +2R. Stuck to plan today - no revenge entries.",
-      hashtags: ["#Futures", "#WinDay"], comments: 4 },
+// JOURNAL - daily trading log with win/loss tags and visibility control
+const JournalMock = () => {
+  const entries = [
+    { title: "ES breakout - stuck to plan", date: "Today", tag: "Win", tagClass: "text-accent border-accent/40 bg-accent/10", body: "Waited for the level, took +2R, walked away. No revenge entries." },
+    { title: "Forced a trade on NQ", date: "Yesterday", tag: "Loss", tagClass: "text-destructive border-destructive/40 bg-destructive/10", body: "Entered early out of boredom. Logged it, reviewed it with my partner." },
+    { title: "London open - sat on hands", date: "Mon", tag: "Break-even", tagClass: "text-muted-foreground border-border bg-secondary", body: "No setup, no trade. Best decision of the week." },
   ];
   return (
     <div className="w-full max-w-[340px] mx-auto bg-background border border-border rounded-[28px] overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="px-5 pt-5 flex items-center justify-between">
-        <span className="text-[16px] font-black tracking-tight text-foreground">TradersWorld</span>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full border border-border bg-card flex items-center justify-center"><Plus className="w-3.5 h-3.5 text-foreground" /></div>
-          <img src={mockNilaja} alt="" className="w-7 h-7 rounded-full object-cover" />
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-border">
+        <div>
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-accent">Your Journal</div>
+          <div className="text-[16px] font-black tracking-tight text-foreground">Trading Log</div>
         </div>
+        <div className="px-2.5 py-1 rounded-full border border-border bg-secondary text-[10px] font-semibold text-muted-foreground">6-day streak</div>
       </div>
-      {/* Feed/Pulse tabs */}
-      <div className="px-5 pt-3 pb-2 flex justify-center">
-        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
-          <span className="px-5 py-1.5 rounded-full bg-accent/10 border border-accent/40 text-[12px] font-bold text-foreground">Feed</span>
-          <span className="px-5 py-1.5 text-[12px] font-semibold text-muted-foreground">Pulse</span>
-        </div>
-      </div>
-      {/* Market filter pills */}
-      <div className="px-4 pt-2 pb-3 flex gap-1.5 overflow-hidden border-b border-border">
-        {["All","Crypto","Forex","Indices","Futures"].map((f,i) => (
-          <span key={i} className={`px-3 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${i===0?"border-accent text-accent bg-accent/5":"border-border text-muted-foreground bg-secondary"}`}>{f}</span>
-        ))}
-      </div>
-      {/* Posts */}
-      <div className="p-3 space-y-3 max-h-[440px] overflow-hidden">
-        {posts.map((p, i) => (
+      {/* Entries */}
+      <div className="p-3 space-y-2.5">
+        {entries.map((e, i) => (
           <div key={i} className="bg-card border border-border rounded-2xl p-3">
-            <div className="flex items-start gap-2.5 mb-2">
-              <img src={p.photo} alt="" className="w-9 h-9 rounded-xl object-cover shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-[12px] font-bold text-foreground truncate">{p.name}</div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{p.time}</span>
-                </div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  {p.tags.map((t, j) => (
-                    <span key={j} className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/30 text-[9px] font-bold text-accent">{t}</span>
-                  ))}
-                </div>
-              </div>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <span className="text-[12px] font-bold text-foreground truncate">{e.title}</span>
+              <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold shrink-0 ${e.tagClass}`}>{e.tag}</span>
             </div>
-            <div className="text-[12px] text-foreground/90 leading-snug mb-2">{p.body}</div>
-            <div className="flex items-center gap-1.5 mb-2">
-              {p.hashtags.map((h, j) => (
-                <span key={j} className="px-2 py-0.5 rounded-full bg-secondary border border-border text-[10px] text-muted-foreground">{h}</span>
-              ))}
-            </div>
-            <div className="flex items-center gap-4 text-muted-foreground border-t border-border pt-2">
-              <Heart className="w-4 h-4" />
-              <div className="flex items-center gap-1"><MessageSquare className="w-4 h-4" /><span className="text-[10px]">{p.comments}</span></div>
-              <Send className="w-4 h-4" />
-              <Bookmark className="w-4 h-4 ml-auto" />
-            </div>
+            <div className="text-[11px] text-muted-foreground leading-snug mb-1.5">{e.body}</div>
+            <div className="text-[9px] text-muted-foreground/70">{e.date}</div>
           </div>
         ))}
+      </div>
+      {/* Visibility row */}
+      <div className="px-4 pb-4">
+        <div className="rounded-xl border border-border bg-secondary/40 px-3 py-2 flex items-center justify-between">
+          <span className="text-[10px] font-semibold text-muted-foreground">Entry visibility</span>
+          <div className="flex gap-1">
+            {["Private", "Partners", "Public"].map((v, i) => (
+              <span key={i} className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${i===1?"border-accent/40 bg-accent/10 text-accent":"border-border text-muted-foreground"}`}>{v}</span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
