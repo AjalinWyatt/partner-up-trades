@@ -52,6 +52,9 @@ interface TradingProfileData {
   connection_types: string[];
   connect_frequency: string[];
   match_priorities: string[];
+  partnership_strengths: string[];
+  accountability_needs: string[];
+  communication_preferences: string[];
 }
 
 interface JournalEntry {
@@ -93,7 +96,7 @@ const Profile = () => {
   const formInitialized = useRef(false);
   const tradingDraftInitialized = useRef(false);
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
-  const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
+  const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [], connection_types: [], partnership_strengths: [], accountability_needs: [], communication_preferences: [] });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -157,6 +160,9 @@ const Profile = () => {
           connection_types: (tData as any).connection_types || [],
           connect_frequency: (tData as any).connect_frequency || [],
           match_priorities: (tData as any).match_priorities || [],
+          partnership_strengths: tData.partnership_strengths || [],
+          accountability_needs: tData.accountability_needs || [],
+          communication_preferences: tData.communication_preferences || [],
         });
 
         // Seed editable draft only the first time so we don't clobber user input.
@@ -180,6 +186,10 @@ const Profile = () => {
           connection_reach: tData.connection_reach || "",
           connect_frequency: (tData as any).connect_frequency || [],
           match_priorities: (tData as any).match_priorities || [],
+          connection_types: tData.connection_types || [],
+          partnership_strengths: tData.partnership_strengths || [],
+          accountability_needs: tData.accountability_needs || [],
+          communication_preferences: tData.communication_preferences || [],
           });
           tradingDraftInitialized.current = true;
         }
@@ -272,6 +282,10 @@ const Profile = () => {
       connection_reach: tradingDraft.connection_reach || null,
       connect_frequency: tradingDraft.connect_frequency,
       match_priorities: tradingDraft.match_priorities,
+      connection_types: tradingDraft.connection_types,
+      partnership_strengths: tradingDraft.partnership_strengths,
+      accountability_needs: tradingDraft.accountability_needs,
+      communication_preferences: tradingDraft.communication_preferences,
       updated_at: new Date().toISOString(),
     } as any).eq("user_id", userId);
 
@@ -317,6 +331,10 @@ const Profile = () => {
       connection_reach: tradingDraft.connection_reach || null,
       connect_frequency: tradingDraft.connect_frequency,
       match_priorities: tradingDraft.match_priorities,
+      connection_types: tradingDraft.connection_types,
+      partnership_strengths: tradingDraft.partnership_strengths,
+      accountability_needs: tradingDraft.accountability_needs,
+      communication_preferences: tradingDraft.communication_preferences,
     } : current);
 
     setEditing(false);
