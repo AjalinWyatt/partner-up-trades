@@ -65,12 +65,14 @@ const NotificationBell = () => {
       const user = session?.user;
       if (!user) return;
       setUserId(user.id);
+      const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
       const { count } = await supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .eq("read", false);
+        .eq("read", false)
+        .gte("created_at", cutoff);
       setUnreadCount(count || 0);
     };
     init();
@@ -96,11 +98,14 @@ const NotificationBell = () => {
   const loadNotifications = async () => {
     if (!userId) return;
     setLoading(true);
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
     const { data: notifs } = await supabase
       .from("notifications")
       .select("*")
       .eq("user_id", userId)
+      .eq("read", false)
+      .gte("created_at", cutoff)
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -141,14 +146,14 @@ const NotificationBell = () => {
       .eq("user_id", userId)
       .eq("read", false);
     setUnreadCount(0);
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications([]);
   };
 
   const handleNotifClick = async (n: Notification) => {
     // Mark as read
     if (!n.read) {
       await supabase.from("notifications").update({ read: true }).eq("id", n.id);
-      setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+      setNotifications(prev => prev.filter(x => x.id !== n.id));
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
 
@@ -172,7 +177,7 @@ const NotificationBell = () => {
     <>
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>
-          <button className="w-8 h-8 flex items-center justify-center relative">
+          <button aria-label="Open notifications" className="w-9 h-9 flex items-center justify-center relative rounded-full bg-background/30">
             <Bell className="w-5 h-5 text-muted-foreground" />
             {unreadCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground flex items-center justify-center px-1">
@@ -188,7 +193,7 @@ const NotificationBell = () => {
               <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
                   <button onClick={markAllRead} className="flex items-center gap-1 text-[10px] text-primary font-semibold">
-                    <CheckCheck className="w-3.5 h-3.5" /> Mark all read
+                    <CheckCheck className="w-3.5 h-3.5" /> Mark all seen
                   </button>
                 )}
                 <button
@@ -211,8 +216,8 @@ const NotificationBell = () => {
                 <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                   <Bell className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-semibold text-foreground mb-1">You're all caught up ✓</p>
-                <p className="text-xs text-muted-foreground">No new notifications</p>
+                <p className="text-sm font-semibold text-foreground mb-1">You’re all caught up</p>
+                <p className="text-xs text-muted-foreground">No unseen notifications from the last 30 days</p>
               </div>
             ) : (
               <div className="divide-y divide-border">
