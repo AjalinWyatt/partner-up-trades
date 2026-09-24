@@ -309,12 +309,17 @@ export default function Messages() {
   async function sendMessage() {
     if (!msgInput.trim() || !activeChat || !userId) return;
     setSendingMsg(true);
-    await supabase.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       sender_id: userId,
       receiver_id: activeChat.partnerId,
       connection_id: activeChat.id,
       content: msgInput.trim(),
     });
+    if (error) {
+      setSendingMsg(false);
+      toast.error("Message not sent. Try again.");
+      return;
+    }
     // Last-message snapshot for the conversation list is now stale.
     invalidateSessionCache("messages:connections");
     setMsgInput("");

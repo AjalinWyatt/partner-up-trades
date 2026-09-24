@@ -177,20 +177,23 @@ const Dashboard = () => {
   const [daily, setDaily] = useState<DailySummary>(EMPTY_DAILY);
   const [showAllActivity, setShowAllActivity] = useState(false);
   const [loading, setLoading] = useState(!(hadProfileCache && hadStatsCache));
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
+      setLoadError(false);
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user || !active) return;
 
       const [
-        { data: prof },
-        { count: savedCount },
-        { data: entries },
-        { data: notifs },
-        { count: pendingRequests },
+        { data: prof, error: profileError },
+        { count: savedCount, error: savedError },
+        { data: entries, error: entriesError },
+        { data: notifs, error: notificationsError },
+        { count: pendingRequests, error: requestsError },
       ] = await Promise.all([
         supabase.from("profiles").select("username, avatar_url, tour_completed").eq("id", user.id).maybeSingle(),
         supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saver_id", user.id),
@@ -199,6 +202,11 @@ const Dashboard = () => {
         supabase.from("partner_connections").select("*", { count: "exact", head: true }).eq("receiver_id", user.id).eq("status", "pending"),
       ]);
       if (!active) return;
+      if (profileError || savedError || entriesError || notificationsError || requestsError) {
+        setLoadError(true);
+        setLoading(false);
+        return;
+      }
 
       setProfile(prof || null);
       const replay = sessionStorage.getItem("tw:replay-tour") === "1";
@@ -334,7 +342,7 @@ const Dashboard = () => {
     };
     void load();
     return () => { active = false; };
-  }, []);
+  }, [reloadKey]);
 
   const activity = useMemo(() => {
     const cutoff = Date.now() - 30 * 86_400_000;
@@ -384,6 +392,10 @@ const Dashboard = () => {
         <DestinationLoading label="Preparing your daily command center." />
       </AppLayout>
     );
+  }
+
+  if (loadError) {
+    return <AppLayout><DestinationState kind="error" title="Home is out of reach" description="We could not prepare today’s overview. Your activity remains safe." actionLabel="Try again" onAction={() => { setLoading(true); setReloadKey((key) => key + 1); }} /></AppLayout>;
   }
 
   return (
