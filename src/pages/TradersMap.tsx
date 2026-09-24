@@ -705,6 +705,28 @@ export default function TradersMap() {
   );
 }
 
+function ViewToggle({ viewMode, onChange }: { viewMode: "map" | "list"; onChange: (v: "map" | "list") => void }) {
+  return (
+    <div className="flex h-7 items-center gap-0.5 rounded-full border border-border bg-background/85 p-0.5 backdrop-blur-md">
+      {(["map", "list"] as const).map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          onClick={() => onChange(mode)}
+          aria-pressed={viewMode === mode}
+          aria-label={mode === "map" ? "Map view" : "List view"}
+          className={cn(
+            "h-6 rounded-full px-3 text-[10px] font-medium capitalize transition-colors",
+            viewMode === mode ? "bg-secondary text-accent" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {mode}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Avatar({ t }: { t: MapTrader }) {
   return (
     <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0 border border-border">
