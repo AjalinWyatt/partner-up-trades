@@ -65,12 +65,14 @@ const NotificationBell = () => {
       const user = session?.user;
       if (!user) return;
       setUserId(user.id);
+      const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
       const { count } = await supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .eq("read", false);
+        .eq("read", false)
+        .gte("created_at", cutoff);
       setUnreadCount(count || 0);
     };
     init();
