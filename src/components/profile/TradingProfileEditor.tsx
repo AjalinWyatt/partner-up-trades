@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import PillSelect from "@/components/onboarding/PillSelect";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { ACCOUNTABILITY_NEED_OPTIONS, COMMUNICATION_OPTIONS, CONNECTION_TYPE_OPTIONS, PARTNERSHIP_STRENGTH_OPTIONS } from "@/lib/profileOptions";
 
 export interface ProfileEditorDraft {
   gender: string;
@@ -32,6 +33,10 @@ export interface TradingEditorDraft {
   connection_reach: string;
   connect_frequency: string[];
   match_priorities: string[];
+  connection_types: string[];
+  partnership_strengths: string[];
+  accountability_needs: string[];
+  communication_preferences: string[];
 }
 
 interface TradingProfileEditorProps {
@@ -172,7 +177,11 @@ const TradingProfileEditor = ({ profileDraft, setProfileDraft, tradingDraft, set
           <AccordionContent className="space-y-5 pt-1">
             <SingleSelectRow label="Looking for" options={["Male", "Female", "Co-Ed"]} value={tradingDraft.looking_for_gender} onChange={(value) => setTradingValue("looking_for_gender", value)} />
             <SingleSelectRow label="Connection reach" options={["Local", "Global", "Both"]} value={tradingDraft.connection_reach} onChange={(value) => setTradingValue("connection_reach", value)} />
+            <MultiSelectSection label="Looking for" options={CONNECTION_TYPE_OPTIONS} selected={tradingDraft.connection_types} onToggle={(value) => toggleTradingArray("connection_types", value)} />
             <MultiSelectSection label="Connection frequency" options={["Daily", "After session", "Weekly", "Flexible"]} selected={tradingDraft.connect_frequency} onToggle={(value) => toggleTradingArray("connect_frequency", value)} />
+            <MultiSelectSection label="How you like to communicate" options={COMMUNICATION_OPTIONS} selected={tradingDraft.communication_preferences} onToggle={(value) => toggleTradingArray("communication_preferences", value)} />
+            <MultiSelectSection label="What you bring to a partnership" options={PARTNERSHIP_STRENGTH_OPTIONS} selected={tradingDraft.partnership_strengths} onToggle={(value) => toggleTradingArray("partnership_strengths", value)} />
+            <MultiSelectSection label="Where a partner would help" options={ACCOUNTABILITY_NEED_OPTIONS} selected={tradingDraft.accountability_needs} onToggle={(value) => toggleTradingArray("accountability_needs", value)} />
             <MultiSelectSection label="Match priorities" options={["Same Strategy", "Same Session", "Same Goals", "Same Experience Level", "Interests"]} selected={tradingDraft.match_priorities} onToggle={(value) => toggleTradingArray("match_priorities", value)} />
           </AccordionContent>
         </AccordionItem>

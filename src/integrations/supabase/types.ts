@@ -1187,6 +1187,8 @@ export type Database = {
       }
       trading_profiles: {
         Row: {
+          accountability_needs: string[]
+          communication_preferences: string[]
           connect_frequency: string[] | null
           connection_reach: string | null
           connection_types: string[] | null
@@ -1200,6 +1202,7 @@ export type Database = {
           loss_response: string | null
           markets: string[] | null
           match_priorities: string[] | null
+          partnership_strengths: string[]
           primary_goal: string[] | null
           sessions: string[] | null
           strategies: string[] | null
@@ -1212,6 +1215,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accountability_needs?: string[]
+          communication_preferences?: string[]
           connect_frequency?: string[] | null
           connection_reach?: string | null
           connection_types?: string[] | null
@@ -1225,6 +1230,7 @@ export type Database = {
           loss_response?: string | null
           markets?: string[] | null
           match_priorities?: string[] | null
+          partnership_strengths?: string[]
           primary_goal?: string[] | null
           sessions?: string[] | null
           strategies?: string[] | null
@@ -1237,6 +1243,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accountability_needs?: string[]
+          communication_preferences?: string[]
           connect_frequency?: string[] | null
           connection_reach?: string | null
           connection_types?: string[] | null
@@ -1250,6 +1258,7 @@ export type Database = {
           loss_response?: string | null
           markets?: string[] | null
           match_priorities?: string[] | null
+          partnership_strengths?: string[]
           primary_goal?: string[] | null
           sessions?: string[] | null
           strategies?: string[] | null
