@@ -35,7 +35,7 @@ const isStudy = (e: ProfileJournalEntry) => String(e.entry_type || "").toLowerCa
 const studyTitle = (e: ProfileJournalEntry) => {
   const d = e.study_data || {};
   const v = d.topic || d.title || d.focus || d.study_type || d.type;
-  return typeof v === "string" && v ? v : "Study session";
+  return typeof v === "string" && v ? v.charAt(0).toUpperCase() + v.slice(1) : "Study session";
 };
 const instrument = (e: ProfileJournalEntry) => e.market_pair ? e.market_pair.split("·").pop()!.trim() : null;
 const titleFor = (e: ProfileJournalEntry) => isStudy(e) ? studyTitle(e) : [instrument(e), e.session].filter(Boolean).join(" · ") || e.result || "Trade entry";
@@ -100,6 +100,11 @@ export default function ProfileJournalCards({ entries, emptyDescription = "Nothi
             if (amount) tags.push({ label: amount, cls: pips! > 0 ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive" });
             if (entry.result) tags.push({ label: entry.result, cls: resultCls(entry.result) });
             (entry.tags || []).forEach((t) => tags.push({ label: t, cls: neutral }));
+            if (isStudy(entry)) {
+              const topics = entry.study_data?.topics;
+              if (Array.isArray(topics)) topics.forEach((t) => typeof t === "string" && tags.push({ label: t, cls: neutral }));
+              tags.push({ label: "Study", cls: "border-info/30 bg-info/10 text-info" });
+            }
             const vis = VISIBILITY.find((o) => o.value === (entry.share_setting || "private")) || VISIBILITY[0];
             return (
               <article key={entry.id} className="rounded-xl border border-surface-line bg-surface p-3">

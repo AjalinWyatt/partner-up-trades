@@ -163,7 +163,7 @@ export default function ViewProfile() {
       {showMenu && <div className="absolute right-0 top-11 z-30 min-w-[160px] overflow-hidden rounded-md border border-surface-line bg-surface-raised shadow-lg">{accepted && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={unmatch}>Unmatch</Button>}<Button variant="ghost" className={cn("w-full justify-start rounded-none text-xs", !isBlocked && "text-destructive")} onClick={toggleBlock}>{isBlocked ? "Unblock" : "Block"}</Button></div>}
     </div>
   );
-  const ctaCls = "h-11 flex-1 rounded-full text-[15px] font-semibold";
+  const ctaCls = "h-10 flex-1 rounded-full text-[14px] font-semibold";
   const primaryAction = isBlocked ? <Button variant="secondary" className={ctaCls} onClick={toggleBlock}><ShieldOff />Unblock</Button>
     : accepted ? <Button className={ctaCls} onClick={() => navigate(`/messages?partner=${userId}`)}><MessageSquare />Message</Button>
     : outgoing ? <Button variant="secondary" className={ctaCls} onClick={cancelRequest} disabled={busy}><Check />Requested</Button>
@@ -172,7 +172,7 @@ export default function ViewProfile() {
   const cta = (
     <div className="flex items-center gap-2.5">
       {primaryAction}
-      <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 rounded-full border-surface-line bg-surface" onClick={() => setShowMenu((v) => !v)} aria-label="More options"><MoreHorizontal className="h-5 w-5" /></Button>
+      <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-full border-surface-line bg-surface" onClick={() => setShowMenu((v) => !v)} aria-label="More options"><MoreHorizontal className="h-5 w-5" /></Button>
     </div>
   );
 
