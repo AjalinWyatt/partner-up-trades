@@ -50,6 +50,13 @@
       "when": 1790240706062,
       "tag": "0006_map_precision",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790241295679,
+      "tag": "0007_approx_location",
+      "breakpoints": true
     }
   ]
 }
