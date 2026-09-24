@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -52,6 +52,17 @@ function pinIcon(text: string, color: string) {
     <circle cx="27" cy="24" r="17" fill="#0b0e11" stroke="${color}" stroke-width="3"/>
     <text x="27" y="29" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="800" fill="#ffffff">${text}</text>
     <path d="M27 44 L21 54 L33 54 Z" fill="${color}"/>
+  </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function avatarIcon(url: string) {
+  const safeUrl = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+    <defs><clipPath id="c"><circle cx="22" cy="22" r="16"/></clipPath></defs>
+    <circle cx="22" cy="22" r="19" fill="#071113" stroke="#18aaa5" stroke-width="1.5"/>
+    <image href="${safeUrl}" x="6" y="6" width="32" height="32" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>
+    <circle cx="35" cy="35" r="4" fill="#16c784" stroke="#071113" stroke-width="2"/>
   </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
@@ -277,14 +288,17 @@ export default function TradersMap() {
           map,
           position: { lat: t.jlat, lng: t.jlng },
           icon: {
-            url: t.avatar_url || pinIcon(initials(t), "#18aaa5"),
-            scaledSize: new google.maps.Size(38, 38),
-            anchor: new google.maps.Point(19, 19),
+            url: t.avatar_url ? avatarIcon(t.avatar_url) : pinIcon(initials(t), "#18aaa5"),
+            scaledSize: new google.maps.Size(44, 44),
+            anchor: new google.maps.Point(22, 22),
           },
           title: `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
           optimized: false,
         });
-        marker.addListener("click", () => setSelected(t));
+        marker.addListener("click", () => {
+          setSelected(t);
+          setBrowsingNearby(true);
+        });
         markersRef.current.push(marker);
       });
     } else {
@@ -403,8 +417,12 @@ export default function TradersMap() {
   const distanceLabel = (t: MapTrader) =>
     userLoc ? `${milesBetween(userLoc, { lat: t.lat, lng: t.lng }).toFixed(1)} miles away` : t.placeLabel;
 
+  const sheetTraders = selected
+    ? [selected, ...visibleTraders.filter((t) => t.id !== selected.id)]
+    : visibleTraders;
+
   return (
-    <div className="fixed inset-0 bg-background overflow-hidden">
+    <div className="fixed inset-0 overflow-hidden bg-background">
       <div ref={mapDivRef} className="absolute inset-0" />
 
       {(loading || guardLoading || (!mapReady && !mapError)) && (
@@ -419,202 +437,170 @@ export default function TradersMap() {
         </div>
       )}
 
-      {/* ---------- top bar ---------- */}
-      <div className="absolute top-0 inset-x-0 z-20 pt-safe-3 px-4 pb-2 bg-gradient-to-b from-background via-background/80 to-transparent">
+      <div className="absolute inset-x-0 top-0 z-20 px-3 pt-safe-3 pb-8 bg-gradient-to-b from-background via-background/70 to-transparent">
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => navigate("/discover")}
             aria-label="Back to Discover"
-            className="w-10 h-10 shrink-0 rounded-full border border-border bg-card/70 backdrop-blur-md flex items-center justify-center text-foreground"
+            className="h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
 
           <form onSubmit={runSearch} className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 h-10 px-3 rounded-full border border-border bg-card/70 backdrop-blur-md">
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex h-9 items-center gap-2 rounded-full border border-border bg-card/80 px-3 backdrop-blur-md">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by city or country..."
-                className="flex-1 min-w-0 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground outline-none"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (!e.target.value) setBrowsingNearby(false);
+                }}
+                placeholder="Search within 50 miles..."
+                className="min-w-0 flex-1 bg-transparent text-[11px] text-foreground outline-none placeholder:text-muted-foreground"
               />
               {search && (
-                <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
+                <Button type="button" variant="ghost" size="icon" onClick={() => { setSearch(""); setBrowsingNearby(false); }} aria-label="Clear search" className="h-6 w-6 rounded-full">
                   <X className="w-4 h-4 text-muted-foreground" />
-                </button>
+                </Button>
               )}
             </div>
           </form>
 
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setShowFilters((v) => !v)}
             aria-label="Filters"
             className={cn(
-              "w-10 h-10 shrink-0 rounded-full border backdrop-blur-md flex items-center justify-center",
-              showFilters ? "border-accent bg-accent/15 text-accent" : "border-border bg-card/70 text-foreground",
+              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md",
+              showFilters && "border-accent/70 text-accent",
             )}
           >
-            <SlidersHorizontal className="w-4.5 h-4.5" />
-          </button>
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
         </div>
 
-        {/* title overlay */}
-        <div className="mt-3 flex items-center gap-2">
-          <Globe2 className="w-4 h-4 text-accent" />
-          <span className="text-[14px] italic text-foreground/90">Traders are everywhere.</span>
+        <div className="mt-3 flex items-start gap-2 pl-1">
+          <MapPin className="mt-0.5 h-4 w-4 text-accent" />
+          <div>
+            <p className="text-[12px] font-semibold text-foreground">Traders near you</p>
+            <p className="text-[10px] text-muted-foreground">Showing traders within 50 miles.</p>
+          </div>
         </div>
 
-        {/* market pills */}
-        {(showFilters || tier !== "world") && (
-          <div className="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        {showFilters && (
+          <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pl-1 no-scrollbar">
             {MARKETS.map((m) => (
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 key={m}
                 onClick={() => setMarket(m)}
                 className={cn(
-                  "shrink-0 px-3 h-8 rounded-full border text-[12px] font-bold backdrop-blur-md",
-                  market === m
-                    ? "border-accent bg-accent/[0.14] text-accent"
-                    : "border-border bg-card/70 text-muted-foreground",
+                  "h-7 shrink-0 rounded-full bg-card/80 px-3 text-[10px] backdrop-blur-md",
+                  market === m && "border-accent/70 text-accent",
                 )}
               >
                 {m}
-              </button>
+              </Button>
             ))}
-            <span className="shrink-0 ml-auto px-3 h-8 flex items-center rounded-full border border-border bg-card/70 backdrop-blur-md text-[12px] font-bold text-foreground">
-              {visibleTraders.length} nearby
-            </span>
           </div>
         )}
       </div>
 
-      {/* ---------- map controls ---------- */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
-        <button
+      <div className="absolute right-3 top-[43%] z-20 flex -translate-y-1/2 flex-col gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={flyToMe}
+          aria-label="Center on my area"
+          disabled={!userLoc}
+          className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md disabled:opacity-40"
+        >
+          <Crosshair className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
           onClick={() => nudgeZoom(1)}
           aria-label="Zoom in"
-          className="w-10 h-10 rounded-full border border-border bg-card/70 backdrop-blur-md flex items-center justify-center text-foreground"
+          className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md"
         >
-          <Plus className="w-4 h-4" />
-        </button>
-        <button
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
           onClick={() => nudgeZoom(-1)}
           aria-label="Zoom out"
-          className="w-10 h-10 rounded-full border border-border bg-card/70 backdrop-blur-md flex items-center justify-center text-foreground"
+          className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md"
         >
-          <Minus className="w-4 h-4" />
-        </button>
-        <button
-          onClick={flyToMe}
-          aria-label="Fly to me"
-          disabled={!userLoc}
-          className="w-10 h-10 rounded-full border border-accent/60 bg-accent/15 backdrop-blur-md flex items-center justify-center text-accent disabled:opacity-40"
-        >
-          <Crosshair className="w-4 h-4" />
-        </button>
+          <Minus className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* ---------- mini card ---------- */}
-      {selected && (
-        <div className="absolute left-4 right-4 bottom-[190px] z-30">
-          <div className="rounded-2xl border border-border bg-card/90 backdrop-blur-xl p-3 flex items-center gap-3">
-            <Avatar t={selected} />
-            <div className="flex-1 min-w-0">
-              <div className="text-[14px] font-bold text-foreground truncate">
-                {selected.full_name || `@${selected.username}`}
+      <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
+        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-muted" />
+        <div className="px-4 pb-3 pt-3">
+          {!browsingNearby && localTraders.length > 0 ? (
+            <div className="py-1">
+              <h2 className="text-[14px] font-semibold text-foreground">Discover traders within 50 miles</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground">Tap a trader to view their profile.</p>
+              <div className="mt-3 flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                <Lock className="h-3 w-3 shrink-0" />
+                Exact locations are never shared
               </div>
-              <div className="text-[11px] text-muted-foreground truncate">{distanceLabel(selected)}</div>
             </div>
-            <span
-              className="text-[12px] font-black shrink-0"
-              style={{ color: matchColor(selected.matchPct) }}
-            >
-              {selected.matchPct}%
-            </span>
-            <button
-              onClick={() => navigate(`/profile/${selected.id}`)}
-              className="shrink-0 px-3 h-9 rounded-full bg-accent text-accent-foreground text-[12px] font-bold"
-            >
-              View Profile →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ---------- bottom sheet ---------- */}
-      <div className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card/85 backdrop-blur-xl rounded-t-3xl pb-safe-3">
-        <div className="w-10 h-1 rounded-full bg-border mx-auto mt-2.5" />
-
-        <div className="px-4 pt-3 pb-3">
-          {tier === "street" ? (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] font-black text-foreground">
-                  {visibleTraders.length} trader{visibleTraders.length === 1 ? "" : "s"} in view
-                </span>
-                <span className="text-[11px] text-muted-foreground">Swipe cards →</span>
-              </div>
-              {visibleTraders.length === 0 ? (
-                <p className="mt-2 text-[12px] text-muted-foreground">No traders in this area yet.</p>
-              ) : (
-                <div className="mt-2.5 flex gap-3 overflow-x-auto no-scrollbar pb-1">
-                  {visibleTraders.map((t) => (
-                    <div
-                      key={t.id}
-                      className="shrink-0 w-[228px] rounded-2xl border border-border bg-secondary/60 p-3"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Avatar t={t} />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-bold text-foreground truncate">
-                            {t.full_name || `@${t.username}`}
-                          </div>
-                          {t.username && (
-                            <div className="text-[11px] text-muted-foreground truncate">@{t.username}</div>
-                          )}
-                        </div>
-                        <span className="text-[12px] font-black" style={{ color: matchColor(t.matchPct) }}>
-                          {t.matchPct}%
-                        </span>
-                      </div>
-                      <div className="mt-2 text-[11px] text-foreground/80 truncate">
-                        {[t.markets[0], t.trading_style[0]].filter(Boolean).join(" · ") || "Trader"}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground truncate">{distanceLabel(t)}</div>
-                      <button
-                        onClick={() => navigate(`/profile/${t.id}`)}
-                        className="mt-2.5 w-full h-9 rounded-full bg-accent text-accent-foreground text-[12px] font-bold"
-                      >
-                        View Profile →
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : tier === "city" ? (
+          ) : sheetTraders.length > 0 ? (
             <div>
-              <div className="text-[13px] font-black text-foreground">
-                {cityLabel || `${visibleTraders.length} trader${visibleTraders.length === 1 ? "" : "s"} in view`}
+              <div className="mb-1 flex items-center justify-between">
+                <h2 className="text-[12px] font-semibold text-foreground">Traders nearby ({sheetTraders.length})</h2>
+                <span className="text-[9px] text-muted-foreground">Nearest⌄</span>
               </div>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Zoom in once more to see individual traders.
-              </p>
+              {sheetTraders.slice(0, 4).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => navigate(`/profile/${t.id}`)}
+                  className="flex w-full items-center gap-3 border-b border-border/70 py-2.5 text-left last:border-0"
+                >
+                  <Avatar t={t} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="truncate text-[11px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
+                      <span className="shrink-0 text-[9px] text-muted-foreground">{distanceLabel(t)}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-[9px] text-muted-foreground">
+                      {[t.markets[0], t.trading_style[0]].filter(Boolean).join("  ·  ") || "Trader"}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+              ))}
             </div>
           ) : (
-            <div>
-              <div className="text-[13px] font-black text-foreground">Zoom in to find traders near you</div>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Tap a glowing cluster to dive into a country or city.
+            <div className="flex flex-col items-center py-2 text-center">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                <Search className="h-4 w-4" />
+              </div>
+              <h2 className="mt-2 text-[12px] font-semibold text-foreground">No traders nearby</h2>
+              <p className="mt-1 max-w-[280px] text-[9px] leading-4 text-muted-foreground">
+                We couldn't find any traders within 50 miles right now. Try adjusting your filters or check back later.
               </p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowFilters(true)} className="mt-3 h-7 rounded-full border-accent/70 px-7 text-[9px] text-accent">
+                Adjust Filters
+              </Button>
             </div>
           )}
-
-          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <Lock className="w-3 h-3 shrink-0" />
-            Exact locations are never shared
-          </div>
         </div>
       </div>
     </div>
