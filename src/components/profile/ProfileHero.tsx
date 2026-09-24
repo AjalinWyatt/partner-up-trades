@@ -25,11 +25,10 @@ interface HeroProps {
   onAvatarClick?: () => void;
   ownProfile?: boolean;
   onEdit?: () => void;
-  onBack?: () => void;
   onSettings?: () => void;
 }
 
-export default function ProfileHero({ profile, tradingProfile, compact, topLeft, topRight, cta, bioFallback, onAvatarClick, ownProfile, onEdit, onBack, onSettings }: HeroProps) {
+export default function ProfileHero({ profile, tradingProfile, compact, topLeft, topRight, cta, bioFallback, onAvatarClick, ownProfile, onEdit, onSettings }: HeroProps) {
   const age = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
   const name = String(profile?.full_name || `@${profile?.username || "trader"}`).replace(/\s*[·.]\s*$/, "");
   const location = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || profile?.location;
@@ -53,7 +52,7 @@ export default function ProfileHero({ profile, tradingProfile, compact, topLeft,
             : <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,hsl(var(--primary)/0.14),transparent_60%)]" />}
           <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background to-transparent" />
           <div className="absolute right-4 top-0 z-10 pt-safe-3">
-            <button type="button" onClick={onSettings} className={controlClass} aria-label="Profile settings"><MoreVertical className="h-4.5 w-4.5" /></button>
+            <button type="button" onClick={onSettings} className={controlClass} aria-label="Profile settings"><MoreVertical className="h-4 w-4" /></button>
           </div>
         </div>
 
