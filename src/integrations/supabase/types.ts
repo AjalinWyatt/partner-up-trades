@@ -914,6 +914,7 @@ export type Database = {
           id: string
           last_seen_at: string | null
           location: string | null
+          map_precision: string
           notify_email: boolean
           notify_messages: boolean
           notify_new_matches: boolean
@@ -945,6 +946,7 @@ export type Database = {
           id: string
           last_seen_at?: string | null
           location?: string | null
+          map_precision?: string
           notify_email?: boolean
           notify_messages?: boolean
           notify_new_matches?: boolean
@@ -976,6 +978,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           location?: string | null
+          map_precision?: string
           notify_email?: boolean
           notify_messages?: boolean
           notify_new_matches?: boolean

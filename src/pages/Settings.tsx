@@ -21,6 +21,7 @@ interface ProfileRow {
   notify_email: boolean;
   profile_visibility: string;
   show_on_map: boolean;
+  map_precision: string;
 }
 
 interface BlockedRow {
@@ -38,6 +39,7 @@ export default function Settings() {
   useOnboardingGuard();
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
+  const [deviceLoc, setDeviceLoc] = useState(() => localStorage.getItem("tw:map-device-location") === "1");
   const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileRow | null>("settings:profile", null);
   const [loading, setLoading] = useState(!hadProfileCache);
   const [fullName, setFullName] = useState("");
@@ -61,7 +63,7 @@ export default function Settings() {
       setEmail(user.email || "");
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, username, full_name, username_changes_count, notify_partner_activity, notify_new_matches, notify_messages, notify_email, profile_visibility, show_on_map")
+        .select("id, username, full_name, username_changes_count, notify_partner_activity, notify_new_matches, notify_messages, notify_email, profile_visibility, show_on_map, map_precision")
         .eq("id", user.id)
         .maybeSingle();
       if (p) {
@@ -320,6 +322,55 @@ export default function Settings() {
             desc="Appear on Traders Near Me at approximate city level only"
             value={profile!.show_on_map ?? true}
             onChange={(v) => toggleNotif("show_on_map" as any, v)}
+          />
+
+          {(profile!.show_on_map ?? true) && (
+            <Field label="Pin precision">
+              <div className="flex gap-2">
+                {([
+                  { v: "approximate", label: "~1 mi" },
+                  { v: "city", label: "~3 mi" },
+                  { v: "region", label: "~10 mi" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={async () => {
+                      const prev = profile!.map_precision;
+                      setProfile({ ...profile!, map_precision: opt.v });
+                      const { error } = await supabase.from("profiles").update({ map_precision: opt.v }).eq("id", profile!.id);
+                      if (error) { setProfile({ ...profile!, map_precision: prev }); toast.error("Couldn't update"); }
+                      else toast.success("Pin precision updated");
+                    }}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg border text-[12px] font-bold",
+                      (profile!.map_precision || "approximate") === opt.v
+                        ? "border-accent bg-accent/[0.12] text-accent"
+                        : "border-border bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">Your pin is placed randomly this far from your city. ~10 mi also hides your city name. Your exact location is never shared.</p>
+            </Field>
+          )}
+
+          <Toggle
+            label="Use device location on my map"
+            desc="Only centers your own Near Me view. Never saved or shown to others."
+            value={deviceLoc}
+            onChange={(v) => {
+              if (v && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                  () => { localStorage.setItem("tw:map-device-location", "1"); setDeviceLoc(true); toast.success("Device location on"); },
+                  () => toast.error("Location access was denied. Allow it in your browser settings."),
+                  { timeout: 8000 },
+                );
+              } else {
+                localStorage.removeItem("tw:map-device-location"); setDeviceLoc(false); toast.success("Device location off");
+              }
+            }}
           />
 
           <Field label="Profile visibility">
