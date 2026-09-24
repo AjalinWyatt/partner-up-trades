@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -338,7 +339,7 @@ export default function TradersMap() {
         markersRef.current.push(marker);
       });
     }
-  }, [clusters, filtered, tier, mapReady]);
+  }, [filtered, zoom, mapReady, navigate]);
 
   /* ---------------- me marker ---------------- */
   useEffect(() => {
@@ -382,18 +383,18 @@ export default function TradersMap() {
   const visibleTraders = useMemo(() => {
     const set = new Set(visibleIds);
     const list = filtered.filter((t) => set.has(t.id));
-    if (!userLoc) return list;
+    if (!centerLoc) return list;
     return list.sort(
-      (a, b) => milesBetween(userLoc, { lat: a.lat, lng: a.lng }) - milesBetween(userLoc, { lat: b.lat, lng: b.lng }),
+      (a, b) => milesBetween(centerLoc, { lat: a.lat, lng: a.lng }) - milesBetween(centerLoc, { lat: b.lat, lng: b.lng }),
     );
-  }, [filtered, visibleIds, userLoc]);
+  }, [filtered, visibleIds, centerLoc]);
 
   const listTraders = useMemo(() => {
-    if (!userLoc) return filtered;
+    if (!centerLoc) return filtered;
     return [...filtered].sort(
-      (a, b) => milesBetween(userLoc, { lat: a.lat, lng: a.lng }) - milesBetween(userLoc, { lat: b.lat, lng: b.lng }),
+      (a, b) => milesBetween(centerLoc, { lat: a.lat, lng: a.lng }) - milesBetween(centerLoc, { lat: b.lat, lng: b.lng }),
     );
-  }, [filtered, userLoc]);
+  }, [filtered, centerLoc]);
 
   const flyToMe = () => {
     if (exploreLoc) { setExploreLoc(null); setExploreLabel(""); setBrowsingNearby(false); return; }
@@ -481,7 +482,7 @@ export default function TradersMap() {
                   setSearch(e.target.value);
                   if (!e.target.value) setBrowsingNearby(false);
                 }}
-                placeholder="Search within 50 miles..."
+                placeholder={exploreLabel ? `Exploring ${exploreLabel}` : "Search a city, state, or country"}
                 className="min-w-0 flex-1 bg-transparent text-[11px] text-foreground outline-none placeholder:text-muted-foreground"
               />
               {search && (
