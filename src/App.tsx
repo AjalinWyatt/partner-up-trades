@@ -84,6 +84,7 @@ const App = () => (
           <Route path="/match/:userId" element={<MatchProfile />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/broadcast" element={<AdminBroadcast />} />
           <Route path="/admin/beta-invites" element={<AdminBetaInvites />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
