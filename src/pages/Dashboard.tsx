@@ -537,7 +537,7 @@ const Dashboard = () => {
           <section className="mt-6 pb-4">
             <h2 className="mb-2 px-1 font-serif text-[22px] font-normal text-foreground">This Week</h2>
             <div className="border-y border-border/70 py-3">
-              <div className="grid grid-cols-3 divide-x divide-border/60">
+              <div className={`grid ${partner ? "grid-cols-3" : "grid-cols-2"} divide-x divide-border/60`}>
                 <div className="px-2 first:pl-1"><p className="text-[18px] font-semibold text-foreground">{daily.weeklyJournalDays.length}</p><p className="text-[9px] text-muted-foreground">Journal days</p></div>
                 {partner && <div className="px-3"><p className="text-[18px] font-semibold text-foreground">{partner.weeklyCheckinDays.length}</p><p className="text-[9px] text-muted-foreground">Partner check-ins</p></div>}
                 <div className="px-3"><p className="text-[18px] font-semibold text-foreground">{stats.streak}</p><p className="text-[9px] text-muted-foreground">Current streak</p></div>
