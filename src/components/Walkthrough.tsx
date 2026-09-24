@@ -29,7 +29,7 @@ const STEPS: Step[] = [
   },
   { target: "nav-home", title: "Home", body: "Your stats, streaks and notifications all live here.", route: "/dashboard" },
   { target: "nav-discover", title: "Discover", body: "Find traders matched to your style. Save the ones you vibe with — they'll see it too.", route: "/discover" },
-  { target: "nav-feed", title: "Feed", body: "Photos, videos and stories from the community. Share wins, setups and lessons.", route: "/feed" },
+  { target: "nav-feed", title: "Community", body: "Rooms and Pulse — connect with traders in real time.", route: "/feed" },
   { target: "nav-messages", title: "Messages", body: "Once you match, this is where you talk strategy, voice notes and check-ins.", route: "/messages" },
   { target: "nav-log", title: "Trading Log", body: "Log every trade. Builds your streak and helps your partner keep you accountable.", route: "/trading-log" },
   { target: "nav-partners", title: "Partners", body: "Send & manage partner requests here. Up to 3 active partners on free.", route: "/partners" },

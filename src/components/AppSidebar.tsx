@@ -13,7 +13,7 @@ import { warmRoute } from "@/lib/routePrefetch";
 const navItems = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
   { path: "/discover", icon: Earth, label: "Discover", tour: "nav-discover" },
-  { path: "/feed", icon: FeedNavIcon, label: "Feed", tour: "nav-feed" },
+  { path: "/feed", icon: FeedNavIcon, label: "Community", tour: "nav-feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
   { path: "/trading-log", icon: BookOpen, label: "Log", tour: "nav-log" },
   { path: "/partners", icon: Users, label: "Partners", tour: "nav-partners" },
