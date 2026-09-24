@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, CircleCheck, MessagesSquare, BookOpen, UserRound } from "lucide-react";
-import FeedNavIcon from "@/components/icons/FeedNavIcon";
+import { Home, CircleCheck, MessagesSquare, BookOpen, UserRound, Sparkles } from "lucide-react";
 import { useNavBadges } from "@/hooks/use-nav-badges";
 import { useQueryClient } from "@tanstack/react-query";
 import { warmRoute } from "@/lib/routePrefetch";
@@ -8,7 +7,7 @@ import { warmRoute } from "@/lib/routePrefetch";
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
   { path: "/discover", icon: CircleCheck, label: "Discover", tour: "nav-discover" },
-  { path: "/feed", icon: FeedNavIcon, label: "Community", tour: "nav-feed" },
+  { path: "/feed", icon: Sparkles, label: "Pulse", tour: "nav-feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
   { path: "/trading-log", icon: BookOpen, label: "Journal", tour: "nav-log" },
   { path: "/profile", icon: UserRound, label: "Profile", tour: "nav-profile" },

@@ -13,4 +13,4 @@
 
 - [x] Restyle Discover to match the supplied screen exactly
 - [x] Restyle the inbox and active DM view to match the supplied screens without changing messaging behavior
-- [ ] Verify both screens on mobile and desktop
+- [x] Verify both screens on mobile and desktop
