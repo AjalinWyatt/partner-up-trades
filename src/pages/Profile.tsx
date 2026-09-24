@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
-import { Camera, ImagePlus, LogOut, Trash2 } from "lucide-react";
+import { Camera, ImagePlus, LogOut, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
@@ -494,11 +494,13 @@ const Profile = () => {
   }
 
   const bioFallback = <button onClick={() => setEditing(true)} className="mt-1.5 text-left text-[12px] italic text-muted-foreground transition-colors hover:text-foreground">Add a bio so traders know how you move.</button>;
+  const compactActionClass = "flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-background/60 text-foreground backdrop-blur-md transition-colors hover:bg-muted";
+  const compactActions = <div className="flex items-center gap-2"><button onClick={() => setEditing(true)} className={compactActionClass} aria-label="Edit profile"><Pencil className="h-4 w-4" /></button><button onClick={() => navigate("/settings")} className={compactActionClass} aria-label="Settings"><SlidersHorizontal className="h-4 w-4" /></button></div>;
 
   return (
     <AppLayout lockHeight>
       <div className="flex h-full min-h-0 flex-1 flex-col">
-        {activeTab === "journal" && <ProfileHero compact profile={profile} tradingProfile={tradingProfile} topRight={<Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>Settings</Button>} onAvatarClick={() => avatarInputRef.current?.click()} />}
+        {activeTab === "journal" && <ProfileHero compact profile={profile} tradingProfile={tradingProfile} topRight={compactActions} onAvatarClick={() => avatarInputRef.current?.click()} />}
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {activeTab === "details" ? (
