@@ -739,11 +739,11 @@ const Landing = () => {
               { icon: Users, title: "1-on-1 Partnerships", body: "Match, request, accept - and grow together. Unmatch or block any time." },
 
               { icon: Zap, title: "100-Point Match Algorithm", body: "Markets, sessions, style, experience, goals - weighted to surface real fits." },
-              { icon: MessageSquare, title: "Pulse Sessions", body: "Async chat and voice notes for partners across any timezone." },
-              { icon: BookOpen, title: "Trading Log", body: "Track every entry with green/red/break-even tags. Build your edge in public - or in private." },
-              { icon: Activity, title: "Live Feed & Stories", body: "Media-first community - stories, posts, market filters, partner activity." },
+              { icon: MessageSquare, title: "Pulse - Real-Time Help", body: "Need someone right now? Send a Pulse. An available trader answers, and you talk it through with chat and voice notes." },
+              { icon: BookOpen, title: "Trading Journal", body: "Log every day with win/loss/break-even tags. Choose who sees each entry - Private, Partners, or Public." },
+              { icon: Activity, title: "Home Command Center", body: "Your day at a glance - streaks, partner check-ins, recent activity, and traders nearby." },
               { icon: Bell, title: "Accountability Alerts", body: "Win 🟢 Loss 🔴 Break ⚪ - your partner sees the pulse, not the P&L." },
-              { icon: GlobeIcon, title: "Forums by Market", body: "Dedicated Forex, Futures and Options spaces. Discuss without the algorithm." },
+              { icon: GlobeIcon, title: "Direct Messages", body: "Private 1-on-1 chat with your partner - text, voice notes, and attachments." },
               { icon: Shield, title: "Privacy & Safety", body: "Block, report, and full account-deletion controls. Your data, your call." },
               { icon: TrendingUp, title: "Profiles That Mean Something", body: "Verified badges, trading style, recent activity. Built for traders, not influencers." },
             ].map((f, i) => (
