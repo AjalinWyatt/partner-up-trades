@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ChevronRight,
-  Crosshair,
   MapPin,
+  Navigation,
   Loader2,
   Lock,
   Minus,
@@ -22,11 +22,8 @@ import { Button } from "@/components/ui/button";
 
 const MARKETS = ["All", "Forex", "Futures", "Options"] as const;
 
-const matchColor = (pct: number) =>
-  pct >= 80 ? "#22c55e" : pct >= 60 ? "#3b82f6" : "#f0b429";
-
 type Tier = "world" | "country" | "city" | "street";
-const tierFor = (z: number): Tier => (z < 3 ? "world" : z < 6 ? "country" : z < 10 ? "city" : "street");
+const tierFor = (z: number): Tier => (z < 3 ? "world" : z < 6 ? "country" : z < 9 ? "city" : "street");
 
 const initials = (t: { full_name: string | null; username: string | null }) =>
   (t.full_name || t.username || "?")
@@ -113,7 +110,6 @@ export default function TradersMap() {
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<MapTrader | null>(null);
-  const [cityLabel, setCityLabel] = useState<string | null>(null);
   const [browsingNearby, setBrowsingNearby] = useState(false);
 
   const tier = tierFor(zoom);
@@ -283,20 +279,36 @@ export default function TradersMap() {
     markersRef.current = [];
 
     if (tier === "street") {
+      const nearbyGroups = new Map<string, MapTrader[]>();
       filtered.forEach((t) => {
+        const key = `${Math.round(t.jlat * 18)}:${Math.round(t.jlng * 18)}`;
+        nearbyGroups.set(key, [...(nearbyGroups.get(key) || []), t]);
+      });
+      nearbyGroups.forEach((group) => {
+        const t = group[0];
+        if (!t) return;
+        const lat = group.reduce((sum, trader) => sum + trader.jlat, 0) / group.length;
+        const lng = group.reduce((sum, trader) => sum + trader.jlng, 0) / group.length;
         const marker = new google.maps.Marker({
           map,
-          position: { lat: t.jlat, lng: t.jlng },
-          icon: {
-            url: t.avatar_url ? avatarIcon(t.avatar_url) : pinIcon(initials(t), "#18aaa5"),
-            scaledSize: new google.maps.Size(44, 44),
-            anchor: new google.maps.Point(22, 22),
-          },
-          title: `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
+          position: { lat, lng },
+          icon: group.length > 1
+            ? { url: clusterIcon(group.length, "#18aaa5"), scaledSize: new google.maps.Size(42, 42), anchor: new google.maps.Point(21, 21) }
+            : {
+                url: t.avatar_url ? avatarIcon(t.avatar_url) : pinIcon(initials(t), "#18aaa5"),
+                scaledSize: new google.maps.Size(44, 44),
+                anchor: new google.maps.Point(22, 22),
+              },
+          title: group.length > 1 ? `${group.length} nearby traders` : `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
           optimized: false,
         });
         marker.addListener("click", () => {
-          setSelected(t);
+          if (group.length > 1 && (map.getZoom() ?? 9) < 13) {
+            map.panTo({ lat, lng });
+            map.setZoom(Math.min(14, (map.getZoom() ?? 9) + 2));
+          } else {
+            setSelected(t);
+          }
           setBrowsingNearby(true);
         });
         markersRef.current.push(marker);
@@ -336,7 +348,6 @@ export default function TradersMap() {
         marker.addListener("click", () => {
           map.panTo({ lat: c.lat, lng: c.lng });
           map.setZoom(Math.min(16, (map.getZoom() ?? 2) + (tier === "world" ? 3 : tier === "country" ? 3 : 4)));
-          if (tier === "city") setCityLabel(`${c.label} · ${c.count} trader${c.count === 1 ? "" : "s"}`);
         });
         markersRef.current.push(marker);
       });
@@ -524,7 +535,7 @@ export default function TradersMap() {
           disabled={!userLoc}
           className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md disabled:opacity-40"
         >
-          <Crosshair className="h-4 w-4" />
+          <Navigation className="h-4 w-4 -rotate-12" />
         </Button>
         <Button
           type="button"
@@ -567,11 +578,12 @@ export default function TradersMap() {
                 <span className="text-[9px] text-muted-foreground">Nearest⌄</span>
               </div>
               {sheetTraders.slice(0, 4).map((t) => (
-                <button
+                <Button
                   key={t.id}
                   type="button"
+                  variant="ghost"
                   onClick={() => navigate(`/profile/${t.id}`)}
-                  className="flex w-full items-center gap-3 border-b border-border/70 py-2.5 text-left last:border-0"
+                  className="h-auto w-full justify-start gap-3 rounded-none border-b border-border/70 px-0 py-2.5 text-left last:border-0 hover:bg-transparent"
                 >
                   <Avatar t={t} />
                   <div className="min-w-0 flex-1">
@@ -584,7 +596,7 @@ export default function TradersMap() {
                     </p>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </button>
+                </Button>
               ))}
             </div>
           ) : (
