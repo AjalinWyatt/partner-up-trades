@@ -32,6 +32,7 @@ const MatchProfile = lazy(() => import("./pages/MatchProfile"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminBroadcast = lazy(() => import("./pages/AdminBroadcast"));
+const AdminReports = lazy(() => import("./pages/AdminReports"));
 const AdminBetaInvites = lazy(() => import("./pages/AdminBetaInvites"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Terms = lazy(() => import("./pages/Terms"));
