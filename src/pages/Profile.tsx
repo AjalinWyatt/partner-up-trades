@@ -3,6 +3,7 @@ import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, CalendarDays, Camera, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2, UserRound } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
