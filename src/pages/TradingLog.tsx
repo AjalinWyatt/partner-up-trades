@@ -365,6 +365,7 @@ export default function TradingLog() {
   }
 
   function resetForm() {
+    setImageFile(null); setImagePath(null); setImagePreview(null);
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
     setEntryType("trade");
