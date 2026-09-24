@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
+  ChevronRight,
   Crosshair,
-  Globe2,
+  MapPin,
   Loader2,
   Lock,
   Minus,
@@ -17,6 +18,7 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { DARK_MAP_STYLE, loadGoogleMaps } from "@/lib/googleMaps";
 import { MapTrader, getMapTraders, geocodePlaces, milesBetween, placeKey } from "@/lib/tradersMap";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const MARKETS = ["All", "Forex", "Futures", "Options"] as const;
 
@@ -87,13 +89,13 @@ export default function TradersMap() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const meMarkerRef = useRef<google.maps.Marker | null>(null);
-  const spinRef = useRef<number | null>(null);
+  const radiusRef = useRef<google.maps.Circle | null>(null);
 
   const [traders, setTraders] = useState<MapTrader[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1.6);
+  const [zoom, setZoom] = useState(9);
   const [market, setMarket] = useState<(typeof MARKETS)[number]>("All");
   const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState("");
@@ -101,6 +103,7 @@ export default function TradersMap() {
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<MapTrader | null>(null);
   const [cityLabel, setCityLabel] = useState<string | null>(null);
+  const [browsingNearby, setBrowsingNearby] = useState(false);
 
   const tier = tierFor(zoom);
 
@@ -156,10 +159,10 @@ export default function TradersMap() {
       .then((maps) => {
         if (cancelled || !mapDivRef.current) return;
         const map = new maps.Map(mapDivRef.current, {
-          center: { lat: 20, lng: 0 },
-          zoom: 1.6,
-          minZoom: 1,
-          maxZoom: 16,
+          center: { lat: 33.749, lng: -84.388 },
+          zoom: 9,
+          minZoom: 8,
+          maxZoom: 14,
           styles: DARK_MAP_STYLE,
           disableDefaultUI: true,
           gestureHandling: "greedy",
@@ -167,47 +170,68 @@ export default function TradersMap() {
           clickableIcons: false,
         });
         mapRef.current = map;
-        map.addListener("zoom_changed", () => setZoom(map.getZoom() ?? 1.6));
-        map.addListener("idle", () => setZoom(map.getZoom() ?? 1.6));
-        map.addListener("dragstart", stopSpin);
+        map.addListener("zoom_changed", () => setZoom(map.getZoom() ?? 9));
+        map.addListener("idle", () => setZoom(map.getZoom() ?? 9));
         map.addListener("click", () => setSelected(null));
         setMapReady(true);
-        startSpin();
       })
       .catch((e) => setMapError(e.message || "Map failed to load"));
     return () => {
       cancelled = true;
-      stopSpin();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const stopSpin = useCallback(() => {
-    if (spinRef.current) {
-      window.clearInterval(spinRef.current);
-      spinRef.current = null;
-    }
-  }, []);
-
-  const startSpin = useCallback(() => {
-    stopSpin();
-    spinRef.current = window.setInterval(() => {
-      const map = mapRef.current;
-      if (!map) return;
-      if ((map.getZoom() ?? 0) > 3) return stopSpin();
-      const c = map.getCenter();
-      if (c) map.setCenter({ lat: c.lat(), lng: c.lng() + 0.35 });
-    }, 60);
-  }, [stopSpin]);
+  /* Keep the map centered on the member's broad area and bounded to 50 miles. */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !userLoc) return;
+    const latDelta = 50 / 69;
+    const lngDelta = 50 / (69 * Math.max(0.25, Math.cos((userLoc.lat * Math.PI) / 180)));
+    map.setOptions({
+      restriction: {
+        latLngBounds: {
+          north: userLoc.lat + latDelta,
+          south: userLoc.lat - latDelta,
+          east: userLoc.lng + lngDelta,
+          west: userLoc.lng - lngDelta,
+        },
+        strictBounds: true,
+      },
+    });
+    map.setCenter(userLoc);
+    map.setZoom(9);
+    radiusRef.current?.setMap(null);
+    radiusRef.current = new google.maps.Circle({
+      map,
+      center: userLoc,
+      radius: 80467.2,
+      strokeColor: "#18aaa5",
+      strokeOpacity: 0.8,
+      strokeWeight: 1,
+      fillColor: "#18aaa5",
+      fillOpacity: 0.035,
+      clickable: false,
+    });
+    return () => radiusRef.current?.setMap(null);
+  }, [mapReady, userLoc]);
 
   /* ---------------- filtering ---------------- */
+  const localTraders = useMemo(
+    () => userLoc ? traders.filter((t) => milesBetween(userLoc, { lat: t.lat, lng: t.lng }) <= 50) : [],
+    [traders, userLoc],
+  );
+
   const filtered = useMemo(() => {
-    let list = traders;
+    let list = localTraders;
     if (market !== "All") list = list.filter((t) => t.markets.includes(market));
     const q = search.trim().toLowerCase();
-    if (q) list = list.filter((t) => t.placeLabel.toLowerCase().includes(q));
+    if (q) list = list.filter((t) =>
+      t.placeLabel.toLowerCase().includes(q)
+      || (t.full_name || "").toLowerCase().includes(q)
+      || (t.username || "").toLowerCase().includes(q),
+    );
     return list;
-  }, [traders, market, search]);
+  }, [localTraders, market, search]);
 
   /* ---------------- clustering by tier ---------------- */
   const clusters = useMemo<Cluster[]>(() => {
@@ -253,9 +277,9 @@ export default function TradersMap() {
           map,
           position: { lat: t.jlat, lng: t.jlng },
           icon: {
-            url: pinIcon(initials(t), matchColor(t.matchPct)),
-            scaledSize: new google.maps.Size(54, 62),
-            anchor: new google.maps.Point(27, 58),
+            url: t.avatar_url || pinIcon(initials(t), "#18aaa5"),
+            scaledSize: new google.maps.Size(38, 38),
+            anchor: new google.maps.Point(19, 19),
           },
           title: `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
           optimized: false,
@@ -265,7 +289,7 @@ export default function TradersMap() {
       });
     } else {
       clusters.forEach((c) => {
-        const color = "#00e5e5";
+        const color = "#18aaa5";
         const marker = new google.maps.Marker({
           map,
           position: { lat: c.lat, lng: c.lng },
@@ -296,7 +320,6 @@ export default function TradersMap() {
           optimized: false,
         });
         marker.addListener("click", () => {
-          stopSpin();
           map.panTo({ lat: c.lat, lng: c.lng });
           map.setZoom(Math.min(16, (map.getZoom() ?? 2) + (tier === "world" ? 3 : tier === "country" ? 3 : 4)));
           if (tier === "city") setCityLabel(`${c.label} · ${c.count} trader${c.count === 1 ? "" : "s"}`);
@@ -304,7 +327,7 @@ export default function TradersMap() {
         markersRef.current.push(marker);
       });
     }
-  }, [clusters, filtered, tier, mapReady, stopSpin]);
+  }, [clusters, filtered, tier, mapReady]);
 
   /* ---------------- me marker ---------------- */
   useEffect(() => {
@@ -349,14 +372,12 @@ export default function TradersMap() {
   }, [filtered, visibleIds, userLoc]);
 
   const flyToMe = () => {
-    stopSpin();
     if (!userLoc) return;
     mapRef.current?.panTo(userLoc);
     mapRef.current?.setZoom(10);
   };
 
   const nudgeZoom = (d: number) => {
-    stopSpin();
     const map = mapRef.current;
     if (!map) return;
     map.setZoom(Math.max(1, Math.min(16, (map.getZoom() ?? 2) + d)));
@@ -366,17 +387,16 @@ export default function TradersMap() {
     e.preventDefault();
     const q = search.trim();
     if (!q) return;
-    stopSpin();
-    const hit = traders.find((t) => t.placeLabel.toLowerCase().includes(q.toLowerCase()));
+    setBrowsingNearby(true);
+    const hit = localTraders.find((t) =>
+      t.placeLabel.toLowerCase().includes(q.toLowerCase())
+      || (t.full_name || "").toLowerCase().includes(q.toLowerCase())
+      || (t.username || "").toLowerCase().includes(q.toLowerCase()),
+    );
     if (hit) {
       mapRef.current?.panTo({ lat: hit.lat, lng: hit.lng });
-      mapRef.current?.setZoom(9);
+      mapRef.current?.setZoom(10);
       return;
-    }
-    const coords = await geocodePlaces([q]);
-    if (coords[q]) {
-      mapRef.current?.panTo(coords[q]);
-      mapRef.current?.setZoom(8);
     }
   };
 
