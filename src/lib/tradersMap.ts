@@ -42,11 +42,20 @@ function writeCache(map: Record<string, Coords>) {
 }
 
 /** Stable pseudo-random offset (≤ ~1 mile) derived from the user id — never a real location. */
-function jitter(id: string, base: Coords): Coords {
+export type MapPrecision = "approximate" | "city" | "region";
+/** Offset ranges (miles) per precision level. Larger = less precise. */
+const PRECISION_RANGE: Record<MapPrecision, [number, number]> = {
+  approximate: [0.25, 1],
+  city: [1.5, 4],
+  region: [6, 12],
+};
+
+function jitter(id: string, base: Coords, precision: MapPrecision = "approximate"): Coords {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   const angle = (h % 360) * (Math.PI / 180);
-  const radiusMiles = 0.25 + ((h >> 9) % 750) / 1000; // 0.25 – 1.0 mi
+  const [min, max] = PRECISION_RANGE[precision] || PRECISION_RANGE.approximate;
+  const radiusMiles = min + (((h >> 9) % 1000) / 1000) * (max - min);
   const dLat = (radiusMiles / 69) * Math.sin(angle);
   const dLng =
     (radiusMiles / (69 * Math.max(0.2, Math.cos((base.lat * Math.PI) / 180)))) * Math.cos(angle);
@@ -73,7 +82,7 @@ export async function geocodePlaces(places: string[]): Promise<Record<string, Co
 }
 
 const profileFields =
-  "id, username, full_name, avatar_url, gender, hobbies, city, state, country, show_on_map";
+  "id, username, full_name, avatar_url, gender, hobbies, city, state, country, show_on_map, map_precision";
 const tradingFields =
   "user_id, markets, sessions, strategies, trading_style, timeframes, experience_level, primary_goal, struggles, looking_for_gender, connection_types, instruments";
 
@@ -120,7 +129,10 @@ export async function getMapTraders(userId: string): Promise<MapTrader[]> {
     if (!base) continue;
     const t = tradingMap.get(p.id);
     const match = computeMatch(myTrading as any, t, myProfile as any, p);
-    const j = jitter(p.id, base);
+    const precision = (p.map_precision || "approximate") as MapPrecision;
+    const j = jitter(p.id, base, precision);
+    // Region-level traders never expose their city center, only the offset point.
+    const shown = precision === "region" ? j : base;
     out.push({
       id: p.id,
       username: p.username,
@@ -132,11 +144,11 @@ export async function getMapTraders(userId: string): Promise<MapTrader[]> {
       markets: t?.markets || [],
       trading_style: t?.trading_style || [],
       matchPct: match.excluded ? Math.max(20, Math.round(match.pct * 0.5)) : match.pct,
-      lat: base.lat,
-      lng: base.lng,
+      lat: shown.lat,
+      lng: shown.lng,
       jlat: j.lat,
       jlng: j.lng,
-      placeLabel: key,
+      placeLabel: precision === "region" ? [p.state, p.country].filter(Boolean).join(", ") || key : key,
     });
   }
   return out;

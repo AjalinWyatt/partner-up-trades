@@ -145,10 +145,12 @@ export default function TradersMap() {
       if (!cancelled && coords[key]) setUserLoc(coords[key]);
     };
 
-    if (navigator.geolocation) {
+    // Device location is opt-in, only used to center your own map, and never saved.
+    if (navigator.geolocation && localStorage.getItem("tw:map-device-location") === "1") {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          if (!cancelled) setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          // Round to ~1 km so even your own view never uses a pinpoint position.
+          if (!cancelled) setUserLoc({ lat: Math.round(pos.coords.latitude * 100) / 100, lng: Math.round(pos.coords.longitude * 100) / 100 });
         },
         () => fallback(),
         { timeout: 8000 },
