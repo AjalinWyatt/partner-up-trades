@@ -498,8 +498,8 @@ export default function TradersMap() {
             onClick={() => setViewMode((v) => (v === "map" ? "list" : "map"))}
             aria-label={viewMode === "map" ? "Switch to list view" : "Switch to map view"}
             className={cn(
-              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md",
-              viewMode === "list" && "border-accent/70 text-accent",
+              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md hover:bg-card/80",
+              viewMode === "list" ? "border-accent/70 text-accent hover:text-accent" : "hover:text-foreground",
             )}
           >
             {viewMode === "map" ? <List className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
