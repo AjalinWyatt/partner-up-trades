@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { BookOpen, CalendarDays, MapPin, UserRound } from "lucide-react";
+import { BookOpen, CalendarDays, Camera, ChevronLeft, MapPin, MoreVertical, Pencil, UserRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type P = Record<string, any> | null;
@@ -23,9 +24,13 @@ interface HeroProps {
   cta?: ReactNode;
   bioFallback?: ReactNode;
   onAvatarClick?: () => void;
+  ownProfile?: boolean;
+  onEdit?: () => void;
+  onBack?: () => void;
+  onSettings?: () => void;
 }
 
-export default function ProfileHero({ profile, tradingProfile, compact, topLeft, topRight, cta, bioFallback, onAvatarClick }: HeroProps) {
+export default function ProfileHero({ profile, tradingProfile, compact, topLeft, topRight, cta, bioFallback, onAvatarClick, ownProfile, onEdit, onBack, onSettings }: HeroProps) {
   const age = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
   const name = String(profile?.full_name || `@${profile?.username || "trader"}`).replace(/\s*[·.]\s*$/, "");
   const location = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || profile?.location;
@@ -33,6 +38,48 @@ export default function ProfileHero({ profile, tradingProfile, compact, topLeft,
   const tradingLine = tradingBits.length > 0 && (
     <p className="truncate text-[13px] font-semibold text-primary">{tradingBits.map((b, i) => <span key={b}>{i > 0 && <span className="mx-1.5 text-primary/70">·</span>}{b}</span>)}</p>
   );
+
+  if (ownProfile && !compact) {
+    const traits = [...new Set([
+      ...(Array.isArray(profile?.hobbies) ? profile.hobbies : []),
+      ...(Array.isArray(profile?.off_chart_prompts) ? profile.off_chart_prompts : []),
+    ].filter(Boolean).map(String))].slice(0, 3);
+    const controlClass = "flex h-11 w-11 items-center justify-center rounded-full border border-surface-line bg-background/80 text-foreground shadow-lg backdrop-blur-md transition-colors hover:bg-surface-raised";
+
+    return (
+      <header className="bg-background pb-1">
+        <div className="relative h-[190px] w-full overflow-hidden bg-gradient-to-br from-surface-raised via-surface to-background">
+          {profile?.cover_url
+            ? <img src={profile.cover_url} alt="Profile cover" className="h-full w-full object-cover" />
+            : <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,hsl(var(--primary)/0.14),transparent_60%)]" />}
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background to-transparent" />
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pt-safe-3">
+            <button type="button" onClick={onBack} className={controlClass} aria-label="Go back"><ChevronLeft className="h-6 w-6" /></button>
+            <button type="button" onClick={onSettings} className={controlClass} aria-label="Profile settings"><MoreVertical className="h-5 w-5" /></button>
+          </div>
+        </div>
+
+        <div className="relative -mt-[48px] px-5">
+          <div className="relative w-fit">
+            <ProfileAvatar profile={profile} size={112} onClick={onAvatarClick} />
+            <button type="button" onClick={onAvatarClick} className="absolute bottom-1 right-0 flex h-10 w-10 items-center justify-center rounded-full border-2 border-background bg-surface-raised text-foreground shadow-md" aria-label="Change profile photo"><Camera className="h-5 w-5" /></button>
+          </div>
+          <h1 className="mt-2 text-[26px] font-bold leading-tight text-foreground">{name}{age ? <span className="font-semibold"> · {age}</span> : ""}</h1>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">@{profile?.username || "trader"}</p>
+          {(location || profile?.created_at) && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12px] text-foreground/75">
+              {location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-muted-foreground" />{location}</span>}
+              {profile?.created_at && <span className="inline-flex items-center gap-1.5 text-muted-foreground"><CalendarDays className="h-4 w-4" />Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>}
+            </div>
+          )}
+          {tradingLine && <div className="mt-2">{tradingLine}</div>}
+          {profile?.bio ? <p className="mt-2 whitespace-pre-line text-[13px] leading-[19px] text-foreground/75">{profile.bio}</p> : bioFallback}
+          {traits.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{traits.map((trait) => <span key={trait} className="rounded-full border border-surface-line bg-surface px-4 py-1.5 text-[11px] font-medium text-foreground/85">{trait}</span>)}</div>}
+          <Button type="button" variant="outline" onClick={onEdit} className="mt-4 h-12 w-full rounded-full border-surface-line bg-surface/70 text-[14px] font-semibold"><Pencil className="h-4 w-4" />Edit Profile</Button>
+        </div>
+      </header>
+    );
+  }
 
   if (compact) {
     return (
