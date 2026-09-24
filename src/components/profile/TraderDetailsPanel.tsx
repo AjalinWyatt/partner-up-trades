@@ -55,14 +55,20 @@ function MatchRing({ value }: { value: number }) {
   const radius = 27;
   const circumference = 2 * Math.PI * radius;
   return (
-    <div className="relative h-[72px] w-[72px] shrink-0">
+    <div className="relative h-[92px] w-[92px] shrink-0">
       <svg className="h-full w-full -rotate-90" viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="32" r={radius} fill="none" className="stroke-secondary" strokeWidth="5" />
-        <circle cx="32" cy="32" r={radius} fill="none" className="stroke-primary" strokeWidth="5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - value / 100)} />
+        <defs>
+          <linearGradient id="match-ring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" />
+            <stop offset="100%" stopColor="hsl(var(--success))" />
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="hsl(var(--surface-line))" strokeWidth="4.5" />
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="url(#match-ring)" strokeWidth="4.5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - value / 100)} style={{ filter: "drop-shadow(0 0 3px hsl(var(--success) / 0.45))" }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-black leading-none text-foreground">{value}%</span>
-        <span className="mt-1 text-[7px] font-bold text-primary">Compatible</span>
+        <span className="text-[24px] font-bold leading-none text-foreground">{value}<span className="text-[13px]">%</span></span>
+        <span className="mt-1 text-[9px] font-medium text-success">Compatible</span>
       </div>
     </div>
   );
@@ -78,43 +84,42 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
     return rawValue ? [{ label, value: String(rawValue), Icon }] : [];
   });
   const groups = detailGroups(profile, tradingProfile).filter(([, items]) => items.length > 0);
-  const summary = match && (match.pct >= 80
-    ? "You line up strongly in the areas that matter most."
-    : match.pct >= 65
-      ? "You share a solid base for trading accountability."
-      : "You have useful overlap and complementary differences.");
+  const strong = matchEntries.filter(([, s]) => s >= 60).length;
+  const summary = match && (strong > 0
+    ? `You line up on ${strong} of ${matchEntries.length} key areas.`
+    : "You have useful overlap and complementary differences.");
 
   return (
-    <div className="space-y-3 px-3 pb-6 pt-3">
+    <div className="space-y-2.5 px-3 pb-4 pt-3">
       {canShowMatch && (
-        <section className="rounded-lg border border-border bg-card p-3 shadow-sm">
+        <section className="rounded-xl border border-surface-line bg-surface p-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-primary" /><p className="text-[10px] font-extrabold uppercase text-foreground">You + @{username || "trader"}</p></div>
-            <Button variant="link" className="h-auto p-0 text-[10px]" onClick={() => setShowMatch(true)}>Why this match?</Button>
+            <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p className="text-[11px] font-semibold uppercase tracking-wide text-foreground">You + {(username || "trader").toUpperCase()}</p></div>
+            <button type="button" className="text-[12px] font-medium text-info hover:underline" onClick={() => setShowMatch(true)}>Why this match?</button>
           </div>
-          <div className="mt-2.5 flex items-center gap-4">
+          <div className="mt-2 flex items-center gap-4">
             <MatchRing value={match.pct} />
-            <p className="text-[12px] font-medium leading-[17px] text-foreground/85">{summary}</p>
+            <p className="text-[14px] leading-[20px] text-foreground/90">{summary}</p>
           </div>
           {match.reasons.length > 0 && (
             <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {match.reasons.slice(0, 5).map((reason) => <span key={reason} className="rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[9px] font-semibold text-foreground/85">{reason}</span>)}
+              {match.reasons.slice(0, 5).map((reason) => <span key={reason} className="rounded-full border border-success/25 bg-success/[0.07] px-3 py-1 text-[11px] font-medium text-foreground/90">{reason}</span>)}
             </div>
           )}
         </section>
       )}
 
       {snapshot.length > 0 && (
-        <section className="rounded-lg border border-border bg-card p-3 shadow-sm">
-          <div className="mb-2.5 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2"><CandlestickChart className="h-4 w-4 text-primary" /><h2 className="text-[11px] font-extrabold uppercase text-foreground">Trading Snapshot</h2></div>
-            {groups.length > 0 && <Button variant="link" className="h-auto p-0 text-[10px]" onClick={() => setShowTrading(true)}>View all</Button>}
+        <section className="rounded-xl border border-surface-line bg-surface p-2.5">
+          <div className="mb-2 flex items-center justify-between gap-3 px-1">
+            <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-foreground">Trading Snapshot</h2></div>
+            {groups.length > 0 && <button type="button" className="text-[12px] font-medium text-info hover:underline" onClick={() => setShowTrading(true)}>View all</button>}
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             {snapshot.map(({ label, value, Icon }) => (
-              <div key={label} className="flex min-w-0 items-center gap-2 rounded-md border border-border/70 bg-secondary/45 px-2 py-2">
-                <Icon className="h-4 w-4 shrink-0 text-primary" />
-                <div className="min-w-0"><p className="text-[7px] leading-none text-muted-foreground">{label}</p><p className="mt-1 truncate text-[9px] font-bold leading-none text-foreground">{value}</p></div>
+              <div key={label} className="flex min-w-0 items-center gap-2 rounded-lg border border-surface-line/70 bg-surface-raised px-2 py-2">
+                <Icon className="h-[18px] w-[18px] shrink-0 text-primary" strokeWidth={1.8} />
+                <div className="min-w-0"><p className="text-[9px] leading-none text-muted-foreground">{label}</p><p className="mt-1 truncate text-[11px] font-semibold leading-none text-foreground">{value}</p></div>
               </div>
             ))}
           </div>
