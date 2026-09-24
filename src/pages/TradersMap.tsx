@@ -366,8 +366,14 @@ export default function TradersMap() {
       );
     };
     update();
-    const l = map.addListener("idle", update);
-    return () => l.remove();
+    const l = map.addListener("idle", update) as google.maps.MapsEventListener | undefined;
+    return () => {
+      try {
+        l?.remove();
+      } catch {
+        /* noop */
+      }
+    };
   }, [filtered, mapReady]);
 
   const visibleTraders = useMemo(() => {
