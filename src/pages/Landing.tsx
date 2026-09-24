@@ -20,7 +20,7 @@ import mockDiego from "@/assets/mock-diego.jpg";
 import mockNilaja from "@/assets/nilaja-founder.jpg";
 import mockJt from "@/assets/mock-jt.jpg";
 import mockKw from "@/assets/mock-kw.jpg";
-import tradersNearMePhone from "@/assets/traders-near-me-phone-reference.png.asset.json";
+import tradersNearMePhone from "@/assets/traders-near-me-phone-reference.png";
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -368,7 +368,7 @@ const MatchProfileMock = () => {
 const MapMock = () => {
   return (
     <img
-      src={tradersNearMePhone.url}
+      src={tradersNearMePhone}
       alt="Traders Near Me showing nearby traders around Atlanta"
       className="mx-auto block w-full max-w-[580px] object-contain"
     />
