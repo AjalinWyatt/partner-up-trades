@@ -469,6 +469,31 @@ const Feed = () => {
     return () => { cancelled = true; clearInterval(i); };
   }, []);
 
+  // Load saved availability + my active Pulse sessions (open or accepted).
+  useEffect(() => {
+    if (!myId) return;
+    let cancelled = false;
+    const loadSessions = async () => {
+      const { data } = await supabase
+        .from("pulse_requests" as any)
+        .select("id, status, requester_id, accepted_by")
+        .or(`requester_id.eq.${myId},accepted_by.eq.${myId}`)
+        .in("status", ["open", "accepted"])
+        .order("created_at", { ascending: false });
+      if (!cancelled) setActivePulseSessions(((data as any[]) || []).map((r) => ({ id: r.id, status: r.status })));
+    };
+    (async () => {
+      const { data } = await supabase.from("profiles").select("pulse_available_until").eq("id", myId).maybeSingle();
+      if (!cancelled) setAvailableUntil((data as any)?.pulse_available_until ?? null);
+    })();
+    loadSessions();
+    const ch = supabase
+      .channel(`pulse-my-sessions-${myId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pulse_requests" }, () => { loadSessions(); })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [myId]);
+
   // Live incoming Pulse requests when "Available to Help" is on.
   useEffect(() => {
     if (!availableToConnect || !myId) {
