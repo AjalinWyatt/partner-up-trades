@@ -649,21 +649,21 @@ const Landing = () => {
           </div>
 
           <div className="space-y-24">
-            {/* FEED */}
+            {/* JOURNAL */}
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="order-1 lg:order-1">
-                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Feed</div>
-                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">A community feed without the noise.</h3>
+                <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Trading Journal</div>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">A daily journal your partner can actually see.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
-                  Stories from your partners. Posts filtered by the markets you actually trade. Real wins, real losses, real break-evens - tagged so the work shows, not the flex.
+                  Log every day - wins, losses, break-evens - with the context behind the trade. Choose exactly who sees each entry: just you, your partners, or everyone.
                 </p>
                 <ul className="space-y-2 text-[13px] text-foreground/90">
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Stories from people you actually partner with</li>
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Filter by market - Forex, Futures, Crypto, Options</li>
-                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Win 🟢 / Loss 🔴 / Break ⚪ tags built in</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Win / Loss / Break-even tags on every entry</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Per-entry privacy - Private, Partners, or Public</li>
+                  <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" /> Daily streaks that keep you and your partner honest</li>
                 </ul>
               </div>
-              <div className="order-2 lg:order-2"><FeedMock /></div>
+              <div className="order-2 lg:order-2"><JournalMock /></div>
             </div>
 
             {/* PULSE */}
