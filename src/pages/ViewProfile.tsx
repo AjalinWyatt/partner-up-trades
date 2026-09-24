@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CalendarDays, Check, ChevronLeft, MapPin, MessageSquare, MoreVertical, ShieldOff, UserPlus, X } from "lucide-react";
+import { BookOpen, CalendarDays, Check, ChevronLeft, MapPin, MessageSquare, MoreVertical, ShieldOff, UserRound, UserPlus, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
@@ -19,7 +19,7 @@ export default function ViewProfile() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const cacheKey = userId || "unknown";
-  const [activeTab, setActiveTab] = useState<"overview" | "trading" | "journal">("overview");
+  const [activeTab, setActiveTab] = useState<"details" | "journal">("details");
   const [profile, setProfile, hadCache] = useSessionCache<any>(`viewprofile:${cacheKey}:profile`, null);
   const [tradingProfile, setTradingProfile] = useSessionCache<any>(`viewprofile:${cacheKey}:trading`, null);
   const [journalEntries, setJournalEntries] = useSessionCache<ProfileJournalEntry[]>(`viewprofile:${cacheKey}:journal`, []);
@@ -170,26 +170,27 @@ export default function ViewProfile() {
               {tradingLine && <p className="mt-1 truncate text-xs font-bold text-primary">{tradingLine}</p>}
             </div>
           </div>
-           <div className="px-5 pb-2 pt-1.5">
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">{location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location}</span>}{profile.created_at && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>}</div>
-             {profile.bio && <p className="mt-1.5 line-clamp-3 whitespace-pre-line text-[11px] leading-[16px] text-foreground/80">{profile.bio}</p>}
-          </div>
+            {activeTab === "details" && <div className="px-5 pb-2 pt-1.5">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">{location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location}</span>}{profile.created_at && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>}</div>
+              {profile.bio && <p className="mt-1.5 line-clamp-3 whitespace-pre-line text-[11px] leading-[16px] text-foreground/80">{profile.bio}</p>}
+              {profile.hobbies?.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{profile.hobbies.slice(0, 3).map((trait: string) => <span key={trait} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[9px] font-semibold text-foreground/80">{trait}</span>)}</div>}
+            </div>}
 
-           <div className="px-5 pb-2 pt-1">
+            {activeTab === "details" && <div className="px-5 pb-3 pt-1">
             {isBlocked ? <Button variant="secondary" className="w-full" onClick={toggleBlock}><ShieldOff />Unblock</Button>
               : accepted ? <Button className="w-full" onClick={() => navigate(`/messages?partner=${userId}`)}><MessageSquare />Message</Button>
               : outgoing ? <Button variant="secondary" className="w-full" onClick={cancelRequest} disabled={busy}><Check />Requested</Button>
               : incoming ? <div className="grid grid-cols-2 gap-2"><Button className="w-full" onClick={() => updateRequest("accepted")} disabled={busy}><Check />Accept</Button><Button variant="outline" className="w-full" onClick={() => updateRequest("declined")} disabled={busy}><X />Decline</Button></div>
               : <Button className="w-full" onClick={sendRequest} disabled={busy}><UserPlus />Connect</Button>}
-          </div>
+           </div>}
 
-           <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
-             {(["overview", "trading"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-10 rounded-none capitalize", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
+            <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
+              {(["details", "journal"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-12 flex-col gap-0.5 rounded-none capitalize text-[10px]", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab === "details" ? <UserRound className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
           </nav>
         </header>
 
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-           {activeTab === "journal" ? <div><div className="flex items-center justify-between border-b border-border px-4 py-2"><Button variant="ghost" size="sm" onClick={() => setActiveTab("overview")}><ChevronLeft />Overview</Button><span className="text-xs font-bold text-foreground">Shared Journal</span></div><ProfileJournalCards entries={journalEntries} /></div> : <TraderDetailsPanel mode={activeTab} profile={profile} tradingProfile={tradingProfile} match={activeTab === "overview" ? compatibility : null} myTrading={myTrading} username={profile.username} journalEntries={journalEntries} onViewJournal={() => setActiveTab("journal")} />}
+            {activeTab === "journal" ? <ProfileJournalCards entries={journalEntries} /> : <TraderDetailsPanel profile={profile} tradingProfile={tradingProfile} match={compatibility} myTrading={myTrading} username={profile.username} />}
         </main>
       </div>
     </AppLayout>

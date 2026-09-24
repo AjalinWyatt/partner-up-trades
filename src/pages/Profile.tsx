@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
+import { BookOpen, CalendarDays, Camera, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2, UserRound } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
-import type { ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
+import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
   username: string | null;
@@ -71,7 +71,7 @@ interface JournalEntry {
 const Profile = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"overview" | "trading">("overview");
+  const [activeTab, setActiveTab] = useState<"details" | "journal">("details");
   const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileData | null>("profile:me:profile", null);
   const [tradingProfile, setTradingProfile] = useSessionCache<TradingProfileData | null>("profile:me:trading", null);
   const [journalEntries, setJournalEntries] = useSessionCache<JournalEntry[]>("profile:me:journal", []);
@@ -327,6 +327,19 @@ const Profile = () => {
     navigate("/");
   };
 
+  const toggleJournalPrivacy = async (entry: ProfileJournalEntry) => {
+    const share_setting = entry.share_setting === "private" ? "partners" : "private";
+    const { error } = await supabase.from("journal_entries").update({ share_setting }).eq("id", entry.id);
+    if (error) { toast.error("Could not update journal sharing"); return; }
+    setJournalEntries((current) => current.map((item) => item.id === entry.id ? { ...item, share_setting } : item));
+  };
+
+  const hideJournalEntry = async (entry: ProfileJournalEntry) => {
+    const { error } = await supabase.from("journal_entries").update({ hidden_from_journal: true }).eq("id", entry.id);
+    if (error) { toast.error("Could not remove journal entry"); return; }
+    setJournalEntries((current) => current.filter((item) => item.id !== entry.id));
+  };
+
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
       "Delete your account permanently?\n\nThis removes your profile, posts, messages, journal entries, and connections. This cannot be undone."
@@ -453,7 +466,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Hero: avatar on the left, name + bio on the right */}
+         {/* Compact identity header */}
          <div className="flex items-start gap-3 px-5 pt-4">
           <div className="relative shrink-0">
             <button data-tour="profile-avatar" onClick={() => avatarInputRef.current?.click()} className="block">
@@ -502,8 +515,7 @@ const Profile = () => {
         </div>
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
-        {/* Bio - full width below meta */}
-         <div className="mt-2 px-5">
+         {activeTab === "details" && <div className="mt-2 px-5">
           {profile?.bio ? (
              <p className="line-clamp-3 whitespace-pre-line text-[11px] leading-4 text-muted-foreground">{profile.bio}</p>
           ) : (
@@ -514,23 +526,26 @@ const Profile = () => {
               Add a bio so traders know how you move.
             </button>
           )}
-        </div>
+           {profile?.hobbies?.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{profile.hobbies.slice(0, 3).map((trait) => <span key={trait} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[9px] font-semibold text-foreground/80">{trait}</span>)}</div>}
+         </div>}
 
          <div className="mt-3 grid grid-cols-2 border-y border-border">
-           {(["overview", "trading"] as const).map((tab) => (
-            <button
+            {(["details", "journal"] as const).map((tab) => (
+             <Button
+                variant="ghost"
                key={tab}
                onClick={() => setActiveTab(tab)}
                aria-label={tab}
                title={tab}
               className={cn(
-                "relative flex items-center justify-center py-3 text-xs font-bold transition-colors",
+                 "relative h-12 flex-col gap-0.5 rounded-none text-[10px] font-bold transition-colors",
                  activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-               {tab === "overview" ? "Overview" : "Trading"}
+                {tab === "details" ? <UserRound className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                {tab === "details" ? "Details" : "Journal"}
                {activeTab === tab && <span className="absolute -bottom-px left-5 right-5 h-0.5 bg-primary" />}
-            </button>
+             </Button>
           ))}
         </div>
         </div>
@@ -540,7 +555,9 @@ const Profile = () => {
           className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-2"
           style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         >
-         <TraderDetailsPanel mode={activeTab} profile={profile as any} tradingProfile={tradingProfile as any} journalEntries={journalEntries as ProfileJournalEntry[]} ownProfile onViewJournal={() => navigate("/trading-log")} />
+          {activeTab === "details"
+            ? <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} ownProfile />
+            : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onTogglePrivacy={toggleJournalPrivacy} onHide={hideJournalEntry} />}
       </div>
       </div>
 
