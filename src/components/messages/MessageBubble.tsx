@@ -112,10 +112,10 @@ export default function MessageBubble({ msg, isMine, onDeleted, onEdited, partne
         )}
         <div
         className={cn(
-          "min-w-0 max-w-[78%] overflow-hidden px-3 py-1.5 text-[12px] leading-snug [overflow-wrap:anywhere]",
+          "min-w-0 max-w-[78%] overflow-hidden px-3 py-2 text-[12px] leading-[1.45] [overflow-wrap:anywhere]",
           isMine
-            ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
-            : "bg-secondary text-foreground rounded-2xl rounded-bl-md"
+            ? "rounded-xl rounded-br-sm bg-accent/30 text-foreground"
+            : "rounded-xl rounded-bl-sm bg-secondary text-foreground"
         )}
       >
         {hasMedia && isAudio && (

@@ -11,6 +11,6 @@
 
 # Discover and Direct Messages visual refresh
 
-- [ ] Restyle Discover with compact hierarchy and restrained teal accents
-- [ ] Restyle the inbox and active DM view without changing messaging behavior
-- [ ] Verify both screens on mobile and desktop
+- [x] Restyle Discover to match the supplied screen exactly
+- [x] Restyle the inbox and active DM view to match the supplied screens without changing messaging behavior
+- [x] Verify both screens on mobile and desktop
