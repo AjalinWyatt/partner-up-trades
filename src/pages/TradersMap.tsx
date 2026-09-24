@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { DARK_MAP_STYLE, loadGoogleMaps } from "@/lib/googleMaps";
-import { MapTrader, getMapTraders, geocodePlaces, milesBetween, placeKey } from "@/lib/tradersMap";
+import { MapTrader, getMapTraders, geocodePlaces, milesBetween, placeKey, resolveMyApproxLocation } from "@/lib/tradersMap";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -128,36 +128,15 @@ export default function TradersMap() {
     })();
   }, []);
 
-  /* ------------- user location (session only, never stored) ------------- */
+  /* ------------- user location (approximate, refreshed when stale) ------------- */
   useEffect(() => {
     let cancelled = false;
-    const fallback = async () => {
+    (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("city, state, country")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      const key = p ? placeKey(p) : "";
-      if (!key) return;
-      const coords = await geocodePlaces([key]);
-      if (!cancelled && coords[key]) setUserLoc(coords[key]);
-    };
-
-    // Device location is opt-in, only used to center your own map, and never saved.
-    if (navigator.geolocation && localStorage.getItem("tw:map-device-location") === "1") {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          // Round to ~1 km so even your own view never uses a pinpoint position.
-          if (!cancelled) setUserLoc({ lat: Math.round(pos.coords.latitude * 100) / 100, lng: Math.round(pos.coords.longitude * 100) / 100 });
-        },
-        () => fallback(),
-        { timeout: 8000 },
-      );
-    } else {
-      fallback();
-    }
+      const loc = await resolveMyApproxLocation(session.user.id);
+      if (!cancelled && loc) setUserLoc(loc);
+    })();
     return () => { cancelled = true; };
   }, []);
 

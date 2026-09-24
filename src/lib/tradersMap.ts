@@ -82,7 +82,7 @@ export async function geocodePlaces(places: string[]): Promise<Record<string, Co
 }
 
 const profileFields =
-  "id, username, full_name, avatar_url, gender, hobbies, city, state, country, show_on_map, map_precision";
+  "id, username, full_name, avatar_url, gender, hobbies, city, state, country, show_on_map, approx_lat, approx_lng";
 const tradingFields =
   "user_id, markets, sessions, strategies, trading_style, timeframes, experience_level, primary_goal, struggles, looking_for_gender, connection_types, instruments";
 
@@ -108,7 +108,7 @@ export async function getMapTraders(userId: string): Promise<MapTrader[]> {
     .limit(500);
 
   const eligible = (profiles || []).filter(
-    (p: any) => !excluded.has(p.id) && (p.city || p.country),
+    (p: any) => !excluded.has(p.id) && (p.approx_lat != null || p.city || p.country),
   );
   if (eligible.length === 0) return [];
 
@@ -125,14 +125,15 @@ export async function getMapTraders(userId: string): Promise<MapTrader[]> {
   const out: MapTrader[] = [];
   for (const p of eligible as any[]) {
     const key = placeKey(p);
-    const base = coords[key];
+    const base: Coords | undefined =
+      p.approx_lat != null && p.approx_lng != null
+        ? { lat: Number(p.approx_lat), lng: Number(p.approx_lng) }
+        : coords[key];
     if (!base) continue;
     const t = tradingMap.get(p.id);
     const match = computeMatch(myTrading as any, t, myProfile as any, p);
-    const precision = (p.map_precision || "approximate") as MapPrecision;
-    const j = jitter(p.id, base, precision);
-    // Region-level traders never expose their city center, only the offset point.
-    const shown = precision === "region" ? j : base;
+    const j = jitter(p.id, base, "approximate");
+    const shown = p.approx_lat != null ? j : base;
     out.push({
       id: p.id,
       username: p.username,
@@ -148,7 +149,7 @@ export async function getMapTraders(userId: string): Promise<MapTrader[]> {
       lng: shown.lng,
       jlat: j.lat,
       jlng: j.lng,
-      placeLabel: precision === "region" ? [p.state, p.country].filter(Boolean).join(", ") || key : key,
+      placeLabel: key,
     });
   }
   return out;
@@ -163,4 +164,53 @@ export function milesBetween(a: Coords, b: Coords) {
   const h =
     Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+const STALE_MS = 18 * 60 * 60 * 1000; // refresh roughly every 12–24h
+/** Snap to a ~7 mile grid so precise GPS is never stored. */
+const snap = (n: number) => Math.round(n * 10) / 10;
+
+function getPosition(): Promise<Coords | null> {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: snap(pos.coords.latitude), lng: snap(pos.coords.longitude) }),
+      () => resolve(null),
+      { timeout: 10000, maximumAge: 60 * 60 * 1000, enableHighAccuracy: false },
+    );
+  });
+}
+
+/**
+ * Returns the user's approximate location for Near Me. Refreshes from the device
+ * (foreground only, one-shot) when the stored value is missing or stale, and
+ * falls back to the profile city if permission is denied.
+ */
+export async function resolveMyApproxLocation(userId: string): Promise<Coords | null> {
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("city, state, country, approx_lat, approx_lng, location_updated_at")
+    .eq("id", userId)
+    .maybeSingle();
+  const stored =
+    p?.approx_lat != null && p?.approx_lng != null
+      ? { lat: Number(p.approx_lat), lng: Number(p.approx_lng) }
+      : null;
+  const fresh =
+    stored && p?.location_updated_at && Date.now() - new Date(p.location_updated_at).getTime() < STALE_MS;
+  if (fresh) return stored;
+
+  const pos = await getPosition();
+  if (pos) {
+    await supabase
+      .from("profiles")
+      .update({ approx_lat: pos.lat, approx_lng: pos.lng, location_updated_at: new Date().toISOString() })
+      .eq("id", userId);
+    return pos;
+  }
+  if (stored) return stored;
+  const key = p ? placeKey(p) : "";
+  if (!key) return null;
+  const coords = await geocodePlaces([key]);
+  return coords[key] || null;
 }

@@ -898,6 +898,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approx_lat: number | null
+          approx_lng: number | null
           avatar_url: string | null
           bio: string | null
           birth_year: number | null
@@ -914,6 +916,7 @@ export type Database = {
           id: string
           last_seen_at: string | null
           location: string | null
+          location_updated_at: string | null
           map_precision: string
           notify_email: boolean
           notify_messages: boolean
@@ -930,6 +933,8 @@ export type Database = {
           username_changes_count: number
         }
         Insert: {
+          approx_lat?: number | null
+          approx_lng?: number | null
           avatar_url?: string | null
           bio?: string | null
           birth_year?: number | null
@@ -946,6 +951,7 @@ export type Database = {
           id: string
           last_seen_at?: string | null
           location?: string | null
+          location_updated_at?: string | null
           map_precision?: string
           notify_email?: boolean
           notify_messages?: boolean
@@ -962,6 +968,8 @@ export type Database = {
           username_changes_count?: number
         }
         Update: {
+          approx_lat?: number | null
+          approx_lng?: number | null
           avatar_url?: string | null
           bio?: string | null
           birth_year?: number | null
@@ -978,6 +986,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           location?: string | null
+          location_updated_at?: string | null
           map_precision?: string
           notify_email?: boolean
           notify_messages?: boolean
