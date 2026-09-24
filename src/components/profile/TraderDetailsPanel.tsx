@@ -157,24 +157,24 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       </Dialog>
 
       <Dialog open={showTrading} onOpenChange={setShowTrading}>
-        <DialogContent className="max-h-[86vh] max-w-sm overflow-y-auto border-surface-line bg-background p-3 pt-5">
-          <DialogHeader><DialogTitle className="text-center text-[20px]">Trading details</DialogTitle></DialogHeader>
+        <DialogContent className="max-h-[92dvh] max-w-sm border-surface-line bg-background p-2.5 pt-3">
+          <DialogHeader className="pb-0"><DialogTitle className="text-center text-[15px] font-semibold">Trading details</DialogTitle></DialogHeader>
           <svg width="0" height="0" className="absolute"><defs><linearGradient id="td-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="hsl(174 72% 58%)" /><stop offset="100%" stopColor="hsl(150 70% 55%)" /></linearGradient></defs></svg>
-          <div className="space-y-3 pt-1">
+          <div className="space-y-1.5">
             {sections.map(({ title, subtitle, Icon, items }) => {
               const tiles = items.filter((t) => t.values.length > 0);
               if (!tiles.length) return null;
               return (
-                <section key={title} className="rounded-2xl border border-[hsl(190_30%_22%/0.6)] bg-[hsl(195_35%_10%)] p-2.5">
-                  <div className="mb-2.5 flex items-center gap-3 px-1.5 pt-1">
-                    <Icon className="h-9 w-9 shrink-0" stroke="url(#td-grad)" strokeWidth={2.25} />
-                    <div><h3 className="text-[19px] font-semibold leading-tight text-foreground">{title}</h3><p className="text-[13px] text-muted-foreground">{subtitle}</p></div>
+                <section key={title} className="rounded-xl border border-[hsl(190_30%_22%/0.6)] bg-[hsl(195_35%_10%)] p-1.5">
+                  <div className="mb-1.5 flex items-center gap-2 px-1">
+                    <Icon className="h-5 w-5 shrink-0" stroke="url(#td-grad)" strokeWidth={2.25} />
+                    <div className="flex items-baseline gap-1.5"><h3 className="text-[12.5px] font-semibold leading-none text-foreground">{title}</h3><p className="text-[9.5px] leading-none text-muted-foreground">{subtitle}</p></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1">
                     {tiles.map(({ label, Icon: TileIcon, values }, i) => (
-                      <div key={label} className={`rounded-xl border border-[hsl(190_25%_22%/0.6)] bg-[hsl(195_30%_13%)] p-2.5 ${tiles.length % 2 === 1 && i === tiles.length - 1 ? "col-span-2" : ""}`}>
-                        <div className="mb-2.5 flex items-center gap-2 px-0.5"><TileIcon className="h-5 w-5 shrink-0" stroke="url(#td-grad)" /><p className="text-[13px] font-semibold text-foreground">{label}</p></div>
-                        <div className="flex flex-wrap gap-1.5">{values.map((v) => <span key={v} className="rounded-full border border-[hsl(200_15%_28%/0.7)] bg-[hsl(200_20%_17%)] px-3 py-1.5 text-[11.5px] leading-tight text-foreground/90">{v}</span>)}</div>
+                      <div key={label} className={`rounded-lg border border-[hsl(190_25%_22%/0.6)] bg-[hsl(195_30%_13%)] p-1.5 ${tiles.length % 2 === 1 && i === tiles.length - 1 ? "col-span-2" : ""}`}>
+                        <div className="mb-1 flex items-center gap-1 px-0.5"><TileIcon className="h-3 w-3 shrink-0" stroke="url(#td-grad)" /><p className="text-[10px] font-semibold leading-none text-foreground">{label}</p></div>
+                        <div className="flex flex-wrap gap-0.5">{values.map((v) => <span key={v} className="rounded-full border border-[hsl(200_15%_28%/0.7)] bg-[hsl(200_20%_17%)] px-1.5 py-0.5 text-[9px] leading-tight text-foreground/90">{v}</span>)}</div>
                       </div>
                     ))}
                   </div>
