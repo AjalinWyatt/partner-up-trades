@@ -459,7 +459,7 @@ export default function TradersMap() {
         </div>
       )}
 
-      <div className="absolute inset-x-0 top-0 z-20 px-4 pt-safe-3 pb-8 bg-gradient-to-b from-background via-background/70 to-transparent">
+      <div className="absolute inset-x-0 top-0 z-20 px-4 pt-safe-3 pb-6 bg-gradient-to-b from-background via-background/80 to-transparent">
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -508,7 +508,7 @@ export default function TradersMap() {
 
         </div>
 
-        <div className="mt-3 flex items-start gap-2 pl-1">
+        <div className="mt-2 flex items-start gap-2 pl-1">
           <MapPin className="mt-0.5 h-5 w-5 text-accent" />
           <div>
             <p className="text-[17px] font-semibold leading-5 text-foreground">Traders near you</p>
@@ -539,10 +539,10 @@ export default function TradersMap() {
 
       {viewMode === "list" && (
         <>
-        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-safe-3 pt-[142px]">
+        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-safe-3 pt-[143px]">
           <div className="px-4">
             <ViewToggle viewMode={viewMode} onChange={setViewMode} wide />
-            <div className="mb-1 mt-3 flex items-center justify-between">
+            <div className="mb-1 mt-2.5 flex items-center justify-between">
               <h2 className="text-[16px] font-semibold text-foreground">Nearby Traders ({listTraders.length})</h2>
               <span className="text-[10px] text-foreground">Nearest first⌄</span>
             </div>
@@ -553,19 +553,19 @@ export default function TradersMap() {
                   type="button"
                   variant="ghost"
                   onClick={() => navigate(`/profile/${t.id}`)}
-                  className="h-auto w-full justify-start gap-3 rounded-none border-b border-border/70 px-0 py-2 text-left last:border-0 hover:bg-transparent"
+                  className="h-[62px] w-full justify-start gap-2.5 rounded-none border-b border-border/70 px-0 py-1 text-left last:border-0 hover:bg-transparent"
                 >
                   <Avatar t={t} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-[13px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
+                    <div className="flex items-center gap-2 leading-none">
+                      <span className="truncate text-[12px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{distanceLabel(t)}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">
+                    <p className="mt-1 text-[9px] leading-none text-muted-foreground">{distanceLabel(t)}</p>
+                    <p className="mt-1 truncate text-[9px] leading-none text-muted-foreground">
                       {[t.placeLabel, t.markets[0], t.trading_style[0]].filter(Boolean).join("  ·  ") || "Trader"}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-accent/15 px-3 py-1.5 text-[10px] font-semibold text-accent">{t.matchPct}% Match</span>
+                  <span className="shrink-0 rounded-full bg-accent/15 px-2.5 py-1.5 text-[9px] font-semibold text-accent">{t.matchPct}% Match</span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </Button>
               ))
@@ -593,7 +593,7 @@ export default function TradersMap() {
       )}
 
       {viewMode === "map" && (
-      <div className="absolute right-3 top-[43%] z-20 flex -translate-y-1/2 flex-col gap-2">
+      <div className="absolute right-3 top-[52%] z-20 flex -translate-y-1/2 flex-col gap-2">
         <Button
           type="button"
           variant="outline"
@@ -629,7 +629,7 @@ export default function TradersMap() {
       )}
 
       {viewMode === "map" && (
-      <div className="absolute inset-x-0 bottom-0 z-20 h-[36vh] min-h-[280px] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
+      <div className="absolute inset-x-0 bottom-0 z-20 h-[29vh] min-h-[238px] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
         <div className="mt-2 px-5">
           <div className="mx-auto h-1 w-10 rounded-full bg-muted" />
           <div className="mt-3"><ViewToggle viewMode={viewMode} onChange={setViewMode} /></div>
@@ -647,8 +647,8 @@ export default function TradersMap() {
           )}
           {!browsingNearby && localTraders.length > 0 ? (
             <div className="py-1">
-              <h2 className="text-[19px] font-semibold text-foreground">Discover traders within 50 miles</h2>
-              <p className="mt-2 text-[13px] text-muted-foreground">Tap a trader to view their profile.</p>
+              <h2 className="text-[18px] font-semibold text-foreground">Discover traders within 50 miles</h2>
+              <p className="mt-2 text-[12px] text-muted-foreground">Tap a trader to view their profile.</p>
               <div className="mt-5 flex items-center gap-2 text-[10px] text-muted-foreground">
                 <Lock className="h-4 w-4 shrink-0" />
                 Exact locations are never shared
@@ -728,7 +728,7 @@ function ViewToggle({ viewMode, onChange, wide = false }: { viewMode: "map" | "l
 
 function Avatar({ t }: { t: MapTrader }) {
   return (
-    <div className="relative h-11 w-11 shrink-0 overflow-visible rounded-full border border-border bg-secondary">
+    <div className="relative h-10 w-10 shrink-0 overflow-visible rounded-full border border-border bg-secondary">
       {t.avatar_url ? (
         <img src={t.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
       ) : (
