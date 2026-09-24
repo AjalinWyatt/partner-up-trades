@@ -95,6 +95,11 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
   const summary = match && (strong > 0
     ? `You line up on ${strong} of ${matchEntries.length} key areas.`
     : "You have useful overlap and complementary differences.");
+  const interests = ownProfile ? unique([
+    ...asList(profile?.chart_prompts),
+    ...asList(profile?.off_chart_prompts),
+    ...asList(profile?.hobbies),
+  ]).slice(0, 8) : [];
 
   return (
     <div className="space-y-2.5 px-3 pb-4 pt-3">
@@ -129,6 +134,15 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
                 <div className="min-w-0"><p className="text-[9px] leading-none text-muted-foreground">{label}</p><p className="mt-1 truncate text-[11px] font-semibold leading-none text-foreground">{value}</p></div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {ownProfile && interests.length > 0 && (
+        <section className="rounded-xl border border-surface-line bg-surface p-3">
+          <div className="mb-2.5 flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-foreground">Interests &amp; Focus</h2></div>
+          <div className="flex flex-wrap gap-1.5">
+            {interests.map((interest) => <span key={interest} className="rounded-full border border-surface-line bg-surface-raised px-3 py-1.5 text-[11px] text-foreground/85">{interest}</span>)}
           </div>
         </section>
       )}
