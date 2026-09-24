@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
-import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
+import type { ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
   username: string | null;
@@ -71,7 +71,7 @@ interface JournalEntry {
 const Profile = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<"overview" | "trading">("overview");
   const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileData | null>("profile:me:profile", null);
   const [tradingProfile, setTradingProfile] = useSessionCache<TradingProfileData | null>("profile:me:trading", null);
   const [journalEntries, setJournalEntries] = useSessionCache<JournalEntry[]>("profile:me:journal", []);
@@ -468,20 +468,20 @@ const Profile = () => {
         </div>
 
         {/* Hero: avatar on the left, name + bio on the right */}
-        <div className="flex items-start gap-4 px-5 pt-6">
+         <div className="flex items-start gap-3 px-5 pt-4">
           <div className="relative shrink-0">
             <button data-tour="profile-avatar" onClick={() => avatarInputRef.current?.click()} className="block">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile photo" className="h-[104px] w-[104px] rounded-full object-cover ring-2 ring-primary/60" />
+                 <img src={profile.avatar_url} alt="Profile photo" className="h-[76px] w-[76px] rounded-full object-cover ring-1 ring-primary/60" />
               ) : (
-                <div className="flex h-[104px] w-[104px] items-center justify-center rounded-full bg-secondary text-2xl font-black text-foreground ring-2 ring-primary/60">{getInitials()}</div>
+                 <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-secondary text-xl font-black text-foreground ring-1 ring-primary/60">{getInitials()}</div>
               )}
             </button>
           </div>
 
           {/* Name + bio (right of avatar) */}
           <div className="flex-1 min-w-0 pt-1">
-            <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}{profile?.birth_year ? ` · ${new Date().getFullYear() - profile.birth_year}` : ""}</h2>
+             <h2 className="text-[18px] font-extrabold leading-tight text-foreground truncate">{displayName}{profile?.birth_year ? ` · ${new Date().getFullYear() - profile.birth_year}` : ""}</h2>
             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{displayUsername}</p>
             {(() => {
               const market = tradingProfile?.markets?.[0];
@@ -496,7 +496,7 @@ const Profile = () => {
               );
             })()}
             {/* Meta row: Location · Joined date - directly under chips */}
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
               {(profile?.city || profile?.state || profile?.country) && (
                 <span className="inline-flex items-center gap-1 min-w-0">
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -517,9 +517,9 @@ const Profile = () => {
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
         {/* Bio - full width below meta */}
-        <div className="mt-3 px-5">
+         <div className="mt-2 px-5">
           {profile?.bio ? (
-            <p className="whitespace-pre-line text-[13px] leading-5 text-muted-foreground">{profile.bio}</p>
+             <p className="line-clamp-3 whitespace-pre-line text-[11px] leading-4 text-muted-foreground">{profile.bio}</p>
           ) : (
             <button
               onClick={() => setEditing(true)}
@@ -530,48 +530,20 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Profile completeness */}
-        {completenessPct < 100 && (
-          <div className="mt-4 px-5">
+         <div className="mt-3 grid grid-cols-2 border-y border-border">
+           {(["overview", "trading"] as const).map((tab) => (
             <button
-              onClick={() => setEditing(true)}
-              className="w-full rounded-2xl border border-border bg-card/60 p-3 text-left transition-colors hover:bg-card"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-foreground">Profile completeness</span>
-                <span className="text-[12px] font-semibold text-primary">{completenessPct}%</span>
-              </div>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${completenessPct}%` }} />
-              </div>
-              {missingFields.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {missingFields.slice(0, 5).map((f) => (
-                    <span key={f.key} className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-[10.5px] font-medium text-muted-foreground">
-                      + {f.label}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="mt-2 text-[10.5px] font-semibold uppercase tracking-wide text-primary">Tap to complete</div>
-            </button>
-          </div>
-        )}
-
-        <div className="mt-5 grid grid-cols-2 border-y border-border">
-          {["Details", "Journal"].map((label, index) => (
-            <button
-              key={label}
-              onClick={() => setActiveTab(index)}
-              aria-label={label}
-              title={label}
+               key={tab}
+               onClick={() => setActiveTab(tab)}
+               aria-label={tab}
+               title={tab}
               className={cn(
                 "relative flex items-center justify-center py-3 text-xs font-bold transition-colors",
-                activeTab === index ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                 activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {label}
-              {activeTab === index && <span className="absolute -bottom-px left-5 right-5 h-0.5 bg-primary" />}
+               {tab === "overview" ? "Overview" : "Trading"}
+               {activeTab === tab && <span className="absolute -bottom-px left-5 right-5 h-0.5 bg-primary" />}
             </button>
           ))}
         </div>
@@ -582,36 +554,7 @@ const Profile = () => {
           className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-2"
           style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         >
-        {activeTab === 0 ? (
-          <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} />
-        ) : (
-          <ProfileJournalCards
-            entries={journalEntries as ProfileJournalEntry[]}
-            emptyDescription="Log your sessions and they’ll show up here."
-            onTogglePrivacy={async (entry) => {
-              const next = entry.share_setting === "private" ? "partners" : "private";
-              const { error } = await supabase.from("journal_entries").update({ share_setting: next }).eq("id", entry.id);
-              if (error) { toast.error("Couldn't update privacy"); return; }
-              toast.success(next === "private" ? "Marked private" : "Shared with partners");
-              if (!userId) return;
-              const { data } = await supabase
-                .from("journal_entries")
-                .select("*")
-                .eq("user_id", userId)
-                .eq("hidden_from_journal", false)
-                .order("created_at", { ascending: false })
-                .limit(50);
-              setJournalEntries((data as JournalEntry[]) || []);
-            }}
-            onHide={async (entry) => {
-              if (!confirm("Remove this entry from your profile journal? It will remain in your Journal.")) return;
-              const { error } = await supabase.from("journal_entries").update({ hidden_from_journal: true } as any).eq("id", entry.id);
-              if (error) { toast.error("Couldn't remove entry"); return; }
-              setJournalEntries((current) => current.filter((item) => item.id !== entry.id));
-              toast.success("Removed from profile journal");
-            }}
-          />
-        )}
+         <TraderDetailsPanel mode={activeTab} profile={profile as any} tradingProfile={tradingProfile as any} journalEntries={journalEntries as ProfileJournalEntry[]} ownProfile onViewJournal={() => navigate("/trading-log")} />
       </div>
       </div>
 
