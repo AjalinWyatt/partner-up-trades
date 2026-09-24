@@ -1,23 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, CalendarDays, Camera, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2, UserRound } from "lucide-react";
+import { Camera, ImagePlus, LogOut, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
+import ProfileHero, { ProfileBottomNav } from "@/components/profile/ProfileHero";
 import ProfileJournalCards, { type JournalVisibility, type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  cover_url?: string | null;
   gender: string | null;
   bio: string | null;
   location: string | null;
@@ -84,6 +85,8 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const [editName, setEditName] = useState("");
@@ -235,6 +238,32 @@ const Profile = () => {
     setProfile((current) => (current ? { ...current, avatar_url: avatarUrl } : current));
     setCropSrc(null);
     toast.success("Photo updated");
+  };
+
+  const handleCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !userId) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image"); return; }
+    setCoverBusy(true);
+    const filePath = `${userId}/cover.jpg`;
+    const { error } = await supabase.storage.from("avatars").upload(filePath, file, { upsert: true, contentType: file.type });
+    if (error) { setCoverBusy(false); toast.error("Cover upload failed"); return; }
+    const coverUrl = `${supabase.storage.from("avatars").getPublicUrl(filePath).data.publicUrl}?t=${Date.now()}`;
+    await supabase.from("profiles").update({ cover_url: coverUrl }).eq("id", userId);
+    setProfile((c) => (c ? { ...c, cover_url: coverUrl } : c));
+    setCoverBusy(false);
+    toast.success("Cover updated");
+  };
+
+  const removeCover = async () => {
+    if (!userId) return;
+    setCoverBusy(true);
+    await supabase.storage.from("avatars").remove([`${userId}/cover.jpg`]);
+    await supabase.from("profiles").update({ cover_url: null }).eq("id", userId);
+    setProfile((c) => (c ? { ...c, cover_url: null } : c));
+    setCoverBusy(false);
+    toast.success("Cover removed");
   };
 
   const handleSaveProfile = async () => {
@@ -402,6 +431,17 @@ const Profile = () => {
             <button onClick={handleSaveProfile} disabled={saving} className="text-sm font-bold text-primary transition-colors hover:text-primary/80">{saving ? "Saving..." : "Done"}</button>
           </div>
 
+          <div className="px-5 pt-4">
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Cover photo</label>
+            <div className="relative h-[120px] overflow-hidden rounded-xl border border-surface-line bg-gradient-to-br from-surface-raised via-surface to-background">
+              {profile?.cover_url && <img src={profile.cover_url} alt="Cover" className="h-full w-full object-cover" />}
+              <div className="absolute bottom-2 right-2 flex gap-2">
+                <Button size="sm" variant="secondary" className="h-8 rounded-full text-xs" onClick={() => coverInputRef.current?.click()} disabled={coverBusy}><ImagePlus />{profile?.cover_url ? "Replace" : "Upload"}</Button>
+                {profile?.cover_url && <Button size="sm" variant="outline" className="h-8 rounded-full text-xs text-destructive" onClick={removeCover} disabled={coverBusy}><Trash2 />Remove</Button>}
+              </div>
+            </div>
+            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
+          </div>
           <div className="flex justify-center py-5">
             <div className="flex flex-col items-center gap-2">
               <button onClick={() => avatarInputRef.current?.click()} className="relative group">
@@ -453,130 +493,29 @@ const Profile = () => {
     );
   }
 
+  const roundBtn = "flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-background/60 text-foreground backdrop-blur-md transition-colors hover:bg-muted";
+  const ownActions = (
+    <div className="flex items-center gap-2">
+      <button onClick={() => setEditing(true)} className={roundBtn} aria-label="Edit profile"><Pencil className="h-4 w-4" /></button>
+      <button onClick={() => navigate("/settings")} className={roundBtn} aria-label="Settings"><SlidersHorizontal className="h-4 w-4" /></button>
+    </div>
+  );
+  const bioFallback = <button onClick={() => setEditing(true)} className="mt-1.5 text-left text-[12px] italic text-muted-foreground transition-colors hover:text-foreground">Add a bio so traders know how you move.</button>;
+
   return (
     <AppLayout lockHeight>
       <div className="flex h-full min-h-0 flex-1 flex-col">
-        {/* Locked header — wordmark, hero, bio, completeness, tabs */}
-        <div className="shrink-0 bg-background">
-        {/* Top bar: wordmark + settings */}
-        <div
-          className="relative flex items-center justify-center px-5"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
-        >
-          <h1 className="text-[22px] font-extrabold text-foreground">
-            Traders<span className="text-foreground">World</span>
-          </h1>
-          <div className="absolute right-5 flex items-center gap-1">
-            <button
-              onClick={() => setEditing(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              aria-label="Edit profile"
-            >
-              <Pencil className="h-5 w-5" strokeWidth={2} />
-            </button>
-            <button
-              onClick={() => navigate("/settings")}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              aria-label="Settings"
-            >
-              <SlidersHorizontal className="h-5 w-5" strokeWidth={2} />
-            </button>
-          </div>
-        </div>
-
-         {/* Compact identity header */}
-         <div className="flex items-start gap-3 px-5 pt-4">
-          <div className="relative shrink-0">
-            <button data-tour="profile-avatar" onClick={() => avatarInputRef.current?.click()} className="block">
-              {profile?.avatar_url ? (
-                 <img src={profile.avatar_url} alt="Profile photo" className="h-[76px] w-[76px] rounded-full object-cover ring-1 ring-primary/60" />
-              ) : (
-                 <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-secondary text-xl font-black text-foreground ring-1 ring-primary/60">{getInitials()}</div>
-              )}
-            </button>
-          </div>
-
-          {/* Name + bio (right of avatar) */}
-          <div className="flex-1 min-w-0 pt-1">
-             <h2 className="text-[18px] font-extrabold leading-tight text-foreground truncate">{displayName}{profile?.birth_year ? ` · ${new Date().getFullYear() - profile.birth_year}` : ""}</h2>
-            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{displayUsername}</p>
-            {(() => {
-              const market = tradingProfile?.markets?.[0];
-              const style = tradingProfile?.trading_style?.[0];
-              const exp = tradingProfile?.experience_level;
-              const chips = [market, style, exp].filter(Boolean) as string[];
-              if (chips.length === 0) return null;
-              return (
-                <div className="mt-1 text-[13px] font-semibold text-primary truncate">
-                  {chips.join(" · ")}
-                </div>
-              );
-            })()}
-            {/* Meta row: Location · Joined date - directly under chips */}
-             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
-              {(profile?.city || profile?.state || profile?.country) && (
-                <span className="inline-flex items-center gap-1 min-w-0">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" />
-                  <span className="font-medium text-foreground truncate">
-                    {[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ")}
-                  </span>
-                </span>
-              )}
-              {profile?.created_at && (
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+        {activeTab === "journal" && <ProfileHero compact profile={profile} tradingProfile={tradingProfile} topRight={ownActions} onAvatarClick={() => avatarInputRef.current?.click()} />}
         <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-
-         {activeTab === "details" && <div className="mt-2 px-5">
-          {profile?.bio ? (
-             <p className="line-clamp-3 whitespace-pre-line text-[11px] leading-4 text-muted-foreground">{profile.bio}</p>
-          ) : (
-            <button
-              onClick={() => setEditing(true)}
-              className="text-left text-[13px] text-muted-foreground italic hover:text-foreground transition-colors"
-            >
-              Add a bio so traders know how you move.
-            </button>
-          )}
-           {profile?.hobbies?.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{profile.hobbies.slice(0, 3).map((trait) => <span key={trait} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[9px] font-semibold text-foreground/80">{trait}</span>)}</div>}
-         </div>}
-
-         <div className="mt-3 grid grid-cols-2 border-y border-border">
-            {(["details", "journal"] as const).map((tab) => (
-             <Button
-                variant="ghost"
-               key={tab}
-               onClick={() => setActiveTab(tab)}
-               aria-label={tab}
-               title={tab}
-              className={cn(
-                 "relative h-12 flex-col gap-0.5 rounded-none text-[10px] font-bold transition-colors hover:bg-transparent",
-                 activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-                {tab === "details" ? <UserRound className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
-                {tab === "details" ? "Details" : "Journal"}
-               {activeTab === tab && <span className="absolute -bottom-px left-5 right-5 h-0.5 bg-primary" />}
-             </Button>
-          ))}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {activeTab === "details" ? (
+            <>
+              <ProfileHero profile={profile} tradingProfile={tradingProfile} topRight={ownActions} bioFallback={bioFallback} onAvatarClick={() => avatarInputRef.current?.click()} />
+              <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} ownProfile />
+            </>
+          ) : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />}
         </div>
-        </div>
-
-        {/* Scrollable tab content — only this region scrolls */}
-        <div
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-2"
-          style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
-        >
-          {activeTab === "details"
-            ? <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} ownProfile />
-            : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />}
-      </div>
+        <ProfileBottomNav active={activeTab} onChange={setActiveTab} className="mb-[calc(76px+env(safe-area-inset-bottom,0px))] md:mb-0" />
       </div>
 
       <AvatarCropDialog
