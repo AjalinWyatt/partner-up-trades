@@ -62,7 +62,7 @@ interface StoryProfileRow {
 }
 
 const FEED_FILTERS = ["All", "Crypto", "Forex", "Indices", "Futures", "Options", "Commodities"] as const;
-const FEED_MODES = ["Rooms", "Pulse"] as const;
+const FEED_MODES = ["Pulse", "Rooms"] as const;
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
@@ -88,7 +88,7 @@ const Feed = () => {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-  const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Rooms");
+  const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Pulse");
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
   const [availableToConnect, setAvailableToConnect] = useState(false);

@@ -10,7 +10,7 @@ const tabs = [
   { path: "/discover", icon: Earth, label: "Discover", tour: "nav-discover" },
   { path: "/feed", icon: FeedNavIcon, label: "Community", tour: "nav-feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
-  { path: "/trading-log", icon: BookOpen, label: "Log", tour: "nav-log" },
+  { path: "/trading-log", icon: BookOpen, label: "Journal", tour: "nav-log" },
   { path: "/partners", icon: Users, label: "Partners", tour: "nav-partners" },
 ];
 
