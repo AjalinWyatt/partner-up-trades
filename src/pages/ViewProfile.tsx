@@ -62,12 +62,10 @@ export default function ViewProfile() {
       setConnection(currentConnection);
       setIsBlocked(!!block);
 
-      if (currentConnection?.status === "accepted") {
-        const { data } = await supabase.from("journal_entries").select("*").eq("user_id", userId).eq("share_setting", "partners").eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(30);
-        if (!cancelled) setJournalEntries((data as ProfileJournalEntry[]) || []);
-      } else {
-        setJournalEntries([]);
-      }
+      // Visibility enforced by database rules: public for everyone, partners only for accepted partners.
+      const allowed = currentConnection?.status === "accepted" ? ["public", "partners"] : ["public"];
+      const { data: visibleEntries } = await supabase.from("journal_entries").select("*").eq("user_id", userId).in("share_setting", allowed).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(30);
+      if (!cancelled) setJournalEntries((visibleEntries as ProfileJournalEntry[]) || []);
       if (viewer.id !== userId) {
         void sendNotification({ userId, type: "profile_viewed", title: `@${viewerProfile?.username || "someone"} viewed your profile`, body: "They might be interested in connecting", relatedUserId: viewer.id });
       }
@@ -76,6 +74,15 @@ export default function ViewProfile() {
     void load();
     return () => { cancelled = true; };
   }, [navigate, setJournalEntries, setProfile, setTradingProfile, userId]);
+
+  // Refresh visible Journal entries immediately when the partnership state changes.
+  const connectionStatus = connection?.status ?? null;
+  useEffect(() => {
+    if (!userId || !myId || loading) return;
+    const allowed = connectionStatus === "accepted" ? ["public", "partners"] : ["public"];
+    void supabase.from("journal_entries").select("*").eq("user_id", userId).in("share_setting", allowed).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(30)
+      .then(({ data }) => setJournalEntries((data as ProfileJournalEntry[]) || []));
+  }, [connectionStatus, userId, myId, loading, setJournalEntries]);
 
   const compatibility = useMemo<MatchResult | null>(() => {
     if (!myTrading || !tradingProfile || !myProfile || !profile) return null;

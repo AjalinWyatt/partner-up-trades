@@ -799,11 +799,12 @@ export default function TradingLog() {
 
           {/* Share with */}
           <div>
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Share this log with</p>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Who can see this?</p>
             <div className="flex flex-col gap-2">
               {[
-                { value: "partners", icon: Link, label: "🤝 Partners", desc: "Your accepted partners can see this in their feed and on your profile" },
                 { value: "private", icon: Lock, label: "🔒 Private", desc: "Only you can see this entry" },
+                { value: "partners", icon: Link, label: "👥 Partners", desc: "You and your accepted partners" },
+                { value: "public", icon: Link, label: "🌎 Public", desc: "Anyone who views your profile's Journal" },
               ].map((opt) => {
                 const sel = shareSetting === opt.value;
                 return (
