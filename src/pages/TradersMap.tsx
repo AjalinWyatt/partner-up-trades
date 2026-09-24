@@ -56,11 +56,11 @@ function pinIcon(text: string, color: string) {
 
 function avatarIcon(url: string) {
   const safeUrl = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
-    <defs><clipPath id="c"><circle cx="22" cy="22" r="16"/></clipPath></defs>
-    <circle cx="22" cy="22" r="19" fill="#071113" stroke="#18aaa5" stroke-width="1.5"/>
-    <image href="${safeUrl}" x="6" y="6" width="32" height="32" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>
-    <circle cx="35" cy="35" r="4" fill="#16c784" stroke="#071113" stroke-width="2"/>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52">
+    <defs><clipPath id="c"><circle cx="26" cy="24" r="19"/></clipPath></defs>
+    <circle cx="26" cy="24" r="22" fill="#071113" stroke="#08e0dc" stroke-width="2"/>
+    <image href="${safeUrl}" x="7" y="5" width="38" height="38" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>
+    <circle cx="39" cy="42" r="4.5" fill="#08e0dc" stroke="#071113" stroke-width="2"/>
   </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
@@ -280,8 +280,8 @@ export default function TradersMap() {
             ? { url: clusterIcon(group.length, "#18aaa5"), scaledSize: new google.maps.Size(42, 42), anchor: new google.maps.Point(21, 21) }
             : {
                 url: t.avatar_url ? avatarIcon(t.avatar_url) : pinIcon(initials(t), "#18aaa5"),
-                scaledSize: new google.maps.Size(44, 44),
-                anchor: new google.maps.Point(22, 22),
+                 scaledSize: new google.maps.Size(52, 52),
+                 anchor: new google.maps.Point(26, 26),
               },
           title: group.length > 1 ? `${group.length} nearby traders` : `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
           optimized: false,
@@ -444,7 +444,7 @@ export default function TradersMap() {
     : visibleTraders;
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
+    <div className="fixed inset-0 mx-auto max-w-[430px] overflow-hidden bg-background">
       <div ref={mapDivRef} className={cn("absolute inset-0", viewMode === "list" && "invisible pointer-events-none")} />
 
       {(loading || guardLoading || (!mapReady && !mapError)) && (
@@ -459,7 +459,7 @@ export default function TradersMap() {
         </div>
       )}
 
-      <div className="absolute inset-x-0 top-0 z-20 px-3 pt-safe-3 pb-8 bg-gradient-to-b from-background via-background/70 to-transparent">
+      <div className="absolute inset-x-0 top-0 z-20 px-4 pt-safe-3 pb-8 bg-gradient-to-b from-background via-background/70 to-transparent">
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -467,13 +467,13 @@ export default function TradersMap() {
             size="icon"
             onClick={() => navigate("/discover")}
             aria-label="Back to Discover"
-            className="h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md"
+            className="h-10 w-10 shrink-0 rounded-full bg-card/90 backdrop-blur-md"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
 
           <form onSubmit={runSearch} className="flex-1 min-w-0">
-            <div className="flex h-9 items-center gap-2 rounded-full border border-border bg-card/80 px-3 backdrop-blur-md">
+            <div className="flex h-10 items-center gap-2 rounded-full border border-border bg-card/90 px-3 backdrop-blur-md">
               <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <input
                 value={search}
@@ -499,7 +499,7 @@ export default function TradersMap() {
             onClick={() => setShowFilters((v) => !v)}
             aria-label="Filters"
             className={cn(
-              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md",
+              "h-10 w-10 shrink-0 rounded-full bg-card/90 backdrop-blur-md",
               showFilters && "border-accent/70 text-accent",
             )}
           >
@@ -509,10 +509,10 @@ export default function TradersMap() {
         </div>
 
         <div className="mt-3 flex items-start gap-2 pl-1">
-          <MapPin className="mt-0.5 h-4 w-4 text-accent" />
+          <MapPin className="mt-0.5 h-5 w-5 text-accent" />
           <div>
-            <p className="text-[12px] font-semibold text-foreground">Traders near you</p>
-            <p className="text-[10px] text-muted-foreground">Showing traders within 50 miles.</p>
+            <p className="text-[17px] font-semibold leading-5 text-foreground">Traders near you</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Showing traders within 50 miles.</p>
           </div>
         </div>
 
@@ -539,11 +539,12 @@ export default function TradersMap() {
 
       {viewMode === "list" && (
         <>
-        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-16 pt-[104px]">
+        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-safe-3 pt-[142px]">
           <div className="px-4">
-            <div className="mb-1 flex items-center justify-between">
-              <h2 className="text-[13px] font-semibold text-foreground">Traders nearby ({listTraders.length})</h2>
-              <span className="text-[9px] text-muted-foreground">Nearest first</span>
+            <ViewToggle viewMode={viewMode} onChange={setViewMode} wide />
+            <div className="mb-1 mt-3 flex items-center justify-between">
+              <h2 className="text-[16px] font-semibold text-foreground">Nearby Traders ({listTraders.length})</h2>
+              <span className="text-[10px] text-foreground">Nearest first⌄</span>
             </div>
             {listTraders.length > 0 ? (
               listTraders.map((t) => (
@@ -552,19 +553,19 @@ export default function TradersMap() {
                   type="button"
                   variant="ghost"
                   onClick={() => navigate(`/profile/${t.id}`)}
-                  className="h-auto w-full justify-start gap-3 rounded-none border-b border-border/70 px-0 py-3 text-left last:border-0 hover:bg-transparent"
+                  className="h-auto w-full justify-start gap-3 rounded-none border-b border-border/70 px-0 py-2 text-left last:border-0 hover:bg-transparent"
                 >
                   <Avatar t={t} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="truncate text-[12px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
-                      <span className="shrink-0 text-[9px] text-muted-foreground">{distanceLabel(t)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-[13px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
                     </div>
-                    <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">{distanceLabel(t)}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">
                       {[t.placeLabel, t.markets[0], t.trading_style[0]].filter(Boolean).join("  ·  ") || "Trader"}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[10px] font-semibold text-accent">{t.matchPct}%</span>
+                  <span className="shrink-0 rounded-full bg-accent/15 px-3 py-1.5 text-[10px] font-semibold text-accent">{t.matchPct}% Match</span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </Button>
               ))
@@ -587,9 +588,6 @@ export default function TradersMap() {
               Exact locations are never shared
             </div>
           </div>
-        </div>
-        <div className="absolute inset-x-0 bottom-4 z-30 flex justify-center pb-safe-3">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
         </div>
         </>
       )}
@@ -631,12 +629,12 @@ export default function TradersMap() {
       )}
 
       {viewMode === "map" && (
-      <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
-        <div className="mt-2 flex items-center justify-between px-4">
-          <div className="mx-auto h-1 w-9 rounded-full bg-muted" />
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+      <div className="absolute inset-x-0 bottom-0 z-20 h-[36vh] min-h-[280px] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
+        <div className="mt-2 px-5">
+          <div className="mx-auto h-1 w-10 rounded-full bg-muted" />
+          <div className="mt-3"><ViewToggle viewMode={viewMode} onChange={setViewMode} /></div>
         </div>
-        <div className="px-4 pb-3 pt-3">
+        <div className="px-5 pb-3 pt-5">
           {exploreLoc && (
             <div className="mb-2 flex items-center justify-between gap-2 border-b border-border pb-2">
               <p className="min-w-0 truncate text-[11px] text-muted-foreground">
@@ -649,10 +647,10 @@ export default function TradersMap() {
           )}
           {!browsingNearby && localTraders.length > 0 ? (
             <div className="py-1">
-              <h2 className="text-[14px] font-semibold text-foreground">Discover traders within 50 miles</h2>
-              <p className="mt-1 text-[11px] text-muted-foreground">Tap a trader to view their profile.</p>
-              <div className="mt-3 flex items-center gap-1.5 text-[9px] text-muted-foreground">
-                <Lock className="h-3 w-3 shrink-0" />
+              <h2 className="text-[19px] font-semibold text-foreground">Discover traders within 50 miles</h2>
+              <p className="mt-2 text-[13px] text-muted-foreground">Tap a trader to view their profile.</p>
+              <div className="mt-5 flex items-center gap-2 text-[10px] text-muted-foreground">
+                <Lock className="h-4 w-4 shrink-0" />
                 Exact locations are never shared
               </div>
             </div>
@@ -705,23 +703,24 @@ export default function TradersMap() {
   );
 }
 
-function ViewToggle({ viewMode, onChange }: { viewMode: "map" | "list"; onChange: (v: "map" | "list") => void }) {
+function ViewToggle({ viewMode, onChange, wide = false }: { viewMode: "map" | "list"; onChange: (v: "map" | "list") => void; wide?: boolean }) {
   return (
-    <div className="flex h-7 items-center gap-0.5 rounded-full border border-border bg-background/85 p-0.5 backdrop-blur-md">
+    <div className={cn("flex h-8 items-center gap-0.5 rounded-full border border-border bg-background/85 p-0.5 backdrop-blur-md", wide ? "w-full" : "w-[146px]") }>
       {(["map", "list"] as const).map((mode) => (
-        <button
+        <Button
           key={mode}
           type="button"
+          variant="ghost"
           onClick={() => onChange(mode)}
           aria-pressed={viewMode === mode}
           aria-label={mode === "map" ? "Map view" : "List view"}
           className={cn(
-            "h-6 rounded-full px-3 text-[10px] font-medium capitalize transition-colors",
-            viewMode === mode ? "bg-secondary text-accent" : "text-muted-foreground hover:text-foreground",
+            "h-7 flex-1 rounded-full px-3 text-[10px] font-medium capitalize transition-colors hover:bg-transparent",
+            viewMode === mode ? "bg-accent/35 text-accent" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {mode}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -729,14 +728,15 @@ function ViewToggle({ viewMode, onChange }: { viewMode: "map" | "list"; onChange
 
 function Avatar({ t }: { t: MapTrader }) {
   return (
-    <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0 border border-border">
+    <div className="relative h-11 w-11 shrink-0 overflow-visible rounded-full border border-border bg-secondary">
       {t.avatar_url ? (
-        <img src={t.avatar_url} alt="" className="w-full h-full object-cover" />
+        <img src={t.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-[12px] font-black text-foreground">
+        <div className="flex h-full w-full items-center justify-center rounded-full text-[12px] font-black text-foreground">
           {initials(t)}
         </div>
       )}
+      <span className="absolute -bottom-0.5 -left-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-success" />
     </div>
   );
 }
