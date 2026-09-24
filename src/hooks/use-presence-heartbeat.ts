@@ -10,10 +10,19 @@ export function usePresenceHeartbeat() {
     let active = true;
     let timer: ReturnType<typeof setInterval> | null = null;
 
+    let pinging = false;
     const ping = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user || !active) return;
-      await supabase.rpc("touch_presence" as any);
+      if (pinging || !active) return;
+      pinging = true;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user || !active) return;
+        await supabase.rpc("touch_presence" as any);
+      } catch (error) {
+        console.warn("Presence update skipped", error);
+      } finally {
+        pinging = false;
+      }
     };
 
     ping();
