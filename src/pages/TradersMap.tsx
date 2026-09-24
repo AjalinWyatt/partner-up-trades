@@ -484,6 +484,20 @@ export default function TradersMap() {
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setViewMode((v) => (v === "map" ? "list" : "map"))}
+            aria-label={viewMode === "map" ? "Switch to list view" : "Switch to map view"}
+            className={cn(
+              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md",
+              viewMode === "list" && "border-accent/70 text-accent",
+            )}
+          >
+            {viewMode === "map" ? <List className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+          </Button>
         </div>
 
         <div className="mt-3 flex items-start gap-2 pl-1">
