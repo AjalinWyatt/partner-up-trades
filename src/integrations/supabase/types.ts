@@ -925,6 +925,7 @@ export type Database = {
           off_chart_prompts: string[] | null
           onboarding_completed: boolean | null
           profile_visibility: string
+          pulse_available_until: string | null
           show_on_map: boolean
           state: string | null
           tour_completed: boolean
@@ -960,6 +961,7 @@ export type Database = {
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
           profile_visibility?: string
+          pulse_available_until?: string | null
           show_on_map?: boolean
           state?: string | null
           tour_completed?: boolean
@@ -995,6 +997,7 @@ export type Database = {
           off_chart_prompts?: string[] | null
           onboarding_completed?: boolean | null
           profile_visibility?: string
+          pulse_available_until?: string | null
           show_on_map?: boolean
           state?: string | null
           tour_completed?: boolean
@@ -1048,6 +1051,8 @@ export type Database = {
           accepted_by: string | null
           context: string[]
           created_at: string
+          ended_at: string | null
+          ended_by: string | null
           expires_at: string
           id: string
           note: string | null
@@ -1059,6 +1064,8 @@ export type Database = {
           accepted_by?: string | null
           context?: string[]
           created_at?: string
+          ended_at?: string | null
+          ended_by?: string | null
           expires_at?: string
           id?: string
           note?: string | null
@@ -1070,6 +1077,8 @@ export type Database = {
           accepted_by?: string | null
           context?: string[]
           created_at?: string
+          ended_at?: string | null
+          ended_by?: string | null
           expires_at?: string
           id?: string
           note?: string | null
@@ -1483,6 +1492,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_pulse_request: { Args: { _id: string }; Returns: boolean }
       are_accepted_partners: {
         Args: { _a: string; _b: string }
         Returns: boolean
@@ -1505,6 +1515,7 @@ export type Database = {
         Returns: boolean
       }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      end_pulse_session: { Args: { _id: string }; Returns: boolean }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1526,6 +1537,7 @@ export type Database = {
         Args: { _owner: string; _viewer: string }
         Returns: boolean
       }
+      is_pulse_available: { Args: { _uid: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1547,6 +1559,7 @@ export type Database = {
         Args: { new_key: string; new_label?: string }
         Returns: undefined
       }
+      set_pulse_availability: { Args: { _on: boolean }; Returns: string }
       touch_presence: { Args: never; Returns: undefined }
       verify_beta_key: { Args: { submitted_key: string }; Returns: boolean }
     }
