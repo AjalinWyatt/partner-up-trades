@@ -482,7 +482,7 @@ const Profile = () => {
           className="relative flex items-center justify-center px-5"
           style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
         >
-          <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
+          <h1 className="text-[22px] font-extrabold text-foreground">
             Traders<span className="text-foreground">World</span>
           </h1>
           <div className="absolute right-5 flex items-center gap-1">
@@ -517,7 +517,8 @@ const Profile = () => {
 
           {/* Name + bio (right of avatar) */}
           <div className="flex-1 min-w-0 pt-1">
-            <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}</h2>
+            <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}{profile?.birth_year ? ` · ${new Date().getFullYear() - profile.birth_year}` : ""}</h2>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{displayUsername}</p>
             {(() => {
               const market = tradingProfile?.markets?.[0];
               const style = tradingProfile?.trading_style?.[0];
@@ -593,24 +594,20 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Details / Journal icon tabs */}
-        <div className="mt-6 flex items-center justify-center gap-1 border-b border-border px-5">
-          {[
-            { Icon: Info, label: "Details" },
-            { Icon: NotebookPen, label: "Journal" },
-          ].map(({ Icon, label }, index) => (
+        <div className="mt-5 grid grid-cols-2 border-y border-border">
+          {["Details", "Journal"].map((label, index) => (
             <button
               key={label}
               onClick={() => setActiveTab(index)}
               aria-label={label}
               title={label}
               className={cn(
-                "relative flex-1 max-w-[120px] flex items-center justify-center py-3 transition-colors",
-                activeTab === index ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                "relative flex items-center justify-center py-3 text-xs font-bold transition-colors",
+                activeTab === index ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="h-[22px] w-[22px]" strokeWidth={activeTab === index ? 2.4 : 1.8} />
-              {activeTab === index && <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-foreground" />}
+              {label}
+              {activeTab === index && <span className="absolute -bottom-px left-5 right-5 h-0.5 bg-primary" />}
             </button>
           ))}
         </div>
@@ -622,10 +619,7 @@ const Profile = () => {
           style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         >
         {activeTab === 0 ? (
-          <DetailsGrid
-            profile={profile}
-            tradingProfile={tradingProfile}
-          />
+          <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} />
         ) : (
           <JournalList
             entries={journalEntries}
@@ -646,38 +640,6 @@ const Profile = () => {
       </div>
       </div>
 
-      <CreatePostModal
-        open={showCreatePost}
-        onClose={() => {
-          setShowCreatePost(false);
-          setEditingPost(null);
-        }}
-        onCreated={() => {
-          setShowCreatePost(false);
-          setEditingPost(null);
-          refreshPosts();
-        }}
-        initialPost={editingPost}
-      />
-      <PostDetailModal
-        open={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
-        post={selectedPost}
-        myId={userId}
-        onDeleted={refreshPosts}
-        onEdit={(post) => {
-          setSelectedPost(null);
-          setEditingPost(post as ProfilePostItem);
-          setShowCreatePost(true);
-        }}
-        onShare={(post) => setPostToShare(post)}
-      />
-      <SharePostSheet post={postToShare} myId={userId} onClose={() => setPostToShare(null)} />
-      <CreatePhotoAlbumModal
-        open={showCreatePhoto}
-        onClose={() => setShowCreatePhoto(false)}
-        onCreated={refreshPosts}
-      />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
