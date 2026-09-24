@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 interface JournalEntry {
   id: string;
@@ -138,6 +139,7 @@ export default function TradingLog() {
   const [logView, setLogView] = useState<"trade" | "study">("trade");
   const [statsRange, setStatsRange] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [showRangeMenu, setShowRangeMenu] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   // Safe left-edge swipe-back: in entry form, swipe right to return to log list
   useSwipeBack({
@@ -199,12 +201,14 @@ export default function TradingLog() {
 
   async function loadEntries() {
     setLoading(true);
-    const { data } = await supabase
+    setLoadError(false);
+    const { data, error } = await supabase
       .from("journal_entries")
       .select("*")
       .eq("user_id", userId!)
       .order("created_at", { ascending: false });
-    setEntries((data as JournalEntry[]) || []);
+    if (error) setLoadError(true);
+    else setEntries((data as JournalEntry[]) || []);
     setLoading(false);
   }
 
@@ -1018,23 +1022,15 @@ export default function TradingLog() {
 
         {/* Entries */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <DestinationLoading label="Opening your journal." />
+        ) : loadError ? (
+          <DestinationState kind="error" title="Your journal stayed closed" description="We could not load your entries. Your saved work remains untouched." actionLabel="Try again" onAction={loadEntries} />
         ) : (() => {
           const filteredEntries = entries.filter((e) =>
             logView === "study" ? e.entry_type === "study" : (e.entry_type || "trade") === "trade"
           );
           return filteredEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
-            <div className="text-3xl mb-3">📓</div>
-            <h2 className="text-base font-bold text-foreground mb-1">
-              No {logView === "study" ? "study sessions" : "trades"} logged yet
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Tap + to log your first {logView === "study" ? "study session" : "trade"}
-            </p>
-          </div>
+          <DestinationState title={logView === "study" ? "A fresh study page" : "A fresh journal page"} description={`Your first ${logView === "study" ? "study session" : "trade"} will begin the story of your progress.`} actionLabel={`Log first ${logView === "study" ? "study" : "trade"}`} onAction={() => { resetForm(); setShowForm(true); }} />
         ) : (
           <>
             <div className="mx-6 max-w-full divide-y divide-border/70 overflow-hidden border-y border-border/70">

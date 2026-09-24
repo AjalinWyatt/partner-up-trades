@@ -4,6 +4,7 @@ import { Plus, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 type Room = {
   id: string;
@@ -28,18 +29,25 @@ export default function RoomsPane() {
   const [title, setTitle] = useState("");
   const [topic, setTopic] = useState("");
   const [market, setMarket] = useState("Forex");
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user.id ?? null));
   }, []);
 
   const load = async () => {
-    const { data: rows } = await supabase
+    setLoadError(false);
+    const { data: rows, error } = await supabase
       .from("voice_rooms")
       .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(50);
+    if (error) {
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
     const list = (rows ?? []) as Room[];
     if (list.length) {
       const ids = Array.from(new Set(list.map((r) => r.host_id)));
@@ -137,13 +145,11 @@ export default function RoomsPane() {
       )}
 
       {loading ? (
-        <p className="text-center text-xs text-muted-foreground">Loading…</p>
+        <DestinationLoading label="Listening for live rooms." />
+      ) : loadError ? (
+        <DestinationState compact kind="error" title="Rooms are quiet" description="We could not check which rooms are live." actionLabel="Try again" onAction={() => { setLoading(true); void load(); }} />
       ) : rooms.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center">
-          <Radio className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-semibold text-foreground">No live rooms</p>
-          <p className="mt-1 text-xs text-muted-foreground">Open one and other traders can join.</p>
-        </div>
+        <DestinationState compact icon={Radio} title="A quiet room" description="No rooms are live. Open one when you are ready to trade alongside others." actionLabel="Open a room" onAction={() => setComposeOpen(true)} />
       ) : (
         <div className="space-y-3">
           {rooms.map((r) => (

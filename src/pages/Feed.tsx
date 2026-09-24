@@ -19,6 +19,7 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { toast } from "sonner";
+import { DestinationLoading } from "@/components/DestinationState";
 
 interface FeedPost {
   id: string;
@@ -712,9 +713,7 @@ const Feed = () => {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <DestinationLoading label="Connecting you to the community." />
       </AppLayout>
     );
   }

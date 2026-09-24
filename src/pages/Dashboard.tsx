@@ -24,6 +24,7 @@ import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
 import { getMapTraders, milesBetween, resolveMyApproxLocation } from "@/lib/tradersMap";
 import globeImage from "@/assets/auth-globe.png";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 type DashboardProfile = {
   username: string | null;
@@ -380,9 +381,7 @@ const Dashboard = () => {
   if (guardLoading || loading) {
     return (
       <AppLayout>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        </div>
+        <DestinationLoading label="Preparing your daily command center." />
       </AppLayout>
     );
   }
@@ -471,10 +470,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-border bg-card/70 px-4 py-6 text-center">
-                <p className="text-xs font-semibold text-foreground">You’re all caught up</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">New activity will appear here.</p>
-              </div>
+              <DestinationState compact title="You’re all caught up" description="New activity will appear here when something needs your attention." />
             )}
           </section>
 

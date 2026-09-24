@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import SafetyMenu from "@/components/safety/SafetyMenu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 const SYSTEM_CONNECTION_ID = "system-tradersworld";
 
@@ -58,6 +59,7 @@ export default function Messages() {
   const [systemExitOpen, setSystemExitOpen] = useState(false);
   const [deletingSystem, setDeletingSystem] = useState(false);
   const [inboxFilter, setInboxFilter] = useState<"all" | "unread" | "partners" | "requests">("all");
+  const [loadError, setLoadError] = useState(false);
 
   // Safe left-edge swipe-back: in chat view, swipe right to return to DM list
   useSwipeBack({
@@ -115,12 +117,18 @@ export default function Messages() {
 
   const loadConnections = async (uid: string) => {
     if (connections.length === 0) setLoading(true);
-    const { data: conns } = await supabase
+    setLoadError(false);
+    const { data: conns, error: connectionsError } = await supabase
       .from("partner_connections")
       .select("*")
       .eq("status", "accepted")
       .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
 
+    if (connectionsError) {
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
     const safeConns = conns || [];
     const partnerIds = safeConns.map((c: any) => c.requester_id === uid ? c.receiver_id : c.requester_id);
     const [{ data: profiles }, { data: recentMessages }] = await Promise.all([
@@ -367,18 +375,11 @@ export default function Messages() {
         style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
       >
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <DestinationLoading label="Opening your conversations." />
+        ) : loadError ? (
+          <DestinationState compact kind="error" title="Messages are out of reach" description="We could not open your conversations. Nothing has been lost." actionLabel="Try again" onAction={() => userId && loadConnections(userId)} />
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <img src={brandGlobe} alt="" className="mb-3 h-16 w-16 object-contain opacity-80" />
-            <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
-            <p className="text-xs text-muted-foreground mb-4">Connect with a match to start chatting</p>
-            <button onClick={() => navigate("/discover")} className="text-xs font-semibold text-info">
-              Find matches
-            </button>
-          </div>
+          <DestinationState compact title={inboxFilter === "all" ? "A quiet inbox" : `No ${inboxFilter} conversations`} description={inboxFilter === "all" ? "Connect with a trader to begin a focused conversation." : "Nothing matches this view right now."} actionLabel={inboxFilter === "all" ? "Find a trader" : "Show all"} onAction={inboxFilter === "all" ? () => navigate("/discover") : () => setInboxFilter("all")} />
         ) : (
           filtered.map((conn) => {
             const isSystem = conn.id === SYSTEM_CONNECTION_ID;
