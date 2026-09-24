@@ -15,6 +15,13 @@
       "when": 1790234890929,
       "tag": "0001_journal_three_visibility_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790235206921,
+      "tag": "0002_cover_and_journal_images",
+      "breakpoints": true
     }
   ]
 }

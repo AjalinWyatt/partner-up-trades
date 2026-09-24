@@ -550,6 +550,7 @@ export type Database = {
           entry_type: string
           hidden_from_journal: boolean
           id: string
+          image_path: string | null
           market_pair: string | null
           mood: string | null
           notes: string | null
@@ -568,6 +569,7 @@ export type Database = {
           entry_type?: string
           hidden_from_journal?: boolean
           id?: string
+          image_path?: string | null
           market_pair?: string | null
           mood?: string | null
           notes?: string | null
@@ -586,6 +588,7 @@ export type Database = {
           entry_type?: string
           hidden_from_journal?: boolean
           id?: string
+          image_path?: string | null
           market_pair?: string | null
           mood?: string | null
           notes?: string | null
@@ -880,6 +883,7 @@ export type Database = {
           chart_prompts: string[] | null
           city: string | null
           country: string | null
+          cover_url: string | null
           created_at: string | null
           date_of_birth: string | null
           full_name: string | null
@@ -910,6 +914,7 @@ export type Database = {
           chart_prompts?: string[] | null
           city?: string | null
           country?: string | null
+          cover_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           full_name?: string | null
@@ -940,6 +945,7 @@ export type Database = {
           chart_prompts?: string[] | null
           city?: string | null
           country?: string | null
+          cover_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           full_name?: string | null
@@ -1408,6 +1414,10 @@ export type Database = {
       }
       can_notify: {
         Args: { _actor: string; _recipient: string }
+        Returns: boolean
+      }
+      can_view_journal_media: {
+        Args: { _path: string; _viewer: string }
         Returns: boolean
       }
       cleanup_inactive_voice_rooms: { Args: never; Returns: undefined }
