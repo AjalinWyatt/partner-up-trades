@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Crosshair,
-  Globe2,
+  ChevronRight,
+  MapPin,
+  Navigation,
   Loader2,
   Lock,
   Minus,
@@ -17,14 +18,12 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { DARK_MAP_STYLE, loadGoogleMaps } from "@/lib/googleMaps";
 import { MapTrader, getMapTraders, geocodePlaces, milesBetween, placeKey } from "@/lib/tradersMap";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const MARKETS = ["All", "Forex", "Futures", "Options"] as const;
 
-const matchColor = (pct: number) =>
-  pct >= 80 ? "#22c55e" : pct >= 60 ? "#3b82f6" : "#f0b429";
-
 type Tier = "world" | "country" | "city" | "street";
-const tierFor = (z: number): Tier => (z < 3 ? "world" : z < 6 ? "country" : z < 10 ? "city" : "street");
+const tierFor = (z: number): Tier => (z < 3 ? "world" : z < 6 ? "country" : z < 9 ? "city" : "street");
 
 const initials = (t: { full_name: string | null; username: string | null }) =>
   (t.full_name || t.username || "?")
@@ -50,6 +49,17 @@ function pinIcon(text: string, color: string) {
     <circle cx="27" cy="24" r="17" fill="#0b0e11" stroke="${color}" stroke-width="3"/>
     <text x="27" y="29" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="800" fill="#ffffff">${text}</text>
     <path d="M27 44 L21 54 L33 54 Z" fill="${color}"/>
+  </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function avatarIcon(url: string) {
+  const safeUrl = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+    <defs><clipPath id="c"><circle cx="22" cy="22" r="16"/></clipPath></defs>
+    <circle cx="22" cy="22" r="19" fill="#071113" stroke="#18aaa5" stroke-width="1.5"/>
+    <image href="${safeUrl}" x="6" y="6" width="32" height="32" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>
+    <circle cx="35" cy="35" r="4" fill="#16c784" stroke="#071113" stroke-width="2"/>
   </svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
@@ -87,20 +97,20 @@ export default function TradersMap() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const meMarkerRef = useRef<google.maps.Marker | null>(null);
-  const spinRef = useRef<number | null>(null);
+  const radiusRef = useRef<google.maps.Circle | null>(null);
 
   const [traders, setTraders] = useState<MapTrader[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1.6);
+  const [zoom, setZoom] = useState(9);
   const [market, setMarket] = useState<(typeof MARKETS)[number]>("All");
   const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState("");
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<MapTrader | null>(null);
-  const [cityLabel, setCityLabel] = useState<string | null>(null);
+  const [browsingNearby, setBrowsingNearby] = useState(false);
 
   const tier = tierFor(zoom);
 
@@ -156,10 +166,10 @@ export default function TradersMap() {
       .then((maps) => {
         if (cancelled || !mapDivRef.current) return;
         const map = new maps.Map(mapDivRef.current, {
-          center: { lat: 20, lng: 0 },
-          zoom: 1.6,
-          minZoom: 1,
-          maxZoom: 16,
+          center: { lat: 33.749, lng: -84.388 },
+          zoom: 9,
+          minZoom: 8,
+          maxZoom: 14,
           styles: DARK_MAP_STYLE,
           disableDefaultUI: true,
           gestureHandling: "greedy",
@@ -167,47 +177,68 @@ export default function TradersMap() {
           clickableIcons: false,
         });
         mapRef.current = map;
-        map.addListener("zoom_changed", () => setZoom(map.getZoom() ?? 1.6));
-        map.addListener("idle", () => setZoom(map.getZoom() ?? 1.6));
-        map.addListener("dragstart", stopSpin);
+        map.addListener("zoom_changed", () => setZoom(map.getZoom() ?? 9));
+        map.addListener("idle", () => setZoom(map.getZoom() ?? 9));
         map.addListener("click", () => setSelected(null));
         setMapReady(true);
-        startSpin();
       })
       .catch((e) => setMapError(e.message || "Map failed to load"));
     return () => {
       cancelled = true;
-      stopSpin();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const stopSpin = useCallback(() => {
-    if (spinRef.current) {
-      window.clearInterval(spinRef.current);
-      spinRef.current = null;
-    }
-  }, []);
-
-  const startSpin = useCallback(() => {
-    stopSpin();
-    spinRef.current = window.setInterval(() => {
-      const map = mapRef.current;
-      if (!map) return;
-      if ((map.getZoom() ?? 0) > 3) return stopSpin();
-      const c = map.getCenter();
-      if (c) map.setCenter({ lat: c.lat(), lng: c.lng() + 0.35 });
-    }, 60);
-  }, [stopSpin]);
+  /* Keep the map centered on the member's broad area and bounded to 50 miles. */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !userLoc) return;
+    const latDelta = 50 / 69;
+    const lngDelta = 50 / (69 * Math.max(0.25, Math.cos((userLoc.lat * Math.PI) / 180)));
+    map.setOptions({
+      restriction: {
+        latLngBounds: {
+          north: userLoc.lat + latDelta,
+          south: userLoc.lat - latDelta,
+          east: userLoc.lng + lngDelta,
+          west: userLoc.lng - lngDelta,
+        },
+        strictBounds: true,
+      },
+    });
+    map.setCenter(userLoc);
+    map.setZoom(9);
+    radiusRef.current?.setMap(null);
+    radiusRef.current = new google.maps.Circle({
+      map,
+      center: userLoc,
+      radius: 80467.2,
+      strokeColor: "#18aaa5",
+      strokeOpacity: 0.8,
+      strokeWeight: 1,
+      fillColor: "#18aaa5",
+      fillOpacity: 0.035,
+      clickable: false,
+    });
+    return () => radiusRef.current?.setMap(null);
+  }, [mapReady, userLoc]);
 
   /* ---------------- filtering ---------------- */
+  const localTraders = useMemo(
+    () => userLoc ? traders.filter((t) => milesBetween(userLoc, { lat: t.lat, lng: t.lng }) <= 50) : [],
+    [traders, userLoc],
+  );
+
   const filtered = useMemo(() => {
-    let list = traders;
+    let list = localTraders;
     if (market !== "All") list = list.filter((t) => t.markets.includes(market));
     const q = search.trim().toLowerCase();
-    if (q) list = list.filter((t) => t.placeLabel.toLowerCase().includes(q));
+    if (q) list = list.filter((t) =>
+      t.placeLabel.toLowerCase().includes(q)
+      || (t.full_name || "").toLowerCase().includes(q)
+      || (t.username || "").toLowerCase().includes(q),
+    );
     return list;
-  }, [traders, market, search]);
+  }, [localTraders, market, search]);
 
   /* ---------------- clustering by tier ---------------- */
   const clusters = useMemo<Cluster[]>(() => {
@@ -248,24 +279,43 @@ export default function TradersMap() {
     markersRef.current = [];
 
     if (tier === "street") {
+      const nearbyGroups = new Map<string, MapTrader[]>();
       filtered.forEach((t) => {
+        const key = `${Math.round(t.jlat * 18)}:${Math.round(t.jlng * 18)}`;
+        nearbyGroups.set(key, [...(nearbyGroups.get(key) || []), t]);
+      });
+      nearbyGroups.forEach((group) => {
+        const t = group[0];
+        if (!t) return;
+        const lat = group.reduce((sum, trader) => sum + trader.jlat, 0) / group.length;
+        const lng = group.reduce((sum, trader) => sum + trader.jlng, 0) / group.length;
         const marker = new google.maps.Marker({
           map,
-          position: { lat: t.jlat, lng: t.jlng },
-          icon: {
-            url: pinIcon(initials(t), matchColor(t.matchPct)),
-            scaledSize: new google.maps.Size(54, 62),
-            anchor: new google.maps.Point(27, 58),
-          },
-          title: `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
+          position: { lat, lng },
+          icon: group.length > 1
+            ? { url: clusterIcon(group.length, "#18aaa5"), scaledSize: new google.maps.Size(42, 42), anchor: new google.maps.Point(21, 21) }
+            : {
+                url: t.avatar_url ? avatarIcon(t.avatar_url) : pinIcon(initials(t), "#18aaa5"),
+                scaledSize: new google.maps.Size(44, 44),
+                anchor: new google.maps.Point(22, 22),
+              },
+          title: group.length > 1 ? `${group.length} nearby traders` : `${t.full_name || t.username || "Trader"} · ${t.matchPct}% match`,
           optimized: false,
         });
-        marker.addListener("click", () => setSelected(t));
+        marker.addListener("click", () => {
+          if (group.length > 1 && (map.getZoom() ?? 9) < 13) {
+            map.panTo({ lat, lng });
+            map.setZoom(Math.min(14, (map.getZoom() ?? 9) + 2));
+          } else {
+            setSelected(t);
+          }
+          setBrowsingNearby(true);
+        });
         markersRef.current.push(marker);
       });
     } else {
       clusters.forEach((c) => {
-        const color = "#00e5e5";
+        const color = "#18aaa5";
         const marker = new google.maps.Marker({
           map,
           position: { lat: c.lat, lng: c.lng },
@@ -296,15 +346,13 @@ export default function TradersMap() {
           optimized: false,
         });
         marker.addListener("click", () => {
-          stopSpin();
           map.panTo({ lat: c.lat, lng: c.lng });
           map.setZoom(Math.min(16, (map.getZoom() ?? 2) + (tier === "world" ? 3 : tier === "country" ? 3 : 4)));
-          if (tier === "city") setCityLabel(`${c.label} · ${c.count} trader${c.count === 1 ? "" : "s"}`);
         });
         markersRef.current.push(marker);
       });
     }
-  }, [clusters, filtered, tier, mapReady, stopSpin]);
+  }, [clusters, filtered, tier, mapReady]);
 
   /* ---------------- me marker ---------------- */
   useEffect(() => {
@@ -349,14 +397,12 @@ export default function TradersMap() {
   }, [filtered, visibleIds, userLoc]);
 
   const flyToMe = () => {
-    stopSpin();
     if (!userLoc) return;
     mapRef.current?.panTo(userLoc);
     mapRef.current?.setZoom(10);
   };
 
   const nudgeZoom = (d: number) => {
-    stopSpin();
     const map = mapRef.current;
     if (!map) return;
     map.setZoom(Math.max(1, Math.min(16, (map.getZoom() ?? 2) + d)));
@@ -366,25 +412,28 @@ export default function TradersMap() {
     e.preventDefault();
     const q = search.trim();
     if (!q) return;
-    stopSpin();
-    const hit = traders.find((t) => t.placeLabel.toLowerCase().includes(q.toLowerCase()));
+    setBrowsingNearby(true);
+    const hit = localTraders.find((t) =>
+      t.placeLabel.toLowerCase().includes(q.toLowerCase())
+      || (t.full_name || "").toLowerCase().includes(q.toLowerCase())
+      || (t.username || "").toLowerCase().includes(q.toLowerCase()),
+    );
     if (hit) {
       mapRef.current?.panTo({ lat: hit.lat, lng: hit.lng });
-      mapRef.current?.setZoom(9);
+      mapRef.current?.setZoom(10);
       return;
-    }
-    const coords = await geocodePlaces([q]);
-    if (coords[q]) {
-      mapRef.current?.panTo(coords[q]);
-      mapRef.current?.setZoom(8);
     }
   };
 
   const distanceLabel = (t: MapTrader) =>
     userLoc ? `${milesBetween(userLoc, { lat: t.lat, lng: t.lng }).toFixed(1)} miles away` : t.placeLabel;
 
+  const sheetTraders = selected
+    ? [selected, ...visibleTraders.filter((t) => t.id !== selected.id)]
+    : visibleTraders;
+
   return (
-    <div className="fixed inset-0 bg-background overflow-hidden">
+    <div className="fixed inset-0 overflow-hidden bg-background">
       <div ref={mapDivRef} className="absolute inset-0" />
 
       {(loading || guardLoading || (!mapReady && !mapError)) && (
@@ -399,202 +448,171 @@ export default function TradersMap() {
         </div>
       )}
 
-      {/* ---------- top bar ---------- */}
-      <div className="absolute top-0 inset-x-0 z-20 pt-safe-3 px-4 pb-2 bg-gradient-to-b from-background via-background/80 to-transparent">
+      <div className="absolute inset-x-0 top-0 z-20 px-3 pt-safe-3 pb-8 bg-gradient-to-b from-background via-background/70 to-transparent">
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => navigate("/discover")}
             aria-label="Back to Discover"
-            className="w-10 h-10 shrink-0 rounded-full border border-border bg-card/70 backdrop-blur-md flex items-center justify-center text-foreground"
+            className="h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
 
           <form onSubmit={runSearch} className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 h-10 px-3 rounded-full border border-border bg-card/70 backdrop-blur-md">
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex h-9 items-center gap-2 rounded-full border border-border bg-card/80 px-3 backdrop-blur-md">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by city or country..."
-                className="flex-1 min-w-0 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground outline-none"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (!e.target.value) setBrowsingNearby(false);
+                }}
+                placeholder="Search within 50 miles..."
+                className="min-w-0 flex-1 bg-transparent text-[11px] text-foreground outline-none placeholder:text-muted-foreground"
               />
               {search && (
-                <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
+                <Button type="button" variant="ghost" size="icon" onClick={() => { setSearch(""); setBrowsingNearby(false); }} aria-label="Clear search" className="h-6 w-6 rounded-full">
                   <X className="w-4 h-4 text-muted-foreground" />
-                </button>
+                </Button>
               )}
             </div>
           </form>
 
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setShowFilters((v) => !v)}
             aria-label="Filters"
             className={cn(
-              "w-10 h-10 shrink-0 rounded-full border backdrop-blur-md flex items-center justify-center",
-              showFilters ? "border-accent bg-accent/15 text-accent" : "border-border bg-card/70 text-foreground",
+              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md",
+              showFilters && "border-accent/70 text-accent",
             )}
           >
-            <SlidersHorizontal className="w-4.5 h-4.5" />
-          </button>
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
         </div>
 
-        {/* title overlay */}
-        <div className="mt-3 flex items-center gap-2">
-          <Globe2 className="w-4 h-4 text-accent" />
-          <span className="text-[14px] italic text-foreground/90">Traders are everywhere.</span>
+        <div className="mt-3 flex items-start gap-2 pl-1">
+          <MapPin className="mt-0.5 h-4 w-4 text-accent" />
+          <div>
+            <p className="text-[12px] font-semibold text-foreground">Traders near you</p>
+            <p className="text-[10px] text-muted-foreground">Showing traders within 50 miles.</p>
+          </div>
         </div>
 
-        {/* market pills */}
-        {(showFilters || tier !== "world") && (
-          <div className="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        {showFilters && (
+          <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pl-1 no-scrollbar">
             {MARKETS.map((m) => (
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 key={m}
                 onClick={() => setMarket(m)}
                 className={cn(
-                  "shrink-0 px-3 h-8 rounded-full border text-[12px] font-bold backdrop-blur-md",
-                  market === m
-                    ? "border-accent bg-accent/[0.14] text-accent"
-                    : "border-border bg-card/70 text-muted-foreground",
+                  "h-7 shrink-0 rounded-full bg-card/80 px-3 text-[10px] backdrop-blur-md",
+                  market === m && "border-accent/70 text-accent",
                 )}
               >
                 {m}
-              </button>
+              </Button>
             ))}
-            <span className="shrink-0 ml-auto px-3 h-8 flex items-center rounded-full border border-border bg-card/70 backdrop-blur-md text-[12px] font-bold text-foreground">
-              {visibleTraders.length} nearby
-            </span>
           </div>
         )}
       </div>
 
-      {/* ---------- map controls ---------- */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
-        <button
+      <div className="absolute right-3 top-[43%] z-20 flex -translate-y-1/2 flex-col gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={flyToMe}
+          aria-label="Center on my area"
+          disabled={!userLoc}
+          className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md disabled:opacity-40"
+        >
+          <Navigation className="h-4 w-4 -rotate-12" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
           onClick={() => nudgeZoom(1)}
           aria-label="Zoom in"
-          className="w-10 h-10 rounded-full border border-border bg-card/70 backdrop-blur-md flex items-center justify-center text-foreground"
+          className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md"
         >
-          <Plus className="w-4 h-4" />
-        </button>
-        <button
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
           onClick={() => nudgeZoom(-1)}
           aria-label="Zoom out"
-          className="w-10 h-10 rounded-full border border-border bg-card/70 backdrop-blur-md flex items-center justify-center text-foreground"
+          className="h-9 w-9 rounded-full bg-card/90 backdrop-blur-md"
         >
-          <Minus className="w-4 h-4" />
-        </button>
-        <button
-          onClick={flyToMe}
-          aria-label="Fly to me"
-          disabled={!userLoc}
-          className="w-10 h-10 rounded-full border border-accent/60 bg-accent/15 backdrop-blur-md flex items-center justify-center text-accent disabled:opacity-40"
-        >
-          <Crosshair className="w-4 h-4" />
-        </button>
+          <Minus className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* ---------- mini card ---------- */}
-      {selected && (
-        <div className="absolute left-4 right-4 bottom-[190px] z-30">
-          <div className="rounded-2xl border border-border bg-card/90 backdrop-blur-xl p-3 flex items-center gap-3">
-            <Avatar t={selected} />
-            <div className="flex-1 min-w-0">
-              <div className="text-[14px] font-bold text-foreground truncate">
-                {selected.full_name || `@${selected.username}`}
+      <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
+        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-muted" />
+        <div className="px-4 pb-3 pt-3">
+          {!browsingNearby && localTraders.length > 0 ? (
+            <div className="py-1">
+              <h2 className="text-[14px] font-semibold text-foreground">Discover traders within 50 miles</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground">Tap a trader to view their profile.</p>
+              <div className="mt-3 flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                <Lock className="h-3 w-3 shrink-0" />
+                Exact locations are never shared
               </div>
-              <div className="text-[11px] text-muted-foreground truncate">{distanceLabel(selected)}</div>
             </div>
-            <span
-              className="text-[12px] font-black shrink-0"
-              style={{ color: matchColor(selected.matchPct) }}
-            >
-              {selected.matchPct}%
-            </span>
-            <button
-              onClick={() => navigate(`/profile/${selected.id}`)}
-              className="shrink-0 px-3 h-9 rounded-full bg-accent text-accent-foreground text-[12px] font-bold"
-            >
-              View Profile →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ---------- bottom sheet ---------- */}
-      <div className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card/85 backdrop-blur-xl rounded-t-3xl pb-safe-3">
-        <div className="w-10 h-1 rounded-full bg-border mx-auto mt-2.5" />
-
-        <div className="px-4 pt-3 pb-3">
-          {tier === "street" ? (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] font-black text-foreground">
-                  {visibleTraders.length} trader{visibleTraders.length === 1 ? "" : "s"} in view
-                </span>
-                <span className="text-[11px] text-muted-foreground">Swipe cards →</span>
-              </div>
-              {visibleTraders.length === 0 ? (
-                <p className="mt-2 text-[12px] text-muted-foreground">No traders in this area yet.</p>
-              ) : (
-                <div className="mt-2.5 flex gap-3 overflow-x-auto no-scrollbar pb-1">
-                  {visibleTraders.map((t) => (
-                    <div
-                      key={t.id}
-                      className="shrink-0 w-[228px] rounded-2xl border border-border bg-secondary/60 p-3"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Avatar t={t} />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-bold text-foreground truncate">
-                            {t.full_name || `@${t.username}`}
-                          </div>
-                          {t.username && (
-                            <div className="text-[11px] text-muted-foreground truncate">@{t.username}</div>
-                          )}
-                        </div>
-                        <span className="text-[12px] font-black" style={{ color: matchColor(t.matchPct) }}>
-                          {t.matchPct}%
-                        </span>
-                      </div>
-                      <div className="mt-2 text-[11px] text-foreground/80 truncate">
-                        {[t.markets[0], t.trading_style[0]].filter(Boolean).join(" · ") || "Trader"}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground truncate">{distanceLabel(t)}</div>
-                      <button
-                        onClick={() => navigate(`/profile/${t.id}`)}
-                        className="mt-2.5 w-full h-9 rounded-full bg-accent text-accent-foreground text-[12px] font-bold"
-                      >
-                        View Profile →
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : tier === "city" ? (
+          ) : sheetTraders.length > 0 ? (
             <div>
-              <div className="text-[13px] font-black text-foreground">
-                {cityLabel || `${visibleTraders.length} trader${visibleTraders.length === 1 ? "" : "s"} in view`}
+              <div className="mb-1 flex items-center justify-between">
+                <h2 className="text-[12px] font-semibold text-foreground">Traders nearby ({sheetTraders.length})</h2>
+                <span className="text-[9px] text-muted-foreground">Nearest⌄</span>
               </div>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Zoom in once more to see individual traders.
-              </p>
+              {sheetTraders.slice(0, 4).map((t) => (
+                <Button
+                  key={t.id}
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate(`/profile/${t.id}`)}
+                  className="h-auto w-full justify-start gap-3 rounded-none border-b border-border/70 px-0 py-2.5 text-left last:border-0 hover:bg-transparent"
+                >
+                  <Avatar t={t} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="truncate text-[11px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
+                      <span className="shrink-0 text-[9px] text-muted-foreground">{distanceLabel(t)}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-[9px] text-muted-foreground">
+                      {[t.markets[0], t.trading_style[0]].filter(Boolean).join("  ·  ") || "Trader"}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Button>
+              ))}
             </div>
           ) : (
-            <div>
-              <div className="text-[13px] font-black text-foreground">Zoom in to find traders near you</div>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Tap a glowing cluster to dive into a country or city.
+            <div className="flex flex-col items-center py-2 text-center">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                <Search className="h-4 w-4" />
+              </div>
+              <h2 className="mt-2 text-[12px] font-semibold text-foreground">No traders nearby</h2>
+              <p className="mt-1 max-w-[280px] text-[9px] leading-4 text-muted-foreground">
+                We couldn't find any traders within 50 miles right now. Try adjusting your filters or check back later.
               </p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowFilters(true)} className="mt-3 h-7 rounded-full border-accent/70 px-7 text-[9px] text-accent">
+                Adjust Filters
+              </Button>
             </div>
           )}
-
-          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <Lock className="w-3 h-3 shrink-0" />
-            Exact locations are never shared
-          </div>
         </div>
       </div>
     </div>
