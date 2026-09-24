@@ -21,6 +21,9 @@ export async function sendNotification({
   relatedUserId,
   entryId,
 }: NotifyParams) {
+  // Feed removed: no longer create notifications for Feed-post interactions.
+  if (FEED_POST_NOTIFICATION_TYPES.has(type)) return;
+
   // De-duplicate: same type + same user + same related_user within 24h
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   let query = supabase
