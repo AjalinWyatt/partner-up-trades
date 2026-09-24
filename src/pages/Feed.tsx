@@ -19,6 +19,7 @@ import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { cn } from "@/lib/utils";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { toast } from "sonner";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 interface FeedPost {
   id: string;
@@ -70,6 +71,7 @@ const Feed = () => {
   // Hydrate posts from sessionStorage so revisits paint instantly.
   const [posts, setPosts, hadPostsCache] = useSessionCache<FeedPost[]>("feed:posts", []);
   const [loading, setLoading] = useState(!hadPostsCache);
+  const [loadError, setLoadError] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
   const [myMarkets, setMyMarkets] = useState<string[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -192,6 +194,7 @@ const Feed = () => {
   }, []);
 
   const loadFeed = useCallback(async () => {
+    setLoadError(false);
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     if (!user) { setLoading(false); return; }
@@ -217,7 +220,13 @@ const Feed = () => {
       query = query.in("market", userMarkets);
     }
 
-    const { data: postsData } = await query;
+    const { data: postsData, error: postsError } = await query;
+
+    if (postsError) {
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
 
     if (!postsData || postsData.length === 0) {
       setPosts([]);
@@ -712,11 +721,13 @@ const Feed = () => {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <DestinationLoading label="Connecting you to the community." />
       </AppLayout>
     );
+  }
+
+  if (loadError) {
+    return <AppLayout><DestinationState kind="error" title="Community is out of reach" description="We could not connect to the latest Pulse activity." actionLabel="Try again" onAction={() => { setLoading(true); void loadFeed(); }} /></AppLayout>;
   }
 
   return (

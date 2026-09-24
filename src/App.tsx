@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RouteSkeleton from "@/components/RouteSkeleton";
 import BetaGate from "@/components/BetaGate";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 
 // Eager: landing/auth (first paint matters most)
 import Landing from "./pages/Landing";
@@ -61,7 +62,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Suspense fallback={<RouteSkeleton />}>
+        <AppErrorBoundary><Suspense fallback={<RouteSkeleton />}>
           <Routes>
           <Route path="/" element={<BetaGate><Landing /></BetaGate>} />
           <Route path="/sign-in" element={<SignIn />} />
@@ -98,7 +99,7 @@ const App = () => (
           <Route path="/rooms/:id" element={<Room />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Suspense>
+        </Suspense></AppErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

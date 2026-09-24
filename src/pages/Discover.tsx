@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { DiscoverMatchCandidate, getDiscoverMatches } from "@/lib/discoverMatches";
 import { useSessionCache } from "@/hooks/use-session-cache";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 type MatchCandidate = DiscoverMatchCandidate;
 
@@ -18,21 +19,29 @@ const Discover = () => {
   const [loading, setLoading] = useState(!hadMatchesCache);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   
 
   useEffect(() => {
     const load = async () => {
+      setLoadError(false);
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) { setLoading(false); return; }
 
-      const { me, matches } = await getDiscoverMatches(user.id);
-      setMe(me);
-      setMatches(matches);
-      setLoading(false);
+      try {
+        const { me, matches } = await getDiscoverMatches(user.id);
+        setMe(me);
+        setMatches(matches);
+      } catch {
+        setLoadError(true);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-  }, []);
+  }, [reloadKey]);
 
   const filtered = useMemo(() => {
     let result = matches;
@@ -50,9 +59,7 @@ const Discover = () => {
   if ((guardLoading || loading) && !hadMatchesCache) {
     return (
       <AppLayout>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-        </div>
+        <DestinationLoading label="Finding traders who fit your preferences." />
       </AppLayout>
     );
   }
@@ -95,11 +102,10 @@ const Discover = () => {
         </header>
 
         <div className="px-6">
-          {filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-sm font-medium text-foreground">No traders match your criteria right now.</p>
-              <p className="mt-1 text-xs text-muted-foreground">Please check back soon.</p>
-            </div>
+          {loadError ? (
+            <DestinationState kind="error" title="We lost the signal" description="Your matches could not be loaded. Your preferences are safe." actionLabel="Try again" onAction={() => { setLoading(true); setReloadKey((key) => key + 1); }} />
+          ) : filtered.length === 0 ? (
+            <DestinationState title={searchQuery ? "A quiet search" : "Your next match is coming"} description={searchQuery ? "No traders match this search yet. Clear it to return to your recommendations." : "No compatible traders are available right now. Check back as the community grows."} actionLabel={searchQuery ? "Clear search" : undefined} onAction={searchQuery ? () => setSearchQuery("") : undefined} />
           ) : (
             <div className="divide-y divide-border/60">
               {filtered.map((m) => (

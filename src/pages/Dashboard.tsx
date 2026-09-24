@@ -24,6 +24,7 @@ import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
 import { getMapTraders, milesBetween, resolveMyApproxLocation } from "@/lib/tradersMap";
 import globeImage from "@/assets/auth-globe.png";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 type DashboardProfile = {
   username: string | null;
@@ -176,20 +177,23 @@ const Dashboard = () => {
   const [daily, setDaily] = useState<DailySummary>(EMPTY_DAILY);
   const [showAllActivity, setShowAllActivity] = useState(false);
   const [loading, setLoading] = useState(!(hadProfileCache && hadStatsCache));
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
+      setLoadError(false);
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user || !active) return;
 
       const [
-        { data: prof },
-        { count: savedCount },
-        { data: entries },
-        { data: notifs },
-        { count: pendingRequests },
+        { data: prof, error: profileError },
+        { count: savedCount, error: savedError },
+        { data: entries, error: entriesError },
+        { data: notifs, error: notificationsError },
+        { count: pendingRequests, error: requestsError },
       ] = await Promise.all([
         supabase.from("profiles").select("username, avatar_url, tour_completed").eq("id", user.id).maybeSingle(),
         supabase.from("saved_profiles").select("*", { count: "exact", head: true }).eq("saver_id", user.id),
@@ -198,6 +202,11 @@ const Dashboard = () => {
         supabase.from("partner_connections").select("*", { count: "exact", head: true }).eq("receiver_id", user.id).eq("status", "pending"),
       ]);
       if (!active) return;
+      if (profileError || savedError || entriesError || notificationsError || requestsError) {
+        setLoadError(true);
+        setLoading(false);
+        return;
+      }
 
       setProfile(prof || null);
       const replay = sessionStorage.getItem("tw:replay-tour") === "1";
@@ -333,7 +342,7 @@ const Dashboard = () => {
     };
     void load();
     return () => { active = false; };
-  }, []);
+  }, [reloadKey]);
 
   const activity = useMemo(() => {
     const cutoff = Date.now() - 30 * 86_400_000;
@@ -380,11 +389,13 @@ const Dashboard = () => {
   if (guardLoading || loading) {
     return (
       <AppLayout>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        </div>
+        <DestinationLoading label="Preparing your daily command center." />
       </AppLayout>
     );
+  }
+
+  if (loadError) {
+    return <AppLayout><DestinationState kind="error" title="Home is out of reach" description="We could not prepare today’s overview. Your activity remains safe." actionLabel="Try again" onAction={() => { setLoading(true); setReloadKey((key) => key + 1); }} /></AppLayout>;
   }
 
   return (
@@ -471,10 +482,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-border bg-card/70 px-4 py-6 text-center">
-                <p className="text-xs font-semibold text-foreground">You’re all caught up</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">New activity will appear here.</p>
-              </div>
+              <DestinationState compact title="You’re all caught up" description="New activity will appear here when something needs your attention." />
             )}
           </section>
 

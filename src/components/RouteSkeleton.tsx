@@ -2,11 +2,11 @@ import { useLocation } from "react-router-dom";
 
 /** Lightweight building blocks — all themed via design tokens. */
 const Bar = ({ className = "" }: { className?: string }) => (
-  <div className={`bg-secondary/60 rounded-md animate-pulse ${className}`} />
+  <div className={`bg-secondary/45 rounded-sm animate-pulse ${className}`} />
 );
 
 const Circle = ({ className = "" }: { className?: string }) => (
-  <div className={`bg-secondary/60 rounded-full animate-pulse ${className}`} />
+  <div className={`bg-secondary/45 rounded-full animate-pulse ${className}`} />
 );
 
 const FeedSkeleton = () => (

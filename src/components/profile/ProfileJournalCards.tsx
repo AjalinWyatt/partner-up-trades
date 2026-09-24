@@ -3,6 +3,7 @@ import { BookOpen, CalendarDays, Clock3, Globe, Lock, MoreHorizontal, SlidersHor
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { DestinationState } from "@/components/DestinationState";
 
 export interface ProfileJournalEntry {
   id: string;
@@ -85,7 +86,7 @@ export default function ProfileJournalCards({ entries, emptyDescription = "Nothi
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center rounded-xl border border-surface-line bg-surface px-6 py-6 text-center"><BookOpen className="mb-1.5 h-5 w-5 text-primary" /><p className="text-[13px] font-semibold text-foreground">No journal entries yet</p><p className="mt-0.5 max-w-[240px] text-[11px] text-muted-foreground">{emptyDescription}</p></div>
+        <DestinationState compact icon={BookOpen} title="A fresh journal page" description={emptyDescription} />
       ) : (
         <div className="space-y-2.5">
           {filtered.map((entry) => {

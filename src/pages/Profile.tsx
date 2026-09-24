@@ -13,6 +13,7 @@ import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
 import ProfileHero from "@/components/profile/ProfileHero";
 import ProfileJournalCards, { type JournalVisibility, type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
+import { DestinationLoading, DestinationState } from "@/components/DestinationState";
 
 interface ProfileData {
   username: string | null;
@@ -88,6 +89,8 @@ const Profile = () => {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [coverBusy, setCoverBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
@@ -103,6 +106,7 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setLoadError(false);
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) {
@@ -112,12 +116,13 @@ const Profile = () => {
 
       setUserId(user.id);
 
-      const [{ data: pData }, { data: tData }, { data: entries }] = await Promise.all([
+      const [{ data: pData, error: profileError }, { data: tData, error: tradingError }, { data: entries, error: entriesError }] = await Promise.all([
         supabase.from("profiles").select("id, username, full_name, avatar_url, cover_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, tour_completed, username_changes_count, notify_email, notify_messages, notify_new_matches, notify_partner_activity, created_at, updated_at").eq("id", user.id).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("journal_entries").select("*").eq("user_id", user.id).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(50),
       ]);
 
+      if (profileError || tradingError || entriesError) setLoadError(true);
       if (pData) {
         setProfile(pData as ProfileData);
         // Only seed form fields from DB once. Never clobber what the user is typing.
@@ -203,7 +208,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [reloadKey]);
 
   const getInitials = () => {
     if (!profile?.full_name) return "?";
@@ -414,11 +419,13 @@ const Profile = () => {
   if (guardLoading || loading || !onboardingComplete) {
     return (
       <AppLayout>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
+        <DestinationLoading label="Preparing your profile and journal." />
       </AppLayout>
     );
+  }
+
+  if (loadError && !profile) {
+    return <AppLayout><DestinationState kind="error" title="Your profile is out of reach" description="We could not load your profile. Your details remain safe." actionLabel="Try again" onAction={() => { setLoading(true); setReloadKey((key) => key + 1); }} /></AppLayout>;
   }
 
   if (editing) {
