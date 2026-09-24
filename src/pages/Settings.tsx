@@ -39,6 +39,7 @@ export default function Settings() {
   useOnboardingGuard();
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
+  const [deviceLoc, setDeviceLoc] = useState(() => localStorage.getItem("tw:map-device-location") === "1");
   const [profile, setProfile, hadProfileCache] = useSessionCache<ProfileRow | null>("settings:profile", null);
   const [loading, setLoading] = useState(!hadProfileCache);
   const [fullName, setFullName] = useState("");
@@ -335,9 +336,9 @@ export default function Settings() {
                     key={opt.v}
                     onClick={async () => {
                       const prev = profile!.map_precision;
-                      setProfile((p) => (p ? { ...p, map_precision: opt.v } : p));
+                      setProfile({ ...profile!, map_precision: opt.v });
                       const { error } = await supabase.from("profiles").update({ map_precision: opt.v }).eq("id", profile!.id);
-                      if (error) { setProfile((p) => (p ? { ...p, map_precision: prev } : p)); toast.error("Couldn't update"); }
+                      if (error) { setProfile({ ...profile!, map_precision: prev }); toast.error("Couldn't update"); }
                       else toast.success("Pin precision updated");
                     }}
                     className={cn(
