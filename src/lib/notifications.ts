@@ -1,5 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const FEED_POST_NOTIFICATION_TYPES = new Set([
+  "post_liked",
+  "post_commented",
+  "post_reposted",
+  "comment_liked",
+  "like",
+  "comment",
+]);
+
 interface NotifyParams {
   userId: string;
   type: string;

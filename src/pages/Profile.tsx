@@ -731,11 +731,9 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Posts / Grid / Details / Journal icon tabs */}
+        {/* Details / Journal icon tabs */}
         <div className="mt-6 flex items-center justify-center gap-1 border-b border-border px-5">
           {[
-            { Icon: FileText, label: "Posts" },
-            { Icon: Grid3x3, label: "Grid" },
             { Icon: Info, label: "Details" },
             { Icon: NotebookPen, label: "Journal" },
           ].map(({ Icon, label }, index) => (
@@ -762,24 +760,6 @@ const Profile = () => {
           style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         >
         {activeTab === 0 ? (
-          <PostList
-            posts={posts}
-            savedPosts={savedPosts}
-            avatarUrl={profile?.avatar_url}
-            initials={getInitials()}
-            username={displayUsername}
-            onOpenPost={setSelectedPost}
-            onCreate={() => setShowCreatePost(true)}
-            onToggleLike={togglePostLike}
-            onSharePost={(post) => setPostToShare(post)}
-          />
-        ) : activeTab === 1 ? (
-          <PhotoGrid
-            posts={posts}
-            onOpenPost={setSelectedPost}
-            onCreate={() => setShowCreatePhoto(true)}
-          />
-        ) : activeTab === 2 ? (
           <DetailsGrid
             profile={profile}
             tradingProfile={tradingProfile}

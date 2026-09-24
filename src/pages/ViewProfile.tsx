@@ -387,8 +387,6 @@ const ViewProfile = () => {
 
         <div className="mt-6 flex border-b border-border px-5">
           {[
-            { Icon: FileText, label: "Posts" },
-            { Icon: Grid3x3, label: "Grid" },
             { Icon: NotebookPen, label: "Journal" },
             { Icon: Info, label: "Details" },
           ].map(({ Icon, label }, index) => (
@@ -415,77 +413,6 @@ const ViewProfile = () => {
         style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
       >
         {activeTab === 0 ? (
-          (() => { const visible = posts.filter((p) => (p as any).share_to_feed !== false); return visible.length > 0 ? (
-            <div>
-              {visible.map((post) => {
-                const media = post.media_urls?.[0] || post.media_url || post.image_url;
-                return (
-                  <button key={post.id} onClick={() => setOpenPost(post)} className="block w-full border-b border-border px-5 py-4 text-left transition-colors hover:bg-muted/20">
-                    <div className="flex items-start gap-3">
-                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-secondary">
-                        {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt="Profile photo" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{getInitials(profile?.full_name || profile?.username || "T")}</div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-foreground">{displayUsername}</span>
-                          <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
-                        </div>
-                        {post.kind === "repost" && (
-                          <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
-                        )}
-                        {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{post.content || post.caption}</p>}
-                        {!!post.tags?.length && (
-                          <div className="mt-3 flex flex-wrap gap-1.5">
-                            {post.tags.map((tag: string) => (
-                              <span key={tag} className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-foreground">#{tag}</span>
-                            ))}
-                          </div>
-                        )}
-                        {media && (
-                          <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-secondary">
-                            <img src={media} alt="Post media" className="max-h-[340px] w-full object-cover" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <EmptyState title="No posts yet" description="This trader hasn’t posted anything yet." />
-          ); })()
-        ) : activeTab === 1 ? (
-          (() => {
-            const photos = posts.filter((p) => {
-              const m = p.media_urls?.[0] || p.media_url || p.image_url;
-              return !!m;
-            });
-            if (photos.length === 0) return <EmptyState title="No photos yet" description="This trader hasn't shared any photos yet." />;
-            return (
-              <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
-                {photos.map((post) => {
-                  const media = post.media_urls?.[0] || post.media_url || post.image_url;
-                  const isMulti = (post.media_urls?.length || 0) > 1;
-                  return (
-                    <button key={post.id} onClick={() => setOpenPost(post)} className="relative aspect-square overflow-hidden bg-secondary">
-                      <img src={media!} alt="Post" className="h-full w-full object-cover" />
-                      {isMulti && (
-                        <div className="absolute right-1.5 top-1.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-bold text-foreground backdrop-blur">
-                          {post.media_urls!.length}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })()
-        ) : activeTab === 2 ? (
           journalEntries.length > 0 ? (
             <div className="space-y-3 px-5 py-4">
               {journalEntries.map((entry) => (
