@@ -8,3 +8,9 @@
 - [x] Verify the complete profile, live compatibility, and Journal privacy behavior
 - [x] Add connection type to onboarding/Edit Profile; add partnership strengths, accountability needs, communication preferences (not in Algo Match)
 - [x] Remap profile deeper details to the correct sources without UI redesign
+
+# Discover and Direct Messages visual refresh
+
+- [ ] Restyle Discover with compact hierarchy and restrained teal accents
+- [ ] Restyle the inbox and active DM view without changing messaging behavior
+- [ ] Verify both screens on mobile and desktop
