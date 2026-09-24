@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { BookOpen, CalendarDays, Camera, ChevronLeft, MapPin, MoreVertical, Pencil, UserRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BookOpen, CalendarDays, Camera, MapPin, MoreVertical, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type P = Record<string, any> | null;
