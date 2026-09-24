@@ -6,7 +6,7 @@ import {
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
   Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, ChevronRight, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu, MapPin,
-  Search, SlidersHorizontal, Navigation, LocateFixed,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
