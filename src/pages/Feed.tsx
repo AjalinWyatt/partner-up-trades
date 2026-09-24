@@ -3,11 +3,8 @@ import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cac
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MoreHorizontal, Link2, Eye, UserPlus, Trash2, Plus, PenSquare, Repeat2, Send, Bookmark, Sparkles, ArrowUpRight, Activity, MessageSquare, Mic, Coffee } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import CreatePostModal from "@/components/CreatePostModal";
-import PostDetailModal from "@/components/PostDetailModal";
 import PullToRefresh from "@/components/PullToRefresh";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import FeedCommentSheet from "@/components/FeedCommentSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
@@ -65,7 +62,7 @@ interface StoryProfileRow {
 }
 
 const FEED_FILTERS = ["All", "Crypto", "Forex", "Indices", "Futures", "Options", "Commodities"] as const;
-const FEED_MODES = ["Feed", "Rooms", "Pulse"] as const;
+const FEED_MODES = ["Rooms", "Pulse"] as const;
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
@@ -91,7 +88,7 @@ const Feed = () => {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [activeStoryGroupIndex, setActiveStoryGroupIndex] = useState<number | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-  const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Feed");
+  const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Rooms");
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
   const [availableToConnect, setAvailableToConnect] = useState(false);
@@ -701,9 +698,9 @@ const Feed = () => {
               <Wordmark size="text-lg" />
               <div className="flex items-center justify-end gap-2">
                 <button
-                  onClick={() => activeMode === "Feed" ? setShowCreatePost(true) : setShowCreateStory(true)}
+                  onClick={() => setShowCreateStory(true)}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted"
-                  aria-label={activeMode === "Feed" ? "Create post" : "Create pulse"}
+                  aria-label="Create pulse"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -722,7 +719,7 @@ const Feed = () => {
             </div>
 
             <div className="flex justify-center">
-              <div className="grid h-10 w-full max-w-[320px] grid-cols-3 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
+              <div className="grid h-10 w-full max-w-[320px] grid-cols-2 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
                 {FEED_MODES.map((mode) => {
                   const active = activeMode === mode;
                   const isPulse = mode === "Pulse";
@@ -1123,211 +1120,11 @@ const Feed = () => {
               )}
             </div>
           </div>
-        ) : visiblePosts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-            <img src={pulseGlobe} alt="" aria-hidden="true" className="h-16 w-16 opacity-90 drop-shadow-[0_0_18px_hsl(var(--primary)/0.45)]" />
-            <p className="mt-4 text-sm font-semibold text-foreground">No {selectedFeedFilter === "All" ? "posts" : `${selectedFeedFilter} posts`} yet</p>
-            <p className="mt-1 max-w-[280px] text-xs leading-5 text-muted-foreground">Post a chart, idea, meme, question, or recap to start shaping the conversation.</p>
-            <button
-              onClick={() => setShowCreatePost(true)}
-              className="mt-5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.22)]"
-            >
-              Create post
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3 px-4 py-4">
-            {visiblePosts.map((post) => (
-              <article key={post.id} className="overflow-hidden rounded-[22px] border border-border bg-card/90 shadow-[0_10px_30px_hsl(var(--background)/0.22)]">
-                <div className="p-4">
-                  <div className="flex items-start gap-3">
-                     <button onClick={() => navigate(post.user_id === myId ? "/profile" : `/profile/${post.user_id}`)} className="shrink-0">
-                      {post.avatar_url ? (
-                        <img src={post.avatar_url} alt={post.full_name} className="h-10 w-10 rounded-xl object-cover" />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-secondary text-xs font-semibold text-foreground">
-                          {getInitials(post.full_name)}
-                        </div>
-                      )}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => navigate(post.user_id === myId ? "/profile" : `/profile/${post.user_id}`)} className="truncate text-sm font-semibold text-foreground hover:opacity-80">
-                          @{post.username.replace(/^@+/, "")}
-                        </button>
-                        <span className="text-[11px] text-muted-foreground">{timeAgo(post.created_at)}</span>
-                      </div>
-                      {(post.market || post.experienceLevel) && (
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          {post.market && (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                              {post.market}
-                            </span>
-                          )}
-                          {post.experienceLevel && (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                              {post.experienceLevel}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <div className="mt-3 space-y-3">
-                        {(post.content || post.caption) && <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
-
-                        {!!post.media_urls?.length && (
-                          <button onClick={() => setSelectedPost(post)} className="block w-full overflow-hidden rounded-[20px] border border-border bg-muted">
-                            {post.media_urls.length === 1 ? (
-                              <img src={post.media_urls[0]} alt="Post media" className="aspect-[4/5] w-full object-cover" />
-                            ) : (
-                              <Carousel opts={{ loop: true }} className="w-full">
-                                <CarouselContent className="ml-0">
-                                  {post.media_urls.map((url) => (
-                                    <CarouselItem key={url} className="pl-0">
-                                      <img src={url} alt="Post media" className="aspect-[4/5] w-full object-cover" />
-                                    </CarouselItem>
-                                  ))}
-                                </CarouselContent>
-                              </Carousel>
-                            )}
-                          </button>
-                        )}
-
-                        {!!post.tags?.length && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {post.tags.slice(0, 4).map((tag) => (
-                              <span key={tag} className="rounded-full border border-border/60 bg-secondary/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                #{tag.replace(/^#/, "")}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex items-center gap-5 border-t border-border pt-3 text-muted-foreground">
-                        <button onClick={() => toggleLike(post.id)} aria-label="Like" className="flex items-center gap-1 transition-colors hover:text-foreground">
-                          <Heart className={cn("h-[18px] w-[18px]", post.liked ? "fill-destructive text-destructive" : "")} />
-                          {post.likeCount > 0 && <span className="text-[11px] tabular-nums">{post.likeCount}</span>}
-                        </button>
-                        <button onClick={() => setCommentPostId(post.id)} aria-label="Comment" className="flex items-center gap-1 transition-colors hover:text-foreground">
-                          <MessageCircle className="h-[18px] w-[18px]" />
-                          {post.commentCount > 0 && <span className="text-[11px] tabular-nums">{post.commentCount}</span>}
-                        </button>
-                        <button onClick={() => setPostToShare(post)} aria-label="Share" className="transition-colors hover:text-foreground">
-                          <Send className="h-[18px] w-[18px]" />
-                        </button>
-                        <button onClick={() => toggleSave(post.id)} aria-label="Save" className="ml-auto transition-colors hover:text-foreground">
-                          <Bookmark className={cn("h-[18px] w-[18px]", post.saved ? "fill-primary text-primary" : "")} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="relative">
-                      <button onClick={() => setMenuOpen(menuOpen === post.id ? null : post.id)} className="text-muted-foreground transition-colors hover:text-foreground">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                      {menuOpen === post.id && (
-                        <div className="absolute right-0 top-7 z-50 w-48 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-xl">
-                          <button
-                            onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
-                            className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
-                          >
-                            <Eye className="h-4 w-4" /> View Profile
-                          </button>
-                          {post.user_id !== myId && (
-                            <>
-                              <button
-                                onClick={() => { navigate(`/profile/${post.user_id}`); setMenuOpen(null); }}
-                                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
-                              >
-                                <Link2 className="h-4 w-4" /> Request Match
-                              </button>
-                              <button
-                                onClick={() => setMenuOpen(null)}
-                                className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
-                              >
-                                <UserPlus className="h-4 w-4" /> Follow
-                              </button>
-                            </>
-                          )}
-                          {(isAdmin || post.user_id === myId) && (
-                            <button
-                              onClick={() => {
-                                setEditingPost(post);
-                                setShowCreatePost(true);
-                                setMenuOpen(null);
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-foreground transition-colors hover:bg-muted"
-                            >
-                              <PenSquare className="h-4 w-4" /> Edit Post
-                            </button>
-                          )}
-                          {(isAdmin || post.user_id === myId) && (
-                            <button
-                              onClick={async () => {
-                                if (!confirm("Delete this post?")) return;
-                                await supabase.from("posts").delete().eq("id", post.id);
-                                setPosts((prev) => prev.filter((p) => p.id !== post.id));
-                                setMenuOpen(null);
-                                toast.success("Post deleted");
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" /> Delete Post
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+        ) : null}
         </PullToRefresh>
         </div>
       </div>
 
-      <CreatePostModal
-        open={showCreatePost}
-        onClose={() => {
-          setShowCreatePost(false);
-          setEditingPost(null);
-        }}
-        onCreated={() => {
-          setShowCreatePost(false);
-          setEditingPost(null);
-          loadFeed();
-        }}
-        initialPost={editingPost}
-      />
-      <PostDetailModal
-        open={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
-        post={selectedPost}
-        myId={myId}
-        onEdit={(post) => {
-          setSelectedPost(null);
-          setEditingPost(post as FeedPost);
-          setShowCreatePost(true);
-        }}
-        onShare={(post) => setPostToShare(post as FeedPost)}
-      />
-      <FeedCommentSheet
-        post={posts.find((entry) => entry.id === commentPostId) || null}
-        myId={myId}
-        onClose={() => setCommentPostId(null)}
-        onCountChange={(postId, delta) => {
-          setPosts(prev => prev.map(p => p.id === postId ? { ...p, commentCount: p.commentCount + delta } : p));
-        }}
-        onToggleLike={toggleLike}
-        onToggleSave={toggleSave}
-        onToggleRepost={toggleRepost}
-        onShare={() => {
-          const post = posts.find((entry) => entry.id === commentPostId);
-          if (post) setPostToShare(post);
-        }}
-      />
       <CreateStoryDialog open={showCreateStory} onClose={() => setShowCreateStory(false)} onCreated={() => loadFeed()} />
       <StoryViewer
         open={activeStoryGroupIndex !== null}
@@ -1337,55 +1134,6 @@ const Feed = () => {
         onNext={handleNextStory}
         onPrev={handlePrevStory}
       />
-      <Dialog open={!!postToShare} onOpenChange={(open) => { if (!open) { setPostToShare(null); setShareSearch(""); } }}>
-        <DialogContent className="border-border bg-card p-0 sm:max-w-md">
-          <DialogHeader className="border-b border-border px-4 py-3 text-left">
-            <DialogTitle className="text-sm font-bold text-foreground">Send post</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 px-4 py-4">
-            <Input
-              value={shareSearch}
-              onChange={(event) => setShareSearch(event.target.value)}
-              placeholder="Search partners or chats"
-              className="h-9 rounded-xl border-border bg-secondary text-sm text-foreground placeholder:text-muted-foreground"
-            />
-
-            {filteredShareTargets.length === 0 ? (
-              <p className="py-8 text-center text-xs text-muted-foreground">No partners or DM chats yet.</p>
-            ) : (
-              <div className="max-h-[420px] space-y-1 overflow-y-auto">
-                {filteredShareTargets.map((target) => (
-                  <button
-                    key={target.userId}
-                    onClick={() => sendPostToTarget(target)}
-                    disabled={sendingToId === target.userId}
-                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary disabled:opacity-60"
-                  >
-                    <div className="h-10 w-10 overflow-hidden rounded-full bg-secondary">
-                      {target.avatarUrl ? (
-                        <img src={target.avatarUrl} alt={target.fullName} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">
-                          {getInitials(target.fullName || target.username)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{target.username}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">
-                        {target.type === "partner" ? "Partner" : "Direct message"}
-                      </p>
-                    </div>
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      {sendingToId === target.userId ? "Sending..." : "Send"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 };
