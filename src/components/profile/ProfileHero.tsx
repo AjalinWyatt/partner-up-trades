@@ -62,7 +62,7 @@ export default function ProfileHero({ profile, tradingProfile, compact, topLeft,
             <button type="button" onClick={onAvatarClick} className="absolute bottom-0.5 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-surface-raised text-foreground shadow-md" aria-label="Change profile photo"><Camera className="h-4 w-4" /></button>
           </div>
           <div className="mt-1.5 flex items-center gap-2.5">
-            <h1 className="min-w-0 truncate text-[21px] font-bold leading-tight text-foreground">{name}{age ? <span className="font-semibold"> · {age}</span> : ""}</h1>
+            <h1 className="min-w-0 truncate font-serif text-[27px] font-normal leading-tight text-foreground">{name}{age ? <span className="font-normal"> · {age}</span> : ""}</h1>
             <button type="button" onClick={onEdit} className="shrink-0 rounded-full border border-surface-line bg-surface px-3 py-1 text-[11px] font-medium text-foreground/85 transition-colors hover:bg-surface-raised">Edit</button>
           </div>
           <p className="text-[12px] text-muted-foreground">@{profile?.username || "trader"}</p>
@@ -87,7 +87,7 @@ export default function ProfileHero({ profile, tradingProfile, compact, topLeft,
         <div className="flex items-center gap-3.5 px-4 pb-4 pt-2">
           <ProfileAvatar profile={profile} size={80} onClick={onAvatarClick} />
           <div className="min-w-0">
-            <h1 className="truncate text-[20px] font-bold leading-tight text-foreground">{name}{age ? <span className="font-semibold"> · {age}</span> : ""}</h1>
+             <h1 className="truncate font-serif text-[24px] font-normal leading-tight text-foreground">{name}{age ? <span className="font-normal"> · {age}</span> : ""}</h1>
             <p className="text-[12px] text-muted-foreground">@{profile?.username || "trader"}</p>
             <div className="mt-1">{tradingLine}</div>
           </div>
@@ -107,7 +107,7 @@ export default function ProfileHero({ profile, tradingProfile, compact, topLeft,
       </div>
       <div className="relative -mt-[52px] px-4">
         <ProfileAvatar profile={profile} size={96} onClick={onAvatarClick} />
-        <h1 className="mt-2 truncate text-[22px] font-bold leading-tight text-foreground">{name}{age ? <span className="font-semibold"> · {age}</span> : ""}</h1>
+         <h1 className="mt-2 truncate font-serif text-[28px] font-normal leading-tight text-foreground">{name}{age ? <span className="font-normal"> · {age}</span> : ""}</h1>
         <p className="text-[12px] text-muted-foreground">@{profile?.username || "trader"}</p>
         {(location || profile?.created_at) && (
           <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-foreground/80">

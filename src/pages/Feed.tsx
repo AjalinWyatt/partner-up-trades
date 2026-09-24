@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
-import Wordmark from "@/components/Wordmark";
 import pulseGlobe from "@/assets/pulse-globe.svg";
 import RoomsPane from "@/components/RoomsPane";
 import { supabase } from "@/integrations/supabase/client";
@@ -726,12 +725,11 @@ const Feed = () => {
         {/* Locked header — does not scroll with the feed */}
         <div className="shrink-0 z-30 border-b border-border bg-background/96 backdrop-blur-xl">
           <div
-            className="space-y-4 px-4 pb-4"
+            className="space-y-4 px-6 pb-4"
             style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
           >
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-              <div />
-              <Wordmark size="text-lg" />
+            <div className="flex items-end justify-between gap-3">
+              <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Live connection</p><h1 className="font-serif text-[34px] font-normal leading-none text-foreground">Community</h1></div>
               <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={() => setShowCreateStory(true)}
@@ -755,7 +753,7 @@ const Feed = () => {
             </div>
 
             <div className="flex justify-center">
-              <div className="grid h-10 w-full max-w-[320px] grid-cols-2 rounded-full border border-border bg-card p-1 shadow-[inset_0_1px_0_hsl(var(--border))]">
+              <div className="grid h-10 w-full grid-cols-2 border-b border-border/70">
                 {FEED_MODES.map((mode) => {
                   const active = activeMode === mode;
                   const isPulse = mode === "Pulse";
@@ -764,8 +762,8 @@ const Feed = () => {
                       key={mode}
                       onClick={() => setActiveMode(mode)}
                       className={cn(
-                        "relative rounded-full text-sm font-medium transition-all",
-                        active ? "bg-secondary text-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]" : "text-muted-foreground hover:text-foreground"
+                        "relative text-[10px] font-semibold uppercase tracking-[0.16em] transition-all",
+                        active ? "border-b border-accent text-accent" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <span className="inline-flex items-center gap-1.5">
@@ -794,9 +792,9 @@ const Feed = () => {
         {activeMode === "Rooms" ? (
           <RoomsPane />
         ) : activeMode === "Pulse" ? (
-          <div className="space-y-3 px-4 py-3">
+          <div className="space-y-4 px-6 py-4">
             {/* Pulse hero header */}
-            <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+            <div className="border-y border-border/70 px-4 py-4 text-center">
               <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">PULSE</p>
               <p className="mt-1 text-[12px] leading-5 text-muted-foreground">Real-time peer connection with traders online right now.</p>
             </div>
@@ -844,7 +842,7 @@ const Feed = () => {
             )}
 
             {/* REQUESTER card - for traders who need someone right now */}
-            <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
+            <div className="border-y border-border/70 px-1 py-4">
               {/* Header row with toggle */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
@@ -957,7 +955,7 @@ const Feed = () => {
             </div>
 
             {/* HELPER card - for traders willing to be there for someone */}
-            <div className="rounded-2xl border border-primary/30 bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--primary)/0.12)] ring-1 ring-primary/10 [background-image:linear-gradient(180deg,hsl(var(--primary)/0.06),transparent_60%)]">
+            <div className="border-y border-border/70 px-1 py-4">
               <div className="mb-3 flex items-center justify-center gap-2">
                 <span className="h-px flex-1 bg-primary/20" />
                 <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">

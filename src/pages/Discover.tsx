@@ -59,12 +59,13 @@ const Discover = () => {
 
   return (
     <AppLayout>
-      <div className="flex-1 overflow-y-auto bg-background pb-20 font-sans">
-        <header className="sticky top-0 z-30 bg-background/95 px-5 pb-0 pt-safe-5 backdrop-blur-xl">
+      <div className="flex-1 overflow-y-auto bg-background font-sans">
+        <header className="sticky top-0 z-30 bg-background/95 px-6 pb-0 pt-safe-6 backdrop-blur-xl">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="font-display text-[25px] font-semibold tracking-normal text-foreground">Discover</h1>
-              <p className="mt-1 text-[12px] text-muted-foreground">Find traders who align with your mindset.</p>
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Find your people</p>
+              <h1 className="font-serif text-[34px] font-normal leading-none text-foreground">Discover</h1>
+              <p className="mt-2 text-[11px] text-muted-foreground">Traders who align with your mindset.</p>
             </div>
             <button
               onClick={() => setShowSearch((value) => !value)}
@@ -86,14 +87,14 @@ const Discover = () => {
               />
             </div>
           )}
-          <div className="mt-5 grid grid-cols-3 border-b border-border/70 text-center text-[12px] font-semibold">
-            <button className="relative pb-3 text-accent after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-accent">For You</button>
+          <div className="mt-5 grid grid-cols-3 border-b border-border/70 text-center text-[10px] font-semibold uppercase tracking-[0.16em]">
+            <button className="relative pb-3 text-accent after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-accent">For You</button>
             <button onClick={() => navigate("/map")} className="pb-3 text-muted-foreground transition-colors hover:text-foreground">Nearby</button>
             <button className="pb-3 text-muted-foreground transition-colors hover:text-foreground">Similar</button>
           </div>
         </header>
 
-        <div className="px-5">
+        <div className="px-6">
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-sm font-medium text-foreground">No traders match your criteria right now.</p>
@@ -105,7 +106,7 @@ const Discover = () => {
                 <button
                   key={m.id}
                   onClick={() => navigate(`/match/${m.id}`, { state: { matchPct: m.matchPct } })}
-                  className="flex min-h-[112px] w-full items-center gap-3 py-3 text-left transition-colors hover:bg-secondary/25"
+                    className="flex min-h-[112px] w-full items-center gap-3 py-4 text-left transition-colors hover:bg-secondary/25"
                 >
                   <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
                     {m.avatar_url ? (
@@ -135,9 +136,9 @@ const Discover = () => {
                     {m.location && (
                       <div className="mt-1 flex items-center gap-1 truncate text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{m.location}</div>
                     )}
-                    <div className="mt-2 flex min-w-0 gap-1.5 overflow-hidden">
+                    <div className="mt-2 flex min-w-0 gap-3 overflow-hidden text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {[m.markets[0], m.trading_style[0]].filter(Boolean).map((label) => (
-                        <span key={label} className="truncate rounded-md border border-border bg-secondary/55 px-2 py-0.5 text-[10px] font-medium text-foreground/75">{label}</span>
+                        <span key={label} className="truncate">{label}</span>
                       ))}
                     </div>
                   </div>
