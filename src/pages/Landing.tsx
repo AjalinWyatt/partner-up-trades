@@ -5,8 +5,7 @@ import {
   ArrowRight, Sparkles, Zap, Users, MessageSquare,
   TrendingUp, Bell, Heart, Shield, Activity, Mic, BookOpen,
   Globe as GlobeIcon, Instagram, Youtube, CheckCircle2, X as XClose,
-  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, ChevronRight, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu, MapPin,
-  Search, SlidersHorizontal, Navigation, LocateFixed,
+  Bot, GraduationCap, Megaphone, UserCheck, ChevronLeft, Bookmark, ChevronsUp, ChevronsDown, Gem, Plus, Send, Menu, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import Wordmark from "@/components/Wordmark";
@@ -20,6 +19,7 @@ import mockDiego from "@/assets/mock-diego.jpg";
 import mockNilaja from "@/assets/nilaja-founder.jpg";
 import mockJt from "@/assets/mock-jt.jpg";
 import mockKw from "@/assets/mock-kw.jpg";
+import tradersNearMeSection from "@/assets/traders-near-me-section-reference.png";
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -365,74 +365,12 @@ const MatchProfileMock = () => {
 
 // TRADERS NEAR ME - local map and nearby-trader sheet
 const MapMock = () => {
-  const pins = [
-    { name: "Marcus", photo: mockMarcus, top: "52%", left: "20%" },
-    { name: "Aaliyah", photo: mockAaliyah, top: "25%", left: "57%" },
-    { name: "Diego", photo: mockDiego, top: "37%", left: "87%" },
-    { name: "KW", photo: mockKw, top: "61%", left: "66%" },
-  ];
   return (
-    <div className="mx-auto w-full max-w-[410px] rounded-[46px] border-2 border-border bg-card p-2 shadow-2xl">
-      <div className="overflow-hidden rounded-[38px] border border-border bg-background">
-        <div className="flex items-center justify-between px-5 pb-3 pt-9">
-          <ChevronLeft className="h-5 w-5 text-foreground" strokeWidth={1.7} />
-          <span className="text-[14px] font-bold text-foreground">Traders Near Me</span>
-          <SlidersHorizontal className="h-5 w-5 text-foreground" strokeWidth={1.7} />
-        </div>
-        <div className="mx-4 mb-2 flex h-10 items-center gap-2 rounded-full bg-secondary px-4">
-          <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
-          <span className="text-[11px] text-muted-foreground">Search another city</span>
-        </div>
-        <div className="relative h-[365px] overflow-hidden border-y border-border bg-card">
-          <div className="absolute inset-0 opacity-70" style={{ backgroundImage: "linear-gradient(26deg, transparent 48%, hsl(var(--surface-line)) 49%, hsl(var(--surface-line)) 51%, transparent 52%), linear-gradient(96deg, transparent 48%, hsl(var(--surface-line)) 49%, hsl(var(--surface-line)) 51%, transparent 52%)", backgroundSize: "84px 70px, 110px 96px" }} />
-          <div className="absolute left-[8%] top-[15%] h-[76%] w-[76%] rounded-full border border-accent bg-accent/5" />
-          <span className="absolute left-[10%] top-[14%] text-[10px] font-medium text-foreground/80">Marietta</span>
-          <span className="absolute left-[42%] top-[18%] text-[10px] font-medium leading-tight text-foreground/80">Sandy<br />Springs</span>
-          <span className="absolute right-[8%] top-[47%] text-[10px] font-medium text-foreground/80">Decatur</span>
-          <span className="absolute left-[30%] bottom-[9%] text-[10px] font-medium text-foreground/80">East Point</span>
-          <span className="absolute left-[36%] top-[46%] text-[21px] font-semibold text-foreground">Atlanta</span>
-          <div className="absolute right-3 top-3 flex items-center gap-2 rounded-2xl border border-border bg-background/90 px-3 py-2 shadow-lg">
-            <Navigation className="h-4 w-4 text-accent" fill="currentColor" />
-            <span className="text-[9px] leading-4 text-foreground"><strong className="block font-semibold">12 traders nearby</strong>Within 50 miles</span>
-          </div>
-          {pins.map((pin) => (
-            <div key={pin.name} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ top: pin.top, left: pin.left }}>
-              <div className="h-10 w-10 rounded-full border-2 border-accent bg-background p-0.5 shadow-lg">
-                <img src={pin.photo} alt={pin.name} className="h-full w-full rounded-full object-cover" />
-              </div>
-              <span className="mx-auto -mt-0.5 block h-2 w-2 rotate-45 border-b border-r border-accent bg-accent" />
-            </div>
-          ))}
-          <div className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-secondary shadow-lg">
-            <LocateFixed className="h-5 w-5 text-foreground" />
-          </div>
-        </div>
-        <div className="rounded-t-[24px] bg-background px-4 pb-6 pt-2">
-          <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-muted" />
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-[14px] font-bold text-foreground">Nearby Traders</span>
-            <span className="flex items-center text-[10px] font-semibold text-accent">View all <ChevronRight className="h-3.5 w-3.5" /></span>
-          </div>
-          <div className="space-y-3">
-            {[
-              { name: "Aaliyah R.", detail: "Day Trader · Forex", distance: "4 mi away", match: "89% Match", photo: mockAaliyah },
-              { name: "Marcus T.", detail: "Futures · Swing Trader", distance: "6 mi away", match: "76% Match", photo: mockMarcus },
-            ].map((trader) => (
-              <div key={trader.name} className="flex items-center gap-3">
-                <img src={trader.photo} alt={trader.name} className="h-12 w-12 rounded-full object-cover" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold text-foreground">{trader.name}</p>
-                  <p className="truncate text-[9px] text-muted-foreground">{trader.detail}</p>
-                  <p className="text-[9px] text-muted-foreground">{trader.distance}</p>
-                </div>
-                <span className="rounded-full bg-accent/10 px-2.5 py-1 text-[9px] font-semibold text-accent">{trader.match}</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+    <img
+      src={tradersNearMeSection}
+      alt="Traders Near Me showing nearby traders around Atlanta and privacy features"
+      className="block h-auto w-full object-contain"
+    />
   );
 };
 
@@ -725,36 +663,8 @@ const Landing = () => {
             </div>
 
             {/* TRADERS NEAR ME */}
-            <div className="relative grid overflow-hidden rounded-[28px] border border-border bg-card/40 px-5 py-10 sm:px-10 lg:grid-cols-[0.86fr_1.14fr] lg:gap-16 lg:px-14 lg:py-16">
-              <div className="relative z-10 order-2 mt-10 lg:order-1 lg:mt-0"><MapMock /></div>
-              <div className="relative z-10 order-1 flex flex-col justify-center lg:order-2">
-                <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.28em] text-accent">Traders Near Me</div>
-                <h3 className="max-w-[520px] font-serif text-[42px] font-normal leading-[1.06] text-foreground sm:text-[54px]">Find traders around you.</h3>
-                <p className="mt-5 max-w-[550px] text-[16px] leading-relaxed text-muted-foreground sm:text-[18px]">
-                  Discover traders within 50 miles, see compatibility at a glance, or explore another city when you're traveling.
-                </p>
-                <div className="mt-8 space-y-6">
-                  {[
-                    { icon: MapPin, title: "Discover traders within 50 miles", body: "See traders near you and check compatibility at a glance." },
-                    { icon: Search, title: "Search any city to explore", body: "Find traders in other cities when you're traveling or relocating." },
-                    { icon: Shield, title: "Your exact location is never shown", body: "Your privacy is always protected." },
-                  ].map((item) => (
-                    <div key={item.title} className="flex items-center gap-4">
-                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                        <item.icon className="h-7 w-7" strokeWidth={1.7} />
-                      </span>
-                      <span>
-                        <strong className="block text-[15px] font-semibold text-foreground">{item.title}</strong>
-                        <span className="mt-1 block text-[13px] leading-5 text-muted-foreground">{item.body}</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <button onClick={() => navigate("/map")} className="mt-8 flex h-12 w-full max-w-[450px] items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-semibold text-accent-foreground transition-opacity hover:opacity-90">
-                  Explore Traders Near Me <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-              <img src={authGlobe} alt="" aria-hidden="true" className="pointer-events-none absolute -right-44 -top-32 hidden h-[620px] w-[620px] max-w-none object-contain opacity-20 lg:block" />
+            <div className="overflow-hidden">
+              <MapMock />
             </div>
           </div>
         </div>
