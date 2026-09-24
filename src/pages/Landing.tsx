@@ -674,7 +674,7 @@ const Landing = () => {
               </div>
               <div className="order-1 lg:order-2">
                 <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent mb-3">Pulse</div>
-                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Async chat + voice notes with your partner.</h3>
+                <h3 className="text-[28px] sm:text-[34px] font-black text-foreground mb-4 tracking-tight">Someone to talk to, right when it matters.</h3>
                 <p className="text-[15px] text-muted-foreground leading-relaxed mb-5">
                   Two sides of one moment. A trader sends a Pulse when they need someone right now - context tagged so you know what they're walking into. Available helpers see it instantly and the first to accept connects privately. Async chat and voice notes when it actually matters.
                 </p>
