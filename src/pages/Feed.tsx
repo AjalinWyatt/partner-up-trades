@@ -11,7 +11,6 @@ import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
 import pulseGlobe from "@/assets/pulse-globe.svg";
-import RoomsPane from "@/components/RoomsPane";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials, timeAgo } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
@@ -62,7 +61,7 @@ interface StoryProfileRow {
 }
 
 const FEED_FILTERS = ["All", "Crypto", "Forex", "Indices", "Futures", "Options", "Commodities"] as const;
-const FEED_MODES = ["Pulse", "Rooms"] as const;
+const FEED_MODES = ["Pulse"] as const;
 
 const Feed = () => {
   const { loading: guardLoading } = useOnboardingGuard();
@@ -763,29 +762,6 @@ const Feed = () => {
               </div>
             </div>
 
-            <div className="flex justify-center">
-              <div className="grid h-10 w-full grid-cols-2 border-b border-border/70">
-                {FEED_MODES.map((mode) => {
-                  const active = activeMode === mode;
-                  const isPulse = mode === "Pulse";
-                  return (
-                    <button
-                      key={mode}
-                      onClick={() => setActiveMode(mode)}
-                      className={cn(
-                        "relative text-[10px] font-semibold uppercase tracking-[0.16em] transition-all",
-                        active ? "border-b border-accent text-accent" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        {mode}
-                        {isPulse && pulseHasNew && !active && <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary))]" />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -800,9 +776,7 @@ const Feed = () => {
             if (myId) await loadStories(myId);
           }}
         >
-        {activeMode === "Rooms" ? (
-          <RoomsPane />
-        ) : activeMode === "Pulse" ? (
+        {activeMode === "Pulse" ? (
           <div className="space-y-4 px-6 py-4">
             {/* Pulse hero header */}
             <div className="border-y border-border/70 px-4 py-4 text-center">

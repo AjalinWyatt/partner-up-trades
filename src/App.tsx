@@ -96,7 +96,7 @@ const App = () => (
           <Route path="/enable-notifications" element={<EnableNotifications />} />
           <Route path="/threads" element={<Navigate to="/feed" replace />} />
           <Route path="/rooms" element={<Navigate to="/feed" replace />} />
-          <Route path="/rooms/:id" element={<Room />} />
+          <Route path="/rooms/:id" element={<Navigate to="/feed" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense></AppErrorBoundary>
