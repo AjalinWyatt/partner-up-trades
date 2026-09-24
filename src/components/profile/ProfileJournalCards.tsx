@@ -117,7 +117,7 @@ export default function ProfileJournalCards({ entries, emptyDescription = "Nothi
                   )}
                 </div>
                 <button type="button" className="mt-2 flex w-full gap-3 text-left" onClick={() => setExpandedId(expanded ? null : entry.id)}>
-                  {img && <img src={img} alt="Journal attachment" loading="lazy" className={cn("shrink-0 rounded-lg border border-surface-line object-cover", expanded ? "h-auto w-full max-w-none" : "h-[84px] w-[84px]")} style={expanded ? { display: "none" } : undefined} />}
+                  {img && !expanded && <img src={img} alt="Journal attachment" loading="lazy" className="h-[84px] w-[84px] shrink-0 rounded-lg border border-surface-line object-cover" />}
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-[14px] font-bold text-foreground">{titleFor(entry)}</h3>
                     {entry.notes && <p className={cn("mt-0.5 whitespace-pre-wrap text-[12px] leading-[17px] text-muted-foreground", !expanded && "line-clamp-3")}>{entry.notes}</p>}
