@@ -6,7 +6,6 @@ import {
   ChevronRight,
   MapPin,
   Navigation,
-  List,
   Loader2,
   Lock,
   Minus,
