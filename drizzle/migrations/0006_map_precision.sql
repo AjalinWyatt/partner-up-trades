@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN map_precision text NOT NULL DEFAULT 'approximate';
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_map_precision_check CHECK (map_precision IN ('approximate','city','region'));

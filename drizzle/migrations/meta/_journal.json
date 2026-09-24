@@ -43,6 +43,13 @@
       "when": 1790240635759,
       "tag": "0005_drop_notifications_from_muted",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790240706062,
+      "tag": "0006_map_precision",
+      "breakpoints": true
     }
   ]
 }
