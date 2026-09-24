@@ -19,7 +19,7 @@ export default function ViewProfile() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const cacheKey = userId || "unknown";
-  const [activeTab, setActiveTab] = useState<"details" | "journal">("details");
+  const [activeTab, setActiveTab] = useState<"overview" | "trading" | "journal">("overview");
   const [profile, setProfile, hadCache] = useSessionCache<any>(`viewprofile:${cacheKey}:profile`, null);
   const [tradingProfile, setTradingProfile] = useSessionCache<any>(`viewprofile:${cacheKey}:trading`, null);
   const [journalEntries, setJournalEntries] = useSessionCache<ProfileJournalEntry[]>(`viewprofile:${cacheKey}:journal`, []);
@@ -155,27 +155,27 @@ export default function ViewProfile() {
     <AppLayout hideBottomNav lockHeight>
       <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
         <header className="shrink-0 border-b border-border bg-background">
-          <div className="flex items-center justify-between px-4 pb-2 pt-safe-4">
+           <div className="flex items-center justify-between px-4 pb-1 pt-safe-3">
             <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={handleBack} aria-label="Back"><ChevronLeft className="h-4 w-4" /></Button>
             <div className="relative">
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowMenu((value) => !value)} aria-label="Profile options"><MoreVertical className="h-4 w-4" /></Button>
               {showMenu && <div className="absolute right-0 top-11 z-20 min-w-[160px] overflow-hidden rounded-md border border-border bg-card shadow-lg">{accepted && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={unmatch}>Unmatch</Button>}<Button variant="ghost" className={cn("w-full justify-start rounded-none text-xs", !isBlocked && "text-destructive")} onClick={toggleBlock}>{isBlocked ? "Unblock" : "Block"}</Button></div>}
             </div>
           </div>
-          <div className="flex items-start gap-3 px-5 pt-1">
-            {profile.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="h-[82px] w-[82px] shrink-0 rounded-full border-2 border-primary object-cover" /> : <div className="flex h-[82px] w-[82px] shrink-0 items-center justify-center rounded-full border-2 border-primary bg-secondary text-xl font-black text-foreground">{getInitials(profile.full_name || profile.username)}</div>}
+           <div className="flex items-start gap-3 px-5 pt-1">
+             {profile.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="h-[70px] w-[70px] shrink-0 rounded-full border border-primary object-cover" /> : <div className="flex h-[70px] w-[70px] shrink-0 items-center justify-center rounded-full border border-primary bg-secondary text-lg font-black text-foreground">{getInitials(profile.full_name || profile.username)}</div>}
             <div className="min-w-0 flex-1 pt-1">
-              <h1 className="truncate text-[19px] font-black text-foreground">{displayName}{age ? ` · ${age}` : ""}</h1>
+               <h1 className="truncate text-[18px] font-black text-foreground">{displayName}{age ? ` · ${age}` : ""}</h1>
               <p className="text-xs text-muted-foreground">@{profile.username || "trader"}</p>
               {tradingLine && <p className="mt-1 truncate text-xs font-bold text-primary">{tradingLine}</p>}
             </div>
           </div>
-          <div className="px-5 pb-3 pt-2">
+           <div className="px-5 pb-2 pt-1.5">
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">{location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location}</span>}{profile.created_at && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>}</div>
-            {profile.bio && <p className="mt-2 line-clamp-3 whitespace-pre-line text-[12px] leading-[18px] text-foreground/80">{profile.bio}</p>}
+             {profile.bio && <p className="mt-1.5 line-clamp-3 whitespace-pre-line text-[11px] leading-[16px] text-foreground/80">{profile.bio}</p>}
           </div>
 
-          <div className="px-4 pb-3">
+           <div className="px-5 pb-2 pt-1">
             {isBlocked ? <Button variant="secondary" className="w-full" onClick={toggleBlock}><ShieldOff />Unblock</Button>
               : accepted ? <Button className="w-full" onClick={() => navigate(`/messages?partner=${userId}`)}><MessageSquare />Message</Button>
               : outgoing ? <Button variant="secondary" className="w-full" onClick={cancelRequest} disabled={busy}><Check />Requested</Button>
@@ -183,13 +183,13 @@ export default function ViewProfile() {
               : <Button className="w-full" onClick={sendRequest} disabled={busy}><UserPlus />Connect</Button>}
           </div>
 
-          <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
-            {(["details", "journal"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-11 rounded-none capitalize", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
+           <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
+             {(["overview", "trading"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-10 rounded-none capitalize", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
           </nav>
         </header>
 
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {activeTab === "details" ? <TraderDetailsPanel profile={profile} tradingProfile={tradingProfile} match={compatibility} myTrading={myTrading} username={profile.username} /> : accepted ? <ProfileJournalCards entries={journalEntries} /> : <div className="px-8 py-20 text-center"><p className="font-bold text-foreground">Journal is for partners</p><p className="mt-1 text-xs text-muted-foreground">Shared entries appear after your connection is accepted.</p></div>}
+           {activeTab === "journal" ? <div><div className="flex items-center justify-between border-b border-border px-4 py-2"><Button variant="ghost" size="sm" onClick={() => setActiveTab("overview")}><ChevronLeft />Overview</Button><span className="text-xs font-bold text-foreground">Shared Journal</span></div><ProfileJournalCards entries={journalEntries} /></div> : <TraderDetailsPanel mode={activeTab} profile={profile} tradingProfile={tradingProfile} match={activeTab === "overview" ? compatibility : null} myTrading={myTrading} username={profile.username} journalEntries={journalEntries} onViewJournal={() => setActiveTab("journal")} />}
         </main>
       </div>
     </AppLayout>
