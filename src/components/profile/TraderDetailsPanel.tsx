@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Brain, CandlestickChart, Clock3, DollarSign, Target, Timer, Users } from "lucide-react";
+import { AlertCircle, BarChart3, Brain, CalendarDays, CandlestickChart, Clock3, Crosshair, DollarSign, Gem, Handshake, MessageSquare, Search, Sparkles, Target, Timer, Trophy, UserCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getBreakdownLabel, type MatchResult } from "@/lib/matchUtils";
@@ -84,6 +84,13 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
     return rawValue ? [{ label, value: String(rawValue), Icon }] : [];
   });
   const groups = detailGroups(profile, tradingProfile).filter(([, items]) => items.length > 0);
+  const g = Object.fromEntries(detailGroups(profile, tradingProfile));
+  const tile = (label: string, key: string, Icon: any) => ({ label, Icon, values: g[key] || [] });
+  const sections = [
+    { title: "Trading", subtitle: "Markets, style and approach", Icon: BarChart3, items: [tile("Instruments", "Instruments", BarChart3), tile("Chart Focus", "Chart focus", Crosshair), tile("Trading Times", "Trading times", Clock3), tile("Frequency", "Trading frequency", CalendarDays)] },
+    { title: "Goals & Habits", subtitle: "Mindset, routine and growth", Icon: Target, items: [tile("Goals", "Goals", Trophy), tile("Trading Habits", "Trading habits", BarChart3), tile("After a Loss", "After a loss", Brain), tile("Trading Struggles", "Trading struggles", AlertCircle)] },
+    { title: "Partnership", subtitle: "How we can trade better together", Icon: Users, items: [tile("What I Bring", "What I bring", Gem), tile("Where a Partner Helps", "Where a partner helps", Handshake), tile("Looking For", "Looking for", Search), tile("Communication", "Communication", MessageSquare), tile("Partner Preferences", "Partner preferences", Users), tile("Match Priorities", "Match priorities", Target), tile("Check-ins", "Check-ins", UserCheck), tile("Off the Charts", "Off the charts", Sparkles)] },
+  ];
   const strong = matchEntries.filter(([, s]) => s >= 60).length;
   const summary = match && (strong > 0
     ? `You line up on ${strong} of ${matchEntries.length} key areas.`
@@ -136,9 +143,30 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       </Dialog>
 
       <Dialog open={showTrading} onOpenChange={setShowTrading}>
-        <DialogContent className="max-h-[82vh] max-w-sm overflow-y-auto border-border bg-card">
-          <DialogHeader><DialogTitle>Trading details</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-1">{groups.map(([title, items]) => <section key={title}><h3 className="mb-2 text-[10px] font-extrabold uppercase text-muted-foreground">{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((item) => <span key={item} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[10px] font-semibold text-foreground">{item}</span>)}</div></section>)}</div>
+        <DialogContent className="max-h-[86vh] max-w-sm overflow-y-auto border-surface-line bg-background p-3 pt-5">
+          <DialogHeader><DialogTitle className="text-center text-[20px]">Trading details</DialogTitle></DialogHeader>
+          <div className="space-y-3 pt-1">
+            {sections.map(({ title, subtitle, Icon, items }) => {
+              const tiles = items.filter((t) => t.values.length > 0);
+              if (!tiles.length) return null;
+              return (
+                <section key={title} className="rounded-2xl border border-surface-line bg-surface p-2.5">
+                  <div className="mb-2.5 flex items-center gap-3 px-1.5 pt-1">
+                    <Icon className="h-8 w-8 shrink-0 text-primary" strokeWidth={2} />
+                    <div><h3 className="text-[17px] font-semibold leading-tight text-foreground">{title}</h3><p className="text-[12px] text-muted-foreground">{subtitle}</p></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {tiles.map(({ label, Icon: TileIcon, values }, i) => (
+                      <div key={label} className={`rounded-xl border border-surface-line/70 bg-surface-raised p-2.5 ${tiles.length % 2 === 1 && i === tiles.length - 1 ? "col-span-2" : ""}`}>
+                        <div className="mb-2 flex items-center gap-1.5"><TileIcon className="h-4 w-4 shrink-0 text-primary" /><p className="text-[12px] font-semibold text-foreground">{label}</p></div>
+                        <div className="flex flex-wrap gap-1.5">{values.map((v) => <span key={v} className="rounded-full border border-surface-line bg-background/40 px-2.5 py-1 text-[10px] text-foreground/90">{v}</span>)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
