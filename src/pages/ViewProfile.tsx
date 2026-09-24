@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BookOpen, CalendarDays, Check, ChevronLeft, MapPin, MessageSquare, MoreVertical, ShieldOff, UserRound, UserPlus, X } from "lucide-react";
+import { Check, ChevronLeft, MessageSquare, MoreHorizontal, MoreVertical, ShieldOff, UserPlus, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
+import ProfileHero, { ProfileBottomNav } from "@/components/profile/ProfileHero";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
 import { cn } from "@/lib/utils";
-import { computeMatch, getInitials, type MatchResult } from "@/lib/matchUtils";
+import { computeMatch, type MatchResult } from "@/lib/matchUtils";
 import { sendNotification } from "@/lib/notifications";
 import { toast } from "sonner";
 
-const PROFILE_FIELDS = "id, username, full_name, avatar_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, created_at";
+const PROFILE_FIELDS = "id, username, full_name, avatar_url, cover_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, created_at";
 
 export default function ViewProfile() {
   const navigate = useNavigate();
@@ -153,52 +154,41 @@ export default function ViewProfile() {
   const incoming = connection?.status === "pending" && connection.requester_id === userId;
   const outgoing = connection?.status === "pending" && connection.requester_id === myId;
   const accepted = connection?.status === "accepted";
-  const age = profile.birth_year ? new Date().getFullYear() - profile.birth_year : null;
-  const displayName = String(profile.full_name || `@${profile.username || "trader"}`).replace(/\s*[·.]\s*$/, "");
-  const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ") || profile.location;
-  const tradingLine = [tradingProfile?.markets?.[0], tradingProfile?.trading_style?.[0], tradingProfile?.experience_level].filter(Boolean).join(" · ");
+
+  const roundBtn = "h-10 w-10 rounded-full border-surface-line bg-background/60 backdrop-blur-md";
+  const back = <Button variant="outline" size="icon" className={roundBtn} onClick={handleBack} aria-label="Back"><ChevronLeft className="h-5 w-5" /></Button>;
+  const options = (
+    <div className="relative">
+      <Button variant="outline" size="icon" className={roundBtn} onClick={() => setShowMenu((v) => !v)} aria-label="Profile options"><MoreVertical className="h-4 w-4" /></Button>
+      {showMenu && <div className="absolute right-0 top-11 z-30 min-w-[160px] overflow-hidden rounded-md border border-surface-line bg-surface-raised shadow-lg">{accepted && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={unmatch}>Unmatch</Button>}<Button variant="ghost" className={cn("w-full justify-start rounded-none text-xs", !isBlocked && "text-destructive")} onClick={toggleBlock}>{isBlocked ? "Unblock" : "Block"}</Button></div>}
+    </div>
+  );
+  const ctaCls = "h-11 flex-1 rounded-full text-[15px] font-semibold";
+  const primaryAction = isBlocked ? <Button variant="secondary" className={ctaCls} onClick={toggleBlock}><ShieldOff />Unblock</Button>
+    : accepted ? <Button className={ctaCls} onClick={() => navigate(`/messages?partner=${userId}`)}><MessageSquare />Message</Button>
+    : outgoing ? <Button variant="secondary" className={ctaCls} onClick={cancelRequest} disabled={busy}><Check />Requested</Button>
+    : incoming ? <div className="flex flex-1 gap-2"><Button className={ctaCls} onClick={() => updateRequest("accepted")} disabled={busy}><Check />Accept</Button><Button variant="outline" className={cn(ctaCls, "border-surface-line")} onClick={() => updateRequest("declined")} disabled={busy}><X />Decline</Button></div>
+    : <Button className={ctaCls} onClick={sendRequest} disabled={busy}><UserPlus />Connect</Button>;
+  const cta = (
+    <div className="flex items-center gap-2.5">
+      {primaryAction}
+      <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 rounded-full border-surface-line bg-surface" onClick={() => setShowMenu((v) => !v)} aria-label="More options"><MoreHorizontal className="h-5 w-5" /></Button>
+    </div>
+  );
 
   return (
     <AppLayout hideBottomNav lockHeight>
       <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
-        <header className="shrink-0 border-b border-border bg-background">
-           <div className="flex items-center justify-between px-4 pb-1 pt-safe-3">
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={handleBack} aria-label="Back"><ChevronLeft className="h-4 w-4" /></Button>
-            <div className="relative">
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowMenu((value) => !value)} aria-label="Profile options"><MoreVertical className="h-4 w-4" /></Button>
-              {showMenu && <div className="absolute right-0 top-11 z-20 min-w-[160px] overflow-hidden rounded-md border border-border bg-card shadow-lg">{accepted && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={unmatch}>Unmatch</Button>}<Button variant="ghost" className={cn("w-full justify-start rounded-none text-xs", !isBlocked && "text-destructive")} onClick={toggleBlock}>{isBlocked ? "Unblock" : "Block"}</Button></div>}
-            </div>
-          </div>
-           <div className="flex items-start gap-3 px-5 pt-1">
-             {profile.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="h-[70px] w-[70px] shrink-0 rounded-full border border-primary object-cover" /> : <div className="flex h-[70px] w-[70px] shrink-0 items-center justify-center rounded-full border border-primary bg-secondary text-lg font-black text-foreground">{getInitials(profile.full_name || profile.username)}</div>}
-            <div className="min-w-0 flex-1 pt-1">
-               <h1 className="truncate text-[18px] font-black text-foreground">{displayName}{age ? ` · ${age}` : ""}</h1>
-              <p className="text-xs text-muted-foreground">@{profile.username || "trader"}</p>
-              {tradingLine && <p className="mt-1 truncate text-xs font-bold text-primary">{tradingLine}</p>}
-            </div>
-          </div>
-            {activeTab === "details" && <div className="px-5 pb-2 pt-1.5">
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">{location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location}</span>}{profile.created_at && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>}</div>
-              {profile.bio && <p className="mt-1.5 line-clamp-3 whitespace-pre-line text-[11px] leading-[16px] text-foreground/80">{profile.bio}</p>}
-              {profile.hobbies?.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{profile.hobbies.slice(0, 3).map((trait: string) => <span key={trait} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[9px] font-semibold text-foreground/80">{trait}</span>)}</div>}
-            </div>}
-
-            {activeTab === "details" && <div className="px-5 pb-3 pt-1">
-            {isBlocked ? <Button variant="secondary" className="w-full" onClick={toggleBlock}><ShieldOff />Unblock</Button>
-              : accepted ? <Button className="w-full" onClick={() => navigate(`/messages?partner=${userId}`)}><MessageSquare />Message</Button>
-              : outgoing ? <Button variant="secondary" className="w-full" onClick={cancelRequest} disabled={busy}><Check />Requested</Button>
-              : incoming ? <div className="grid grid-cols-2 gap-2"><Button className="w-full" onClick={() => updateRequest("accepted")} disabled={busy}><Check />Accept</Button><Button variant="outline" className="w-full" onClick={() => updateRequest("declined")} disabled={busy}><X />Decline</Button></div>
-              : <Button className="w-full" onClick={sendRequest} disabled={busy}><UserPlus />Connect</Button>}
-           </div>}
-
-            <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
-              {(["details", "journal"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-12 flex-col gap-0.5 rounded-none capitalize text-[10px] hover:bg-transparent", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab === "details" ? <UserRound className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
-          </nav>
-        </header>
-
+        {activeTab === "journal" && <ProfileHero compact profile={profile} tradingProfile={tradingProfile} topLeft={back} topRight={options} />}
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            {activeTab === "journal" ? <ProfileJournalCards entries={journalEntries} /> : <TraderDetailsPanel profile={profile} tradingProfile={tradingProfile} match={compatibility} myTrading={myTrading} username={profile.username} />}
+          {activeTab === "details" ? (
+            <>
+              <ProfileHero profile={profile} tradingProfile={tradingProfile} topLeft={back} topRight={options} cta={cta} />
+              <TraderDetailsPanel profile={profile} tradingProfile={tradingProfile} match={compatibility} myTrading={myTrading} username={profile.username} />
+            </>
+          ) : <ProfileJournalCards entries={journalEntries} />}
         </main>
+        <ProfileBottomNav active={activeTab} onChange={setActiveTab} className="pb-[env(safe-area-inset-bottom)]" />
       </div>
     </AppLayout>
   );
