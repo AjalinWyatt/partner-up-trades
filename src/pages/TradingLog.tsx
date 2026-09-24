@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, X, Lock, Link, BookOpen, TrendingUp, MoreVertical, Pencil, Trash2, ChevronDown } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import AppHeader from "@/components/AppHeader";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { sendNotification } from "@/lib/notifications";

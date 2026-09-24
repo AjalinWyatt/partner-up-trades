@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import type { StoryGroup, StoryItem } from "@/components/feed/StoriesBar";
 import CreateStoryDialog from "@/components/feed/CreateStoryDialog";
 import StoryViewer from "@/components/feed/StoryViewer";
-import Wordmark from "@/components/Wordmark";
 import pulseGlobe from "@/assets/pulse-globe.svg";
 import RoomsPane from "@/components/RoomsPane";
 import { supabase } from "@/integrations/supabase/client";
