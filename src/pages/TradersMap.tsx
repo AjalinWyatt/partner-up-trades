@@ -643,6 +643,16 @@ export default function TradersMap() {
       <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
         <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-muted" />
         <div className="px-4 pb-3 pt-3">
+          {exploreLoc && (
+            <div className="mb-2 flex items-center justify-between gap-2 border-b border-border pb-2">
+              <p className="min-w-0 truncate text-[11px] text-muted-foreground">
+                Exploring <span className="text-foreground">{exploreLabel}</span> · 50 mi
+              </p>
+              <button type="button" onClick={returnToNearMe} className="shrink-0 text-[11px] font-medium text-accent">
+                Return to Near Me
+              </button>
+            </div>
+          )}
           {!browsingNearby && localTraders.length > 0 ? (
             <div className="py-1">
               <h2 className="text-[14px] font-semibold text-foreground">Discover traders within 50 miles</h2>
