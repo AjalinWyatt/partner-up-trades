@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Map as MapIcon, Zap } from "lucide-react";
+import { MapPin, Search, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,7 @@ const Discover = () => {
   const [loading, setLoading] = useState(!hadMatchesCache);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [filters, setFilters] = useState<{ market: string | null; session: string | null; experience: string | null }>({
     market: null, session: null, experience: null,
   });
@@ -74,114 +75,94 @@ const Discover = () => {
 
   return (
     <AppLayout>
-      <div className="flex-1 overflow-y-auto pb-20">
-        {/* Header */}
-        <div className="px-5 pt-safe-5 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/map")}
-            aria-label="Traders near me"
-            className="w-12 h-12 rounded-full border border-border bg-secondary flex items-center justify-center shrink-0 text-accent"
-          >
-            <MapIcon className="w-5 h-5" />
-          </button>
-          <h1 className="text-[24px] font-black tracking-tight">
-            <span className="text-foreground">Traders</span><span className="text-foreground">World</span>
-          </h1>
-          <button
-            onClick={() => navigate("/profile")}
-            className="w-12 h-12 rounded-full overflow-hidden border-2 border-border shrink-0"
-          >
-            {me?.avatar_url ? (
-              <img src={me.avatar_url} className="w-full h-full object-cover" alt="me" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-black text-primary-foreground">
-                {(me?.username || "U").slice(0, 1).toUpperCase()}
-              </div>
-            )}
-          </button>
-        </div>
+      <div className="flex-1 overflow-y-auto bg-background pb-20 font-sans">
+        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 px-5 pb-0 pt-safe-5 backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="font-display text-[27px] font-semibold tracking-normal text-foreground">Discover</h1>
+              <p className="mt-1 text-[13px] text-muted-foreground">Find traders who align with your mindset.</p>
+            </div>
+            <button
+              onClick={() => setShowSearch((value) => !value)}
+              aria-label={showSearch ? "Close search" : "Search traders"}
+              className="mt-0.5 flex h-9 w-9 items-center justify-center text-foreground transition-colors hover:text-accent"
+            >
+              {showSearch ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            </button>
+          </div>
+          {showSearch && (
+            <div className="relative mt-3">
+              <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                autoFocus
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search traders"
+                className="h-10 w-full border-0 border-b border-border bg-transparent pl-7 pr-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-accent"
+              />
+            </div>
+          )}
+          <div className="mt-5 grid grid-cols-3 text-center text-[13px] font-semibold">
+            <button className="relative pb-3 text-accent after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-accent">For You</button>
+            <button onClick={() => navigate("/map")} className="pb-3 text-muted-foreground transition-colors hover:text-foreground">Nearby</button>
+            <button className="pb-3 text-muted-foreground transition-colors hover:text-foreground">Similar</button>
+          </div>
+        </header>
 
-        {/* Globe */}
-        <div className="mt-4 mb-2">
-          <AnimatedGlobe />
-        </div>
-
-        {/* Title */}
-        <h2
-          className={`mt-2 mb-4 px-5 text-foreground tracking-tight ${
-            filtered.length === 0 && matches.length === 0
-              ? "mx-auto max-w-[320px] text-center text-[15px] font-medium leading-[1.55] text-foreground/88"
-              : "text-[22px] font-black"
-          }`}
-        >
-          {filtered.length === 0 && matches.length === 0
-            ? "No traders match your criteria right now. Please check back soon."
-            : "Some curated matches for you!"}
-        </h2>
-
-        {/* Search/filter removed to match design */}
-
-        {/* Results - large card style matching mockup */}
-        <div className="px-5 mt-2">
-          {filtered.length === 0 ? null : (
-            <div className="space-y-3">
+        <div className="px-5">
+          {filtered.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-sm font-medium text-foreground">No traders match your criteria right now.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Please check back soon.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/60">
               {filtered.map((m) => (
                 <button
                   key={m.id}
                   onClick={() => navigate(`/match/${m.id}`, { state: { matchPct: m.matchPct } })}
-                  className="w-full bg-card border border-border rounded-2xl overflow-hidden flex items-stretch text-left hover:border-accent/40 transition-colors h-[96px]"
+                  className="flex min-h-[106px] w-full items-center gap-3 py-3.5 text-left transition-colors hover:bg-secondary/25"
                 >
-                  <div className="w-[96px] h-full shrink-0 bg-secondary">
+                  <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
                     {m.avatar_url ? (
                       <img src={m.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-                        <span className="text-2xl font-bold text-foreground">
+                      <div className="flex h-full w-full items-center justify-center bg-secondary">
+                        <span className="text-xl font-semibold text-muted-foreground">
                           {(m.full_name || m.username || "?").slice(0, 1).toUpperCase()}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-center gap-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[15px] font-bold text-accent truncate">
-                          {m.full_name || `@${m.username}` || "Trader"}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate font-display text-[14px] font-semibold text-foreground">
+                          {m.full_name || (m.username ? `@${m.username}` : "Trader")}
                         </span>
                         {m.age && (
                           <>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-[14px] text-foreground font-bold">{m.age}</span>
+                            <span className="text-muted-foreground">·</span>
+                            <span className="text-[12px] text-muted-foreground">{m.age}</span>
                           </>
                         )}
-                      </div>
-                      <div className="shrink-0 flex flex-col items-end">
-                        <div className="flex items-center gap-1.5">
-                          <div className="relative w-[20px] h-[20px]">
-                            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                              <circle cx="18" cy="18" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
-                              <circle
-                                cx="18" cy="18" r="16" fill="none"
-                                stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round"
-                                strokeDasharray={`${(m.matchPct / 100) * 100.53} 100.53`}
-                              />
-                            </svg>
-                            <Zap
-                              className="absolute inset-0 m-auto w-2.5 h-2.5 text-accent"
-                              fill="currentColor"
-                              strokeWidth={0}
-                            />
-                          </div>
-                          <span className="text-[15px] font-black text-foreground">{m.matchPct}%</span>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">Match</span>
-                      </div>
                     </div>
-
+                    {m.username && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">@{m.username}</p>}
                     {m.location && (
-                      <div className="text-[12px] text-foreground/90 truncate">{m.location}</div>
+                      <div className="mt-1 flex items-center gap-1 truncate text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{m.location}</div>
                     )}
+                    <div className="mt-2 flex min-w-0 gap-1.5 overflow-hidden">
+                      {[m.markets[0], m.trading_style[0]].filter(Boolean).map((label) => (
+                        <span key={label} className="truncate rounded-md border border-border bg-secondary/55 px-2 py-0.5 text-[10px] font-medium text-foreground/75">{label}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="relative flex h-48px w-48px h-12 w-12 shrink-0 items-center justify-center">
+                    <svg viewBox="0 0 48 48" className="h-full w-full -rotate-90">
+                      <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
+                      <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--accent))" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={`${(m.matchPct / 100) * 125.66} 125.66`} />
+                    </svg>
+                    <span className="absolute text-[10px] font-semibold text-foreground">{m.matchPct}%</span>
                   </div>
                 </button>
               ))}
@@ -189,7 +170,6 @@ const Discover = () => {
           )}
         </div>
       </div>
-
     </AppLayout>
   );
 };
