@@ -20,7 +20,7 @@ import mockDiego from "@/assets/mock-diego.jpg";
 import mockNilaja from "@/assets/nilaja-founder.jpg";
 import mockJt from "@/assets/mock-jt.jpg";
 import mockKw from "@/assets/mock-kw.jpg";
-import tradersNearMePhone from "@/assets/traders-near-me-phone-reference.png";
+import tradersNearMeSection from "@/assets/traders-near-me-section-reference.png";
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -368,9 +368,9 @@ const MatchProfileMock = () => {
 const MapMock = () => {
   return (
     <img
-      src={tradersNearMePhone}
-      alt="Traders Near Me showing nearby traders around Atlanta"
-      className="mx-auto block w-full max-w-[580px] object-contain"
+      src={tradersNearMeSection}
+      alt="Traders Near Me showing nearby traders around Atlanta and privacy features"
+      className="block h-auto w-full object-contain"
     />
   );
 };
@@ -664,36 +664,8 @@ const Landing = () => {
             </div>
 
             {/* TRADERS NEAR ME */}
-            <div className="relative grid overflow-hidden rounded-[28px] border border-border bg-card/40 px-5 py-10 sm:px-10 lg:grid-cols-[0.86fr_1.14fr] lg:gap-16 lg:px-14 lg:py-16">
-              <div className="relative z-10 order-2 mt-10 lg:order-1 lg:mt-0"><MapMock /></div>
-              <div className="relative z-10 order-1 flex flex-col justify-center lg:order-2">
-                <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.28em] text-accent">Traders Near Me</div>
-                <h3 className="max-w-[520px] font-serif text-[42px] font-normal leading-[1.06] text-foreground sm:text-[54px]">Find traders around you.</h3>
-                <p className="mt-5 max-w-[550px] text-[16px] leading-relaxed text-muted-foreground sm:text-[18px]">
-                  Discover traders within 50 miles, see compatibility at a glance, or explore another city when you're traveling.
-                </p>
-                <div className="mt-8 space-y-6">
-                  {[
-                    { icon: MapPin, title: "Discover traders within 50 miles", body: "See traders near you and check compatibility at a glance." },
-                    { icon: Search, title: "Search any city to explore", body: "Find traders in other cities when you're traveling or relocating." },
-                    { icon: Shield, title: "Your exact location is never shown", body: "Your privacy is always protected." },
-                  ].map((item) => (
-                    <div key={item.title} className="flex items-center gap-4">
-                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                        <item.icon className="h-7 w-7" strokeWidth={1.7} />
-                      </span>
-                      <span>
-                        <strong className="block text-[15px] font-semibold text-foreground">{item.title}</strong>
-                        <span className="mt-1 block text-[13px] leading-5 text-muted-foreground">{item.body}</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <button onClick={() => navigate("/map")} className="mt-8 flex h-12 w-full max-w-[450px] items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-semibold text-accent-foreground transition-opacity hover:opacity-90">
-                  Explore Traders Near Me <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-              <img src={authGlobe} alt="" aria-hidden="true" className="pointer-events-none absolute -right-44 -top-32 hidden h-[620px] w-[620px] max-w-none object-contain opacity-20 lg:block" />
+            <div className="overflow-hidden">
+              <MapMock />
             </div>
           </div>
         </div>
