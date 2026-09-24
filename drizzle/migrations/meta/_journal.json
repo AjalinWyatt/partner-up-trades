@@ -85,6 +85,13 @@
       "when": 1790242539233,
       "tag": "0011_attachments_readable_by_recipients",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790242953465,
+      "tag": "0012_pulse_availability_and_sessions",
+      "breakpoints": true
     }
   ]
 }

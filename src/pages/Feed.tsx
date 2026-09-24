@@ -91,7 +91,18 @@ const Feed = () => {
   const [activeMode, setActiveMode] = useState<(typeof FEED_MODES)[number]>("Pulse");
   const [selectedFeedFilter, setSelectedFeedFilter] = useState<(typeof FEED_FILTERS)[number]>("All");
   const [pulseTab, setPulseTab] = useState<"Market" | "Connect">("Market");
-  const [availableToConnect, setAvailableToConnect] = useState(false);
+  // Available to Help is a real, server-stored state that expires after 120 minutes.
+  const [availableUntil, setAvailableUntil] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  const availableToConnect = !!availableUntil && new Date(availableUntil).getTime() > nowTick;
+  const setAvailableToConnect = (on: boolean) => { if (!on) setAvailableUntil(null); };
+  const [activePulseSessions, setActivePulseSessions] = useState<{ id: string; status: string }[]>([]);
+  useEffect(() => {
+    if (!availableUntil) return;
+    const ms = new Date(availableUntil).getTime() - Date.now();
+    const t = setTimeout(() => setNowTick(Date.now()), Math.max(0, ms) + 500);
+    return () => clearTimeout(t);
+  }, [availableUntil]);
   const [supportContext, setSupportContext] = useState<string[]>([]);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
   const [insightFor, setInsightFor] = useState<string | null>(null);
@@ -458,6 +469,31 @@ const Feed = () => {
     return () => { cancelled = true; clearInterval(i); };
   }, []);
 
+  // Load saved availability + my active Pulse sessions (open or accepted).
+  useEffect(() => {
+    if (!myId) return;
+    let cancelled = false;
+    const loadSessions = async () => {
+      const { data } = await supabase
+        .from("pulse_requests" as any)
+        .select("id, status, requester_id, accepted_by")
+        .or(`requester_id.eq.${myId},accepted_by.eq.${myId}`)
+        .in("status", ["open", "accepted"])
+        .order("created_at", { ascending: false });
+      if (!cancelled) setActivePulseSessions(((data as any[]) || []).map((r) => ({ id: r.id, status: r.status })));
+    };
+    (async () => {
+      const { data } = await supabase.from("profiles").select("pulse_available_until").eq("id", myId).maybeSingle();
+      if (!cancelled) setAvailableUntil((data as any)?.pulse_available_until ?? null);
+    })();
+    loadSessions();
+    const ch = supabase
+      .channel(`pulse-my-sessions-${myId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pulse_requests" }, () => { loadSessions(); })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [myId]);
+
   // Live incoming Pulse requests when "Available to Help" is on.
   useEffect(() => {
     if (!availableToConnect || !myId) {
@@ -790,6 +826,23 @@ const Feed = () => {
               </div>
             </div>
 
+            {activePulseSessions.length > 0 && (
+              <div className="space-y-2">
+                {activePulseSessions.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => navigate(`/pulse/session/${s.id}`)}
+                    className="flex w-full items-center justify-between rounded-xl border border-primary/30 bg-card px-3 py-2.5 text-left"
+                  >
+                    <span className="text-[12px] font-semibold text-foreground">
+                      {s.status === "accepted" ? "Active Pulse Session" : "Your Pulse is waiting for a trader"}
+                    </span>
+                    <span className="text-[11px] font-medium text-primary">{s.status === "accepted" ? "Return" : "View"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* REQUESTER card - for traders who need someone right now */}
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_24px_60px_hsl(var(--background)/0.45)]">
               {/* Header row with toggle */}
@@ -928,10 +981,12 @@ const Feed = () => {
                 <button
                   role="switch"
                   aria-checked={availableToConnect}
-                  onClick={() => {
+                  onClick={async () => {
                     const next = !availableToConnect;
-                    setAvailableToConnect(next);
-                    toast.success(next ? "You're online to help." : "You're offline.");
+                    const { data, error } = await supabase.rpc("set_pulse_availability" as any, { _on: next });
+                    if (error) { toast.error("Couldn't update availability. Try again."); return; }
+                    setAvailableUntil((data as string | null) ?? null);
+                    toast.success(next ? "You're online to help for the next 2 hours." : "You're offline.");
                   }}
                   className={cn(
                     "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
@@ -1058,14 +1113,8 @@ const Feed = () => {
                                 <button
                                   onClick={async () => {
                                     if (!myId) return;
-                                    // Atomic claim: only succeeds if still open
-                                    const { data, error } = await supabase
-                                      .from("pulse_requests" as any)
-                                      .update({ status: "accepted", accepted_by: myId, accepted_at: new Date().toISOString() })
-                                      .eq("id", req.id)
-                                      .eq("status", "open")
-                                      .select("id")
-                                      .maybeSingle();
+                                    // Atomic server-side claim: only one available helper wins
+                                    const { data, error } = await supabase.rpc("accept_pulse_request" as any, { _id: req.id });
                                     if (error || !data) {
                                       toast.error("This Pulse has already been answered.");
                                       setIncomingRequests((prev) => prev.filter((r) => r.id !== req.id));
