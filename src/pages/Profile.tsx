@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
+import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -621,10 +622,14 @@ const Profile = () => {
         {activeTab === 0 ? (
           <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} />
         ) : (
-          <JournalList
-            entries={journalEntries}
-            onOpenLog={() => navigate("/trading-log")}
-            onChanged={async () => {
+          <ProfileJournalCards
+            entries={journalEntries as ProfileJournalEntry[]}
+            emptyDescription="Log your sessions and they’ll show up here."
+            onTogglePrivacy={async (entry) => {
+              const next = entry.share_setting === "private" ? "partners" : "private";
+              const { error } = await supabase.from("journal_entries").update({ share_setting: next }).eq("id", entry.id);
+              if (error) { toast.error("Couldn't update privacy"); return; }
+              toast.success(next === "private" ? "Marked private" : "Shared with partners");
               if (!userId) return;
               const { data } = await supabase
                 .from("journal_entries")
@@ -634,6 +639,13 @@ const Profile = () => {
                 .order("created_at", { ascending: false })
                 .limit(50);
               setJournalEntries((data as JournalEntry[]) || []);
+            }}
+            onHide={async (entry) => {
+              if (!confirm("Remove this entry from your profile journal? It will remain in your Journal.")) return;
+              const { error } = await supabase.from("journal_entries").update({ hidden_from_journal: true } as any).eq("id", entry.id);
+              if (error) { toast.error("Couldn't remove entry"); return; }
+              setJournalEntries((current) => current.filter((item) => item.id !== entry.id));
+              toast.success("Removed from profile journal");
             }}
           />
         )}

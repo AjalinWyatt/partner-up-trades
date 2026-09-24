@@ -147,6 +147,7 @@ export default function ViewProfile() {
   const outgoing = connection?.status === "pending" && connection.requester_id === myId;
   const accepted = connection?.status === "accepted";
   const age = profile.birth_year ? new Date().getFullYear() - profile.birth_year : null;
+  const displayName = String(profile.full_name || `@${profile.username || "trader"}`).replace(/\s*[·.]\s*$/, "");
   const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ") || profile.location;
   const tradingLine = [tradingProfile?.markets?.[0], tradingProfile?.trading_style?.[0], tradingProfile?.experience_level].filter(Boolean).join(" · ");
 
@@ -164,7 +165,7 @@ export default function ViewProfile() {
           <div className="flex items-start gap-3 px-5 pt-1">
             {profile.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="h-[82px] w-[82px] shrink-0 rounded-full border-2 border-primary object-cover" /> : <div className="flex h-[82px] w-[82px] shrink-0 items-center justify-center rounded-full border-2 border-primary bg-secondary text-xl font-black text-foreground">{getInitials(profile.full_name || profile.username)}</div>}
             <div className="min-w-0 flex-1 pt-1">
-              <h1 className="truncate text-[19px] font-black text-foreground">{profile.full_name || `@${profile.username || "trader"}`}{age ? ` · ${age}` : ""}</h1>
+              <h1 className="truncate text-[19px] font-black text-foreground">{displayName}{age ? ` · ${age}` : ""}</h1>
               <p className="text-xs text-muted-foreground">@{profile.username || "trader"}</p>
               {tradingLine && <p className="mt-1 truncate text-xs font-bold text-primary">{tradingLine}</p>}
             </div>
