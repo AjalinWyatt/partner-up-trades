@@ -75,6 +75,15 @@ export default function ViewProfile() {
     return () => { cancelled = true; };
   }, [navigate, setJournalEntries, setProfile, setTradingProfile, userId]);
 
+  // Refresh visible Journal entries immediately when the partnership state changes.
+  const connectionStatus = connection?.status ?? null;
+  useEffect(() => {
+    if (!userId || !myId || loading) return;
+    const allowed = connectionStatus === "accepted" ? ["public", "partners"] : ["public"];
+    void supabase.from("journal_entries").select("*").eq("user_id", userId).in("share_setting", allowed).eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(30)
+      .then(({ data }) => setJournalEntries((data as ProfileJournalEntry[]) || []));
+  }, [connectionStatus, userId, myId, loading, setJournalEntries]);
+
   const compatibility = useMemo<MatchResult | null>(() => {
     if (!myTrading || !tradingProfile || !myProfile || !profile) return null;
     const result = computeMatch(myTrading, tradingProfile, myProfile, profile);

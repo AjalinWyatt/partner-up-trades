@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
-import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
+import ProfileJournalCards, { type JournalVisibility, type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
   username: string | null;
@@ -346,8 +346,7 @@ const Profile = () => {
     navigate("/");
   };
 
-  const toggleJournalPrivacy = async (entry: ProfileJournalEntry) => {
-    const share_setting = entry.share_setting === "private" ? "partners" : "private";
+  const setJournalVisibility = async (entry: ProfileJournalEntry, share_setting: JournalVisibility) => {
     const { error } = await supabase.from("journal_entries").update({ share_setting }).eq("id", entry.id);
     if (error) { toast.error("Could not update journal sharing"); return; }
     setJournalEntries((current) => current.map((item) => item.id === entry.id ? { ...item, share_setting } : item));
@@ -576,7 +575,7 @@ const Profile = () => {
         >
           {activeTab === "details"
             ? <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} ownProfile />
-            : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onTogglePrivacy={toggleJournalPrivacy} onHide={hideJournalEntry} />}
+            : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />}
       </div>
       </div>
 

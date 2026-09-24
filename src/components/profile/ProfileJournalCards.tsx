@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BookOpen, ChevronDown, Lock, MoreVertical, SlidersHorizontal, Trash2, Users } from "lucide-react";
+import { BookOpen, ChevronDown, Globe, Lock, MoreVertical, SlidersHorizontal, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +21,17 @@ export interface ProfileJournalEntry {
 }
 
 type Filter = "all" | "trade" | "study";
+export type JournalVisibility = "private" | "partners" | "public";
+
+const VISIBILITY: { value: JournalVisibility; label: string; Icon: typeof Lock }[] = [
+  { value: "private", label: "Private", Icon: Lock },
+  { value: "partners", label: "Partners", Icon: Users },
+  { value: "public", label: "Public", Icon: Globe },
+];
 
 const titleFor = (entry: ProfileJournalEntry) => entry.market_pair || entry.result || entry.session || (entry.entry_type ? `${entry.entry_type} entry` : "Journal entry");
 
-export default function ProfileJournalCards({ entries, emptyDescription = "Nothing shared here yet.", onTogglePrivacy, onHide }: { entries: ProfileJournalEntry[]; emptyDescription?: string; onTogglePrivacy?: (entry: ProfileJournalEntry) => void | Promise<void>; onHide?: (entry: ProfileJournalEntry) => void | Promise<void> }) {
+export default function ProfileJournalCards({ entries, emptyDescription = "Nothing shared here yet.", onSetVisibility, onHide }: { entries: ProfileJournalEntry[]; emptyDescription?: string; onSetVisibility?: (entry: ProfileJournalEntry, visibility: JournalVisibility) => void | Promise<void>; onHide?: (entry: ProfileJournalEntry) => void | Promise<void> }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
@@ -48,10 +55,10 @@ export default function ProfileJournalCards({ entries, emptyDescription = "Nothi
             return (
               <article key={entry.id} className="rounded-lg border border-border bg-card p-3 shadow-sm">
                 <div className="flex items-center justify-between gap-2 text-[9px] text-muted-foreground">
-                  <div className="flex min-w-0 flex-wrap items-center gap-1.5"><span>{new Date(entry.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span><span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{entry.entry_type || "Trade"}</span>{entry.account_type && <span className="rounded-full bg-secondary px-2 py-0.5">{entry.account_type}</span>}{entry.share_setting === "private" && <span className="inline-flex items-center gap-1"><Lock className="h-2.5 w-2.5" />Private</span>}</div>
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5"><span>{new Date(entry.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span><span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{entry.entry_type || "Trade"}</span>{entry.account_type && <span className="rounded-full bg-secondary px-2 py-0.5">{entry.account_type}</span>}{onSetVisibility && (() => { const v = VISIBILITY.find((o) => o.value === (entry.share_setting || "private")) || VISIBILITY[0]; return <span className="inline-flex items-center gap-1"><v.Icon className="h-2.5 w-2.5" />{v.label}</span>; })()}</div>
                   <div className="relative flex shrink-0 items-center gap-1">
-                    {(onTogglePrivacy || onHide) && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMenuId(menuId === entry.id ? null : entry.id)} aria-label="Entry options"><MoreVertical className="h-3.5 w-3.5" /></Button>}
-                    {menuId === entry.id && <div className="absolute right-0 top-7 z-20 min-w-[160px] overflow-hidden rounded-md border border-border bg-card shadow-lg">{onTogglePrivacy && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={async () => { setMenuId(null); await onTogglePrivacy(entry); }}>{entry.share_setting === "private" ? <Users /> : <Lock />}{entry.share_setting === "private" ? "Share with partners" : "Make private"}</Button>}{onHide && <Button variant="ghost" className="w-full justify-start rounded-none text-xs text-destructive" onClick={async () => { setMenuId(null); await onHide(entry); }}><Trash2 />Remove from profile</Button>}</div>}
+                    {(onSetVisibility || onHide) && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMenuId(menuId === entry.id ? null : entry.id)} aria-label="Entry options"><MoreVertical className="h-3.5 w-3.5" /></Button>}
+                    {menuId === entry.id && <div className="absolute right-0 top-7 z-20 min-w-[160px] overflow-hidden rounded-md border border-border bg-card shadow-lg">{onSetVisibility && VISIBILITY.filter((o) => o.value !== (entry.share_setting || "private")).map((o) => <Button key={o.value} variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={async () => { setMenuId(null); await onSetVisibility(entry, o.value); }}><o.Icon />Make {o.label.toLowerCase()}</Button>)}{onHide && <Button variant="ghost" className="w-full justify-start rounded-none text-xs text-destructive" onClick={async () => { setMenuId(null); await onHide(entry); }}><Trash2 />Remove from profile</Button>}</div>}
                   </div>
                 </div>
                 <button type="button" className="mt-2 block w-full text-left" onClick={() => setExpandedId(expanded ? null : entry.id)}>
