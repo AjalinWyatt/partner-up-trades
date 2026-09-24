@@ -113,6 +113,10 @@ export default function TradersMap() {
   const [selected, setSelected] = useState<MapTrader | null>(null);
   const [browsingNearby, setBrowsingNearby] = useState(false);
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [exploreLoc, setExploreLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [exploreLabel, setExploreLabel] = useState("");
+  const [searching, setSearching] = useState(false);
+  const centerLoc = useMemo(() => exploreLoc ?? userLoc, [exploreLoc, userLoc]);
 
   const tier = tierFor(zoom);
 
@@ -171,29 +175,30 @@ export default function TradersMap() {
     };
   }, []);
 
-  /* Keep the map centered on the member's broad area and bounded to 50 miles. */
+  /* Keep the map centered on the active area (Near Me or Explore) and bounded to 50 miles. */
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady || !userLoc) return;
+    if (!map || !mapReady || !centerLoc) return;
     const latDelta = 50 / 69;
-    const lngDelta = 50 / (69 * Math.max(0.25, Math.cos((userLoc.lat * Math.PI) / 180)));
+    const lngDelta = 50 / (69 * Math.max(0.25, Math.cos((centerLoc.lat * Math.PI) / 180)));
+    map.setOptions({ restriction: null });
+    map.setCenter(centerLoc);
+    map.setZoom(9);
     map.setOptions({
       restriction: {
         latLngBounds: {
-          north: userLoc.lat + latDelta,
-          south: userLoc.lat - latDelta,
-          east: userLoc.lng + lngDelta,
-          west: userLoc.lng - lngDelta,
+          north: centerLoc.lat + latDelta,
+          south: centerLoc.lat - latDelta,
+          east: centerLoc.lng + lngDelta,
+          west: centerLoc.lng - lngDelta,
         },
         strictBounds: true,
       },
     });
-    map.setCenter(userLoc);
-    map.setZoom(9);
     radiusRef.current?.setMap(null);
     radiusRef.current = new google.maps.Circle({
       map,
-      center: userLoc,
+      center: centerLoc,
       radius: 80467.2,
       strokeColor: "#18aaa5",
       strokeOpacity: 0.8,
@@ -203,25 +208,19 @@ export default function TradersMap() {
       clickable: false,
     });
     return () => radiusRef.current?.setMap(null);
-  }, [mapReady, userLoc]);
+  }, [mapReady, centerLoc]);
 
   /* ---------------- filtering ---------------- */
   const localTraders = useMemo(
-    () => userLoc ? traders.filter((t) => milesBetween(userLoc, { lat: t.lat, lng: t.lng }) <= 50) : [],
-    [traders, userLoc],
+    () => centerLoc ? traders.filter((t) => milesBetween(centerLoc, { lat: t.lat, lng: t.lng }) <= 50) : [],
+    [traders, centerLoc],
   );
 
   const filtered = useMemo(() => {
     let list = localTraders;
     if (market !== "All") list = list.filter((t) => t.markets.includes(market));
-    const q = search.trim().toLowerCase();
-    if (q) list = list.filter((t) =>
-      t.placeLabel.toLowerCase().includes(q)
-      || (t.full_name || "").toLowerCase().includes(q)
-      || (t.username || "").toLowerCase().includes(q),
-    );
     return list;
-  }, [localTraders, market, search]);
+  }, [localTraders, market]);
 
   /* ---------------- clustering by tier ---------------- */
   const clusters = useMemo<Cluster[]>(() => {
@@ -261,10 +260,12 @@ export default function TradersMap() {
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
 
-    if (tier === "street") {
+    if (true) {
+      const z = zoom;
+      const cell = z >= 13 ? 60 : z >= 11 ? 30 : z >= 10 ? 18 : 10;
       const nearbyGroups = new Map<string, MapTrader[]>();
       filtered.forEach((t) => {
-        const key = `${Math.round(t.jlat * 18)}:${Math.round(t.jlng * 18)}`;
+        const key = `${Math.round(t.jlat * cell)}:${Math.round(t.jlng * cell)}`;
         nearbyGroups.set(key, [...(nearbyGroups.get(key) || []), t]);
       });
       nearbyGroups.forEach((group) => {
@@ -286,11 +287,13 @@ export default function TradersMap() {
           optimized: false,
         });
         marker.addListener("click", () => {
-          if (group.length > 1 && (map.getZoom() ?? 9) < 13) {
+          if (group.length === 1) {
+            navigate(`/profile/${t.id}`);
+            return;
+          }
+          if ((map.getZoom() ?? 9) < 14) {
             map.panTo({ lat, lng });
             map.setZoom(Math.min(14, (map.getZoom() ?? 9) + 2));
-          } else {
-            setSelected(t);
           }
           setBrowsingNearby(true);
         });
@@ -393,9 +396,17 @@ export default function TradersMap() {
   }, [filtered, userLoc]);
 
   const flyToMe = () => {
+    if (exploreLoc) { setExploreLoc(null); setExploreLabel(""); setBrowsingNearby(false); return; }
     if (!userLoc) return;
     mapRef.current?.panTo(userLoc);
     mapRef.current?.setZoom(10);
+  };
+
+  const returnToNearMe = () => {
+    setExploreLoc(null);
+    setExploreLabel("");
+    setSearch("");
+    setBrowsingNearby(false);
   };
 
   const nudgeZoom = (d: number) => {
@@ -408,21 +419,25 @@ export default function TradersMap() {
     e.preventDefault();
     const q = search.trim();
     if (!q) return;
-    setBrowsingNearby(true);
-    const hit = localTraders.find((t) =>
-      t.placeLabel.toLowerCase().includes(q.toLowerCase())
-      || (t.full_name || "").toLowerCase().includes(q.toLowerCase())
-      || (t.username || "").toLowerCase().includes(q.toLowerCase()),
-    );
-    if (hit) {
-      mapRef.current?.panTo({ lat: hit.lat, lng: hit.lng });
-      mapRef.current?.setZoom(10);
-      return;
+    setSearching(true);
+    try {
+      const res = await geocodePlaces([q]);
+      const hit = res[q];
+      if (hit) {
+        setExploreLoc(hit);
+        setExploreLabel(q);
+        setSearch("");
+        setBrowsingNearby(true);
+      } else {
+        toast.error("Couldn't find that location");
+      }
+    } finally {
+      setSearching(false);
     }
   };
 
   const distanceLabel = (t: MapTrader) =>
-    userLoc ? `${milesBetween(userLoc, { lat: t.lat, lng: t.lng }).toFixed(1)} miles away` : t.placeLabel;
+    centerLoc ? `${milesBetween(centerLoc, { lat: t.lat, lng: t.lng }).toFixed(1)} miles away` : t.placeLabel;
 
   const sheetTraders = selected
     ? [selected, ...visibleTraders.filter((t) => t.id !== selected.id)]
