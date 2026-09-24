@@ -18,6 +18,7 @@ import PromptCard from "@/components/onboarding/PromptCard";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { ACCOUNTABILITY_NEED_OPTIONS, COMMUNICATION_OPTIONS, CONNECTION_TYPE_OPTIONS, PARTNERSHIP_STRENGTH_OPTIONS } from "@/lib/profileOptions";
 
 const DRAFT_KEY = "tw:onboarding-draft";
 const loadDraft = (): Record<string, any> => {
@@ -118,6 +119,9 @@ const Onboarding = () => {
   const [connectionTypes, setConnectionTypes] = useState<string[]>(() => d("connectionTypes", []));
   const [connectFreq, setConnectFreq] = useState<string[]>(() => d("connectFreq", []));
   const [matchPriorities, setMatchPriorities] = useState<string[]>(() => d("matchPriorities", []));
+  const [strengths, setStrengths] = useState<string[]>(() => d("strengths", []));
+  const [accountabilityNeeds, setAccountabilityNeeds] = useState<string[]>(() => d("accountabilityNeeds", []));
+  const [communication, setCommunication] = useState<string[]>(() => d("communication", []));
   const [city, setCity] = useState<string>(() => d("city", ""));
   const [state, setState] = useState<string>(() => d("state", ""));
   const [country, setCountry] = useState<string>(() => d("country", ""));
@@ -138,6 +142,7 @@ const Onboarding = () => {
           experience, goals, lossResponse,
           struggles, journaling, tradingPlan,
           gender, lookingFor, reach, connectionTypes, connectFreq, matchPriorities,
+          strengths, accountabilityNeeds, communication,
           city, state, country,
         }),
       );
@@ -151,6 +156,7 @@ const Onboarding = () => {
     experience, goals, lossResponse,
     struggles, journaling, tradingPlan,
     gender, lookingFor, reach, connectionTypes, connectFreq, matchPriorities,
+    strengths, accountabilityNeeds, communication,
     city, state, country,
   ]);
 
@@ -632,11 +638,23 @@ const Onboarding = () => {
             <div className="text-[15px] text-foreground mb-3">Looking for</div>
             <GenderSelect options={["Male", "Female", "Co-Ed"]} selected={lookingFor} onSelect={setLookingFor} />
 
+            <div className="text-[15px] text-foreground mb-3 mt-8">What kind of connection?</div>
+            <PillSelect options={CONNECTION_TYPE_OPTIONS} selected={connectionTypes} onToggle={toggle(connectionTypes, setConnectionTypes)} />
+
             <div className="text-[15px] text-foreground mb-3 mt-8">Connection Reach</div>
             <ReachSelect selected={reach} onSelect={setReach} />
 
             <div className="text-[15px] text-foreground mb-3 mt-8">Connection frequency</div>
             <PillSelect options={["Daily", "After session", "Weekly", "Flexible"]} selected={connectFreq} onToggle={toggle(connectFreq, setConnectFreq)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">How do you like to communicate?</div>
+            <PillSelect options={COMMUNICATION_OPTIONS} selected={communication} onToggle={toggle(communication, setCommunication)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">What you bring to a partnership</div>
+            <PillSelect options={PARTNERSHIP_STRENGTH_OPTIONS} selected={strengths} onToggle={toggle(strengths, setStrengths)} />
+
+            <div className="text-[15px] text-foreground mb-3 mt-8">Where would a partner help?</div>
+            <PillSelect options={ACCOUNTABILITY_NEED_OPTIONS} selected={accountabilityNeeds} onToggle={toggle(accountabilityNeeds, setAccountabilityNeeds)} />
 
             <div className="text-[15px] text-foreground mb-3 mt-8">Match Priorities</div>
             <PillSelect options={["Same Strategy", "Same Session", "Same Goals", "Same Experience Level", "Interests"]} selected={matchPriorities} onToggle={toggle(matchPriorities, setMatchPriorities)} />
@@ -811,6 +829,9 @@ const Onboarding = () => {
                       connection_types: connectionTypes,
                       connect_frequency: connectFreq,
                       match_priorities: matchPriorities,
+                      partnership_strengths: strengths,
+                      accountability_needs: accountabilityNeeds,
+                      communication_preferences: communication,
                       updated_at: new Date().toISOString(),
                     }, { onConflict: "user_id" });
 
