@@ -91,11 +91,16 @@ export function computeMatch(
 
   if (marketOverlap.length === 0) return { pct: 0, reasons: [], breakdown: {}, excluded: true, excludeReason: "No market overlap" };
 
-  const myPref = myTrading.looking_for_gender;
-  const theirGender = theirProfile?.gender;
-  const prefNorm = (myPref || "").toLowerCase().replace(/[-\s]/g, "");
-  const isOpenPref = !myPref || prefNorm === "nopreference" || prefNorm === "coed" || prefNorm === "any";
-  if (!isOpenPref && myPref && theirGender && myPref.toLowerCase().replace(/s$/, '') !== theirGender.toLowerCase()) {
+  const genderMismatch = (pref?: string | null, gender?: string | null) => {
+    const prefNorm = (pref || "").toLowerCase().replace(/[-\s]/g, "");
+    const isOpenPref = !pref || prefNorm === "nopreference" || prefNorm === "coed" || prefNorm === "any";
+    return !isOpenPref && !!pref && !!gender && pref.toLowerCase().replace(/s$/, '') !== gender.toLowerCase();
+  };
+  // Mutual: both sides' preferences must allow the other
+  if (
+    genderMismatch(myTrading.looking_for_gender, theirProfile?.gender) ||
+    genderMismatch(theirTrading.looking_for_gender, myProfile?.gender)
+  ) {
     return { pct: 0, reasons: [], breakdown: {}, excluded: true, excludeReason: "Gender preference mismatch" };
   }
 

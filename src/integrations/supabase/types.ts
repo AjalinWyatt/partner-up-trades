@@ -1491,6 +1491,10 @@ export type Database = {
         Args: { _actor: string; _recipient: string }
         Returns: boolean
       }
+      can_view_audio_message: {
+        Args: { _name: string; _viewer: string }
+        Returns: boolean
+      }
       can_view_journal_media: {
         Args: { _path: string; _viewer: string }
         Returns: boolean
