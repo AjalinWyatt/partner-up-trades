@@ -16,13 +16,12 @@ const tabs = [
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { homeDot, messagesDot, discoverDot, partnersDot } = useNavBadges();
+  const { homeDot, messagesDot, partnersDot } = useNavBadges();
   const queryClient = useQueryClient();
 
   const dotForPath: Record<string, boolean> = {
     "/dashboard": homeDot,
     "/messages": messagesDot,
-    "/discover": discoverDot,
     "/partners": partnersDot,
   };
 
@@ -35,9 +34,6 @@ const BottomNav = () => {
         const Icon = tab.icon;
         const active = location.pathname === tab.path;
         const showDot = !!dotForPath[tab.path];
-        // "New" label only on Discover and Partners (not Home / Messages).
-        const showNewLabel = showDot && (tab.path === "/discover" || tab.path === "/partners");
-
         return (
           <button
             key={tab.path}
@@ -55,16 +51,8 @@ const BottomNav = () => {
             {showDot && (
               <span
                 aria-hidden
-                className="pointer-events-none absolute -top-0.5 right-0 h-1.5 w-1.5 rounded-full bg-[hsl(210_100%_60%)] animate-slow-blink"
+                className="pointer-events-none absolute -top-0.5 right-0 h-1.5 w-1.5 rounded-full bg-accent animate-slow-blink"
               />
-            )}
-            {showNewLabel && (
-              <span
-                aria-hidden
-                className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[hsl(210_100%_60%)] px-1.5 py-[1px] text-[8px] font-bold uppercase tracking-wide text-white animate-slow-blink"
-              >
-                New
-              </span>
             )}
           </button>
         );

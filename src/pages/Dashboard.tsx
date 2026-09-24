@@ -2,14 +2,16 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bookmark,
-  BookOpen,
+  Check,
   ChevronRight,
   Flame,
+  MapPin,
+  MessageSquare,
   NotebookTabs,
-  Target,
   UserCheck,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -19,8 +21,8 @@ import { useSessionCache } from "@/hooks/use-session-cache";
 import { timeAgo } from "@/lib/matchUtils";
 import { FREE_PARTNER_LIMIT, isProMember } from "@/lib/partnerLimits";
 import { getDiscoverMatches } from "@/lib/discoverMatches";
+import { getMapTraders, milesBetween, resolveMyApproxLocation } from "@/lib/tradersMap";
 import globeImage from "@/assets/auth-globe.png";
-import focusMountains from "@/assets/home-focus-mountains.jpg";
 
 type DashboardProfile = {
   username: string | null;
@@ -54,6 +56,40 @@ type DashboardNotification = {
   read: boolean;
   actorUsername?: string | null;
   actorAvatar?: string | null;
+};
+
+type HomePartner = {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  identity: string;
+  streak: number;
+  checkedInToday: boolean;
+  weeklyCheckinDays: string[];
+};
+
+type DailySummary = {
+  journalToday: boolean;
+  weeklyJournalDays: string[];
+  nearbyCount: number;
+};
+
+const EMPTY_DAILY: DailySummary = { journalToday: false, weeklyJournalDays: [], nearbyCount: 0 };
+
+const localDay = (value: Date | string) => {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const startOfWeek = () => {
+  const date = new Date();
+  const offset = (date.getDay() + 6) % 7;
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - offset);
+  return date;
 };
 
 const EMPTY_STATS: DashboardStats = {
@@ -135,6 +171,9 @@ const Dashboard = () => {
   const [stats, setStats, hadStatsCache] = useSessionCache<DashboardStats>("dashboard:stats", EMPTY_STATS);
   const [updates, setUpdates] = useSessionCache<Update[]>("dashboard:updates", []);
   const [notifications, setNotifications] = useSessionCache<DashboardNotification[]>("dashboard:notifications", []);
+  const [partner, setPartner] = useState<HomePartner | null>(null);
+  const [daily, setDaily] = useState<DailySummary>(EMPTY_DAILY);
+  const [showAllActivity, setShowAllActivity] = useState(false);
   const [loading, setLoading] = useState(!(hadProfileCache && hadStatsCache));
 
   useEffect(() => {
@@ -204,8 +243,63 @@ const Dashboard = () => {
         activeStreaks: streak > 0 ? 1 : 0,
       });
 
+      const weekStart = startOfWeek();
+      const weekStartIso = weekStart.toISOString();
+      const today = localDay(new Date());
+      const weeklyJournalDays = [...days].filter((day) => day >= localDay(weekStart));
+
+      const { data: accepted } = await supabase
+        .from("partner_connections")
+        .select("requester_id, receiver_id, updated_at")
+        .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq("status", "accepted")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (accepted) {
+        const partnerId = accepted.requester_id === user.id ? accepted.receiver_id : accepted.requester_id;
+        const [{ data: partnerProfile }, { data: partnerTrading }, { data: partnerStreak }, { data: weekMessages }] = await Promise.all([
+          supabase.from("profiles").select("username, full_name, avatar_url").eq("id", partnerId).maybeSingle(),
+          supabase.from("trading_profiles").select("markets, trading_style, experience_level").eq("user_id", partnerId).maybeSingle(),
+          supabase.rpc("get_partner_checkin_streak", { user_a: user.id, user_b: partnerId }),
+          supabase.from("messages").select("sender_id, receiver_id, created_at").or(`and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`).gte("created_at", weekStartIso),
+        ]);
+        const directions = new Map<string, Set<string>>();
+        (weekMessages || []).forEach((message) => {
+          const day = localDay(message.created_at);
+          const senders = directions.get(day) || new Set<string>();
+          senders.add(message.sender_id);
+          directions.set(day, senders);
+        });
+        const weeklyCheckinDays = [...directions.entries()].filter(([, senders]) => senders.has(user.id) && senders.has(partnerId)).map(([day]) => day);
+        const identity = [partnerTrading?.markets?.[0], partnerTrading?.trading_style?.[0], partnerTrading?.experience_level].filter(Boolean).join(" · ");
+        setPartner({
+          id: partnerId,
+          username: partnerProfile?.username ? `@${partnerProfile.username}` : partnerProfile?.full_name || "Partner",
+          avatarUrl: partnerProfile?.avatar_url || null,
+          identity: identity || "Trading partner",
+          streak: Number(partnerStreak) || 0,
+          checkedInToday: weeklyCheckinDays.includes(today),
+          weeklyCheckinDays,
+        });
+      } else {
+        setPartner(null);
+      }
+
+      let nearbyCount = 0;
+      try {
+        const location = await resolveMyApproxLocation(user.id);
+        if (location) {
+          const nearbyTraders = await getMapTraders(user.id);
+          nearbyCount = nearbyTraders.filter((trader) => milesBetween(location, { lat: trader.lat, lng: trader.lng }) <= 50).length;
+        }
+      } catch (error) {
+        console.error("nearby count failed", error);
+      }
+      setDaily({ journalToday: days.has(today), weeklyJournalDays, nearbyCount });
+
       const nextUpdates: Update[] = [];
-      const today = new Date().toISOString().slice(0, 10);
       if (!days.has(today)) {
         nextUpdates.push({ id: "journal-today", text: "Today's journal entry is ready", created_at: new Date().toISOString(), route: "/trading-log" });
       }
@@ -241,7 +335,7 @@ const Dashboard = () => {
   }, []);
 
   const activity = useMemo(() => {
-    const notificationRows = notifications.slice(0, 4).map((notification) => ({
+    const notificationRows = notifications.map((notification) => ({
       id: notification.id,
       ...activityCopy(notification),
       createdAt: notification.created_at,
@@ -249,10 +343,8 @@ const Dashboard = () => {
       type: notification.type,
       avatar: notification.actorAvatar,
     }));
-    if (notificationRows.length >= 4) return notificationRows;
     const updateRows = updates
       .filter((update) => !notificationRows.some((row) => row.id === update.id))
-      .slice(0, 4 - notificationRows.length)
       .map((update) => ({
         id: update.id,
         title: update.text,
@@ -262,8 +354,24 @@ const Dashboard = () => {
         type: update.route === "/discover" ? "new_match" : "partner_logged",
         avatar: null,
       }));
-    return [...notificationRows, ...updateRows];
+    return [...notificationRows, ...updateRows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [notifications, updates]);
+
+  const weekDays = useMemo(() => {
+    const start = startOfWeek();
+    return ["M", "T", "W", "T", "F", "S", "S"].map((label, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const key = localDay(date);
+      return {
+        key,
+        label,
+        journal: daily.weeklyJournalDays.includes(key),
+        checkin: partner?.weeklyCheckinDays.includes(key) || false,
+        future: date.getTime() > Date.now(),
+      };
+    });
+  }, [daily.weeklyJournalDays, partner?.weeklyCheckinDays]);
 
   if (guardLoading || loading) {
     return (
@@ -319,8 +427,8 @@ const Dashboard = () => {
               <NotebookTabs className="h-6 w-6" strokeWidth={1.8} />
             </span>
             <span className="relative ml-4 min-w-0 flex-1">
-              <span className="block truncate font-serif text-[20px] leading-6 text-foreground">Add today’s entry</span>
-              <span className="mt-1 block truncate text-[11px] font-normal text-muted-foreground">Track your progress, mindset and more.</span>
+              <span className="block font-serif text-[19px] leading-6 text-foreground">{daily.journalToday ? "Today’s entry complete" : "Add today’s entry"}</span>
+              <span className="mt-1 block text-[11px] font-normal leading-4 text-muted-foreground">{daily.journalToday ? "Review or update today’s journal." : "Track your progress, mindset and more."}</span>
             </span>
             <span className="relative ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/25 text-foreground">
               <ChevronRight className="h-5 w-5" />
@@ -329,14 +437,15 @@ const Dashboard = () => {
 
           <section className="mt-6">
             <div className="mb-2.5 flex items-center justify-between px-1">
-              <h2 className="font-serif text-[25px] font-normal text-foreground">Recent Activity</h2>
-              <Button variant="ghost" onClick={() => navigate("/dashboard")} className="h-8 px-0 text-xs font-medium text-accent hover:bg-transparent hover:text-accent">
-                View all <ChevronRight className="h-4 w-4" />
+              <h2 className="font-serif text-[22px] font-normal text-foreground">Recent Activity</h2>
+              {activity.length > 3 && <Button variant="ghost" onClick={() => setShowAllActivity((value) => !value)} className="h-8 px-0 text-xs font-medium text-accent hover:bg-transparent hover:text-accent">
+                {showAllActivity ? "Show less" : "View all"} <ChevronRight className={`h-4 w-4 transition-transform ${showAllActivity ? "rotate-90" : ""}`} />
               </Button>
+              }
             </div>
             {activity.length > 0 ? (
               <div className="overflow-hidden rounded-xl border border-border bg-card/70">
-                {activity.map((item, index) => (
+                {(showAllActivity ? activity : activity.slice(0, 3)).map((item, index) => (
                   <Button key={item.id} variant="ghost" onClick={() => navigate(item.route)} className={`h-[66px] w-full justify-start rounded-none px-3 text-left hover:bg-muted/30 ${index > 0 ? "border-t border-border" : ""}`}>
                     {item.avatar ? (
                       <img src={item.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
@@ -362,22 +471,86 @@ const Dashboard = () => {
             )}
           </section>
 
+          {daily.nearbyCount > 0 && (
+            <section className="mt-6 border-y border-border/70 py-3">
+              <Button variant="ghost" onClick={() => navigate("/map")} className="h-auto w-full justify-start rounded-none px-1 py-0 text-left hover:bg-transparent">
+                <MapPin className="mr-3 h-5 w-5 shrink-0 text-accent" strokeWidth={1.7} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-semibold text-foreground">{daily.nearbyCount} trader{daily.nearbyCount === 1 ? "" : "s"} nearby</span>
+                  <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">Within 50 miles of you</span>
+                </span>
+                <span className="flex items-center text-[11px] font-semibold text-accent">Explore <ChevronRight className="h-4 w-4" /></span>
+              </Button>
+            </section>
+          )}
+
           <section className="mt-6">
-            <h2 className="mb-2.5 px-1 font-serif text-[25px] font-normal text-foreground">Today’s Focus</h2>
-            <Button variant="ghost" onClick={() => navigate("/discover")} className="relative h-[80px] w-full justify-start overflow-hidden rounded-xl border border-accent/35 bg-card px-4 text-left hover:bg-card">
-              <img src={focusMountains} alt="" aria-hidden="true" loading="lazy" width={1200} height={512} className="absolute inset-0 h-full w-full object-cover opacity-75" />
-              <span className="absolute inset-0 bg-gradient-to-r from-card via-card/80 to-card/10" />
-              <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-foreground">
-                <Target className="h-6 w-6" strokeWidth={1.8} />
-              </span>
-              <span className="relative ml-4 min-w-0 flex-1">
-                <span className="block truncate font-serif text-[17px] text-foreground">Find your next trading partner</span>
-                <span className="mt-1 block truncate text-[10px] font-normal text-muted-foreground">Explore new traders in Discover.</span>
-              </span>
-              <span className="relative ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/25 text-foreground">
-                <ChevronRight className="h-5 w-5" />
-              </span>
-            </Button>
+            <h2 className="mb-2 px-1 font-serif text-[22px] font-normal text-foreground">Your Partner</h2>
+            {partner ? (
+              <div className="flex items-center gap-3 border-y border-border/70 py-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate(`/profile/${partner.id}`)} className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted p-0">
+                  {partner.avatarUrl ? <img src={partner.avatarUrl} alt="" className="h-full w-full object-cover" /> : <Users className="h-5 w-5 text-muted-foreground" />}
+                </Button>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-semibold text-foreground">{partner.username}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{partner.identity}</p>
+                  <p className={`mt-1 text-[10px] ${partner.checkedInToday ? "text-accent" : "text-muted-foreground"}`}>
+                    {partner.checkedInToday ? "Checked in today" : "Check-in not complete"}{partner.streak > 0 ? ` · ${partner.streak} day streak` : ""}
+                  </p>
+                </div>
+                <Button variant="ghost" onClick={() => navigate(`/messages?partner=${partner.id}`)} className="h-8 gap-1.5 px-2 text-[11px] text-accent hover:bg-accent/10 hover:text-accent">
+                  <MessageSquare className="h-4 w-4" /> Message
+                </Button>
+              </div>
+            ) : (
+              <Button variant="ghost" onClick={() => navigate("/discover")} className="h-auto w-full justify-start rounded-none border-y border-border/70 px-1 py-3 text-left hover:bg-transparent">
+                <Users className="mr-3 h-5 w-5 text-accent" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-semibold text-foreground">Find your trading partner</span>
+                  <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">Explore traders in Discover</span>
+                </span>
+                <ChevronRight className="h-4 w-4 text-accent" />
+              </Button>
+            )}
+          </section>
+
+          <section className="mt-6">
+            <h2 className="mb-2 px-1 font-serif text-[22px] font-normal text-foreground">Today</h2>
+            <div className="divide-y divide-border/60 border-y border-border/70">
+              <Button variant="ghost" onClick={() => navigate("/trading-log")} className="h-11 w-full justify-start rounded-none px-1 hover:bg-transparent">
+                <span className="flex-1 text-left text-[12px] text-foreground">Journal entry</span>
+                <span className={`flex items-center gap-1.5 text-[11px] ${daily.journalToday ? "text-accent" : "text-muted-foreground"}`}>
+                  {daily.journalToday ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{daily.journalToday ? "Complete" : "Not complete"}
+                </span>
+              </Button>
+              {partner && (
+                <Button variant="ghost" onClick={() => navigate(`/messages?partner=${partner.id}`)} className="h-11 w-full justify-start rounded-none px-1 hover:bg-transparent">
+                  <span className="flex-1 text-left text-[12px] text-foreground">Partner check-in</span>
+                  <span className={`flex items-center gap-1.5 text-[11px] ${partner.checkedInToday ? "text-accent" : "text-muted-foreground"}`}>
+                    {partner.checkedInToday ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{partner.checkedInToday ? "Complete" : "Not complete"}
+                  </span>
+                </Button>
+              )}
+            </div>
+          </section>
+
+          <section className="mt-6 pb-4">
+            <h2 className="mb-2 px-1 font-serif text-[22px] font-normal text-foreground">This Week</h2>
+            <div className="border-y border-border/70 py-3">
+              <div className={`grid ${partner ? "grid-cols-3" : "grid-cols-2"} divide-x divide-border/60`}>
+                <div className="px-2 first:pl-1"><p className="text-[18px] font-semibold text-foreground">{daily.weeklyJournalDays.length}</p><p className="text-[9px] text-muted-foreground">Journal days</p></div>
+                {partner && <div className="px-3"><p className="text-[18px] font-semibold text-foreground">{partner.weeklyCheckinDays.length}</p><p className="text-[9px] text-muted-foreground">Partner check-ins</p></div>}
+                <div className="px-3"><p className="text-[18px] font-semibold text-foreground">{stats.streak}</p><p className="text-[9px] text-muted-foreground">Current streak</p></div>
+              </div>
+              <div className="mt-4 grid grid-cols-7 gap-2">
+                {weekDays.map((day) => (
+                  <div key={day.key} className="text-center">
+                    <span className="text-[9px] text-muted-foreground">{day.label}</span>
+                    <span className={`mx-auto mt-1 block h-1.5 w-1.5 rounded-full ${day.journal || day.checkin ? "bg-accent" : day.future ? "bg-transparent" : "bg-muted"}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
         </main>
       </div>
