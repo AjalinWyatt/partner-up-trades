@@ -40,7 +40,6 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Install = lazy(() => import("./pages/Install"));
 const EnableNotifications = lazy(() => import("./pages/EnableNotifications"));
-const Room = lazy(() => import("./pages/Room"));
 const TradersMap = lazy(() => import("./pages/TradersMap"));
 
 const queryClient = new QueryClient({
