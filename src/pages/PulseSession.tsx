@@ -11,7 +11,7 @@ type PulseRequest = {
   id: string;
   requester_id: string;
   accepted_by: string | null;
-  status: "open" | "accepted" | "cancelled" | "expired";
+  status: "open" | "accepted" | "cancelled" | "expired" | "completed";
   context: string[];
   note: string | null;
   created_at: string;
