@@ -379,6 +379,13 @@ export default function TradersMap() {
     );
   }, [filtered, visibleIds, userLoc]);
 
+  const listTraders = useMemo(() => {
+    if (!userLoc) return filtered;
+    return [...filtered].sort(
+      (a, b) => milesBetween(userLoc, { lat: a.lat, lng: a.lng }) - milesBetween(userLoc, { lat: b.lat, lng: b.lng }),
+    );
+  }, [filtered, userLoc]);
+
   const flyToMe = () => {
     if (!userLoc) return;
     mapRef.current?.panTo(userLoc);
