@@ -741,14 +741,6 @@ const Feed = () => {
                 })}
               </div>
             </div>
-
-                    >
-                      {filter}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
 
