@@ -627,7 +627,10 @@ export default function TradersMap() {
 
       {viewMode === "map" && (
       <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
-        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-muted" />
+        <div className="mt-2 flex items-center justify-between px-4">
+          <div className="mx-auto h-1 w-9 rounded-full bg-muted" />
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        </div>
         <div className="px-4 pb-3 pt-3">
           {exploreLoc && (
             <div className="mb-2 flex items-center justify-between gap-2 border-b border-border pb-2">
