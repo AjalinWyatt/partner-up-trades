@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Lock, LogOut, MapPin, MoreVertical, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -12,16 +12,6 @@ import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft 
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
 import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface ProfileData {
   username: string | null;
@@ -361,33 +351,6 @@ const Profile = () => {
   const displayName = profile?.full_name || "Your profile";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
 
-  const detailSections = [
-    { title: "Markets", items: tradingProfile?.markets || [] },
-    { title: "Instruments", items: tradingProfile?.instruments || [] },
-    { title: "Sessions", items: tradingProfile?.sessions || [] },
-    { title: "Trade Times", items: tradingProfile?.trade_times || [] },
-    { title: "Trading Style", items: tradingProfile?.trading_style || [] },
-    { title: "Strategies", items: tradingProfile?.strategies || [] },
-    { title: "Timeframes", items: tradingProfile?.timeframes || [] },
-    { title: "Frequency", items: tradingProfile?.frequency || [] },
-    { title: "Primary Goals", items: tradingProfile?.primary_goal || [] },
-    { title: "Loss Response", items: tradingProfile?.loss_response || [] },
-    { title: "Struggles", items: tradingProfile?.struggles || [] },
-    { title: "Journaling", items: tradingProfile?.journaling || [] },
-    { title: "Trading Plan", items: tradingProfile?.trading_plan || [] },
-    { title: "Match Priorities", items: tradingProfile?.match_priorities || [] },
-    { title: "Interests", items: profile?.hobbies || [] },
-    { title: "Chart Prompts", items: profile?.chart_prompts || [] },
-    { title: "Off Chart", items: profile?.off_chart_prompts || [] },
-  ].filter((section) => section.items.length > 0);
-
-  const profileFacts = [
-    { label: "Experience", value: tradingProfile?.experience_level || null },
-    { label: "Gender", value: profile?.gender || null },
-    { label: "Looking For", value: tradingProfile?.looking_for_gender || null },
-    { label: "Connection Reach", value: tradingProfile?.connection_reach || null },
-  ].filter((item) => item.value);
-
   // Profile completeness: short list of high-impact fields others see
   const completenessChecks = [
     { key: "avatar", label: "Profile photo", done: !!profile?.avatar_url },
@@ -662,151 +625,6 @@ const Profile = () => {
   );
 };
 
-const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[]; onOpenLog: () => void; onChanged: () => void | Promise<void> }) => {
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<JournalEntry | null>(null);
-
-  const togglePrivacy = async (entry: JournalEntry) => {
-    const next = entry.share_setting === "private" ? "partners" : "private";
-    const { error } = await supabase.from("journal_entries").update({ share_setting: next }).eq("id", entry.id);
-    setOpenMenuId(null);
-    if (error) {
-      toast.error("Couldn't update privacy");
-      return;
-    }
-    toast.success(next === "private" ? "Marked private" : "Now visible to others");
-    await onChanged();
-  };
-
-  const hideFromJournal = async (entry: JournalEntry) => {
-    const { error } = await supabase
-      .from("journal_entries")
-      .update({ hidden_from_journal: true } as any)
-      .eq("id", entry.id);
-    setConfirmDeleteEntry(null);
-    if (error) {
-      toast.error("Couldn't remove entry");
-      return;
-    }
-    toast.success("Removed from journal");
-    await onChanged();
-  };
-
-  if (entries.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-        <p className="text-base font-bold text-foreground">No journal entries yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Log your sessions and they’ll show up here.</p>
-        <button onClick={onOpenLog} className="mt-5 text-sm font-bold text-primary transition-colors hover:text-primary/80">Open trading log</button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-1.5 px-5 py-4">
-      {entries.map((entry) => {
-        const isPositive = (entry.pnl_pips || 0) >= 0;
-        const isPrivate = entry.share_setting === "private";
-        return (
-          <div
-            key={entry.id}
-            className="bg-card border border-border rounded-xl p-2.5 px-3 relative"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
-                  📈 Trade
-                </span>
-                <span className="text-[11px] font-bold text-foreground">{formatProfileDate(entry.created_at)}</span>
-                {isPrivate && (
-                  <span className="flex items-center gap-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-secondary">
-                    <Lock className="w-2.5 h-2.5" /> Private
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {typeof entry.pnl_pips === "number" && (
-                  <span className={cn("text-sm font-extrabold", isPositive ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                    {entry.pnl_unit === "dollars"
-                      ? `${isPositive ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
-                      : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips} pips`}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
-                  className="w-6 h-6 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  aria-label="Entry options"
-                >
-                  <MoreVertical className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-            {openMenuId === entry.id && (
-              <>
-                <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
-                <div className="absolute right-2 top-9 z-40 min-w-[150px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
-                  <button
-                    onClick={() => togglePrivacy(entry)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
-                  >
-                    <Lock className="w-3.5 h-3.5" /> {isPrivate ? "Make public" : "Make private"}
-                  </button>
-                  <button
-                    onClick={() => { setOpenMenuId(null); setConfirmDeleteEntry(entry); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                  </button>
-                </div>
-              </>
-            )}
-            <div className="text-[10px] text-muted-foreground truncate">
-              {[entry.result, entry.market_pair, entry.mood].filter(Boolean).join(" · ") || "Trade entry"}
-            </div>
-            {entry.notes && (
-              <p className="mt-1 text-[11px] text-foreground leading-snug whitespace-pre-wrap">{entry.notes}</p>
-            )}
-            {!!entry.tags?.length && (
-              <div className="mt-1 flex flex-wrap gap-[3px]">
-                {entry.tags.map((tag) => (
-                  <span key={tag} className="text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px] bg-secondary text-muted-foreground">{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      <AlertDialog open={!!confirmDeleteEntry} onOpenChange={(open) => !open && setConfirmDeleteEntry(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove from journal?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This entry will be removed from your profile journal. It will stay in your trading log.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => confirmDeleteEntry && hideFromJournal(confirmDeleteEntry)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-};
-
-const StatCard = ({ value, label }: { value: string; label: string }) => (
-  <div className="rounded-2xl border border-border bg-card py-4 text-center">
-    <p className="text-[26px] font-extrabold leading-none text-primary">{value}</p>
-    <p className="mt-1.5 text-xs text-muted-foreground">{label}</p>
-  </div>
-);
-
 const EditField = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) => (
   <div>
     <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
@@ -818,10 +636,5 @@ const EditField = ({ label, value, onChange, placeholder }: { label: string; val
     />
   </div>
 );
-
-const formatProfileDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-};
 
 export default Profile;
