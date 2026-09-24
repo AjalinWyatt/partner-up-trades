@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
-import ProfileHero, { ProfileBottomNav } from "@/components/profile/ProfileHero";
+import ProfileHero from "@/components/profile/ProfileHero";
 import ProfileJournalCards, { type JournalVisibility, type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
