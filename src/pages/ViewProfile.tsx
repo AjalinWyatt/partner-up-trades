@@ -1,471 +1,196 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CalendarDays, ChevronLeft, FileText, Grid3x3, Info, MapPin, MessageSquare, MoreVertical, NotebookPen, Shield, ShieldOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CalendarDays, Check, ChevronLeft, MapPin, MessageSquare, MoreVertical, ShieldOff, UserPlus, X } from "lucide-react";
+import AppLayout from "@/components/AppLayout";
+import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
+import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { getInitials, timeAgo } from "@/lib/matchUtils";
-import { toast } from "sonner";
-import { sendNotification } from "@/lib/notifications";
-import PostDetailModal from "@/components/PostDetailModal";
-import SharePostSheet from "@/components/SharePostSheet";
-import DetailCardsGrid, { type DetailCardItem } from "@/components/profile/DetailCardsGrid";
-import { useSwipeBack } from "@/hooks/use-swipe-back";
 import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
+import { cn } from "@/lib/utils";
+import { computeMatch, getInitials, type MatchResult } from "@/lib/matchUtils";
+import { sendNotification } from "@/lib/notifications";
+import { toast } from "sonner";
 
-interface ViewPostItem {
-  id: string;
-  user_id: string;
-  content?: string | null;
-  caption?: string | null;
-  media_url?: string | null;
-  media_urls?: string[] | null;
-  image_url?: string | null;
-  tags?: string[] | null;
-  created_at: string;
-  kind: "post" | "repost";
-  originalUsername?: string;
-}
+const PROFILE_FIELDS = "id, username, full_name, avatar_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, created_at";
 
-const ViewProfile = () => {
+export default function ViewProfile() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-  const [activeTab, setActiveTab] = useState(0);
-  // Cache per-userId so revisiting the same profile is instant.
   const cacheKey = userId || "unknown";
-  const [profile, setProfile, hadProfileCache] = useSessionCache<any>(`viewprofile:${cacheKey}:profile`, null);
+  const [activeTab, setActiveTab] = useState<"details" | "journal">("details");
+  const [profile, setProfile, hadCache] = useSessionCache<any>(`viewprofile:${cacheKey}:profile`, null);
   const [tradingProfile, setTradingProfile] = useSessionCache<any>(`viewprofile:${cacheKey}:trading`, null);
-  const [posts, setPosts] = useSessionCache<ViewPostItem[]>(`viewprofile:${cacheKey}:posts`, []);
-  const [journalEntries, setJournalEntries] = useSessionCache<any[]>(`viewprofile:${cacheKey}:journal`, []);
-  const [loading, setLoading] = useState(!hadProfileCache);
-  const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
-  const [connectionId, setConnectionId] = useState<string | null>(null);
-  const [iAmRequester, setIAmRequester] = useState(false);
+  const [journalEntries, setJournalEntries] = useSessionCache<ProfileJournalEntry[]>(`viewprofile:${cacheKey}:journal`, []);
+  const [myProfile, setMyProfile] = useState<any>(null);
+  const [myTrading, setMyTrading] = useState<any>(null);
   const [myId, setMyId] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [connection, setConnection] = useState<any>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [loading, setLoading] = useState(!hadCache);
+  const [busy, setBusy] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [openPost, setOpenPost] = useState<ViewPostItem | null>(null);
-  const [postToShare, setPostToShare] = useState<ViewPostItem | null>(null);
 
-  const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.state?.idx > 0) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/feed", { replace: true });
-  };
-
-  // Safe left-edge swipe-back to previous page
+  const handleBack = () => window.history.state?.idx > 0 ? navigate(-1) : navigate("/discover", { replace: true });
   useSwipeBack({ onBack: handleBack });
 
   useEffect(() => {
     if (!userId) return;
-
+    let cancelled = false;
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (user) setMyId(user.id);
+      const viewer = session?.user;
+      if (!viewer) { setLoading(false); return; }
+      setMyId(viewer.id);
+      if (viewer.id === userId) { navigate("/profile", { replace: true }); return; }
 
-      const [{ data: prof }, { data: tp }, journalResponse, { data: repostRows }] = await Promise.all([
-        supabase.from("profiles").select("id, username, full_name, avatar_url, bio, birth_year, gender, location, city, state, country, hobbies, off_chart_prompts, chart_prompts, profile_visibility, onboarding_completed, tour_completed, username_changes_count, created_at, updated_at").eq("id", userId).maybeSingle(),
+      const [{ data: viewedProfile }, { data: viewedTrading }, { data: viewerProfile }, { data: viewerTrading }, { data: connections }, { data: block }] = await Promise.all([
+        supabase.from("profiles").select(PROFILE_FIELDS).eq("id", userId).maybeSingle(),
         supabase.from("trading_profiles").select("*").eq("user_id", userId).maybeSingle(),
-        supabase.from("journal_entries").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
-        supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("profiles").select(PROFILE_FIELDS).eq("id", viewer.id).maybeSingle(),
+        supabase.from("trading_profiles").select("*").eq("user_id", viewer.id).maybeSingle(),
+        supabase.from("partner_connections").select("id, status, requester_id, receiver_id").or(`and(requester_id.eq.${viewer.id},receiver_id.eq.${userId}),and(requester_id.eq.${userId},receiver_id.eq.${viewer.id})`).order("updated_at", { ascending: false }).limit(1),
+        supabase.from("blocked_users").select("id").eq("blocker_id", viewer.id).eq("blocked_id", userId).maybeSingle(),
       ]);
+      if (cancelled) return;
+      const currentConnection = connections?.[0] || null;
+      setProfile(viewedProfile);
+      setTradingProfile(viewedTrading);
+      setMyProfile(viewerProfile);
+      setMyTrading(viewerTrading);
+      setConnection(currentConnection);
+      setIsBlocked(!!block);
 
-      const { data: ownPosts } = await supabase.from("posts").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-      const repostIds = [...new Set((repostRows || []).map((row: any) => row.post_id))];
-      const { data: repostPosts } = repostIds.length > 0 ? await supabase.from("posts").select("*").in("id", repostIds) : { data: [] as any[] };
-      const repostAuthorIds = [...new Set((repostPosts || []).map((post: any) => post.user_id))];
-      const { data: repostAuthors } = repostAuthorIds.length > 0 ? await supabase.from("profiles").select("id, username").in("id", repostAuthorIds) : { data: [] as any[] };
-      const authorMap = new Map((repostAuthors || []).map((row: any) => [row.id, row]));
-      const repostPostMap = new Map((repostPosts || []).map((row: any) => [row.id, row]));
-
-      const mergedPosts: ViewPostItem[] = [
-        ...((ownPosts || []).map((post: any) => ({ ...post, kind: "post" as const }))),
-        ...((repostRows || []).map((row: any) => {
-          const original = repostPostMap.get(row.post_id);
-          const author = original ? authorMap.get(original.user_id) : null;
-          return original ? {
-            ...original,
-            created_at: row.created_at,
-            kind: "repost" as const,
-            originalUsername: author?.username ? `@${author.username}` : "@trader",
-          } : null;
-        }).filter(Boolean) as ViewPostItem[]),
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      setProfile(prof);
-      setTradingProfile(tp);
-      setPosts(mergedPosts);
-      setJournalEntries(journalResponse.data || []);
-
-      if (user) {
-        const [{ data: conn }, { data: blockData }] = await Promise.all([
-          supabase
-            .from("partner_connections")
-            .select("id, status, requester_id")
-            .or(`and(requester_id.eq.${user.id},receiver_id.eq.${userId}),and(requester_id.eq.${userId},receiver_id.eq.${user.id})`)
-            .maybeSingle(),
-          supabase.from("blocked_users").select("id").eq("blocker_id", user.id).eq("blocked_id", userId).maybeSingle(),
-        ]);
-
-        setConnectionStatus(conn?.status || null);
-        setConnectionId(conn?.id || null);
-        setIAmRequester(conn?.requester_id === user.id);
-        setIsBlocked(!!blockData);
-
-        if (user.id !== userId) {
-          const { data: myProf } = await supabase.from("profiles").select("username").eq("id", user.id).single();
-          sendNotification({
-            userId,
-            type: "profile_viewed",
-            title: `@${myProf?.username || "someone"} viewed your profile`,
-            body: "They might be interested in connecting",
-            relatedUserId: user.id,
-          });
-        }
+      if (currentConnection?.status === "accepted") {
+        const { data } = await supabase.from("journal_entries").select("*").eq("user_id", userId).eq("share_setting", "partners").eq("hidden_from_journal", false).order("created_at", { ascending: false }).limit(30);
+        if (!cancelled) setJournalEntries((data as ProfileJournalEntry[]) || []);
+      } else {
+        setJournalEntries([]);
       }
-
+      if (viewer.id !== userId) {
+        void sendNotification({ userId, type: "profile_viewed", title: `@${viewerProfile?.username || "someone"} viewed your profile`, body: "They might be interested in connecting", relatedUserId: viewer.id });
+      }
       setLoading(false);
     };
+    void load();
+    return () => { cancelled = true; };
+  }, [navigate, setJournalEntries, setProfile, setTradingProfile, userId]);
 
-    load();
-  }, [userId]);
+  const compatibility = useMemo<MatchResult | null>(() => {
+    if (!myTrading || !tradingProfile || !myProfile || !profile) return null;
+    const result = computeMatch(myTrading, tradingProfile, myProfile, profile);
+    return Object.keys(result.breakdown).length > 0 ? result : null;
+  }, [myProfile, myTrading, profile, tradingProfile]);
 
-  const handleConnect = async () => {
-    if (!myId || !userId || sending || connectionStatus === "pending") return;
-    setSending(true);
+  const refreshCaches = () => invalidateSessionCache("partners:pending", "partners:partners", "dashboard:stats", "dashboard:updates", "discover:matches");
 
-    const { error } = await supabase.from("partner_connections").insert({
-      requester_id: myId,
-      receiver_id: userId,
-      status: "pending",
-      match_score: 0,
-      match_breakdown: {},
-    });
+  const sendRequest = async () => {
+    if (!myId || !userId || busy) return;
+    setBusy(true);
+    const payload = { requester_id: myId, receiver_id: userId, status: "pending", match_score: compatibility?.pct || 0, match_breakdown: compatibility?.breakdown || {} };
+    const { data, error } = connection?.status === "declined"
+      ? await supabase.from("partner_connections").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", connection.id).select("id, status, requester_id, receiver_id").single()
+      : await supabase.from("partner_connections").insert(payload).select("id, status, requester_id, receiver_id").single();
+    if (error) toast.error("Could not send request");
+    else {
+      setConnection(data); refreshCaches(); toast.success("Connection request sent");
+      void sendNotification({ userId, type: "partner_request", title: "New connection request", body: `@${myProfile?.username || "someone"} wants to connect with you`, relatedUserId: myId });
+    }
+    setBusy(false);
+  };
 
-    if (error) {
-      toast.error("Could not send request");
+  const updateRequest = async (status: "accepted" | "declined") => {
+    if (!connection || !myId || busy) return;
+    setBusy(true);
+    const { error } = await supabase.from("partner_connections").update({ status, updated_at: new Date().toISOString() }).eq("id", connection.id);
+    if (error) toast.error(`Could not ${status === "accepted" ? "accept" : "decline"} request`);
+    else {
+      setConnection({ ...connection, status }); refreshCaches(); toast.success(status === "accepted" ? "Connection accepted" : "Request declined");
+      if (status === "accepted") void sendNotification({ userId: connection.requester_id, type: "partner_accepted", title: "Connection accepted", body: `@${myProfile?.username || "someone"} accepted your request.`, relatedUserId: myId });
+    }
+    setBusy(false);
+  };
+
+  const cancelRequest = async () => {
+    if (!connection || busy) return;
+    setBusy(true);
+    const { error } = await supabase.from("partner_connections").delete().eq("id", connection.id);
+    if (error) toast.error("Could not cancel request"); else { setConnection(null); refreshCaches(); toast.success("Request canceled"); }
+    setBusy(false);
+  };
+
+  const unmatch = async () => {
+    if (!connection || !confirm("Unmatch this partner?")) return;
+    const { error } = await supabase.from("partner_connections").delete().eq("id", connection.id);
+    if (error) toast.error("Failed to unmatch"); else { setConnection(null); setShowMenu(false); refreshCaches(); toast.success("Unmatched"); }
+  };
+
+  const toggleBlock = async () => {
+    if (!myId || !userId) return;
+    if (isBlocked) {
+      await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", userId);
+      setIsBlocked(false); toast.success("Trader unblocked");
     } else {
-      toast.success("Match request sent");
-      // Partners list and dashboard pending count are now stale.
-      invalidateSessionCache("partners:pending", "partners:partners", "dashboard:stats", "dashboard:updates");
-      setConnectionStatus("pending");
-      setIAmRequester(true);
-      const { data: myProf } = await supabase.from("profiles").select("username").eq("id", myId).single();
-      await sendNotification({
-        userId,
-        type: "partner_request",
-        title: "New connection request",
-        body: `@${myProf?.username || "someone"} wants to connect with you`,
-        relatedUserId: myId,
-      });
+      if (!confirm(`Block @${profile?.username || "this trader"}?`)) return;
+      await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: userId });
+      if (connection) await supabase.from("partner_connections").delete().eq("id", connection.id);
+      setConnection(null); setIsBlocked(true); toast.success("Trader blocked");
     }
-
-    setSending(false);
-  };
-
-  const handleUnmatch = async () => {
-    if (!connectionId) return;
-    if (!confirm("Unmatch this partner?")) return;
-
-    const { error } = await supabase.from("partner_connections").delete().eq("id", connectionId);
-    if (error) {
-      toast.error("Failed to unmatch");
-      return;
-    }
-
-    setConnectionStatus(null);
-    setConnectionId(null);
     setShowMenu(false);
-    toast.success("Unmatched");
   };
 
-  const handleCancelRequest = async () => {
-    if (!connectionId || sending) return;
-    if (!confirm("Cancel your match request?")) return;
-    setSending(true);
-    const { error } = await supabase.from("partner_connections").delete().eq("id", connectionId);
-    setSending(false);
-    if (error) {
-      toast.error("Could not cancel request");
-      return;
-    }
-    setConnectionStatus(null);
-    setConnectionId(null);
-    setIAmRequester(false);
-    toast.success("Request canceled");
-  };
+  if (loading) return <AppLayout lockHeight><div className="flex flex-1 items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></AppLayout>;
+  if (!profile) return <AppLayout><div className="flex flex-1 flex-col items-center justify-center px-6 text-center"><p className="font-bold text-foreground">Profile unavailable</p><Button variant="link" onClick={handleBack}>Go back</Button></div></AppLayout>;
 
-  const handleBlock = async () => {
-    if (!myId || !userId) return;
-    if (!confirm(`Block @${profile?.username || "this user"}?`)) return;
-
-    await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: userId });
-    if (connectionId) {
-      await supabase.from("partner_connections").delete().eq("id", connectionId);
-      setConnectionStatus(null);
-      setConnectionId(null);
-    }
-
-    setIsBlocked(true);
-    setShowMenu(false);
-    toast.success(`Blocked @${profile?.username || "user"}`);
-  };
-
-  const handleUnblock = async () => {
-    if (!myId || !userId) return;
-    await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", userId);
-    setIsBlocked(false);
-    setShowMenu(false);
-    toast.success(`Unblocked @${profile?.username || "user"}`);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <div className="flex flex-1 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      </div>
-    );
-  }
-
-  const displayName = profile?.full_name || `@${profile?.username || "trader"}`;
-  const displayUsername = profile?.username ? `@${profile.username}` : "@trader";
-  const age = profile?.birth_year ? new Date().getFullYear() - profile.birth_year : null;
-  const first = (arr?: any): string | null => (Array.isArray(arr) && arr.length > 0 ? String(arr[0]) : null);
-  const detailItems: DetailCardItem[] = ([
-    { label: "Session", value: first(tradingProfile?.sessions) },
-    { label: "Trading Style", value: first(tradingProfile?.trading_style) },
-    { label: "Strategy", value: first(tradingProfile?.strategies) },
-    { label: "Charts", value: first(profile?.chart_prompts) },
-    { label: "Interests", value: first(profile?.hobbies) },
-    { label: "Off Chart", value: first(profile?.off_chart_prompts) },
-    { label: "Timeframe", value: first(tradingProfile?.timeframes) },
-    { label: "Experience level", value: tradingProfile?.experience_level || null },
-    { label: "Markets", value: first(tradingProfile?.markets) },
-    { label: "Instruments", value: first(tradingProfile?.instruments) },
-    { label: "Trade Times", value: first(tradingProfile?.trade_times) },
-    { label: "Primary Goal", value: first(tradingProfile?.primary_goal) },
-    { label: "Struggles", value: first(tradingProfile?.struggles) },
-    { label: "Looking For", value: tradingProfile?.looking_for_gender || null },
-    { label: "Gender", value: profile?.gender || null },
-    { label: "Connection Reach", value: (() => {
-        const r = (tradingProfile?.connection_reach || "").toLowerCase();
-        return r === "local" ? "Local" : r === "global" ? "Global" : r === "both" ? "Local/Global" : null;
-      })() },
-  ].filter((it) => !!it.value) as DetailCardItem[]);
+  const incoming = connection?.status === "pending" && connection.requester_id === userId;
+  const outgoing = connection?.status === "pending" && connection.requester_id === myId;
+  const accepted = connection?.status === "accepted";
+  const age = profile.birth_year ? new Date().getFullYear() - profile.birth_year : null;
+  const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ") || profile.location;
+  const tradingLine = [tradingProfile?.markets?.[0], tradingProfile?.trading_style?.[0], tradingProfile?.experience_level].filter(Boolean).join(" · ");
 
   return (
-    <>
-    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background">
-      {/* Locked header — back bar + hero + action button + tabs */}
-      <div className="shrink-0 bg-background">
-      <div className="flex items-center justify-between border-b border-border bg-background/95 px-5 pb-4 pt-safe-4 backdrop-blur">
-        <button onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-          <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
-        </button>
-        {myId && myId !== userId ? (
-          <div className="relative">
-            <button onClick={() => setShowMenu((current) => !current)} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted">
-              <MoreVertical className="h-4 w-4" />
-            </button>
-            {showMenu && (
-              <div className="absolute right-0 top-11 min-w-[180px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
-                {connectionStatus === "accepted" && (
-                  <button onClick={handleUnmatch} className="w-full px-4 py-3 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted">
-                    Unmatch
-                  </button>
-                )}
-                {isBlocked ? (
-                  <button onClick={handleUnblock} className="w-full px-4 py-3 text-left text-xs font-medium text-foreground transition-colors hover:bg-muted">
-                    Unblock
-                  </button>
-                ) : (
-                  <button onClick={handleBlock} className="w-full px-4 py-3 text-left text-xs font-medium text-destructive transition-colors hover:bg-destructive/10">
-                    Block
-                  </button>
-                )}
-              </div>
-            )}
+    <AppLayout hideBottomNav lockHeight>
+      <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
+        <header className="shrink-0 border-b border-border bg-background">
+          <div className="flex items-center justify-between px-4 pb-2 pt-safe-4">
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={handleBack} aria-label="Back"><ChevronLeft className="h-4 w-4" /></Button>
+            <div className="relative">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowMenu((value) => !value)} aria-label="Profile options"><MoreVertical className="h-4 w-4" /></Button>
+              {showMenu && <div className="absolute right-0 top-11 z-20 min-w-[160px] overflow-hidden rounded-md border border-border bg-card shadow-lg">{accepted && <Button variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={unmatch}>Unmatch</Button>}<Button variant="ghost" className={cn("w-full justify-start rounded-none text-xs", !isBlocked && "text-destructive")} onClick={toggleBlock}>{isBlocked ? "Unblock" : "Block"}</Button></div>}
+            </div>
           </div>
-        ) : <div className="h-9 w-9" />}
-      </div>
-
-      <div className="px-5 pt-6">
-          <div className="flex items-start gap-4">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profile photo" className="h-[84px] w-[84px] shrink-0 rounded-full object-cover" />
-            ) : (
-              <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-full bg-secondary text-xl font-black text-foreground">
-                {getInitials(profile?.full_name || profile?.username || "T")}
-              </div>
-            )}
+          <div className="flex items-start gap-3 px-5 pt-1">
+            {profile.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="h-[82px] w-[82px] shrink-0 rounded-full border-2 border-primary object-cover" /> : <div className="flex h-[82px] w-[82px] shrink-0 items-center justify-center rounded-full border-2 border-primary bg-secondary text-xl font-black text-foreground">{getInitials(profile.full_name || profile.username)}</div>}
             <div className="min-w-0 flex-1 pt-1">
-              <h1 className="text-[18px] font-extrabold leading-tight text-foreground truncate">
-                {displayName}
-                {age ? <span className="ml-1.5 font-black text-foreground">{age}</span> : null}
-              </h1>
-              <p className="mt-0.5 text-[12px] font-medium text-muted-foreground truncate">{displayUsername}</p>
-              {(() => {
-                const market = tradingProfile?.markets?.[0];
-                const style = tradingProfile?.trading_style?.[0];
-                const exp = tradingProfile?.experience_level;
-                const chips = [market, style, exp].filter(Boolean) as string[];
-                if (chips.length === 0) return null;
-                return (
-                  <div className="mt-1 text-[12px] font-semibold text-primary truncate">
-                    {chips.join(" · ")}
-                  </div>
-                );
-              })()}
-              {/* Meta row: Location · Joined date - directly under chips */}
-              {((profile?.city || profile?.state || profile?.country) || profile?.created_at) && (
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
-                  {(profile?.city || profile?.state || profile?.country) && (
-                    <span className="inline-flex items-center gap-1 min-w-0">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span className="font-medium text-foreground truncate">
-                        {[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ")}
-                      </span>
-                    </span>
-                  )}
-                  {profile?.created_at && (
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      <span>Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
-                    </span>
-                  )}
-                </div>
-              )}
+              <h1 className="truncate text-[19px] font-black text-foreground">{profile.full_name || `@${profile.username || "trader"}`}{age ? ` · ${age}` : ""}</h1>
+              <p className="text-xs text-muted-foreground">@{profile.username || "trader"}</p>
+              {tradingLine && <p className="mt-1 truncate text-xs font-bold text-primary">{tradingLine}</p>}
             </div>
           </div>
-          {profile?.bio ? (
-            <p className="mt-3 whitespace-pre-line text-[13px] leading-5 text-muted-foreground">{profile.bio}</p>
-          ) : (
-            <p className="mt-3 text-[13px] text-muted-foreground italic">No bio yet.</p>
-          )}
-        </div>
-
-        {myId && myId !== userId && (
-          <div className="mt-5 px-5">
-            {isBlocked ? (
-              <button onClick={handleUnblock} className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted">
-                <ShieldOff className="h-4 w-4" />
-                Unblock
-              </button>
-            ) : connectionStatus === "accepted" ? (
-              <button onClick={() => navigate(`/messages?partner=${userId}`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
-                <MessageSquare className="h-4 w-4" />
-                Message
-              </button>
-            ) : connectionStatus === "pending" && iAmRequester ? (
-              <button
-                onClick={handleCancelRequest}
-                disabled={sending}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted disabled:opacity-60"
-              >
-                Pending · Tap to cancel
-              </button>
-            ) : (
-              <button
-                onClick={handleConnect}
-                disabled={sending || connectionStatus === "pending"}
-                className={cn(
-                  "flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-opacity",
-                  connectionStatus === "pending" ? "bg-secondary text-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
-                )}
-              >
-                {connectionStatus === "pending" ? "Pending" : "Match request"}
-              </button>
-            )}
+          <div className="px-5 pb-3 pt-2">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">{location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location}</span>}{profile.created_at && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />Joined {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>}</div>
+            {profile.bio && <p className="mt-2 line-clamp-3 whitespace-pre-line text-[12px] leading-[18px] text-foreground/80">{profile.bio}</p>}
           </div>
-        )}
 
-        <div className="mt-6 flex border-b border-border px-5">
-          {[
-            { Icon: NotebookPen, label: "Journal" },
-            { Icon: Info, label: "Details" },
-          ].map(({ Icon, label }, index) => (
-            <button
-              key={label}
-              onClick={() => setActiveTab(index)}
-              aria-label={label}
-              title={label}
-              className={cn(
-                "relative flex-1 flex items-center justify-center py-3 transition-colors",
-                activeTab === index ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              <Icon className="h-[22px] w-[22px]" strokeWidth={activeTab === index ? 2.4 : 1.8} />
-              {activeTab === index && <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-foreground" />}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="px-4 pb-3">
+            {isBlocked ? <Button variant="secondary" className="w-full" onClick={toggleBlock}><ShieldOff />Unblock</Button>
+              : accepted ? <Button className="w-full" onClick={() => navigate(`/messages?partner=${userId}`)}><MessageSquare />Message</Button>
+              : outgoing ? <Button variant="secondary" className="w-full" onClick={cancelRequest} disabled={busy}><Check />Requested</Button>
+              : incoming ? <div className="grid grid-cols-2 gap-2"><Button className="w-full" onClick={() => updateRequest("accepted")} disabled={busy}><Check />Accept</Button><Button variant="outline" className="w-full" onClick={() => updateRequest("declined")} disabled={busy}><X />Decline</Button></div>
+              : <Button className="w-full" onClick={sendRequest} disabled={busy}><UserPlus />Connect</Button>}
+          </div>
 
-      {/* Scrollable tab content — only this region scrolls */}
-      <div
-        className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-2"
-        style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
-      >
-        {activeTab === 0 ? (
-          journalEntries.length > 0 ? (
-            <div className="space-y-3 px-5 py-4">
-              {journalEntries.map((entry) => (
-                <div key={entry.id} className="rounded-2xl border border-border bg-card p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {entry.result && <span className="text-sm font-bold text-foreground">{entry.result}</span>}
-                        {entry.market_pair && <span className="text-xs text-muted-foreground">{entry.market_pair}</span>}
-                      </div>
-                      <p className="mt-1 text-[11px] text-muted-foreground">{timeAgo(entry.created_at)}</p>
-                    </div>
-                    {typeof entry.pnl_pips === "number" && (
-                      <span className="text-sm font-bold text-foreground">
-                        {(entry as any).pnl_unit === "dollars"
-                          ? `${entry.pnl_pips >= 0 ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
-                          : `${entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips`}
-                      </span>
-                    )}
-                  </div>
-                  {entry.notes && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{entry.notes}</p>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState title="No journal yet" description="Nothing shared here yet." />
-          )
-        ) : (
-          detailItems.length > 0 ? (
-            <DetailCardsGrid items={detailItems} />
-          ) : (
-            <EmptyState title="No details yet" description="This trader hasn’t filled out their trading details." />
-          )
-        )}
+          <nav className="grid grid-cols-2 border-t border-border" aria-label="Profile sections">
+            {(["details", "journal"] as const).map((tab) => <Button key={tab} variant="ghost" className={cn("relative h-11 rounded-none capitalize", activeTab === tab ? "text-primary" : "text-muted-foreground")} onClick={() => setActiveTab(tab)}>{tab}{activeTab === tab && <span className="absolute inset-x-5 bottom-0 h-0.5 bg-primary" />}</Button>)}
+          </nav>
+        </header>
+
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {activeTab === "details" ? <TraderDetailsPanel profile={profile} tradingProfile={tradingProfile} match={compatibility} myTrading={myTrading} username={profile.username} /> : accepted ? <ProfileJournalCards entries={journalEntries} /> : <div className="px-8 py-20 text-center"><p className="font-bold text-foreground">Journal is for partners</p><p className="mt-1 text-xs text-muted-foreground">Shared entries appear after your connection is accepted.</p></div>}
+        </main>
       </div>
-    </div>
-    <PostDetailModal
-      open={!!openPost}
-      onClose={() => setOpenPost(null)}
-      post={openPost as any}
-      myId={myId}
-      onShare={(post) => setPostToShare(post as ViewPostItem)}
-    />
-    <SharePostSheet post={postToShare as any} myId={myId} onClose={() => setPostToShare(null)} />
-    </>
+    </AppLayout>
   );
-};
-
-const EmptyState = ({ title, description }: { title: string; description: string }) => (
-  <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-    <p className="text-base font-bold text-foreground">{title}</p>
-    <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">{description}</p>
-  </div>
-);
-
-export default ViewProfile;
+}
