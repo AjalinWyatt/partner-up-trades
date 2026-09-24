@@ -424,7 +424,7 @@ export default function TradersMap() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-background">
-      <div ref={mapDivRef} className="absolute inset-0" />
+      <div ref={mapDivRef} className={cn("absolute inset-0", viewMode === "list" && "invisible pointer-events-none")} />
 
       {(loading || guardLoading || (!mapReady && !mapError)) && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-background/70 backdrop-blur-sm">
