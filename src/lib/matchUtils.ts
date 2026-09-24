@@ -95,7 +95,7 @@ export function computeMatch(
   const theirGender = theirProfile?.gender;
   const prefNorm = (myPref || "").toLowerCase().replace(/[-\s]/g, "");
   const isOpenPref = !myPref || prefNorm === "nopreference" || prefNorm === "coed" || prefNorm === "any";
-  if (!isOpenPref && theirGender && myPref!.toLowerCase().replace(/s$/, '') !== theirGender.toLowerCase()) {
+  if (!isOpenPref && myPref && theirGender && myPref.toLowerCase().replace(/s$/, '') !== theirGender.toLowerCase()) {
     return { pct: 0, reasons: [], breakdown: {}, excluded: true, excludeReason: "Gender preference mismatch" };
   }
 

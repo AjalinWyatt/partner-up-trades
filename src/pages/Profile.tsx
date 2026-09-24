@@ -1,30 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, LogOut, MapPin, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
-import CreatePostModal from "@/components/CreatePostModal";
-import PostDetailModal from "@/components/PostDetailModal";
-import CreatePhotoAlbumModal from "@/components/CreatePhotoAlbumModal";
-import SharePostSheet from "@/components/SharePostSheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
-import DetailCardsGrid from "@/components/profile/DetailCardsGrid";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
+import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
   username: string | null;
@@ -40,6 +27,7 @@ interface ProfileData {
   chart_prompts: string[];
   off_chart_prompts: string[];
   onboarding_completed: boolean;
+  birth_year?: number | null;
   created_at?: string | null;
 }
 
@@ -80,27 +68,6 @@ interface JournalEntry {
   pnl_unit?: string | null;
 }
 
-interface ProfilePostItem {
-  id: string;
-  user_id: string;
-  content?: string | null;
-  caption?: string | null;
-  media_url?: string | null;
-  media_urls?: string[] | null;
-  image_url?: string | null;
-  tags?: string[] | null;
-  created_at: string;
-  username: string;
-  avatar_url: string | null;
-  kind: "post" | "repost" | "saved";
-  originalUsername?: string;
-  originalAvatarUrl?: string | null;
-  originalCreatedAt?: string;
-  likeCount?: number;
-  commentCount?: number;
-  liked?: boolean;
-}
-
 const Profile = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
@@ -126,114 +93,6 @@ const Profile = () => {
   const tradingDraftInitialized = useRef(false);
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
-
-  const [posts, setPosts] = useSessionCache<ProfilePostItem[]>("profile:me:posts", []);
-  const [savedPosts, setSavedPosts] = useSessionCache<ProfilePostItem[]>("profile:me:saved", []);
-  const [showCreatePost, setShowCreatePost] = useState(false);
-  const [showCreatePhoto, setShowCreatePhoto] = useState(false);
-  const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
-  const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [postToShare, setPostToShare] = useState<any>(null);
-
-  const togglePostLike = async (postId: string) => {
-    if (!userId) return;
-    const target = posts.find((p) => p.id === postId);
-    if (!target) return;
-    const isLiked = !!target.liked;
-    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, liked: !isLiked, likeCount: (p.likeCount || 0) + (isLiked ? -1 : 1) } : p));
-    if (isLiked) {
-      await supabase.from("feed_likes").delete().eq("user_id", userId).eq("entry_id", postId);
-    } else {
-      await supabase.from("feed_likes").insert({ user_id: userId, entry_id: postId });
-    }
-  };
-
-  const loadProfileCollections = async (uid: string, ownUsername?: string | null) => {
-    const [{ data: ownPosts }, { data: repostRows }, { data: savedRows }, { data: ownProfile }] = await Promise.all([
-      supabase.from("posts").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("saved_posts" as any).select("post_id, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("username, avatar_url").eq("id", uid).maybeSingle(),
-    ]);
-
-    const referencedIds = [...new Set([...(repostRows || []).map((row: any) => row.post_id), ...(savedRows || []).map((row: any) => row.post_id)])];
-    const { data: referencedPosts } = referencedIds.length > 0
-      ? await supabase.from("posts").select("*").in("id", referencedIds)
-      : { data: [] as any[] };
-
-    const authorIds = [...new Set([...(ownPosts || []).map((post: any) => post.user_id), ...(referencedPosts || []).map((post: any) => post.user_id)])];
-    const { data: authorProfiles } = authorIds.length > 0
-      ? await supabase.from("profiles").select("id, username, avatar_url").in("id", authorIds)
-      : { data: [] as any[] };
-
-    const authorMap = new Map((authorProfiles || []).map((entry: any) => [entry.id, entry]));
-    const referencedMap = new Map((referencedPosts || []).map((entry: any) => [entry.id, entry]));
-    const myUsername = ownUsername || ownProfile?.username || profile?.username || "username";
-
-    // Aggregate likes/comments for all visible posts
-    const allPostIds = [
-      ...(ownPosts || []).map((p: any) => p.id),
-      ...referencedIds,
-    ];
-    const [{ data: allLikes }, { data: myLikes }, { data: allComments }] = allPostIds.length > 0
-      ? await Promise.all([
-          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds),
-          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds).eq("user_id", uid),
-          supabase.from("feed_comments").select("entry_id").in("entry_id", allPostIds),
-        ])
-      : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
-    const likeCounts = new Map<string, number>();
-    (allLikes || []).forEach((l: any) => likeCounts.set(l.entry_id, (likeCounts.get(l.entry_id) || 0) + 1));
-    const commentCounts = new Map<string, number>();
-    (allComments || []).forEach((c: any) => commentCounts.set(c.entry_id, (commentCounts.get(c.entry_id) || 0) + 1));
-    const mySet = new Set<string>((myLikes || []).map((l: any) => l.entry_id));
-    const decorate = (p: any): ProfilePostItem => ({
-      ...p,
-      likeCount: likeCounts.get(p.id) || 0,
-      commentCount: commentCounts.get(p.id) || 0,
-      liked: mySet.has(p.id),
-    });
-
-    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => decorate({
-      ...post,
-      username: `@${myUsername}`,
-      avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
-      kind: "post",
-    }));
-
-    const repostItems: ProfilePostItem[] = (repostRows || []).map((row: any) => {
-      const original = referencedMap.get(row.post_id);
-      const author = original ? authorMap.get(original.user_id) : null;
-      return original ? decorate({
-        ...original,
-        created_at: row.created_at,
-        username: `@${myUsername}`,
-        avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
-        kind: "repost",
-        originalUsername: author?.username ? `@${author.username}` : "@trader",
-        originalAvatarUrl: author?.avatar_url || null,
-        originalCreatedAt: original.created_at,
-      }) : null;
-    }).filter(Boolean) as ProfilePostItem[];
-
-    const savedItems: ProfilePostItem[] = (savedRows || []).map((row: any) => {
-      const original = referencedMap.get(row.post_id);
-      const author = original ? authorMap.get(original.user_id) : null;
-      return original ? decorate({
-        ...original,
-        created_at: row.created_at,
-        username: author?.username ? `@${author.username}` : "@trader",
-        avatar_url: author?.avatar_url || null,
-        kind: "saved",
-        originalUsername: author?.username ? `@${author.username}` : "@trader",
-        originalAvatarUrl: author?.avatar_url || null,
-        originalCreatedAt: original.created_at,
-      }) : null;
-    }).filter(Boolean) as ProfilePostItem[];
-
-    setPosts([...ownItems, ...repostItems].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    setSavedPosts(savedItems);
-  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -325,7 +184,6 @@ const Profile = () => {
         }
       }
 
-      await loadProfileCollections(user.id, pData?.username);
       setJournalEntries((entries as JournalEntry[]) || []);
       setLoading(false);
     };
@@ -366,11 +224,6 @@ const Profile = () => {
     setProfile((current) => (current ? { ...current, avatar_url: avatarUrl } : current));
     setCropSrc(null);
     toast.success("Photo updated");
-  };
-
-  const refreshPosts = async () => {
-    if (!userId) return;
-    await loadProfileCollections(userId, profile?.username);
   };
 
   const handleSaveProfile = async () => {
@@ -498,33 +351,6 @@ const Profile = () => {
   const displayName = profile?.full_name || "Your profile";
   const displayUsername = profile?.username ? `@${profile.username}` : "@username";
 
-  const detailSections = [
-    { title: "Markets", items: tradingProfile?.markets || [] },
-    { title: "Instruments", items: tradingProfile?.instruments || [] },
-    { title: "Sessions", items: tradingProfile?.sessions || [] },
-    { title: "Trade Times", items: tradingProfile?.trade_times || [] },
-    { title: "Trading Style", items: tradingProfile?.trading_style || [] },
-    { title: "Strategies", items: tradingProfile?.strategies || [] },
-    { title: "Timeframes", items: tradingProfile?.timeframes || [] },
-    { title: "Frequency", items: tradingProfile?.frequency || [] },
-    { title: "Primary Goals", items: tradingProfile?.primary_goal || [] },
-    { title: "Loss Response", items: tradingProfile?.loss_response || [] },
-    { title: "Struggles", items: tradingProfile?.struggles || [] },
-    { title: "Journaling", items: tradingProfile?.journaling || [] },
-    { title: "Trading Plan", items: tradingProfile?.trading_plan || [] },
-    { title: "Match Priorities", items: tradingProfile?.match_priorities || [] },
-    { title: "Interests", items: profile?.hobbies || [] },
-    { title: "Chart Prompts", items: profile?.chart_prompts || [] },
-    { title: "Off Chart", items: profile?.off_chart_prompts || [] },
-  ].filter((section) => section.items.length > 0);
-
-  const profileFacts = [
-    { label: "Experience", value: tradingProfile?.experience_level || null },
-    { label: "Gender", value: profile?.gender || null },
-    { label: "Looking For", value: tradingProfile?.looking_for_gender || null },
-    { label: "Connection Reach", value: tradingProfile?.connection_reach || null },
-  ].filter((item) => item.value);
-
   // Profile completeness: short list of high-impact fields others see
   const completenessChecks = [
     { key: "avatar", label: "Profile photo", done: !!profile?.avatar_url },
@@ -620,7 +446,7 @@ const Profile = () => {
           className="relative flex items-center justify-center px-5"
           style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
         >
-          <h1 className="text-[22px] font-extrabold tracking-tight text-foreground">
+          <h1 className="text-[22px] font-extrabold text-foreground">
             Traders<span className="text-foreground">World</span>
           </h1>
           <div className="absolute right-5 flex items-center gap-1">
@@ -655,7 +481,8 @@ const Profile = () => {
 
           {/* Name + bio (right of avatar) */}
           <div className="flex-1 min-w-0 pt-1">
-            <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}</h2>
+            <h2 className="text-[20px] font-extrabold leading-tight text-foreground truncate">{displayName}{profile?.birth_year ? ` · ${new Date().getFullYear() - profile.birth_year}` : ""}</h2>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{displayUsername}</p>
             {(() => {
               const market = tradingProfile?.markets?.[0];
               const style = tradingProfile?.trading_style?.[0];
@@ -731,24 +558,20 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Details / Journal icon tabs */}
-        <div className="mt-6 flex items-center justify-center gap-1 border-b border-border px-5">
-          {[
-            { Icon: Info, label: "Details" },
-            { Icon: NotebookPen, label: "Journal" },
-          ].map(({ Icon, label }, index) => (
+        <div className="mt-5 grid grid-cols-2 border-y border-border">
+          {["Details", "Journal"].map((label, index) => (
             <button
               key={label}
               onClick={() => setActiveTab(index)}
               aria-label={label}
               title={label}
               className={cn(
-                "relative flex-1 max-w-[120px] flex items-center justify-center py-3 transition-colors",
-                activeTab === index ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                "relative flex items-center justify-center py-3 text-xs font-bold transition-colors",
+                activeTab === index ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="h-[22px] w-[22px]" strokeWidth={activeTab === index ? 2.4 : 1.8} />
-              {activeTab === index && <span className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-foreground" />}
+              {label}
+              {activeTab === index && <span className="absolute -bottom-px left-5 right-5 h-0.5 bg-primary" />}
             </button>
           ))}
         </div>
@@ -760,15 +583,16 @@ const Profile = () => {
           style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         >
         {activeTab === 0 ? (
-          <DetailsGrid
-            profile={profile}
-            tradingProfile={tradingProfile}
-          />
+          <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} />
         ) : (
-          <JournalList
-            entries={journalEntries}
-            onOpenLog={() => navigate("/trading-log")}
-            onChanged={async () => {
+          <ProfileJournalCards
+            entries={journalEntries as ProfileJournalEntry[]}
+            emptyDescription="Log your sessions and they’ll show up here."
+            onTogglePrivacy={async (entry) => {
+              const next = entry.share_setting === "private" ? "partners" : "private";
+              const { error } = await supabase.from("journal_entries").update({ share_setting: next }).eq("id", entry.id);
+              if (error) { toast.error("Couldn't update privacy"); return; }
+              toast.success(next === "private" ? "Marked private" : "Shared with partners");
               if (!userId) return;
               const { data } = await supabase
                 .from("journal_entries")
@@ -779,43 +603,18 @@ const Profile = () => {
                 .limit(50);
               setJournalEntries((data as JournalEntry[]) || []);
             }}
+            onHide={async (entry) => {
+              if (!confirm("Remove this entry from your profile journal? It will remain in your Journal.")) return;
+              const { error } = await supabase.from("journal_entries").update({ hidden_from_journal: true } as any).eq("id", entry.id);
+              if (error) { toast.error("Couldn't remove entry"); return; }
+              setJournalEntries((current) => current.filter((item) => item.id !== entry.id));
+              toast.success("Removed from profile journal");
+            }}
           />
         )}
       </div>
       </div>
 
-      <CreatePostModal
-        open={showCreatePost}
-        onClose={() => {
-          setShowCreatePost(false);
-          setEditingPost(null);
-        }}
-        onCreated={() => {
-          setShowCreatePost(false);
-          setEditingPost(null);
-          refreshPosts();
-        }}
-        initialPost={editingPost}
-      />
-      <PostDetailModal
-        open={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
-        post={selectedPost}
-        myId={userId}
-        onDeleted={refreshPosts}
-        onEdit={(post) => {
-          setSelectedPost(null);
-          setEditingPost(post as ProfilePostItem);
-          setShowCreatePost(true);
-        }}
-        onShare={(post) => setPostToShare(post)}
-      />
-      <SharePostSheet post={postToShare} myId={userId} onClose={() => setPostToShare(null)} />
-      <CreatePhotoAlbumModal
-        open={showCreatePhoto}
-        onClose={() => setShowCreatePhoto(false)}
-        onCreated={refreshPosts}
-      />
       <AvatarCropDialog
         open={!!cropSrc}
         imageSrc={cropSrc}
@@ -825,431 +624,6 @@ const Profile = () => {
     </AppLayout>
   );
 };
-
-const PostList = ({
-  posts,
-  savedPosts,
-  avatarUrl,
-  initials,
-  username,
-  onOpenPost,
-  onCreate,
-  onToggleLike,
-  onSharePost,
-}: {
-  posts: ProfilePostItem[];
-  savedPosts: ProfilePostItem[];
-  avatarUrl: string | null | undefined;
-  initials: string;
-  username: string;
-  onOpenPost: (post: any) => void;
-  onCreate: () => void;
-  onToggleLike: (postId: string) => void;
-  onSharePost: (post: any) => void;
-}) => {
-  const visiblePosts = posts.filter((p) => (p as any).share_to_feed !== false);
-  if (visiblePosts.length === 0 && savedPosts.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
-          <Camera className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-base font-bold text-foreground">No posts yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Your posts will show up here in a simple timeline.</p>
-        <button onClick={onCreate} className="mt-5 text-sm font-bold text-primary transition-colors hover:text-primary/80">Create your first post</button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {visiblePosts.map((post) => {
-        const media = post.media_urls?.[0] || post.media_url || post.image_url;
-        return (
-          <div key={post.id} className="border-b border-border px-5 py-4">
-            <div onClick={() => onOpenPost(post)} className="flex items-start gap-3 cursor-pointer transition-colors hover:bg-muted/20 -mx-5 px-5 py-1">
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-secondary">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Profile photo" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{initials}</div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-foreground">{post.username || username}</span>
-                  <span className="text-[11px] text-muted-foreground">{formatProfileDate(post.created_at)}</span>
-                </div>
-                {post.kind === "repost" && (
-                  <p className="mt-1 text-[11px] font-medium text-muted-foreground">Reposted from {post.originalUsername}</p>
-                )}
-                {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[14px] leading-6 text-foreground line-clamp-6">{post.content || post.caption}</p>}
-                {!!post.tags?.length && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {post.tags.map((tag: string) => (
-                      <span key={tag} className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-foreground">#{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {media && (
-                  <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-secondary">
-                    <img src={media} alt="Post media" className="max-h-[340px] w-full object-cover" />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="mt-2 ml-14 flex items-center gap-4 text-muted-foreground">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onToggleLike(post.id); }}
-                aria-label="Like"
-                className="flex items-center gap-1 transition-colors hover:text-foreground"
-              >
-                <Heart className={cn("h-[15px] w-[15px]", post.liked && "fill-destructive text-destructive")} />
-                {(post.likeCount || 0) > 0 && <span className="text-[10px] tabular-nums">{post.likeCount}</span>}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenPost(post); }}
-                aria-label="Comment"
-                className="flex items-center gap-1 transition-colors hover:text-foreground"
-              >
-                <MessageCircle className="h-[15px] w-[15px]" />
-                {(post.commentCount || 0) > 0 && <span className="text-[10px] tabular-nums">{post.commentCount}</span>}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onSharePost(post); }}
-                aria-label="Share"
-                className="transition-colors hover:text-foreground"
-              >
-                <Send className="h-[15px] w-[15px]" />
-              </button>
-            </div>
-          </div>
-        );
-      })}
-
-      {savedPosts.length > 0 && (
-        <div className="px-5 py-5">
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Saved</p>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            {savedPosts.map((post, index) => {
-              const media = post.media_urls?.[0] || post.media_url || post.image_url;
-              return (
-                <button
-                  key={`saved-${post.id}`}
-                  onClick={() => onOpenPost(post)}
-                  className={cn(
-                    "block w-full px-4 py-4 text-left transition-colors hover:bg-muted/20",
-                    index !== savedPosts.length - 1 && "border-b border-border"
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-secondary">
-                      {post.avatar_url ? (
-                        <img src={post.avatar_url} alt="Saved post author" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-foreground">{(post.originalUsername || post.username || "@").slice(1, 2).toUpperCase()}</div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">{post.originalUsername || post.username}</span>
-                        <span className="text-[11px] text-muted-foreground">Saved {formatProfileDate(post.created_at)}</span>
-                      </div>
-                      {(post.content || post.caption) && <p className="mt-1 whitespace-pre-wrap text-[14px] leading-6 text-foreground">{post.content || post.caption}</p>}
-                      {media && (
-                        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-secondary">
-                          <img src={media} alt="Saved post media" className="max-h-[280px] w-full object-cover" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const PhotoGrid = ({
-  posts,
-  onOpenPost,
-  onCreate,
-}: {
-  posts: ProfilePostItem[];
-  onOpenPost: (post: any) => void;
-  onCreate?: () => void;
-}) => {
-  const photos = posts.filter((post) => {
-    const media = post.media_urls?.[0] || post.media_url || post.image_url;
-    if (!media) return false;
-    const type = (post as any).media_type || "";
-    return !type.startsWith("video");
-  });
-
-  if (photos.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary">
-          <Camera className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-base font-bold text-foreground">No photos yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Share photos to your grid. They stay on your profile and don't post to the feed.</p>
-        {onCreate && (
-          <button onClick={onCreate} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-            <Plus className="h-4 w-4" /> New photo
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      {onCreate && (
-        <div className="flex justify-end gap-2 px-3 pt-2 pb-1">
-          <button
-            onClick={onCreate}
-            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" /> Photo
-          </button>
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-[2px] px-[2px] pb-4">
-      {photos.map((post) => {
-        const media = post.media_urls?.[0] || post.media_url || post.image_url;
-        const isMulti = (post.media_urls?.length || 0) > 1;
-        return (
-          <button
-            key={post.id}
-            onClick={() => onOpenPost(post)}
-            className="relative aspect-square overflow-hidden bg-secondary"
-          >
-            <img src={media!} alt="Post" className="h-full w-full object-cover" />
-            {isMulti && (
-              <div className="absolute right-1.5 top-1.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[9px] font-bold text-foreground backdrop-blur">
-                {post.media_urls!.length}
-              </div>
-            )}
-          </button>
-        );
-      })}
-      </div>
-    </div>
-  );
-};
-
-const JournalList = ({ entries, onOpenLog, onChanged }: { entries: JournalEntry[]; onOpenLog: () => void; onChanged: () => void | Promise<void> }) => {
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<JournalEntry | null>(null);
-
-  const togglePrivacy = async (entry: JournalEntry) => {
-    const next = entry.share_setting === "private" ? "partners" : "private";
-    const { error } = await supabase.from("journal_entries").update({ share_setting: next }).eq("id", entry.id);
-    setOpenMenuId(null);
-    if (error) {
-      toast.error("Couldn't update privacy");
-      return;
-    }
-    toast.success(next === "private" ? "Marked private" : "Now visible to others");
-    await onChanged();
-  };
-
-  const hideFromJournal = async (entry: JournalEntry) => {
-    const { error } = await supabase
-      .from("journal_entries")
-      .update({ hidden_from_journal: true } as any)
-      .eq("id", entry.id);
-    setConfirmDeleteEntry(null);
-    if (error) {
-      toast.error("Couldn't remove entry");
-      return;
-    }
-    toast.success("Removed from journal");
-    await onChanged();
-  };
-
-  if (entries.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
-        <p className="text-base font-bold text-foreground">No journal entries yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Log your sessions and they’ll show up here.</p>
-        <button onClick={onOpenLog} className="mt-5 text-sm font-bold text-primary transition-colors hover:text-primary/80">Open trading log</button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-1.5 px-5 py-4">
-      {entries.map((entry) => {
-        const isPositive = (entry.pnl_pips || 0) >= 0;
-        const isPrivate = entry.share_setting === "private";
-        return (
-          <div
-            key={entry.id}
-            className="bg-card border border-border rounded-xl p-2.5 px-3 relative"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
-                  📈 Trade
-                </span>
-                <span className="text-[11px] font-bold text-foreground">{formatProfileDate(entry.created_at)}</span>
-                {isPrivate && (
-                  <span className="flex items-center gap-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-secondary">
-                    <Lock className="w-2.5 h-2.5" /> Private
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {typeof entry.pnl_pips === "number" && (
-                  <span className={cn("text-sm font-extrabold", isPositive ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
-                    {entry.pnl_unit === "dollars"
-                      ? `${isPositive ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}`
-                      : `${(entry.pnl_pips || 0) > 0 ? "+" : ""}${entry.pnl_pips} pips`}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === entry.id ? null : entry.id); }}
-                  className="w-6 h-6 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  aria-label="Entry options"
-                >
-                  <MoreVertical className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-            {openMenuId === entry.id && (
-              <>
-                <div className="fixed inset-0 z-30" onClick={() => setOpenMenuId(null)} />
-                <div className="absolute right-2 top-9 z-40 min-w-[150px] rounded-xl border border-border bg-card shadow-xl overflow-hidden">
-                  <button
-                    onClick={() => togglePrivacy(entry)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-secondary"
-                  >
-                    <Lock className="w-3.5 h-3.5" /> {isPrivate ? "Make public" : "Make private"}
-                  </button>
-                  <button
-                    onClick={() => { setOpenMenuId(null); setConfirmDeleteEntry(entry); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                  </button>
-                </div>
-              </>
-            )}
-            <div className="text-[10px] text-muted-foreground truncate">
-              {[entry.result, entry.market_pair, entry.mood].filter(Boolean).join(" · ") || "Trade entry"}
-            </div>
-            {entry.notes && (
-              <p className="mt-1 text-[11px] text-foreground leading-snug whitespace-pre-wrap">{entry.notes}</p>
-            )}
-            {!!entry.tags?.length && (
-              <div className="mt-1 flex flex-wrap gap-[3px]">
-                {entry.tags.map((tag) => (
-                  <span key={tag} className="text-[8px] font-semibold px-1.5 py-0.5 rounded-[3px] bg-secondary text-muted-foreground">{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      <AlertDialog open={!!confirmDeleteEntry} onOpenChange={(open) => !open && setConfirmDeleteEntry(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove from journal?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This entry will be removed from your profile journal. It will stay in your trading log.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => confirmDeleteEntry && hideFromJournal(confirmDeleteEntry)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-};
-
-const DetailCard = ({ title, items }: { title: string; items: string[] }) => (
-  <div className="rounded-2xl border border-border bg-card p-4">
-    <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <span key={item} className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground">{item}</span>
-      ))}
-    </div>
-  </div>
-);
-
-const DetailsGrid = ({
-  profile,
-  tradingProfile,
-}: {
-  profile: ProfileData | null;
-  tradingProfile: TradingProfileData | null;
-}) => {
-  const first = (arr?: string[] | null) => (arr && arr.length > 0 ? arr[0] : null);
-
-  const items: { value: string; label: string }[] = [
-    { value: first(tradingProfile?.sessions) || "", label: "Session" },
-    { value: first(tradingProfile?.trading_style) || "", label: "Trading Style" },
-    { value: first(tradingProfile?.strategies) || "", label: "Strategy" },
-    { value: first(profile?.chart_prompts) || "", label: "Charts" },
-    { value: first(profile?.hobbies) || "", label: "Interests" },
-    { value: first(profile?.off_chart_prompts) || "", label: "Off Chart" },
-    { value: first(tradingProfile?.timeframes) || "", label: "Timeframe" },
-    { value: tradingProfile?.experience_level || "", label: "Experience level" },
-    { value: first(tradingProfile?.frequency) || "", label: "How Often" },
-    { value: first(tradingProfile?.markets) || "", label: "Markets" },
-    { value: first(tradingProfile?.instruments) || "", label: "Instruments" },
-    { value: first(tradingProfile?.trade_times) || "", label: "Trade Times" },
-    { value: first(tradingProfile?.primary_goal) || "", label: "Primary Goal" },
-    { value: first(tradingProfile?.struggles) || "", label: "Struggles" },
-    { value: first(tradingProfile?.journaling) || "", label: "Journaling" },
-    { value: first(tradingProfile?.trading_plan) || "", label: "Trading Plan" },
-    { value: first(tradingProfile?.loss_response as any) || "", label: "Loss Response" },
-    { value: first(tradingProfile?.match_priorities) || "", label: "Match Priority" },
-    { value: tradingProfile?.looking_for_gender || "", label: "Looking For" },
-    { value: profile?.gender || "", label: "Gender" },
-  ].filter((i) => !!i.value);
-
-  const reach = (tradingProfile?.connection_reach || "").toLowerCase();
-  const reachLabel = reach === "local" ? "Local" : reach === "global" ? "Global" : reach === "both" ? "Local/Global" : "";
-  if (reachLabel) items.push({ value: reachLabel, label: "Connection Reach" });
-
-  if (items.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
-        <p className="text-base font-bold text-foreground">No details yet</p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">Complete your onboarding info to fill this section out.</p>
-      </div>
-    );
-  }
-
-  return (
-    <DetailCardsGrid items={items} />
-  );
-};
-
-const StatCard = ({ value, label }: { value: string; label: string }) => (
-  <div className="rounded-2xl border border-border bg-card py-4 text-center">
-    <p className="text-[26px] font-extrabold leading-none text-primary">{value}</p>
-    <p className="mt-1.5 text-xs text-muted-foreground">{label}</p>
-  </div>
-);
 
 const EditField = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) => (
   <div>
@@ -1262,10 +636,5 @@ const EditField = ({ label, value, onChange, placeholder }: { label: string; val
     />
   </div>
 );
-
-const formatProfileDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-};
 
 export default Profile;
