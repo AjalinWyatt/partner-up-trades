@@ -157,24 +157,24 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       </Dialog>
 
       <Dialog open={showTrading} onOpenChange={setShowTrading}>
-        <DialogContent className="max-h-[92dvh] max-w-sm border-surface-line bg-background p-2.5 pt-3">
-          <DialogHeader className="pb-0"><DialogTitle className="text-center text-[15px] font-semibold">Trading details</DialogTitle></DialogHeader>
-          <svg width="0" height="0" className="absolute"><defs><linearGradient id="td-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="hsl(174 72% 58%)" /><stop offset="100%" stopColor="hsl(150 70% 55%)" /></linearGradient></defs></svg>
-          <div className="space-y-1.5">
-            {sections.map(({ title, subtitle, Icon, items }) => {
+        <DialogContent className="top-[max(env(safe-area-inset-top),0.5rem)] bottom-[max(env(safe-area-inset-bottom),0.5rem)] flex w-[calc(100%-1rem)] max-w-sm translate-y-0 flex-col gap-2 overflow-hidden rounded-[22px] border-surface-line bg-background p-3 shadow-2xl">
+          <DialogHeader className="shrink-0 pb-1"><DialogTitle className="text-center text-[20px] font-semibold leading-7">Trading details</DialogTitle></DialogHeader>
+          <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
+            {sections.map(({ title, subtitle, Icon, items }, sectionIndex) => {
               const tiles = items.filter((t) => t.values.length > 0);
               if (!tiles.length) return null;
+              const sectionTone = sectionIndex === 1 ? "text-success" : "text-primary";
               return (
-                <section key={title} className="rounded-xl border border-[hsl(190_30%_22%/0.6)] bg-[hsl(195_35%_10%)] p-1.5">
-                  <div className="mb-1.5 flex items-center gap-2 px-1">
-                    <Icon className="h-5 w-5 shrink-0" stroke="url(#td-grad)" strokeWidth={2.25} />
-                    <div className="flex items-baseline gap-1.5"><h3 className="text-[12.5px] font-semibold leading-none text-foreground">{title}</h3><p className="text-[9.5px] leading-none text-muted-foreground">{subtitle}</p></div>
+                <section key={title} className="rounded-2xl border border-surface-line bg-surface p-2.5">
+                  <div className="mb-2 flex items-center gap-2.5 px-1">
+                    <Icon className={`h-7 w-7 shrink-0 ${sectionTone} drop-shadow-[0_0_6px_hsl(var(--primary)/0.28)]`} strokeWidth={2.5} />
+                    <div className="min-w-0"><h3 className="text-[17px] font-semibold leading-5 text-foreground">{title}</h3><p className="truncate text-[11px] leading-4 text-muted-foreground">{subtitle}</p></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {tiles.map(({ label, Icon: TileIcon, values }, i) => (
-                      <div key={label} className={`rounded-lg border border-[hsl(190_25%_22%/0.6)] bg-[hsl(195_30%_13%)] p-1.5 ${tiles.length % 2 === 1 && i === tiles.length - 1 ? "col-span-2" : ""}`}>
-                        <div className="mb-1 flex items-center gap-1 px-0.5"><TileIcon className="h-3 w-3 shrink-0" stroke="url(#td-grad)" /><p className="text-[10px] font-semibold leading-none text-foreground">{label}</p></div>
-                        <div className="flex flex-wrap gap-0.5">{values.map((v) => <span key={v} className="rounded-full border border-[hsl(200_15%_28%/0.7)] bg-[hsl(200_20%_17%)] px-1.5 py-0.5 text-[9px] leading-tight text-foreground/90">{v}</span>)}</div>
+                      <div key={label} className={`min-h-0 rounded-xl border border-surface-line bg-surface-raised p-2 ${tiles.length % 2 === 1 && i === tiles.length - 1 ? "col-span-2" : ""}`}>
+                        <div className="mb-1.5 flex items-center gap-1.5"><TileIcon className={`h-4 w-4 shrink-0 ${i % 3 === 2 ? "text-success" : "text-primary"}`} strokeWidth={2.25} /><p className="truncate text-[12px] font-semibold leading-4 text-foreground">{label}</p></div>
+                        <div className="flex flex-wrap gap-1">{values.map((v) => <span key={v} className="max-w-full truncate rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] leading-[14px] text-foreground/90">{v}</span>)}</div>
                       </div>
                     ))}
                   </div>
