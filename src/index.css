@@ -29,6 +29,11 @@
 
     --success: 160 76% 42%;
     --success-foreground: 0 0% 100%;
+    --info: 214 76% 50%;
+    --slate: 212 14% 42%;
+    --surface: 0 0% 97%;
+    --surface-raised: 0 0% 94%;
+    --surface-line: 0 0% 88%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -71,8 +76,13 @@
     --accent: 180 100% 50%;
     --accent-foreground: 0 0% 5%;
 
-    --success: 160 84% 45%;
+    --success: 150 72% 46%;
     --success-foreground: 0 0% 100%;
+    --info: 210 90% 62%;
+    --slate: 212 16% 62%;
+    --surface: 210 20% 7.5%;
+    --surface-raised: 210 18% 10.5%;
+    --surface-line: 208 22% 17%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
