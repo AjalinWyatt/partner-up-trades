@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, FileText, Grid3x3, Heart, Info, Lock, LogOut, MapPin, MessageCircle, MoreVertical, NotebookPen, Pencil, Plus, Send, SlidersHorizontal, Trash2 } from "lucide-react";
+import { CalendarDays, Camera, Lock, LogOut, MapPin, MoreVertical, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/components/AppLayout";
-import CreatePostModal from "@/components/CreatePostModal";
-import PostDetailModal from "@/components/PostDetailModal";
-import CreatePhotoAlbumModal from "@/components/CreatePhotoAlbumModal";
-import SharePostSheet from "@/components/SharePostSheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
-import DetailCardsGrid from "@/components/profile/DetailCardsGrid";
+import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +36,7 @@ interface ProfileData {
   chart_prompts: string[];
   off_chart_prompts: string[];
   onboarding_completed: boolean;
+  birth_year?: number | null;
   created_at?: string | null;
 }
 
@@ -80,27 +77,6 @@ interface JournalEntry {
   pnl_unit?: string | null;
 }
 
-interface ProfilePostItem {
-  id: string;
-  user_id: string;
-  content?: string | null;
-  caption?: string | null;
-  media_url?: string | null;
-  media_urls?: string[] | null;
-  image_url?: string | null;
-  tags?: string[] | null;
-  created_at: string;
-  username: string;
-  avatar_url: string | null;
-  kind: "post" | "repost" | "saved";
-  originalUsername?: string;
-  originalAvatarUrl?: string | null;
-  originalCreatedAt?: string;
-  likeCount?: number;
-  commentCount?: number;
-  liked?: boolean;
-}
-
 const Profile = () => {
   const { loading: guardLoading, onboardingComplete } = useOnboardingGuard();
   const navigate = useNavigate();
@@ -126,114 +102,6 @@ const Profile = () => {
   const tradingDraftInitialized = useRef(false);
   const [profileDraft, setProfileDraft] = useState<ProfileEditorDraft>({ gender: "", city: "", state: "", country: "", hobbies: [], chart_prompts: [], off_chart_prompts: [] });
   const [tradingDraft, setTradingDraft] = useState<TradingEditorDraft>({ markets: [], instruments: [], sessions: [], trade_times: [], trading_style: [], strategies: [], timeframes: [], frequency: [], experience_level: "", primary_goal: [], loss_response: [], struggles: [], journaling: [], trading_plan: [], looking_for_gender: "", connection_reach: "", connect_frequency: [], match_priorities: [] });
-
-  const [posts, setPosts] = useSessionCache<ProfilePostItem[]>("profile:me:posts", []);
-  const [savedPosts, setSavedPosts] = useSessionCache<ProfilePostItem[]>("profile:me:saved", []);
-  const [showCreatePost, setShowCreatePost] = useState(false);
-  const [showCreatePhoto, setShowCreatePhoto] = useState(false);
-  const [editingPost, setEditingPost] = useState<ProfilePostItem | null>(null);
-  const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [postToShare, setPostToShare] = useState<any>(null);
-
-  const togglePostLike = async (postId: string) => {
-    if (!userId) return;
-    const target = posts.find((p) => p.id === postId);
-    if (!target) return;
-    const isLiked = !!target.liked;
-    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, liked: !isLiked, likeCount: (p.likeCount || 0) + (isLiked ? -1 : 1) } : p));
-    if (isLiked) {
-      await supabase.from("feed_likes").delete().eq("user_id", userId).eq("entry_id", postId);
-    } else {
-      await supabase.from("feed_likes").insert({ user_id: userId, entry_id: postId });
-    }
-  };
-
-  const loadProfileCollections = async (uid: string, ownUsername?: string | null) => {
-    const [{ data: ownPosts }, { data: repostRows }, { data: savedRows }, { data: ownProfile }] = await Promise.all([
-      supabase.from("posts").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("post_reposts" as any).select("post_id, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("saved_posts" as any).select("post_id, created_at").eq("user_id", uid).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("username, avatar_url").eq("id", uid).maybeSingle(),
-    ]);
-
-    const referencedIds = [...new Set([...(repostRows || []).map((row: any) => row.post_id), ...(savedRows || []).map((row: any) => row.post_id)])];
-    const { data: referencedPosts } = referencedIds.length > 0
-      ? await supabase.from("posts").select("*").in("id", referencedIds)
-      : { data: [] as any[] };
-
-    const authorIds = [...new Set([...(ownPosts || []).map((post: any) => post.user_id), ...(referencedPosts || []).map((post: any) => post.user_id)])];
-    const { data: authorProfiles } = authorIds.length > 0
-      ? await supabase.from("profiles").select("id, username, avatar_url").in("id", authorIds)
-      : { data: [] as any[] };
-
-    const authorMap = new Map((authorProfiles || []).map((entry: any) => [entry.id, entry]));
-    const referencedMap = new Map((referencedPosts || []).map((entry: any) => [entry.id, entry]));
-    const myUsername = ownUsername || ownProfile?.username || profile?.username || "username";
-
-    // Aggregate likes/comments for all visible posts
-    const allPostIds = [
-      ...(ownPosts || []).map((p: any) => p.id),
-      ...referencedIds,
-    ];
-    const [{ data: allLikes }, { data: myLikes }, { data: allComments }] = allPostIds.length > 0
-      ? await Promise.all([
-          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds),
-          supabase.from("feed_likes").select("entry_id").in("entry_id", allPostIds).eq("user_id", uid),
-          supabase.from("feed_comments").select("entry_id").in("entry_id", allPostIds),
-        ])
-      : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
-    const likeCounts = new Map<string, number>();
-    (allLikes || []).forEach((l: any) => likeCounts.set(l.entry_id, (likeCounts.get(l.entry_id) || 0) + 1));
-    const commentCounts = new Map<string, number>();
-    (allComments || []).forEach((c: any) => commentCounts.set(c.entry_id, (commentCounts.get(c.entry_id) || 0) + 1));
-    const mySet = new Set<string>((myLikes || []).map((l: any) => l.entry_id));
-    const decorate = (p: any): ProfilePostItem => ({
-      ...p,
-      likeCount: likeCounts.get(p.id) || 0,
-      commentCount: commentCounts.get(p.id) || 0,
-      liked: mySet.has(p.id),
-    });
-
-    const ownItems: ProfilePostItem[] = (ownPosts || []).map((post: any) => decorate({
-      ...post,
-      username: `@${myUsername}`,
-      avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
-      kind: "post",
-    }));
-
-    const repostItems: ProfilePostItem[] = (repostRows || []).map((row: any) => {
-      const original = referencedMap.get(row.post_id);
-      const author = original ? authorMap.get(original.user_id) : null;
-      return original ? decorate({
-        ...original,
-        created_at: row.created_at,
-        username: `@${myUsername}`,
-        avatar_url: ownProfile?.avatar_url || profile?.avatar_url || null,
-        kind: "repost",
-        originalUsername: author?.username ? `@${author.username}` : "@trader",
-        originalAvatarUrl: author?.avatar_url || null,
-        originalCreatedAt: original.created_at,
-      }) : null;
-    }).filter(Boolean) as ProfilePostItem[];
-
-    const savedItems: ProfilePostItem[] = (savedRows || []).map((row: any) => {
-      const original = referencedMap.get(row.post_id);
-      const author = original ? authorMap.get(original.user_id) : null;
-      return original ? decorate({
-        ...original,
-        created_at: row.created_at,
-        username: author?.username ? `@${author.username}` : "@trader",
-        avatar_url: author?.avatar_url || null,
-        kind: "saved",
-        originalUsername: author?.username ? `@${author.username}` : "@trader",
-        originalAvatarUrl: author?.avatar_url || null,
-        originalCreatedAt: original.created_at,
-      }) : null;
-    }).filter(Boolean) as ProfilePostItem[];
-
-    setPosts([...ownItems, ...repostItems].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    setSavedPosts(savedItems);
-  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -325,7 +193,6 @@ const Profile = () => {
         }
       }
 
-      await loadProfileCollections(user.id, pData?.username);
       setJournalEntries((entries as JournalEntry[]) || []);
       setLoading(false);
     };
@@ -366,11 +233,6 @@ const Profile = () => {
     setProfile((current) => (current ? { ...current, avatar_url: avatarUrl } : current));
     setCropSrc(null);
     toast.success("Photo updated");
-  };
-
-  const refreshPosts = async () => {
-    if (!userId) return;
-    await loadProfileCollections(userId, profile?.username);
   };
 
   const handleSaveProfile = async () => {
