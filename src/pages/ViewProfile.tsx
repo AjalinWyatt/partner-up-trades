@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Check, ChevronLeft, MessageSquare, MoreHorizontal, MoreVertical, ShieldOff, UserPlus, X } from "lucide-react";
+import { Check, ChevronLeft, MessageSquare, MoreVertical, ShieldOff, UserPlus, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProfileJournalCards, { type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
@@ -155,7 +155,7 @@ export default function ViewProfile() {
   const outgoing = connection?.status === "pending" && connection.requester_id === myId;
   const accepted = connection?.status === "accepted";
 
-  const roundBtn = "h-10 w-10 rounded-full border-surface-line bg-background/60 backdrop-blur-md";
+  const roundBtn = "h-10 w-10 rounded-full border-surface-line bg-background/80 shadow-md backdrop-blur-md";
   const back = <Button variant="outline" size="icon" className={roundBtn} onClick={handleBack} aria-label="Back"><ChevronLeft className="h-5 w-5" /></Button>;
   const options = (
     <div className="relative">
@@ -172,18 +172,18 @@ export default function ViewProfile() {
   const cta = (
     <div className="flex items-center gap-2.5">
       {primaryAction}
-      <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-full border-surface-line bg-surface" onClick={() => setShowMenu((v) => !v)} aria-label="More options"><MoreHorizontal className="h-5 w-5" /></Button>
     </div>
   );
 
   return (
     <AppLayout hideBottomNav lockHeight>
-      <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
+      <div className="relative flex h-full min-h-0 flex-1 flex-col bg-background">
+        {activeTab === "details" && <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 pt-safe-3"><div className="pointer-events-auto">{back}</div><div className="pointer-events-auto">{options}</div></div>}
         {activeTab === "journal" && <ProfileHero compact profile={profile} tradingProfile={tradingProfile} topLeft={back} topRight={options} />}
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {activeTab === "details" ? (
             <>
-              <ProfileHero profile={profile} tradingProfile={tradingProfile} topLeft={back} topRight={options} cta={cta} />
+              <ProfileHero profile={profile} tradingProfile={tradingProfile} cta={cta} />
               <TraderDetailsPanel profile={profile} tradingProfile={tradingProfile} match={compatibility} myTrading={myTrading} username={profile.username} />
             </>
           ) : <ProfileJournalCards entries={journalEntries} />}
