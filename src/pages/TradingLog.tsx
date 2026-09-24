@@ -872,11 +872,9 @@ export default function TradingLog() {
   // ─── MAIN LOG VIEW ───
   return (
     <AppLayout lockHeight>
-      <AppHeader />
-
       {/* Page nav */}
-      <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden px-5 py-1.5">
-        <h1 className="min-w-0 truncate text-lg font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>Trading Log</h1>
+      <div className="flex w-full min-w-0 shrink-0 items-end justify-between gap-3 overflow-hidden px-6 pb-4 pt-safe-6">
+        <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Your progress</p><h1 className="min-w-0 truncate font-serif text-[34px] font-normal leading-none text-foreground">Journal</h1></div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="relative">
             <button
@@ -915,7 +913,7 @@ export default function TradingLog() {
           <button
             onClick={() => { resetForm(); setShowForm(true); }}
             aria-label="Log new entry"
-            className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_2px_10px_hsl(var(--accent)/0.35)]"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/50 bg-accent/10"
           >
             <Plus className="w-4 h-4 text-accent-foreground" strokeWidth={2.8} />
           </button>
@@ -924,10 +922,9 @@ export default function TradingLog() {
 
       <div className="min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-[calc(96px+env(safe-area-inset-bottom,0px))] touch-pan-y" style={{ scrollbarWidth: "none" }}>
         {/* Streak */}
-        <div className="mx-5 my-2 flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl border border-border bg-card p-2.5 px-3.5">
-          <span className="text-2xl">⚡</span>
+        <div className="mx-6 my-2 flex min-w-0 items-center gap-2.5 overflow-hidden border-y border-border/70 py-3">
           <div className="min-w-0 flex-1">
-            <div className="text-xl font-black text-foreground" style={{ fontFamily: "'Gabarito', sans-serif" }}>
+            <div className="font-serif text-[22px] font-normal text-foreground">
               {streak} Day Streak
             </div>
             <div className="text-[10px] text-muted-foreground">
@@ -952,7 +949,7 @@ export default function TradingLog() {
         </div>
 
         {/* Stats row */}
-        <div className="mx-5 mb-3 grid min-w-0 grid-cols-4 gap-px overflow-hidden rounded-[10px] bg-border">
+        <div className="mx-6 mb-4 grid min-w-0 grid-cols-4 divide-x divide-border/70 border-b border-border/70">
           <div className="bg-card py-2.5 px-1 text-center">
             <div className={cn("text-sm font-black leading-tight", (stats.totalDollars || stats.totalPips) >= 0 ? "text-accent" : "text-destructive")} style={{ fontFamily: "'Gabarito', sans-serif" }}>
               {stats.totalDollars !== 0
@@ -987,7 +984,7 @@ export default function TradingLog() {
         </div>
 
         {/* Trade / Study view toggle */}
-        <div className="mx-5 mb-2 flex min-w-0 gap-1.5 overflow-hidden rounded-2xl border border-border bg-secondary p-1">
+        <div className="mx-6 mb-3 flex min-w-0 border-b border-border/70">
           {([
             { value: "trade", label: "Trade Log", emoji: "📈" },
             { value: "study", label: "Study Log", emoji: "📚" },
@@ -998,11 +995,11 @@ export default function TradingLog() {
                 key={opt.value}
                 onClick={() => setLogView(opt.value)}
                 className={cn(
-                  "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12px] font-bold transition-all",
+                  "flex min-w-0 flex-1 items-center justify-center gap-1.5 py-3 text-[10px] font-semibold uppercase tracking-[0.14em] transition-all",
                   sel
                     ? opt.value === "study"
-                      ? "bg-primary text-primary-foreground shadow-[0_2px_10px_hsl(var(--primary)/0.3)]"
-                      : "bg-accent text-accent-foreground shadow-[0_2px_10px_hsl(var(--accent)/0.3)]"
+                      ? "border-b border-primary text-primary"
+                      : "border-b border-accent text-accent"
                     : "text-muted-foreground"
                 )}
               >
@@ -1014,7 +1011,7 @@ export default function TradingLog() {
         </div>
 
         {/* Section header */}
-        <div className="px-5 pt-1 pb-1.5">
+        <div className="px-6 pt-2 pb-2">
           <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
             Recent {logView === "study" ? "Study Sessions" : "Trades"}
           </span>
@@ -1041,14 +1038,14 @@ export default function TradingLog() {
           </div>
         ) : (
           <>
-            <div className="mx-5 max-w-full space-y-1.5 overflow-hidden">
+            <div className="mx-6 max-w-full divide-y divide-border/70 overflow-hidden border-y border-border/70">
               {filteredEntries.map((entry) => (
                 <div
                   key={entry.id}
                   onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
                   className={cn(
-                    "relative max-w-full cursor-pointer overflow-hidden rounded-xl border bg-card p-2.5 px-3 transition-colors hover:bg-card/80",
-                    entry.entry_type === "study" ? "border-primary/40" : "border-border",
+                    "relative max-w-full cursor-pointer overflow-hidden border-0 bg-transparent px-1 py-3 transition-colors hover:bg-card/40",
+                    entry.entry_type === "study" ? "" : "",
                     expandedId === entry.id && "ring-1 ring-accent/40"
                   )}
                 >

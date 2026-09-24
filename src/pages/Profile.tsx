@@ -518,12 +518,12 @@ const Profile = () => {
           {activeTab === "details" ? (
             <>
               <ProfileHero profile={profile} tradingProfile={tradingProfile} ownProfile bioFallback={bioFallback} onAvatarClick={() => avatarInputRef.current?.click()} onEdit={() => setEditing(true)} onSettings={() => navigate("/settings")} />
-              <div className="px-5 pt-3">{tabs}</div>
+              <div className="px-6 pt-3">{tabs}</div>
               <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} ownProfile />
             </>
           ) : (
             <>
-              <div className="px-4 pt-3">{tabs}</div>
+              <div className="px-6 pt-3">{tabs}</div>
               <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />
             </>
           )}

@@ -102,7 +102,7 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
   ]).slice(0, 8) : [];
 
   return (
-    <div className="space-y-2.5 px-3 pb-4 pt-3">
+    <div className="space-y-4 px-6 pb-4 pt-4">
       {canShowMatch && (
         <section className="rounded-xl border border-surface-line bg-surface p-3">
           <div className="flex items-center justify-between gap-3">
@@ -122,7 +122,7 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       )}
 
       {snapshot.length > 0 && (
-        <section className={`rounded-xl border border-surface-line bg-surface ${ownProfile ? "p-2" : "p-2.5"}`}>
+        <section className={`border-y border-surface-line py-3 ${ownProfile ? "px-0" : "px-1"}`}>
           <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
             <div className="flex items-center gap-2"><BarChart3 className="h-3.5 w-3.5 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-foreground">Trading Snapshot</h2></div>
             {groups.length > 0 && <button type="button" className="text-[12px] font-medium text-info hover:underline" onClick={() => setShowTrading(true)}>View all</button>}

@@ -329,8 +329,8 @@ export default function Messages() {
   const conversationListContent = (
     <div className="flex h-full min-w-0 w-full flex-col overflow-x-hidden bg-background">
       <div
-        className="sticky top-0 z-40 flex items-center justify-between bg-background/95 px-5 pb-3 backdrop-blur-xl"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+        className="sticky top-0 z-40 flex items-end justify-between bg-background/95 px-6 pb-4 backdrop-blur-xl"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.5rem)" }}
       >
         {showSearch ? (
           <div className="relative flex-1">
@@ -346,7 +346,7 @@ export default function Messages() {
           </div>
         ) : (
           <>
-            <h1 className="font-display text-[25px] font-semibold tracking-normal text-foreground">Messages</h1>
+            <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Your conversations</p><h1 className="font-serif text-[34px] font-normal leading-none text-foreground">Messages</h1></div>
             <div className="flex items-center gap-3">
               <button onClick={() => setShowSearch(true)} className="text-foreground" aria-label="Search"><Search className="h-5 w-5" /></button>
               <button onClick={() => navigate("/discover")} className="text-foreground" aria-label="New message"><SquarePen className="h-5 w-5" /></button>
@@ -355,15 +355,15 @@ export default function Messages() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-b border-border/70 px-5 pb-2">
+      <div className="flex items-center gap-5 border-b border-border/70 px-6 pb-0">
         {(["all", "unread", "partners", "requests"] as const).map((filter) => {
           const count = filter === "all" ? connections.length : filter === "unread" ? connections.filter((item) => item.unreadCount > 0).length : null;
-          return <button key={filter} onClick={() => setInboxFilter(filter)} className={cn("relative shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold capitalize", inboxFilter === filter ? "border-accent/40 bg-accent/10 text-accent" : "border-border bg-secondary/45 text-muted-foreground")}>{filter}{count !== null ? ` (${count})` : ""}{inboxFilter === filter && <span className="absolute -bottom-[9px] left-1/2 h-0.5 w-8 -translate-x-1/2 bg-accent" />}</button>;
+          return <button key={filter} onClick={() => setInboxFilter(filter)} className={cn("relative shrink-0 py-3 text-[9px] font-semibold uppercase tracking-[0.14em]", inboxFilter === filter ? "text-accent" : "text-muted-foreground")}>{filter}{count !== null ? ` (${count})` : ""}{inboxFilter === filter && <span className="absolute inset-x-0 bottom-0 h-px bg-accent" />}</button>;
         })}
       </div>
 
       <div
-        className="flex-1 overflow-y-auto px-5 lg:pb-0"
+        className="flex-1 overflow-y-auto px-6 lg:pb-0"
         style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
       >
         {loading ? (
@@ -386,7 +386,7 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); markConversationRead(conn); }}
-              className="flex min-h-[72px] w-full items-center gap-3 border-b border-border/60 py-2.5 text-left"
+              className="flex min-h-[78px] w-full items-center gap-3 border-b border-border/60 py-3 text-left"
             >
               <div className="relative shrink-0">
                 <div className={cn(
