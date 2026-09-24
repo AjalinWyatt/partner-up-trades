@@ -158,6 +158,9 @@ export default function TradingLog() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [shareSetting, setShareSetting] = useState("partners");
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [partners, setPartners] = useState<{ id: string; name: string }[]>([]);
 
@@ -289,7 +292,17 @@ export default function TradingLog() {
       resource: studyResource || null,
     } : {};
 
+    let nextImagePath = imagePath;
+    if (imageFile) {
+      const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("journal-media").upload(path, imageFile, { contentType: imageFile.type });
+      if (upErr) { setSaving(false); toast.error("Image upload failed"); return; }
+      nextImagePath = path;
+    }
+
     const payload: any = {
+      image_path: nextImagePath,
       user_id: userId,
       mood: mood || null,
       result: entryType === "trade" ? (result || null) : null,
@@ -352,6 +365,7 @@ export default function TradingLog() {
   }
 
   function resetForm() {
+    setImageFile(null); setImagePath(null); setImagePreview(null);
     setMood(""); setResult(""); setPnl(""); setMarketName(""); setPairName("");
     setAccountType(""); setSelectedTags([]); setNotes(""); setShareSetting("partners");
     setEntryType("trade");
@@ -375,6 +389,10 @@ export default function TradingLog() {
     setSelectedTags(entry.tags || []);
     setNotes(entry.notes || "");
     setShareSetting(entry.share_setting || "partners");
+    setImageFile(null);
+    setImagePath((entry as any).image_path || null);
+    setImagePreview(null);
+    if ((entry as any).image_path) void supabase.storage.from("journal-media").createSignedUrl((entry as any).image_path, 3600).then(({ data }) => setImagePreview(data?.signedUrl || null));
     const sd = entry.study_data || {};
     setStudyType(sd.study_type || "");
     setStudyTopics(sd.topics || []);
@@ -795,6 +813,25 @@ export default function TradingLog() {
                 entryType === "study" ? "min-h-[140px]" : "min-h-[60px]"
               )}
             />
+          </div>
+
+          {/* Optional image */}
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">
+              {entryType === "study" ? "Notes / image (optional)" : "Chart screenshot (optional)"}
+            </p>
+            {imagePreview ? (
+              <div className="relative overflow-hidden rounded-[10px] border-[1.5px] border-border">
+                <img src={imagePreview} alt="Attachment preview" className="max-h-48 w-full object-cover" />
+                <button type="button" onClick={() => { setImageFile(null); setImagePath(null); setImagePreview(null); }} className="absolute right-2 top-2 rounded-full bg-background/80 px-2.5 py-1 text-[11px] font-semibold text-destructive">Remove</button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-border bg-secondary px-3.5 py-3 text-[12px] font-semibold text-muted-foreground hover:text-foreground">
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; if (f.size > 10 * 1024 * 1024) { toast.error("Image must be under 10MB"); return; } setImageFile(f); setImagePreview(URL.createObjectURL(f)); }} />
+                Attach image
+              </label>
+            )}
+            <p className="mt-1 text-[10px] text-muted-foreground">Uses the same visibility as this entry.</p>
           </div>
 
           {/* Share with */}
