@@ -538,7 +538,8 @@ export default function TradersMap() {
       </div>
 
       {viewMode === "list" && (
-        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-safe-3 pt-[104px]">
+        <>
+        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-16 pt-[104px]">
           <div className="px-4">
             <div className="mb-1 flex items-center justify-between">
               <h2 className="text-[13px] font-semibold text-foreground">Traders nearby ({listTraders.length})</h2>
@@ -587,6 +588,10 @@ export default function TradersMap() {
             </div>
           </div>
         </div>
+        <div className="absolute inset-x-0 bottom-4 z-30 flex justify-center pb-safe-3">
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        </div>
+        </>
       )}
 
       {viewMode === "map" && (
