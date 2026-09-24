@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
-import { BookOpen, ChevronDown, Globe, Lock, MoreVertical, SlidersHorizontal, Trash2, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { BookOpen, CalendarDays, Clock3, Globe, Lock, MoreHorizontal, SlidersHorizontal, Trash2, TrendingUp, Users, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export interface ProfileJournalEntry {
@@ -18,6 +19,7 @@ export interface ProfileJournalEntry {
   account_type?: string | null;
   entry_type?: string | null;
   study_data?: Record<string, unknown> | null;
+  image_path?: string | null;
 }
 
 type Filter = "all" | "trade" | "study";
@@ -29,46 +31,104 @@ const VISIBILITY: { value: JournalVisibility; label: string; Icon: typeof Lock }
   { value: "public", label: "Public", Icon: Globe },
 ];
 
-const titleFor = (entry: ProfileJournalEntry) => entry.market_pair || entry.result || entry.session || (entry.entry_type ? `${entry.entry_type} entry` : "Journal entry");
+const isStudy = (e: ProfileJournalEntry) => String(e.entry_type || "").toLowerCase() === "study";
+const studyTitle = (e: ProfileJournalEntry) => {
+  const d = e.study_data || {};
+  const v = d.topic || d.title || d.focus || d.study_type || d.type;
+  return typeof v === "string" && v ? v : "Study session";
+};
+const instrument = (e: ProfileJournalEntry) => e.market_pair ? e.market_pair.split("·").pop()!.trim() : null;
+const titleFor = (e: ProfileJournalEntry) => isStudy(e) ? studyTitle(e) : [instrument(e), e.session].filter(Boolean).join(" · ") || e.result || "Trade entry";
+
+const badgeFor = (e: ProfileJournalEntry) => {
+  if (isStudy(e)) return { label: "Study", cls: "border-info/30 bg-info/10 text-info", Icon: Clock3 };
+  const a = (e.account_type || "Trade").trim();
+  const l = a.toLowerCase();
+  if (l === "live") return { label: "Live Account", cls: "border-success/30 bg-success/10 text-success", Icon: TrendingUp };
+  if (l === "demo") return { label: "Demo", cls: "border-slate/30 bg-slate/10 text-slate", Icon: Wallet };
+  return { label: a, cls: "border-primary/30 bg-primary/10 text-primary", Icon: Wallet };
+};
+
+const resultCls = (r: string) => {
+  const l = r.toLowerCase();
+  if (l.includes("win") || l.includes("profit")) return "border-success/30 bg-success/10 text-success";
+  if (l.includes("loss") || l.includes("lesson")) return "border-destructive/30 bg-destructive/10 text-destructive";
+  return "border-slate/30 bg-slate/10 text-slate";
+};
+const neutral = "border-surface-line bg-surface-raised text-foreground/80";
 
 export default function ProfileJournalCards({ entries, emptyDescription = "Nothing shared here yet.", onSetVisibility, onHide }: { entries: ProfileJournalEntry[]; emptyDescription?: string; onSetVisibility?: (entry: ProfileJournalEntry, visibility: JournalVisibility) => void | Promise<void>; onHide?: (entry: ProfileJournalEntry) => void | Promise<void> }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
-  const filtered = useMemo(() => entries.filter((entry) => filter === "all" || String(entry.entry_type || "trade").toLowerCase().includes(filter)), [entries, filter]);
+  const [images, setImages] = useState<Record<string, string>>({});
+  const filtered = useMemo(() => entries.filter((e) => filter === "all" || (filter === "study" ? isStudy(e) : !isStudy(e))), [entries, filter]);
+
+  // Signed URLs are only issued for images the database lets this viewer read.
+  const pathsKey = entries.map((e) => e.image_path).filter(Boolean).join("|");
+  useEffect(() => {
+    const paths = [...new Set(entries.map((e) => e.image_path).filter(Boolean) as string[])];
+    if (paths.length === 0) { setImages({}); return; }
+    void supabase.storage.from("journal-media").createSignedUrls(paths, 3600).then(({ data }) => {
+      const map: Record<string, string> = {};
+      data?.forEach((d) => { if (d.signedUrl && d.path) map[d.path] = d.signedUrl; });
+      setImages(map);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathsKey]);
 
   return (
-    <div className="px-3 pb-6 pt-3">
-      <div className="mb-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /><h2 className="text-sm font-extrabold text-foreground">Journal Activity</h2></div>
-        {entries.length > 1 && <Button variant="outline" size="sm" className="h-7 rounded-full px-2.5 text-[9px]" onClick={() => setFilter((current) => current === "all" ? "trade" : current === "trade" ? "study" : "all")}><SlidersHorizontal className="h-3 w-3" />{filter === "all" ? "Filter" : filter === "trade" ? "Trades" : "Study"}</Button>}
+    <div className="px-3 pb-4 pt-3">
+      <div className="mb-3 flex items-center justify-between px-1">
+        <div className="flex items-center gap-2.5"><BookOpen className="h-5 w-5 text-primary" strokeWidth={1.8} /><h2 className="text-[16px] font-bold text-foreground">Journal Activity</h2></div>
+        {entries.length > 1 && <Button variant="outline" size="sm" className="h-8 rounded-full border-surface-line bg-surface px-3 text-[11px] font-medium" onClick={() => setFilter((c) => c === "all" ? "trade" : c === "trade" ? "study" : "all")}><SlidersHorizontal className="h-3.5 w-3.5" />{filter === "all" ? "Filter" : filter === "trade" ? "Trades" : "Study"}</Button>}
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center rounded-lg border border-border bg-card px-8 py-10 text-center"><BookOpen className="mb-2 h-6 w-6 text-primary" /><p className="text-sm font-bold text-foreground">No journal entries yet</p><p className="mt-1 max-w-[240px] text-[11px] text-muted-foreground">{emptyDescription}</p></div>
+        <div className="flex flex-col items-center rounded-xl border border-surface-line bg-surface px-6 py-6 text-center"><BookOpen className="mb-1.5 h-5 w-5 text-primary" /><p className="text-[13px] font-semibold text-foreground">No journal entries yet</p><p className="mt-0.5 max-w-[240px] text-[11px] text-muted-foreground">{emptyDescription}</p></div>
       ) : (
         <div className="space-y-2.5">
           {filtered.map((entry) => {
-            const positive = (entry.pnl_pips || 0) >= 0;
             const expanded = expandedId === entry.id;
-            const amount = typeof entry.pnl_pips === "number" ? (entry.pnl_unit === "dollars" ? `${positive ? "+$" : "-$"}${Math.abs(entry.pnl_pips)}` : `${positive && entry.pnl_pips > 0 ? "+" : ""}${entry.pnl_pips} pips`) : null;
+            const badge = badgeFor(entry);
+            const img = entry.image_path ? images[entry.image_path] : null;
+            const pips = typeof entry.pnl_pips === "number" && entry.pnl_pips !== 0 ? entry.pnl_pips : null;
+            const amount = pips !== null ? (entry.pnl_unit === "dollars" ? `${pips > 0 ? "+$" : "-$"}${Math.abs(pips)}` : `${pips > 0 ? "+" : ""}${pips} pips`) : null;
+            const tags: { label: string; cls: string }[] = [];
+            const inst = instrument(entry);
+            if (inst) tags.push({ label: inst, cls: neutral });
+            if (amount) tags.push({ label: amount, cls: pips! > 0 ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive" });
+            if (entry.result) tags.push({ label: entry.result, cls: resultCls(entry.result) });
+            (entry.tags || []).forEach((t) => tags.push({ label: t, cls: neutral }));
+            const vis = VISIBILITY.find((o) => o.value === (entry.share_setting || "private")) || VISIBILITY[0];
             return (
-              <article key={entry.id} className="rounded-lg border border-border bg-card p-3 shadow-sm">
-                <div className="flex items-center justify-between gap-2 text-[9px] text-muted-foreground">
-                  <div className="flex min-w-0 flex-wrap items-center gap-1.5"><span>{new Date(entry.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span><span className="rounded-full bg-primary/10 px-2 py-0.5 font-bold text-primary">{entry.entry_type || "Trade"}</span>{entry.account_type && <span className="rounded-full bg-secondary px-2 py-0.5">{entry.account_type}</span>}{onSetVisibility && (() => { const v = VISIBILITY.find((o) => o.value === (entry.share_setting || "private")) || VISIBILITY[0]; return <span className="inline-flex items-center gap-1"><v.Icon className="h-2.5 w-2.5" />{v.label}</span>; })()}</div>
-                  <div className="relative flex shrink-0 items-center gap-1">
-                    {(onSetVisibility || onHide) && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMenuId(menuId === entry.id ? null : entry.id)} aria-label="Entry options"><MoreVertical className="h-3.5 w-3.5" /></Button>}
-                    {menuId === entry.id && <div className="absolute right-0 top-7 z-20 min-w-[160px] overflow-hidden rounded-md border border-border bg-card shadow-lg">{onSetVisibility && VISIBILITY.filter((o) => o.value !== (entry.share_setting || "private")).map((o) => <Button key={o.value} variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={async () => { setMenuId(null); await onSetVisibility(entry, o.value); }}><o.Icon />Make {o.label.toLowerCase()}</Button>)}{onHide && <Button variant="ghost" className="w-full justify-start rounded-none text-xs text-destructive" onClick={async () => { setMenuId(null); await onHide(entry); }}><Trash2 />Remove from profile</Button>}</div>}
+              <article key={entry.id} className="rounded-xl border border-surface-line bg-surface p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />{new Date(entry.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+                    <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium", badge.cls)}><badge.Icon className="h-3 w-3" />{badge.label}</span>
+                    {onSetVisibility && <span className="inline-flex items-center gap-1 text-[10px] text-slate"><vis.Icon className="h-3 w-3" />{vis.label}</span>}
                   </div>
+                  {(onSetVisibility || onHide) && (
+                    <div className="relative shrink-0">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => setMenuId(menuId === entry.id ? null : entry.id)} aria-label="Entry options"><MoreHorizontal className="h-4 w-4" /></Button>
+                      {menuId === entry.id && <div className="absolute right-0 top-7 z-20 min-w-[160px] overflow-hidden rounded-md border border-surface-line bg-surface-raised shadow-lg">{onSetVisibility && VISIBILITY.filter((o) => o.value !== (entry.share_setting || "private")).map((o) => <Button key={o.value} variant="ghost" className="w-full justify-start rounded-none text-xs" onClick={async () => { setMenuId(null); await onSetVisibility(entry, o.value); }}><o.Icon />Make {o.label.toLowerCase()}</Button>)}{onHide && <Button variant="ghost" className="w-full justify-start rounded-none text-xs text-destructive" onClick={async () => { setMenuId(null); await onHide(entry); }}><Trash2 />Remove from profile</Button>}</div>}
+                    </div>
+                  )}
                 </div>
-                <button type="button" className="mt-2 block w-full text-left" onClick={() => setExpandedId(expanded ? null : entry.id)}>
-                  <h3 className="text-[13px] font-extrabold text-foreground">{titleFor(entry)}</h3>
-                  {entry.notes && <p className={cn("mt-1 whitespace-pre-wrap text-[11px] leading-4 text-muted-foreground", !expanded && "line-clamp-2")}>{entry.notes}</p>}
+                <button type="button" className="mt-2 flex w-full gap-3 text-left" onClick={() => setExpandedId(expanded ? null : entry.id)}>
+                  {img && <img src={img} alt="Journal attachment" loading="lazy" className={cn("shrink-0 rounded-lg border border-surface-line object-cover", expanded ? "h-auto w-full max-w-none" : "h-[84px] w-[84px]")} style={expanded ? { display: "none" } : undefined} />}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-[14px] font-bold text-foreground">{titleFor(entry)}</h3>
+                    {entry.notes && <p className={cn("mt-0.5 whitespace-pre-wrap text-[12px] leading-[17px] text-muted-foreground", !expanded && "line-clamp-3")}>{entry.notes}</p>}
+                  </div>
                 </button>
-                <div className="mt-2 flex items-end justify-between gap-2">
-                  <div className="flex flex-wrap gap-1">{[entry.market_pair, entry.session, entry.result, entry.mood, ...(entry.tags || [])].filter(Boolean).slice(0, expanded ? undefined : 4).map((tag) => <span key={String(tag)} className="rounded-full bg-secondary px-2 py-0.5 text-[8px] font-semibold text-foreground">{tag}</span>)}</div>
-                  <div className="flex shrink-0 items-center gap-1">{amount && <span className={cn("text-[10px] font-black", positive ? "text-success" : "text-destructive")}>{amount}</span>}{(entry.notes || (entry.tags?.length || 0) > 4) && <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", expanded && "rotate-180")} />}</div>
-                </div>
+                {expanded && img && <img src={img} alt="Journal attachment" className="mt-2 w-full rounded-lg border border-surface-line object-cover" />}
+                {tags.length > 0 && (
+                  <div className={cn("mt-2 flex flex-wrap gap-1.5", img && !expanded && "pl-[96px]")}>
+                    {tags.slice(0, expanded ? undefined : 4).map((t) => <span key={t.label} className={cn("rounded-md border px-2 py-0.5 text-[10px] font-medium", t.cls)}>{t.label}</span>)}
+                  </div>
+                )}
               </article>
             );
           })}
