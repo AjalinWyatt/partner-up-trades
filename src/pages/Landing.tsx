@@ -87,10 +87,10 @@ const PulseMock = () => {
           <img src={mockNilaja} alt="" className="w-7 h-7 rounded-full object-cover" />
         </div>
       </div>
-      {/* Feed/Pulse tabs */}
+      {/* Community / Pulse header */}
       <div className="px-5 pt-3 pb-3 flex justify-center border-b border-border">
-        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
-          <span className="px-5 py-1.5 text-[12px] font-semibold text-muted-foreground">Feed</span>
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Community</span>
           <span className="px-5 py-1.5 rounded-full bg-accent/10 border border-accent/40 text-[12px] font-bold text-foreground">Pulse</span>
         </div>
       </div>
@@ -166,10 +166,10 @@ const PulseHelperMock = () => {
           <img src={mockNilaja} alt="" className="w-7 h-7 rounded-full object-cover" />
         </div>
       </div>
-      {/* Feed/Pulse tabs */}
+      {/* Community / Pulse header */}
       <div className="px-5 pt-3 pb-3 flex justify-center border-b border-border">
-        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
-          <span className="px-5 py-1.5 text-[12px] font-semibold text-muted-foreground">Feed</span>
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Community</span>
           <span className="px-5 py-1.5 rounded-full bg-accent/10 border border-accent/40 text-[12px] font-bold text-foreground">Pulse</span>
         </div>
       </div>
