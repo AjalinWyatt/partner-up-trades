@@ -5,6 +5,7 @@ import {
   ChevronRight,
   MapPin,
   Navigation,
+  List,
   Loader2,
   Lock,
   Minus,
@@ -111,6 +112,7 @@ export default function TradersMap() {
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<MapTrader | null>(null);
   const [browsingNearby, setBrowsingNearby] = useState(false);
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
 
   const tier = tierFor(zoom);
 
@@ -364,8 +366,14 @@ export default function TradersMap() {
       );
     };
     update();
-    const l = map.addListener("idle", update);
-    return () => l.remove();
+    const l = map.addListener("idle", update) as google.maps.MapsEventListener | undefined;
+    return () => {
+      try {
+        l?.remove();
+      } catch {
+        /* noop */
+      }
+    };
   }, [filtered, mapReady]);
 
   const visibleTraders = useMemo(() => {
@@ -376,6 +384,13 @@ export default function TradersMap() {
       (a, b) => milesBetween(userLoc, { lat: a.lat, lng: a.lng }) - milesBetween(userLoc, { lat: b.lat, lng: b.lng }),
     );
   }, [filtered, visibleIds, userLoc]);
+
+  const listTraders = useMemo(() => {
+    if (!userLoc) return filtered;
+    return [...filtered].sort(
+      (a, b) => milesBetween(userLoc, { lat: a.lat, lng: a.lng }) - milesBetween(userLoc, { lat: b.lat, lng: b.lng }),
+    );
+  }, [filtered, userLoc]);
 
   const flyToMe = () => {
     if (!userLoc) return;
@@ -415,7 +430,7 @@ export default function TradersMap() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-background">
-      <div ref={mapDivRef} className="absolute inset-0" />
+      <div ref={mapDivRef} className={cn("absolute inset-0", viewMode === "list" && "invisible pointer-events-none")} />
 
       {(loading || guardLoading || (!mapReady && !mapError)) && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-background/70 backdrop-blur-sm">
@@ -475,6 +490,20 @@ export default function TradersMap() {
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setViewMode((v) => (v === "map" ? "list" : "map"))}
+            aria-label={viewMode === "map" ? "Switch to list view" : "Switch to map view"}
+            className={cn(
+              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md hover:bg-card/80",
+              viewMode === "list" ? "border-accent/70 text-accent hover:text-accent" : "hover:text-foreground",
+            )}
+          >
+            {viewMode === "map" ? <List className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+          </Button>
         </div>
 
         <div className="mt-3 flex items-start gap-2 pl-1">
@@ -506,6 +535,59 @@ export default function TradersMap() {
         )}
       </div>
 
+      {viewMode === "list" && (
+        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-safe-3 pt-[104px]">
+          <div className="px-4">
+            <div className="mb-1 flex items-center justify-between">
+              <h2 className="text-[13px] font-semibold text-foreground">Traders nearby ({listTraders.length})</h2>
+              <span className="text-[9px] text-muted-foreground">Nearest first</span>
+            </div>
+            {listTraders.length > 0 ? (
+              listTraders.map((t) => (
+                <Button
+                  key={t.id}
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate(`/profile/${t.id}`)}
+                  className="h-auto w-full justify-start gap-3 rounded-none border-b border-border/70 px-0 py-3 text-left last:border-0 hover:bg-transparent"
+                >
+                  <Avatar t={t} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="truncate text-[12px] font-semibold text-foreground">{t.full_name || `@${t.username}`}</span>
+                      <span className="shrink-0 text-[9px] text-muted-foreground">{distanceLabel(t)}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                      {[t.placeLabel, t.markets[0], t.trading_style[0]].filter(Boolean).join("  ·  ") || "Trader"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[10px] font-semibold text-accent">{t.matchPct}%</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Button>
+              ))
+            ) : (
+              <div className="flex flex-col items-center py-10 text-center">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                  <Search className="h-4 w-4" />
+                </div>
+                <h2 className="mt-2 text-[12px] font-semibold text-foreground">No traders nearby</h2>
+                <p className="mt-1 max-w-[280px] text-[10px] leading-4 text-muted-foreground">
+                  We couldn't find any traders within 50 miles right now. Try adjusting your filters or check back later.
+                </p>
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowFilters(true)} className="mt-3 h-7 rounded-full border-accent/70 px-7 text-[9px] text-accent">
+                  Adjust Filters
+                </Button>
+              </div>
+            )}
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-[9px] text-muted-foreground">
+              <Lock className="h-3 w-3 shrink-0" />
+              Exact locations are never shared
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewMode === "map" && (
       <div className="absolute right-3 top-[43%] z-20 flex -translate-y-1/2 flex-col gap-2">
         <Button
           type="button"
@@ -539,7 +621,9 @@ export default function TradersMap() {
           <Minus className="h-4 w-4" />
         </Button>
       </div>
+      )}
 
+      {viewMode === "map" && (
       <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
         <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-muted" />
         <div className="px-4 pb-3 pt-3">
@@ -596,6 +680,7 @@ export default function TradersMap() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
