@@ -6,7 +6,6 @@ import {
   ChevronRight,
   MapPin,
   Navigation,
-  List,
   Loader2,
   Lock,
   Minus,
@@ -507,19 +506,6 @@ export default function TradersMap() {
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setViewMode((v) => (v === "map" ? "list" : "map"))}
-            aria-label={viewMode === "map" ? "Switch to list view" : "Switch to map view"}
-            className={cn(
-              "h-9 w-9 shrink-0 rounded-full bg-card/80 backdrop-blur-md hover:bg-card/80",
-              viewMode === "list" ? "border-accent/70 text-accent hover:text-accent" : "hover:text-foreground",
-            )}
-          >
-            {viewMode === "map" ? <List className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-          </Button>
         </div>
 
         <div className="mt-3 flex items-start gap-2 pl-1">
@@ -552,7 +538,8 @@ export default function TradersMap() {
       </div>
 
       {viewMode === "list" && (
-        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-safe-3 pt-[104px]">
+        <>
+        <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-background pb-16 pt-[104px]">
           <div className="px-4">
             <div className="mb-1 flex items-center justify-between">
               <h2 className="text-[13px] font-semibold text-foreground">Traders nearby ({listTraders.length})</h2>
@@ -601,6 +588,10 @@ export default function TradersMap() {
             </div>
           </div>
         </div>
+        <div className="absolute inset-x-0 bottom-4 z-30 flex justify-center pb-safe-3">
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        </div>
+        </>
       )}
 
       {viewMode === "map" && (
@@ -641,7 +632,10 @@ export default function TradersMap() {
 
       {viewMode === "map" && (
       <div className="absolute inset-x-0 bottom-0 z-20 max-h-[46vh] overflow-y-auto rounded-t-[22px] border-t border-border bg-card/95 pb-safe-3 backdrop-blur-xl">
-        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-muted" />
+        <div className="mt-2 flex items-center justify-between px-4">
+          <div className="mx-auto h-1 w-9 rounded-full bg-muted" />
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        </div>
         <div className="px-4 pb-3 pt-3">
           {exploreLoc && (
             <div className="mb-2 flex items-center justify-between gap-2 border-b border-border pb-2">
@@ -707,6 +701,28 @@ export default function TradersMap() {
         </div>
       </div>
       )}
+    </div>
+  );
+}
+
+function ViewToggle({ viewMode, onChange }: { viewMode: "map" | "list"; onChange: (v: "map" | "list") => void }) {
+  return (
+    <div className="flex h-7 items-center gap-0.5 rounded-full border border-border bg-background/85 p-0.5 backdrop-blur-md">
+      {(["map", "list"] as const).map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          onClick={() => onChange(mode)}
+          aria-pressed={viewMode === mode}
+          aria-label={mode === "map" ? "Map view" : "List view"}
+          className={cn(
+            "h-6 rounded-full px-3 text-[10px] font-medium capitalize transition-colors",
+            viewMode === mode ? "bg-secondary text-accent" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {mode}
+        </button>
+      ))}
     </div>
   );
 }
