@@ -228,9 +228,17 @@ export default function PulseSession() {
   const formatElapsed = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
-  const partnerLabel = partner?.username
-    ? `@${partner.username}`
-    : partner?.full_name || "Partner";
+  const firstName = (partner?.full_name || "").trim().split(/\s+/)[0];
+  const partnerLabel = firstName || (partner?.username ? `@${partner.username}` : "Trader");
+
+  const endSession = async () => {
+    if (!id || !accepted) return;
+    if (!window.confirm("End this Pulse session?")) return;
+    const { data, error } = await supabase.rpc("end_pulse_session" as any, { _id: id });
+    if (error || !data) { toast.error("Couldn't end session. Try again."); return; }
+    toast.success("Pulse session ended.");
+    navigate("/feed");
+  };
 
   return (
     <AppLayout>
@@ -244,18 +252,30 @@ export default function PulseSession() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
+          {accepted && (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-[11px] font-semibold text-foreground">
+              {partner?.avatar_url ? (
+                <img src={partner.avatar_url} alt={partnerLabel} className="h-full w-full object-cover" />
+              ) : (
+                partnerLabel.slice(0, 1).toUpperCase()
+              )}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
-              Pulse Session
-            </p>
             <p className="truncate text-[13px] font-semibold text-foreground">
-              {accepted ? partnerLabel : isRequester ? "Waiting for a trader…" : "Loading…"}
+              {accepted ? partnerLabel : isRequester && request?.status === "open" ? "Waiting for a trader…" : "Pulse"}
+            </p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
+              Pulse Session
             </p>
           </div>
           {accepted ? (
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-              Live
-            </span>
+            <button
+              onClick={endSession}
+              className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground"
+            >
+              End Session
+            </button>
           ) : isRequester && request?.status === "open" ? (
             <button
               onClick={cancelRequest}
@@ -298,6 +318,11 @@ export default function PulseSession() {
                       ))}
                     </div>
                   )}
+                </>
+              ) : request.status === "completed" ? (
+                <>
+                  <p className="text-[13px] font-semibold text-foreground">This Pulse session has ended.</p>
+                  <button onClick={() => navigate("/feed")} className="mt-3 text-[12px] font-medium text-primary">Back to Pulse</button>
                 </>
               ) : request.status === "cancelled" ? (
                 <p className="text-[13px] font-semibold text-foreground">This Pulse was cancelled.</p>
