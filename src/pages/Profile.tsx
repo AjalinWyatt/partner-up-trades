@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import TradingProfileEditor, { type ProfileEditorDraft, type TradingEditorDraft } from "@/components/profile/TradingProfileEditor";
 import AvatarCropDialog from "@/components/profile/AvatarCropDialog";
 import TraderDetailsPanel from "@/components/profile/TraderDetailsPanel";
-import ProfileHero, { ProfileBottomNav } from "@/components/profile/ProfileHero";
+import ProfileHero from "@/components/profile/ProfileHero";
 import ProfileJournalCards, { type JournalVisibility, type ProfileJournalEntry } from "@/components/profile/ProfileJournalCards";
 
 interface ProfileData {
@@ -493,9 +493,21 @@ const Profile = () => {
     );
   }
 
-  const bioFallback = <button onClick={() => setEditing(true)} className="mt-1.5 text-left text-[12px] italic text-muted-foreground transition-colors hover:text-foreground">Add a bio so traders know how you move.</button>;
+  const bioFallback = <button onClick={() => setEditing(true)} className="mt-1 text-left text-[12px] italic text-muted-foreground transition-colors hover:text-foreground">Add a bio so traders know how you move.</button>;
   const compactActionClass = "flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-background/60 text-foreground backdrop-blur-md transition-colors hover:bg-muted";
   const compactActions = <div className="flex items-center gap-2"><button onClick={() => setEditing(true)} className={compactActionClass} aria-label="Edit profile"><Pencil className="h-4 w-4" /></button><button onClick={() => navigate("/settings")} className={compactActionClass} aria-label="Settings"><SlidersHorizontal className="h-4 w-4" /></button></div>;
+  const tabs = (
+    <div className="inline-flex rounded-full border border-surface-line bg-surface p-0.5" role="tablist" aria-label="Profile sections">
+      {(["details", "journal"] as const).map((tab) => {
+        const on = activeTab === tab;
+        return (
+          <button key={tab} type="button" role="tab" aria-selected={on} onClick={() => setActiveTab(tab)} className={`h-7 rounded-full px-4 text-[12px] font-medium transition-colors ${on ? "bg-surface-raised text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {tab === "details" ? "Details" : "Journal"}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <AppLayout lockHeight>
@@ -505,12 +517,17 @@ const Profile = () => {
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {activeTab === "details" ? (
             <>
-              <ProfileHero profile={profile} tradingProfile={tradingProfile} ownProfile bioFallback={bioFallback} onAvatarClick={() => avatarInputRef.current?.click()} onEdit={() => setEditing(true)} onBack={() => navigate(-1)} onSettings={() => navigate("/settings")} />
+              <ProfileHero profile={profile} tradingProfile={tradingProfile} ownProfile bioFallback={bioFallback} onAvatarClick={() => avatarInputRef.current?.click()} onEdit={() => setEditing(true)} onSettings={() => navigate("/settings")} />
+              <div className="px-5 pt-3">{tabs}</div>
               <TraderDetailsPanel profile={profile as any} tradingProfile={tradingProfile as any} ownProfile />
             </>
-          ) : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />}
+          ) : (
+            <>
+              <div className="px-4 pt-3">{tabs}</div>
+              <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />
+            </>
+          )}
         </div>
-        <ProfileBottomNav active={activeTab} onChange={setActiveTab} className="mb-[calc(62px+env(safe-area-inset-bottom,0px))] md:mb-0" />
       </div>
 
       <AvatarCropDialog

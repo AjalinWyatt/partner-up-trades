@@ -122,15 +122,15 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       )}
 
       {snapshot.length > 0 && (
-        <section className="rounded-xl border border-surface-line bg-surface p-2.5">
-          <div className="mb-2 flex items-center justify-between gap-3 px-1">
-            <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-foreground">Trading Snapshot</h2></div>
+        <section className={`rounded-xl border border-surface-line bg-surface ${ownProfile ? "p-2" : "p-2.5"}`}>
+          <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
+            <div className="flex items-center gap-2"><BarChart3 className="h-3.5 w-3.5 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-foreground">Trading Snapshot</h2></div>
             {groups.length > 0 && <button type="button" className="text-[12px] font-medium text-info hover:underline" onClick={() => setShowTrading(true)}>View all</button>}
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             {snapshot.map(({ label, value, Icon }) => (
-              <div key={label} className="flex min-w-0 items-center gap-2 rounded-lg border border-surface-line/70 bg-surface-raised px-2 py-2">
-                <Icon className="h-[18px] w-[18px] shrink-0 text-primary" strokeWidth={1.8} />
+              <div key={label} className={`flex min-w-0 items-center gap-1.5 rounded-lg border border-surface-line/70 bg-surface-raised px-2 ${ownProfile ? "py-1.5" : "py-2"}`}>
+                <Icon className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.8} />
                 <div className="min-w-0"><p className="text-[9px] leading-none text-muted-foreground">{label}</p><p className="mt-1 truncate text-[11px] font-semibold leading-none text-foreground">{value}</p></div>
               </div>
             ))}
@@ -139,10 +139,10 @@ export default function TraderDetailsPanel({ profile, tradingProfile, match, myT
       )}
 
       {ownProfile && interests.length > 0 && (
-        <section className="rounded-xl border border-surface-line bg-surface p-3">
-          <div className="mb-2.5 flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-foreground">Interests &amp; Focus</h2></div>
+        <section className="px-1">
+          <div className="mb-1.5 flex items-center gap-1.5"><Target className="h-3.5 w-3.5 text-primary" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Interests &amp; Focus</h2></div>
           <div className="flex flex-wrap gap-1.5">
-            {interests.map((interest) => <span key={interest} className="rounded-full border border-surface-line bg-surface-raised px-3 py-1.5 text-[11px] text-foreground/85">{interest}</span>)}
+            {interests.map((interest) => <span key={interest} className="rounded-full border border-surface-line px-2.5 py-1 text-[11px] text-foreground/75">{interest}</span>)}
           </div>
         </section>
       )}
