@@ -112,6 +112,7 @@ export default function TradersMap() {
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<MapTrader | null>(null);
   const [browsingNearby, setBrowsingNearby] = useState(false);
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
 
   const tier = tierFor(zoom);
 
