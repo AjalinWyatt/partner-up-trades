@@ -515,7 +515,7 @@ const Profile = () => {
             </>
           ) : <ProfileJournalCards entries={journalEntries as ProfileJournalEntry[]} emptyDescription="Your journal activity will appear here." onSetVisibility={setJournalVisibility} onHide={hideJournalEntry} />}
         </div>
-        <ProfileBottomNav active={activeTab} onChange={setActiveTab} className="mb-[calc(76px+env(safe-area-inset-bottom,0px))] md:mb-0" />
+        <ProfileBottomNav active={activeTab} onChange={setActiveTab} className="mb-[calc(62px+env(safe-area-inset-bottom,0px))] md:mb-0" />
       </div>
 
       <AvatarCropDialog
