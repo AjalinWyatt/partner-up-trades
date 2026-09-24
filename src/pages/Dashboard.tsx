@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import NotificationBell from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
@@ -335,6 +336,7 @@ const Dashboard = () => {
   }, []);
 
   const activity = useMemo(() => {
+    const cutoff = Date.now() - 30 * 86_400_000;
     const notificationRows = notifications.map((notification) => ({
       id: notification.id,
       ...activityCopy(notification),
@@ -354,7 +356,9 @@ const Dashboard = () => {
         type: update.route === "/discover" ? "new_match" : "partner_logged",
         avatar: null,
       }));
-    return [...notificationRows, ...updateRows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return [...notificationRows, ...updateRows]
+      .filter((item) => new Date(item.createdAt).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [notifications, updates]);
 
   const weekDays = useMemo(() => {
@@ -385,7 +389,7 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
-      <div className="relative flex-1 overflow-hidden bg-background pb-24">
+      <div className="relative flex-1 overflow-hidden bg-background">
         <section className="relative overflow-hidden px-6 pb-7 pt-safe-6">
           <img
             src={globeImage}
@@ -403,13 +407,16 @@ const Dashboard = () => {
                 <span className="block text-accent">@{profile?.username || "trader"}</span>
               </h1>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} aria-label="Open my profile" className="mt-2 h-[50px] w-[50px] overflow-hidden rounded-full border-2 border-border bg-background/30 p-0 hover:bg-background/50">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="My profile" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-sm font-semibold text-foreground">{(profile?.username || "T").slice(0, 1).toUpperCase()}</span>
-              )}
-            </Button>
+            <div className="mt-2 flex items-center gap-2">
+              <NotificationBell />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} aria-label="Open my profile" className="h-[50px] w-[50px] overflow-hidden rounded-full border-2 border-border bg-background/30 p-0 hover:bg-background/50">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="My profile" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-sm font-semibold text-foreground">{(profile?.username || "T").slice(0, 1).toUpperCase()}</span>
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="relative z-10 mt-8 flex divide-x divide-border/70">
