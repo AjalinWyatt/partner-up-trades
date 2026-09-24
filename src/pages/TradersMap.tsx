@@ -674,6 +674,7 @@ export default function TradersMap() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
