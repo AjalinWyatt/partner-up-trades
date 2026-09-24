@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Search, X } from "lucide-react";
+import { ChevronRight, MapPin, Search, X } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import AnimatedGlobe from "@/components/AnimatedGlobe";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingGuard } from "@/hooks/use-onboarding-guard";
 import { DiscoverMatchCandidate, getDiscoverMatches } from "@/lib/discoverMatches";
@@ -10,25 +9,15 @@ import { useSessionCache } from "@/hooks/use-session-cache";
 
 type MatchCandidate = DiscoverMatchCandidate;
 
-const FILTER_OPTIONS = {
-  market: ["Forex", "Futures", "Options"],
-  session: ["London", "New York", "Asian"],
-  experience: ["Just getting started", "Building my edge", "Consistent & growing", "Profitable trader"],
-};
-
 const Discover = () => {
   const { loading: guardLoading } = useOnboardingGuard();
   const navigate = useNavigate();
   // Hydrate from sessionStorage so revisits paint instantly with last-known matches.
   const [matches, setMatches, hadMatchesCache] = useSessionCache<MatchCandidate[]>("discover:matches", []);
-  const [me, setMe] = useSessionCache<{ avatar_url: string | null; username: string | null } | null>("discover:me", null);
+  const [, setMe] = useSessionCache<{ avatar_url: string | null; username: string | null } | null>("discover:me", null);
   const [loading, setLoading] = useState(!hadMatchesCache);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [filters, setFilters] = useState<{ market: string | null; session: string | null; experience: string | null }>({
-    market: null, session: null, experience: null,
-  });
   
 
   useEffect(() => {
@@ -55,13 +44,8 @@ const Discover = () => {
         m.markets.some(mk => mk.toLowerCase().includes(q))
       );
     }
-    if (filters.market) result = result.filter(m => m.markets.includes(filters.market!));
-    if (filters.session) result = result.filter(m => m.sessions.includes(filters.session!));
-    if (filters.experience) result = result.filter(m => m.experience_level === filters.experience);
     return result;
-  }, [matches, searchQuery, filters]);
-
-  const activeFilterCount = [filters.market, filters.session, filters.experience].filter(Boolean).length;
+  }, [matches, searchQuery]);
 
   if ((guardLoading || loading) && !hadMatchesCache) {
     return (
@@ -76,11 +60,11 @@ const Discover = () => {
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto bg-background pb-20 font-sans">
-        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 px-5 pb-0 pt-safe-5 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 bg-background/95 px-5 pb-0 pt-safe-5 backdrop-blur-xl">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="font-display text-[27px] font-semibold tracking-normal text-foreground">Discover</h1>
-              <p className="mt-1 text-[13px] text-muted-foreground">Find traders who align with your mindset.</p>
+              <h1 className="font-display text-[25px] font-semibold tracking-normal text-foreground">Discover</h1>
+              <p className="mt-1 text-[12px] text-muted-foreground">Find traders who align with your mindset.</p>
             </div>
             <button
               onClick={() => setShowSearch((value) => !value)}
@@ -102,7 +86,7 @@ const Discover = () => {
               />
             </div>
           )}
-          <div className="mt-5 grid grid-cols-3 text-center text-[13px] font-semibold">
+          <div className="mt-5 grid grid-cols-3 border-b border-border/70 text-center text-[12px] font-semibold">
             <button className="relative pb-3 text-accent after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-accent">For You</button>
             <button onClick={() => navigate("/map")} className="pb-3 text-muted-foreground transition-colors hover:text-foreground">Nearby</button>
             <button className="pb-3 text-muted-foreground transition-colors hover:text-foreground">Similar</button>
@@ -121,7 +105,7 @@ const Discover = () => {
                 <button
                   key={m.id}
                   onClick={() => navigate(`/match/${m.id}`, { state: { matchPct: m.matchPct } })}
-                  className="flex min-h-[106px] w-full items-center gap-3 py-3.5 text-left transition-colors hover:bg-secondary/25"
+                  className="flex min-h-[112px] w-full items-center gap-3 py-3 text-left transition-colors hover:bg-secondary/25"
                 >
                   <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
                     {m.avatar_url ? (
@@ -157,13 +141,14 @@ const Discover = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="relative flex h-48px w-48px h-12 w-12 shrink-0 items-center justify-center">
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                     <svg viewBox="0 0 48 48" className="h-full w-full -rotate-90">
                       <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
                       <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(var(--accent))" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={`${(m.matchPct / 100) * 125.66} 125.66`} />
                     </svg>
                     <span className="absolute text-[10px] font-semibold text-foreground">{m.matchPct}%</span>
                   </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </button>
               ))}
             </div>

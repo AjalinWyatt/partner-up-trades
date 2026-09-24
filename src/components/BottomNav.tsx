@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Earth, MessagesSquare, BookOpen, Users } from "lucide-react";
+import { Home, CircleCheck, MessagesSquare, BookOpen, UserRound } from "lucide-react";
 import FeedNavIcon from "@/components/icons/FeedNavIcon";
 import { useNavBadges } from "@/hooks/use-nav-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,11 +7,11 @@ import { warmRoute } from "@/lib/routePrefetch";
 
 const tabs = [
   { path: "/dashboard", icon: Home, label: "Home", tour: "nav-home" },
-  { path: "/discover", icon: Earth, label: "Discover", tour: "nav-discover" },
+  { path: "/discover", icon: CircleCheck, label: "Discover", tour: "nav-discover" },
   { path: "/feed", icon: FeedNavIcon, label: "Community", tour: "nav-feed" },
   { path: "/messages", icon: MessagesSquare, label: "Messages", tour: "nav-messages" },
   { path: "/trading-log", icon: BookOpen, label: "Journal", tour: "nav-log" },
-  { path: "/partners", icon: Users, label: "Partners", tour: "nav-partners" },
+  { path: "/profile", icon: UserRound, label: "Profile", tour: "nav-profile" },
 ];
 
 const BottomNav = () => {
@@ -29,7 +29,7 @@ const BottomNav = () => {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around rounded-t-[28px] bg-card/95 px-3 pt-2.5 backdrop-blur-xl"
+      className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border/70 bg-background/95 px-3 pt-2.5 backdrop-blur-xl"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
     >
       {tabs.map((tab) => {
@@ -49,16 +49,10 @@ const BottomNav = () => {
             className="relative flex items-center justify-center"
             aria-label={tab.label}
           >
-            {active ? (
-              <div
-                className="flex h-[44px] w-[40px] items-center justify-center bg-accent"
-                style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
-              >
-                <Icon className="h-[20px] w-[20px] text-accent-foreground" strokeWidth={2} />
-              </div>
-            ) : (
-              <Icon className="h-[22px] w-[22px] text-foreground" strokeWidth={1.8} />
-            )}
+            <div className="flex min-w-[45px] flex-col items-center gap-1">
+              <Icon className={active ? "h-[21px] w-[21px] text-accent" : "h-[21px] w-[21px] text-muted-foreground"} strokeWidth={active ? 2.4 : 1.8} />
+              <span className={active ? "text-[9px] font-semibold text-accent" : "text-[9px] text-muted-foreground"}>{tab.label}</span>
+            </div>
             {showDot && (
               <span
                 aria-hidden

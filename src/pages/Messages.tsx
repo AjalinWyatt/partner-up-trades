@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSessionCache, invalidateSessionCache } from "@/hooks/use-session-cache";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone } from "lucide-react";
+import { ArrowLeft, Send, Search, Tag as TagIcon, BadgeCheck, Megaphone, SquarePen, Phone, MoreVertical } from "lucide-react";
 import brandGlobe from "@/assets/pulse-globe.svg";
 import tradersworldGlobe from "@/assets/tradersworld-globe.png";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ export default function Messages() {
   const [partnerTrading, setPartnerTrading] = useState<{ markets?: string[] | null; experience_level?: string | null; trading_style?: string[] | null } | null>(null);
   const [systemExitOpen, setSystemExitOpen] = useState(false);
   const [deletingSystem, setDeletingSystem] = useState(false);
+  const [inboxFilter, setInboxFilter] = useState<"all" | "unread" | "partners" | "requests">("all");
 
   // Safe left-edge swipe-back: in chat view, swipe right to return to DM list
   useSwipeBack({
@@ -155,7 +156,7 @@ export default function Messages() {
       connectionList.push({
         id: c.id,
         partnerId,
-        partnerName: profile?.username ? `@${profile.username}` : "trader",
+        partnerName: profile?.full_name || (profile?.username ? `@${profile.username}` : "trader"),
         partnerUsername: profile?.username || "",
         avatarUrl: profile?.avatar_url,
         lastMessage: last?.content,
@@ -316,81 +317,47 @@ export default function Messages() {
     (c) =>
       (c.partnerName.toLowerCase().includes(search.toLowerCase()) ||
         c.partnerUsername.toLowerCase().includes(search.toLowerCase())) &&
-      (!activeTagId || (assignmentsByPartner[c.partnerId] || []).includes(activeTagId))
+      (!activeTagId || (assignmentsByPartner[c.partnerId] || []).includes(activeTagId)) &&
+      (inboxFilter !== "unread" || c.unreadCount > 0) &&
+      inboxFilter !== "requests"
   );
 
   const grouped = activeChat ? groupMessagesByDate(messages) : [];
 
   const conversationListContent = (
-    <div className="flex flex-col h-full min-w-0 w-full overflow-x-hidden">
+    <div className="flex h-full min-w-0 w-full flex-col overflow-x-hidden bg-background">
       <div
-        className="sticky top-0 z-40 px-5 pb-4 flex items-center justify-between bg-background/95 backdrop-blur-xl"
+        className="sticky top-0 z-40 flex items-center justify-between bg-background/95 px-5 pb-3 backdrop-blur-xl"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
       >
         {showSearch ? (
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onBlur={() => !search && setShowSearch(false)}
               placeholder="Search"
-              className="pl-9 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl h-9 text-sm"
+              className="h-9 rounded-none border-0 border-b border-border bg-transparent pl-7 text-sm text-foreground placeholder:text-muted-foreground"
             />
           </div>
         ) : (
           <>
-            <button
-              onClick={() => setShowSearch(true)}
-              className="p-1 text-foreground"
-              aria-label="Search"
-            >
-              <Search className="w-6 h-6" strokeWidth={2} />
-            </button>
-            <h1 className="text-xl font-semibold text-foreground tracking-tight">
-              Traders<span className="font-bold">World</span>
-            </h1>
-            <button
-              onClick={() => navigate("/profile")}
-              className="w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0"
-              aria-label="My profile"
-            >
-              {myAvatarUrl ? (
-                <img src={myAvatarUrl} alt="Me" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-brand" />
-              )}
-            </button>
+            <h1 className="font-display text-[25px] font-semibold tracking-normal text-foreground">Messages</h1>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowSearch(true)} className="text-foreground" aria-label="Search"><Search className="h-5 w-5" /></button>
+              <button onClick={() => navigate("/discover")} className="text-foreground" aria-label="New message"><SquarePen className="h-5 w-5" /></button>
+            </div>
           </>
         )}
       </div>
 
-      <div className="px-4 pb-4 flex items-center gap-2 overflow-x-auto scrollbar-none">
-        {allTags.map((t) => {
-          const active = activeTagId === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setActiveTagId(active ? null : t.id)}
-              className={cn(
-                "shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors border",
-                active
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-foreground border-foreground/70"
-              )}
-            >
-              {t.name}
-            </button>
-          );
+      <div className="flex items-center gap-2 border-b border-border/70 px-5 pb-2">
+        {(["all", "unread", "partners", "requests"] as const).map((filter) => {
+          const count = filter === "all" ? connections.length : filter === "unread" ? connections.filter((item) => item.unreadCount > 0).length : null;
+          return <button key={filter} onClick={() => setInboxFilter(filter)} className={cn("relative shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold capitalize", inboxFilter === filter ? "border-accent/40 bg-accent/10 text-accent" : "border-border bg-secondary/45 text-muted-foreground")}>{filter}{count !== null ? ` (${count})` : ""}{inboxFilter === filter && <span className="absolute -bottom-[9px] left-1/2 h-0.5 w-8 -translate-x-1/2 bg-accent" />}</button>;
         })}
-        <button
-          onClick={() => setTagsOpen(true)}
-          className="shrink-0 ml-auto h-7 w-7 rounded-full border border-border flex items-center justify-center text-primary hover:bg-muted"
-          aria-label="Manage tags"
-        >
-          <TagIcon className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       <div
@@ -403,10 +370,10 @@ export default function Messages() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <img src={brandGlobe} alt="" className="w-20 h-20 object-contain opacity-95 drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)] mb-3 animate-globe-float motion-reduce:animate-none" />
+            <img src={brandGlobe} alt="" className="mb-3 h-16 w-16 object-contain opacity-80" />
             <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
             <p className="text-xs text-muted-foreground mb-4">Connect with a match to start chatting</p>
-            <button onClick={() => navigate("/discover")} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold">
+            <button onClick={() => navigate("/discover")} className="text-xs font-semibold text-info">
               Find matches
             </button>
           </div>
@@ -417,17 +384,17 @@ export default function Messages() {
             <button
               key={conn.id}
               onClick={() => { setActiveChat(conn); setMsgInput(""); markConversationRead(conn); }}
-              className="w-full flex items-center gap-3 py-2.5 text-left"
+              className="flex min-h-[72px] w-full items-center gap-3 border-b border-border/60 py-2.5 text-left"
             >
               <div className="relative shrink-0">
                 <div className={cn(
-                  "w-12 h-12 rounded-full overflow-hidden bg-secondary",
-                  isSystem && "ring-2 ring-primary/60"
+                   "h-12 w-12 overflow-hidden rounded-full bg-secondary",
+                   isSystem && "ring-1 ring-info/60"
                 )}>
                   <AvatarIcon conn={conn} size="md" />
                 </div>
                 {conn.unreadCount > 0 && (
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success border-2 border-background" />
+                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-accent" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -436,24 +403,23 @@ export default function Messages() {
                     {conn.partnerName.replace(/^@/, "")}
                   </p>
                   {isSystem && (
-                    <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0 fill-primary/20" />
+                    <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-info" />
                   )}
                   {isSystem && (
-                    <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30 shrink-0">
-                      Official
-                    </span>
+                    null
                   )}
                 </div>
-                <p className={cn("text-[13px] truncate mt-0.5", conn.unreadCount > 0 ? "text-foreground" : "text-muted-foreground")}>
+                 <p className={cn("mt-1 truncate text-[12px]", conn.unreadCount > 0 ? "text-foreground/85" : "text-muted-foreground")}> 
                   {conn.lastMessage || "No messages yet"}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {conn.lastMessage && conn.lastMessageFromMe === true && (
+                 {conn.lastMessageTime && <span className="text-[10px] text-muted-foreground">{new Date(conn.lastMessageTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>}
+                 {conn.lastMessage && conn.lastMessageFromMe === true && (
                   <span
                     className={cn(
                       "text-[11px] font-medium",
-                      conn.lastMessageRead ? "text-primary" : "text-muted-foreground"
+                       conn.lastMessageRead ? "text-accent" : "text-muted-foreground"
                     )}
                     title={conn.lastMessageRead ? "Seen" : "Sent"}
                   >
@@ -461,7 +427,7 @@ export default function Messages() {
                   </span>
                 )}
                 {conn.unreadCount > 0 && conn.lastMessageFromMe !== true && (
-                  <span className="min-w-[20px] h-[20px] bg-primary rounded-full flex items-center justify-center text-[11px] font-bold text-primary-foreground px-1.5">
+                   <span className="flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
                     {conn.unreadCount}
                   </span>
                 )}
@@ -488,8 +454,8 @@ export default function Messages() {
     <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden overscroll-none touch-pan-y">
       <div
         className={cn(
-          "sticky top-0 z-40 flex w-full max-w-full shrink-0 items-center gap-3 overflow-hidden border-b bg-background/95 px-3 pb-3 pt-[max(3rem,calc(env(safe-area-inset-top,0px)+1rem))] backdrop-blur-xl lg:pt-3",
-          activeChat.id === SYSTEM_CONNECTION_ID ? "border-primary/40 bg-primary/5" : "border-border/40"
+           "sticky top-0 z-40 flex w-full max-w-full shrink-0 items-center gap-3 overflow-hidden border-b bg-background/95 px-3 pb-3 pt-[max(3rem,calc(env(safe-area-inset-top,0px)+1rem))] backdrop-blur-xl lg:pt-3",
+           activeChat.id === SYSTEM_CONNECTION_ID ? "border-info/40 bg-info/5" : "border-border/60"
         )}
       >
         <button
@@ -511,7 +477,7 @@ export default function Messages() {
             alt={activeChat.partnerName}
             className={cn(
               "w-9 h-9 rounded-full object-cover bg-secondary shrink-0",
-              activeChat.id === SYSTEM_CONNECTION_ID && "ring-2 ring-primary/60"
+               activeChat.id === SYSTEM_CONNECTION_ID && "ring-1 ring-info/60"
             )}
           />
         ) : (
@@ -525,11 +491,11 @@ export default function Messages() {
               {activeChat.partnerName.replace(/^@/, "")}
             </p>
             {activeChat.id === SYSTEM_CONNECTION_ID && (
-              <BadgeCheck className="w-4 h-4 text-primary shrink-0 fill-primary/20" />
+               <BadgeCheck className="h-4 w-4 shrink-0 text-info" />
             )}
           </div>
           {activeChat.id === SYSTEM_CONNECTION_ID ? (
-            <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold leading-tight text-primary">
+             <p className="flex min-w-0 items-center gap-1 truncate text-[11px] font-semibold leading-tight text-info">
               <Megaphone className="h-3 w-3 shrink-0" /> <span className="min-w-0 truncate">Official announcements</span>
             </p>
           ) : (
@@ -538,7 +504,7 @@ export default function Messages() {
             </p>
           )}
           {partnerTrading && (partnerTrading.markets?.length || partnerTrading.experience_level || partnerTrading.trading_style?.length) ? (
-            <p className="text-[10px] text-primary/80 truncate leading-tight mt-0.5 font-medium">
+             <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-muted-foreground">
               {[
                 partnerTrading.markets?.[0],
                 partnerTrading.experience_level,
@@ -547,16 +513,7 @@ export default function Messages() {
             </p>
           ) : null}
         </div>
-        {activeChat.id !== SYSTEM_CONNECTION_ID && (
-          <button
-            onClick={() => setTagsOpen(true)}
-            className="p-2 text-primary shrink-0"
-            aria-label="Tag conversation"
-            title="Tag conversation"
-          >
-            <TagIcon className="w-5 h-5" strokeWidth={2} />
-          </button>
-        )}
+        {activeChat.id !== SYSTEM_CONNECTION_ID && <div className="flex shrink-0 items-center gap-3"><button className="text-foreground" aria-label="Call"><Phone className="h-5 w-5" /></button><button onClick={() => setTagsOpen(true)} className="text-foreground" aria-label="Conversation options"><MoreVertical className="h-5 w-5" /></button></div>}
       </div>
       {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
         <div className="flex max-w-full shrink-0 flex-wrap items-center gap-1.5 overflow-hidden px-4 pt-2">
@@ -582,7 +539,7 @@ export default function Messages() {
           grouped.map((group) => (
             <div key={group.date}>
               <div className="flex items-center justify-center my-4">
-                <span className="text-[10px] text-muted-foreground bg-secondary px-3 py-1 rounded-full font-medium">
+               <span className="rounded-full bg-secondary px-3 py-1 text-[10px] font-medium text-muted-foreground">
                   {group.date}
                 </span>
               </div>
@@ -621,7 +578,7 @@ export default function Messages() {
         </div>
       ) : (
       <div className="shrink-0 overflow-hidden px-4 pt-2 pb-safe-4">
-        <div className="relative flex w-full max-w-full min-w-0 items-center gap-2 overflow-hidden rounded-full bg-secondary/70 py-1.5 pl-3 pr-1.5">
+         <div className="relative flex w-full max-w-full min-w-0 items-center gap-2 overflow-hidden rounded-full border border-border bg-secondary/70 py-1.5 pl-3 pr-1.5">
           <AttachmentButton
             userId={userId!}
             connectionId={activeChat.id}
@@ -641,12 +598,12 @@ export default function Messages() {
             <button
               onClick={sendMessage}
               disabled={sendingMsg}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary disabled:opacity-40"
+               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent disabled:opacity-40"
             >
-              <Send className="w-5 h-5 text-primary-foreground" />
+               <Send className="h-5 w-5 text-accent-foreground" />
             </button>
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary">
+             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent">
               <VoiceRecorder
                 userId={userId!}
                 connectionId={activeChat.id}
@@ -665,8 +622,8 @@ export default function Messages() {
     <>
       <div className="hidden lg:block">
         <AppLayout>
-          <div className="flex h-[calc(100vh-0px)] -mt-0 border-[3px] border-primary/40 rounded-xl overflow-hidden m-2">
-            <div className="w-[340px] xl:w-[380px] border-r border-primary/30 bg-card/50 shrink-0">
+          <div className="m-2 flex h-[calc(100vh-16px)] overflow-hidden rounded-lg border border-border">
+            <div className="w-[340px] shrink-0 border-r border-border bg-background xl:w-[380px]">
               {conversationListContent}
             </div>
             <div className="flex-1 bg-background">
