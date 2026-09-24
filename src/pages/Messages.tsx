@@ -29,6 +29,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import SafetyMenu from "@/components/safety/SafetyMenu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const SYSTEM_CONNECTION_ID = "system-tradersworld";
 
@@ -513,7 +515,7 @@ export default function Messages() {
             </p>
           ) : null}
         </div>
-        {activeChat.id !== SYSTEM_CONNECTION_ID && <div className="flex shrink-0 items-center gap-3"><button className="text-foreground" aria-label="Call"><Phone className="h-5 w-5" /></button><button onClick={() => setTagsOpen(true)} className="text-foreground" aria-label="Conversation options"><MoreVertical className="h-5 w-5" /></button></div>}
+        {activeChat.id !== SYSTEM_CONNECTION_ID && <div className="flex shrink-0 items-center gap-3"><button className="text-foreground" aria-label="Call"><Phone className="h-5 w-5" /></button><SafetyMenu targetId={activeChat.partnerId} username={activeChat.partnerUsername} context="chat" onBlockedChange={(b) => { if (b) { setActiveChat(null); invalidateSessionCache("messages:connections"); setConnections((c) => c.filter((x) => x.partnerId !== activeChat.partnerId)); } }} trigger={<button className="text-foreground" aria-label="Conversation options"><MoreVertical className="h-5 w-5" /></button>} extraItems={<DropdownMenuItem onSelect={() => setTagsOpen(true)}><TagIcon className="mr-2 h-4 w-4" />Tags</DropdownMenuItem>} /></div>}
       </div>
       {(assignmentsByPartner[activeChat.partnerId] || []).length > 0 && (
         <div className="flex max-w-full shrink-0 flex-wrap items-center gap-1.5 overflow-hidden px-4 pt-2">
