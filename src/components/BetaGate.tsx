@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { KeyRound, Mail, User, Check } from "lucide-react";
+import { KeyRound, Mail, User, Check, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Wordmark from "@/components/Wordmark";
 import AuthGlobeBackground from "@/components/AuthGlobeBackground";
@@ -10,19 +10,25 @@ import { supabase } from "@/integrations/supabase/client";
 const WAITLIST_MODE = true;
 
 const BETA_KEY = "MYOBxTWapp";
-const STORAGE_KEY = "tw:beta-unlocked:v5";
+const STORAGE_KEY = "tw:beta-unlocked:v6";
 const MARKETS = ["Forex", "Futures", "Options"];
 
 const BetaGate = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  const [unlocked, setUnlocked] = useState(
-    () => !WAITLIST_MODE || localStorage.getItem(STORAGE_KEY) === "1"
-  );
+  const [unlocked, setUnlocked] = useState(() => {
+    if (!WAITLIST_MODE) return true;
+    if (new URLSearchParams(window.location.search).get("beta") === BETA_KEY) {
+      localStorage.setItem(STORAGE_KEY, "1");
+      return true;
+    }
+    return localStorage.getItem(STORAGE_KEY) === "1";
+  });
   const [showKey, setShowKey] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [markets, setMarkets] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -42,6 +48,7 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
     const { error } = await supabase.from("waitlist" as any).insert({
       email: email.trim().toLowerCase(),
       name: name.trim() || null,
+      phone: phone.trim() || null,
       markets,
       market: markets[0] ?? null,
     } as any);
@@ -63,14 +70,6 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 200px)" }}
       >
         <div className="flex justify-center"><Wordmark size="text-3xl" /></div>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-accent text-center mt-5">Coming soon</p>
-        <h1 className="font-serif font-light text-[28px] leading-tight text-foreground text-center mt-2">
-          You're not trading alone.
-        </h1>
-        <p className="text-sm text-muted-foreground text-center mt-3">
-          1-on-1 accountability partners for Forex, Futures and Options traders. Join the waitlist for early access.
-        </p>
-
         {joined ? (
           <div className="mt-10 flex flex-col items-center text-center gap-3">
             <div className="h-12 w-12 rounded-full bg-accent/15 flex items-center justify-center">
@@ -112,6 +111,14 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
             </div>
             <div>
               <div className="flex items-center gap-3 pb-2">
+                <Phone className="w-5 h-5 text-accent shrink-0" strokeWidth={1.8} />
+                <input type="tel" placeholder="Phone number" value={phone} maxLength={30} onChange={(e) => setPhone(e.target.value)}
+                  className="flex-1 bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground outline-none" />
+              </div>
+              <div className="h-px bg-border" />
+            </div>
+            <div>
+              <div className="flex items-center gap-3 pb-2">
                 <Mail className="w-5 h-5 text-accent shrink-0" strokeWidth={1.8} />
                 <input type="email" required placeholder="Email" value={email} maxLength={255}
                   onChange={(e) => { setEmail(e.target.value); setError(""); }}
@@ -136,17 +143,6 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
           </form>
         )}
 
-        <div className="text-sm text-muted-foreground text-center mt-6 space-y-2">
-          {!joined && (
-            <button onClick={() => { setShowKey(!showKey); setError(""); }} className="text-accent font-semibold hover:underline">
-              {showKey ? "Join the waitlist instead" : "Have a beta key?"}
-            </button>
-          )}
-          <p>
-            Already have an account?{" "}
-            <button onClick={() => navigate("/sign-in")} className="text-accent font-semibold hover:underline">Sign In</button>
-          </p>
-        </div>
       </div>
     </div>
   );
