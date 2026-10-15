@@ -10,18 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 const WAITLIST_MODE = true;
 
 const BETA_KEY = "MYOBxTWapp";
-const STORAGE_KEY = "tw:beta-unlocked:v6";
 const MARKETS = ["Forex", "Futures", "Options"];
 
 const BetaGate = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [unlocked, setUnlocked] = useState(() => {
     if (!WAITLIST_MODE) return true;
-    if (new URLSearchParams(window.location.search).get("beta") === BETA_KEY) {
-      localStorage.setItem(STORAGE_KEY, "1");
-      return true;
-    }
-    return localStorage.getItem(STORAGE_KEY) === "1";
+    // Never remember unlocks — everyone sees the waitlist unless the beta link is used.
+    try { Object.keys(localStorage).filter((k) => k.startsWith("tw:beta-unlocked")).forEach((k) => localStorage.removeItem(k)); } catch {}
+    return new URLSearchParams(window.location.search).get("beta") === BETA_KEY;
   });
   const [showKey, setShowKey] = useState(false);
   const [input, setInput] = useState("");
@@ -36,7 +33,6 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
   const handleKey = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() === BETA_KEY) {
-      localStorage.setItem(STORAGE_KEY, "1");
       setUnlocked(true);
     } else setError("That beta key isn't valid.");
   };
