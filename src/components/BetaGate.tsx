@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 const WAITLIST_MODE = true;
 
 const BETA_KEY = "MYOBxTWapp";
-const STORAGE_KEY = "tw:beta-unlocked:v6";
 const MARKETS = ["Forex", "Futures", "Options"];
 
 const BetaGate = ({ children }: { children: React.ReactNode }) => {
@@ -34,7 +33,6 @@ const BetaGate = ({ children }: { children: React.ReactNode }) => {
   const handleKey = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() === BETA_KEY) {
-      localStorage.setItem(STORAGE_KEY, "1");
       setUnlocked(true);
     } else setError("That beta key isn't valid.");
   };
